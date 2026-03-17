@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>출석 체크 시스템</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --ink: #0e1117;
+  --card: rgba(255,255,255,0.05);
+  --card2: rgba(255,255,255,0.09);
+  --border: rgba(255,255,255,0.1);
+  --border2: rgba(255,255,255,0.18);
+  --accent: #e94560;
+  --accent2: #f5a623;
+  --ok: #00c896;
+  --sky: #5eb8ff;
+  --text: #edf0f7;
+  --muted: #7a8499;
+  --r: 14px;
+  --r-sm: 10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Noto Sans KR',sans-serif;
+  background:var(--ink);color:var(--text);
+  min-height:100vh;font-size:14px;line-height:1.5;
+  -webkit-tap-highlight-color:transparent;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 5%,rgba(233,69,96,.1) 0%,transparent 55%),
+    radial-gradient(ellipse 50% 60% at 85% 85%,rgba(94,184,255,.07) 0%,transparent 55%);
+}
+.wrap{position:relative;z-index:1}
+
+/* topbar */
+.topbar{
+  display:flex;align-items:center;gap:12px;
+  padding:0 20px;height:56px;
+  background:rgba(14,17,23,.88);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:200;
+}
+.logo{
+  font-size:16px;font-weight:900;letter-spacing:-.5px;white-space:nowrap;
+  background:linear-gradient(130deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.topbar-nav{display:flex;gap:2px;margin-left:auto}
+.nb{
+  display:flex;align-items:center;gap:6px;
+  padding:7px 13px;border-radius:8px;border:none;
+  background:transparent;color:var(--muted);
+  font-family:inherit;font-size:13px;font-weight:500;
+  cursor:pointer;transition:all .18s;
+}
+.nb:hover{background:var(--card2);color:var(--text)}
+.nb.on{background:var(--card2);color:var(--text)}
+.nb .lbl{display:none}
+@media(min-width:520px){.nb .lbl{display:inline}}
+.live-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--accent);display:none;flex-shrink:0;
+  animation:pulse 1.4s ease-in-out infinite;
+}
+.live-dot.on{display:block}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.75)}}
+
+/* page */
+.page{display:none;padding:24px 20px;max-width:880px;margin:0 auto}
+.page.on{display:block}
+
+/* card */
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:22px;margin-bottom:14px;
+}
+.card-head{font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+.row-btw{display:flex;align-items:center;justify-content:space-between;gap:12px}
+
+/* form */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;letter-spacing:.4px}
+.field input,.field select{
+  width:100%;background:rgba(255,255,255,.05);
+  border:1px solid var(--border);border-radius:var(--r-sm);
+  padding:10px 13px;color:var(--text);font-family:inherit;font-size:14px;
+  outline:none;transition:border-color .2s,background .2s;
+  -webkit-appearance:none;appearance:none;
+}
+.field input:focus,.field select:focus{border-color:var(--accent);background:rgba(233,69,96,.06)}
+.field select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a8499' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
+}
+.field select option{background:#1a1f2e;color:var(--text)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:480px){.g2{grid-template-columns:1fr}}
+
+/* buttons */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:10px 20px;border:none;border-radius:var(--r-sm);
+  font-family:inherit;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.btn-red{background:var(--accent);color:#fff}
+.btn-red:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.btn-green{background:var(--ok);color:#003d2b}
+.btn-green:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-ghost{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--card2);border-color:var(--border2)}
+.btn-full{width:100%;padding:13px;font-size:14px}
+.btn-sm{padding:6px 13px;font-size:12px}
+.btn-del{color:#ff7096;border-color:rgba(233,69,96,.25)}
+.btn-del:hover{background:rgba(233,69,96,.1);border-color:rgba(233,69,96,.4)}
+.btn-stop{color:#ff7096;border-color:rgba(233,69,96,.25)}
+.btn-stop:hover{background:rgba(233,69,96,.1)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+@media(max-width:480px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 12px;text-align:center}
+.sn{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;line-height:1}
+.sl{font-size:10px;color:var(--muted);margin-top:5px;letter-spacing:.6px;text-transform:uppercase}
+.c-sky{color:var(--sky)}.c-ok{color:var(--ok)}.c-red{color:var(--accent)}.c-amber{color:var(--accent2)}
+
+/* QR layout */
+.qr-layout{display:flex;gap:18px;align-items:flex-start}
+@media(max-width:640px){.qr-layout{flex-direction:column}}
+.qr-panel{
+  flex-shrink:0;width:244px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:20px;
+  display:flex;flex-direction:column;align-items:center;gap:13px;
+}
+@media(max-width:640px){.qr-panel{width:100%}}
+.qr-box{background:#fff;border-radius:10px;padding:10px;line-height:0}
+.timer-num{font-family:'DM Mono',monospace;font-size:40px;font-weight:500;letter-spacing:-1px;transition:color .4s;line-height:1}
+.timer-lbl{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+.t-ok{color:var(--ok)}.t-warn{color:var(--accent2)}.t-end{color:var(--accent)}
+.live-pill{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(233,69,96,.14);border:1px solid rgba(233,69,96,.28);
+  color:#ff7096;padding:5px 12px;border-radius:20px;
+  font-size:11px;font-weight:700;
+}
+.pill-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1.2s infinite}
+.qr-hint{font-size:10px;color:var(--muted);text-align:center}
+.qr-btns{display:flex;gap:8px;width:100%}
+.qr-btns .btn{flex:1;font-size:11px;padding:7px 4px}
+
+/* att panel */
+.att-panel{flex:1;min-width:0}
+.att-panel .card{margin-bottom:0}
+.prog-bg{background:rgba(255,255,255,.08);border-radius:4px;height:4px;margin:8px 0 3px}
+.prog-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--ok));transition:width .4s}
+.prog-lbl{font-size:11px;color:var(--muted);text-align:right}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+thead th{text-align:left;padding:9px 10px;font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
+tbody tr{transition:background .12s}
+tbody tr:hover td{background:var(--card2)}
+tbody td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
+tbody tr:last-child td{border-bottom:none}
+.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700}
+.b-ok{background:rgba(0,200,150,.14);color:var(--ok);border:1px solid rgba(0,200,150,.28)}
+.b-no{background:rgba(233,69,96,.1);color:#ff7096;border:1px solid rgba(233,69,96,.2)}
+
+/* student page (탭 내) */
+.s-hero{
+  min-height:72vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:32px 20px;text-align:center;
+}
+.s-icon{
+  width:72px;height:72px;border-radius:20px;margin-bottom:22px;
+  background:linear-gradient(135deg,var(--accent),#ff6b35);
+  display:flex;align-items:center;justify-content:center;font-size:32px;
+  box-shadow:0 14px 44px rgba(233,69,96,.3);
+}
+.s-title{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
+.s-sub{color:var(--muted);font-size:14px;line-height:1.75;margin-bottom:30px;white-space:pre-line}
+.big-input{
+  width:100%;max-width:320px;
+  background:rgba(255,255,255,.07);border:2px solid var(--border);border-radius:14px;
+  padding:17px 20px;color:var(--text);
+  font-family:'DM Mono',monospace;font-size:20px;text-align:center;outline:none;
+  transition:border-color .2s,background .2s;margin-bottom:12px;
+  -webkit-appearance:none;
+}
+.big-input:focus{border-color:var(--accent);background:rgba(233,69,96,.07)}
+.big-input::placeholder{font-family:'Noto Sans KR',sans-serif;font-size:14px;color:var(--muted)}
+.err-box{
+  background:rgba(233,69,96,.1);border:1px solid rgba(233,69,96,.28);
+  border-radius:8px;padding:10px 16px;color:#ff7096;font-size:13px;
+  max-width:320px;margin-bottom:12px;display:none;
+}
+.ok-card{
+  background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.24);
+  border-radius:18px;padding:32px 28px;max-width:340px;
+  display:none;flex-direction:column;align-items:center;gap:6px;
+  animation:fadeUp .35s ease-out;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.ok-icon{font-size:48px;margin-bottom:10px}
+.ok-name{font-size:22px;font-weight:800;color:var(--ok)}
+.ok-meta{color:var(--muted);font-size:13px;line-height:2;text-align:center;white-space:pre-line}
+
+/* student fullscreen */
+#student-fullscreen{display:none;min-height:100vh;background:var(--ink)}
+.sf-page{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:40px 24px;text-align:center;
+}
+
+/* manage */
+.s-row{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .12s;
+}
+.s-row:hover{background:var(--card2)}
+.s-row:last-child{border-bottom:none}
+.ava{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:13px;color:#fff;
+}
+.sr-name{font-weight:600;flex:1;font-size:13px}
+.sr-no{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);min-width:84px}
+.sr-cls{font-size:11px;color:var(--muted);min-width:78px}
+
+/* history */
+.hist-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px;border-bottom:1px solid rgba(255,255,255,.04);
+  cursor:pointer;transition:background .12s;
+}
+.hist-row:hover{background:var(--card2)}
+.hist-row:last-child{border-bottom:none}
+.hist-subj{font-weight:700;font-size:14px}
+.hist-info{font-size:11px;color:var(--muted);margin-top:3px}
+.hist-detail{display:none;font-size:12px;color:var(--muted);margin-top:8px;line-height:1.8}
+.hist-rate{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;color:var(--ok);white-space:nowrap}
+
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty-icon{font-size:32px;margin-bottom:10px}
+
+/* modal */
+.modal-bg{
+  display:none;position:fixed;inset:0;z-index:300;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(8px);
+  align-items:center;justify-content:center;padding:20px;
+}
+.modal-bg.on{display:flex}
+.modal{background:#1a1f2e;border:1px solid var(--border);border-radius:18px;padding:26px;width:100%;max-width:380px}
+.modal h3{font-size:17px;font-weight:800;margin-bottom:6px}
+.modal p{color:var(--muted);font-size:13px;margin-bottom:20px;line-height:1.6}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end}
+
+/* toast */
+.toast{
+  position:fixed;bottom:24px;left:50%;
+  transform:translateX(-50%) translateY(60px);
+  background:#1e2435;border:1px solid var(--border);
+  border-radius:10px;padding:11px 18px;
+  font-size:13px;font-weight:500;
+  z-index:400;transition:transform .28s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:none;white-space:nowrap;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:rgba(0,200,150,.35);color:var(--ok)}
+.toast.err{border-color:rgba(233,69,96,.35);color:#ff7096}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+
+<!-- ══ 상단바 ══ -->
+<div class="topbar" id="topbar">
+  <div class="logo">출석 CHECK</div>
+  <div class="live-dot" id="live-dot"></div>
+  <nav class="topbar-nav">
+    <button class="nb on" id="nb-teacher" onclick="goTab('teacher')"><span>🎓</span><span class="lbl">교사</span></button>
+    <button class="nb" id="nb-student" onclick="goTab('student')"><span>📱</span><span class="lbl">학생</span></button>
+    <button class="nb" id="nb-manage" onclick="goTab('manage')"><span>👥</span><span class="lbl">명단</span></button>
+    <button class="nb" id="nb-history" onclick="goTab('history')"><span>📊</span><span class="lbl">기록</span></button>
+  </nav>
+</div>
+
+<!-- ══ 교사 탭 ══ -->
+<div class="page on" id="pg-teacher">
+  <div id="form-area">
+    <div class="card">
+      <div class="card-head">새 수업 시작</div>
+      <div class="g2">
+        <div class="field"><label>과목명</label><input id="f-subj" value="수학" placeholder="수학, 영어, 과학..."></div>
+        <div class="field"><label>담당 교사</label><input id="f-teacher" value="김선생" placeholder="이름"></div>
+      </div>
+      <div class="g2">
+        <div class="field">
+          <label>학년 / 반</label>
+          <select id="f-cls">
+            <option>2학년 3반</option><option>1학년 1반</option>
+            <option>3학년 2반</option><option>2학년 1반</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>QR 유효 시간</label>
+          <select id="f-dur">
+            <option value="300">5분</option>
+            <option value="600" selected>10분</option>
+            <option value="900">15분</option>
+            <option value="1800">30분</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-red btn-full" onclick="startSession()">▶ QR 생성 및 수업 시작</button>
+    </div>
+  </div>
+
+  <div id="session-area" style="display:none">
+    <div class="stats">
+      <div class="stat"><div class="sn c-sky" id="s-total">0</div><div class="sl">전체</div></div>
+      <div class="stat"><div class="sn c-ok" id="s-present">0</div><div class="sl">출석</div></div>
+      <div class="stat"><div class="sn c-red" id="s-absent">0</div><div class="sl">미출석</div></div>
+      <div class="stat"><div class="sn c-amber" id="s-rate">0%</div><div class="sl">출석률</div></div>
+    </div>
+    <div class="qr-layout">
+      <div class="qr-panel">
+        <div class="live-pill"><span class="pill-dot"></span><span id="sess-lbl">진행 중</span></div>
+        <div class="qr-box" id="qr-render"></div>
+        <div style="text-align:center">
+          <div class="timer-num t-ok" id="timer-disp">10:00</div>
+          <div class="timer-lbl">남은 시간</div>
+        </div>
+        <div class="qr-hint" id="qr-hint">스캔하면 학생 출석 화면으로 이동</div>
+        <div class="qr-btns">
+          <button class="btn btn-ghost" onclick="refreshQR()">🔄 갱신</button>
+          <button class="btn btn-ghost btn-stop" onclick="openEndModal()">⏹ 종료</button>
+        </div>
+      </div>
+      <div class="att-panel">
+        <div class="card">
+          <div class="row-btw" style="margin-bottom:10px">
+            <div style="font-weight:700;font-size:15px">출석 현황</div>
+            <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📥 CSV 저장</button>
+          </div>
+          <div class="prog-bg"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+          <div class="prog-lbl" id="prog-lbl">0 / 0명</div>
+          <table>
+            <thead><tr><th>이름</th><th>학번</th><th>시각</th><th>상태</th></tr></thead>
+            <tbody id="att-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 학생 탭 (일반 탭 접속용) ══ -->
+<div class="page" id="pg-student">
+  <div class="s-hero">
+    <div id="s-form-wrap" style="display:flex;flex-direction:column;align-items:center;text-align:center;width:100%">
+      <div class="s-icon">🏫</div>
+      <div class="s-title" id="s-title">출석 체크</div>
+      <div class="s-sub" id="s-sub">진행 중인 수업이 없습니다.&#10;선생님이 QR을 생성하면 입력창이 나타납니다.</div>
+      <div id="s-input-wrap" style="display:none;flex-direction:column;align-items:center;width:100%">
+        <input class="big-input" id="s-no" type="text" inputmode="numeric"
+          placeholder="학번 입력" maxlength="12"
+          onkeydown="if(event.key==='Enter')doAttend()">
+        <div class="err-box" id="s-err"></div>
+        <button class="btn btn-green" style="padding:14px 44px;font-size:15px" onclick="doAttend()">✓ 출석하기</button>
+      </div>
+    </div>
+    <div class="ok-card" id="s-ok">
+      <div class="ok-icon">✅</div>
+      <div class="ok-name" id="ok-name"></div>
+      <div class="ok-meta" id="ok-meta"></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:18px" onclick="resetTab()">← 돌아가기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 학생 전용 전체화면 (QR 스캔 진입) ══ -->
+<div id="student-fullscreen">
+  <div class="sf-page">
+    <div id="sf-form" style="display:flex;flex-direction:column;align-items:center;text-align:center;width:100%">
+      <div class="s-icon">🏫</div>
+      <div class="s-title" id="sf-title">출석 체크</div>
+      <div class="s-sub" id="sf-sub">잠시만 기다려주세요...</div>
+      <div id="sf-input-wrap" style="display:none;flex-direction:column;align-items:center;width:100%">
+        <input class="big-input" id="sf-no" type="text" inputmode="numeric"
+          placeholder="학번 입력" maxlength="12"
+          onkeydown="if(event.key==='Enter')doAttendFull()">
+        <div class="err-box" id="sf-err"></div>
+        <button class="btn btn-green" style="padding:15px 48px;font-size:16px" onclick="doAttendFull()">✓ 출석하기</button>
+      </div>
+    </div>
+    <div class="ok-card" id="sf-ok">
+      <div class="ok-icon">✅</div>
+      <div class="ok-name" id="sfok-name"></div>
+      <div class="ok-meta" id="sfok-meta"></div>
+      <div style="margin-top:20px;font-size:12px;color:var(--muted)">이 창을 닫아도 됩니다</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 명단 탭 ══ -->
+<div class="page" id="pg-manage">
+  <div class="row-btw" style="margin-bottom:14px">
+    <div style="font-size:17px;font-weight:800">학생 명단</div>
+    <button class="btn btn-red btn-sm" onclick="toggleAddForm()">+ 추가</button>
+  </div>
+  <div class="card" id="add-form" style="display:none;margin-bottom:14px">
+    <div class="card-head">새 학생 등록</div>
+    <div class="g2">
+      <div class="field"><label>이름</label><input id="n-name" placeholder="홍길동"></div>
+      <div class="field"><label>학번</label><input id="n-no" placeholder="20240101" inputmode="numeric"></div>
+    </div>
+    <div class="field">
+      <label>학년 / 반</label>
+      <select id="n-cls">
+        <option>2학년 3반</option><option>1학년 1반</option>
+        <option>3학년 2반</option><option>2학년 1반</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-green btn-sm" onclick="addStudent()">등록</button>
+      <button class="btn btn-ghost btn-sm" onclick="toggleAddForm()">취소</button>
+    </div>
+  </div>
+  <div class="card"><div id="s-list"></div></div>
+</div>
+
+<!-- ══ 기록 탭 ══ -->
+<div class="page" id="pg-history">
+  <div style="font-size:17px;font-weight:800;margin-bottom:14px">수업 출석 기록</div>
+  <div class="card"><div id="hist-list"></div></div>
+</div>
+
+<!-- ══ 종료 모달 ══ -->
+<div class="modal-bg" id="modal-end">
+  <div class="modal">
+    <h3>수업을 종료할까요?</h3>
+    <p>QR이 비활성화되고 출석 기록이 저장됩니다.<br>CSV 저장은 종료 전에 해주세요.</p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">취소</button>
+      <button class="btn btn-red btn-sm" onclick="endSession()">종료</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 토스트 ══ -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══ 데이터 ══ */
+const S = {
+  students: [
+    {id:1, name:'김민준', no:'20240101', cls:'2학년 3반'},
+    {id:2, name:'이서연', no:'20240102', cls:'2학년 3반'},
+    {id:3, name:'박지호', no:'20240103', cls:'2학년 3반'},
+    {id:4, name:'최수아', no:'20240104', cls:'2학년 3반'},
+    {id:5, name:'정우진', no:'20240105', cls:'2학년 3반'},
+    {id:6, name:'강하늘', no:'20240106', cls:'2학년 3반'},
+    {id:7, name:'오지민', no:'20240107', cls:'2학년 3반'},
+    {id:8, name:'윤채원', no:'20240108', cls:'2학년 3반'},
+    {id:9, name:'한도윤', no:'20240109', cls:'2학년 3반'},
+    {id:10,name:'임지아', no:'20240110', cls:'2학년 3반'},
+    {id:11,name:'신예준', no:'20240111', cls:'2학년 3반'},
+    {id:12,name:'조나연', no:'20240112', cls:'2학년 3반'},
+    {id:13,name:'권태양', no:'20240113', cls:'2학년 3반'},
+    {id:14,name:'황소율', no:'20240114', cls:'2학년 3반'},
+    {id:15,name:'유건우', no:'20240115', cls:'2학년 3반'},
+    {id:16,name:'서채영', no:'20240116', cls:'2학년 3반'},
+    {id:17,name:'노준혁', no:'20240117', cls:'2학년 3반'},
+    {id:18,name:'백하린', no:'20240118', cls:'2학년 3반'},
+    {id:19,name:'전시우', no:'20240119', cls:'2학년 3반'},
+    {id:20,name:'문아영', no:'20240120', cls:'2학년 3반'},
+  ],
+  session: null,
+  attendance: [],
+  history: [],
+  nextId: 21,
+  timerInt: null,
+};
+
+/* ══ Google Apps Script 연결 URL ══ */
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzrh2K5mEf1_FUJye_2R5WTgs9MVtQrFFM1QyyJc4jZIE-pWDOIRo6Bp-MvgnnW3vsh/exec";
+
+/* ══ Google Sheets API 호출 ══ */
+async function gasPost(payload) {
+  try {
+    const res = await fetch(GAS_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+    return await res.json();
+  } catch(e) {
+    return {ok: false, msg: "서버 연결 실패: " + e.message};
+  }
+}
+
+/* ══ 진입 모드 감지 ══ */
+(async function init() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('mode') === 'student') {
+    document.getElementById('topbar').style.display = 'none';
+    ['pg-teacher','pg-student','pg-manage','pg-history'].forEach(id => {
+      document.getElementById(id).style.display = 'none';
+    });
+    document.getElementById('student-fullscreen').style.display = 'block';
+    document.getElementById('sf-sub').textContent = '수업 정보를 불러오는 중...';
+    const result = await gasPost({action: "getSession"});
+    if (result.ok) {
+      S.session = {
+        id: result.sessionId, subj: result.subject,
+        cls: result.cls, teacher: result.teacher,
+        dur: result.remainSec, remain: result.remainSec,
+        startedAt: new Date()
+      };
+      S.attendance = [];
+      startTimer();
+    }
+    syncFullUI();
+  } else {
+    // 교사 화면 — Sheets에서 진행 중인 세션 자동 복원
+    document.getElementById('student-fullscreen').style.display = 'none';
+    renderStudentList();
+    restoreTeacherSession();
+  }
+})();
+
+// ── 교사 화면 세션 복원 (새로고침 후 자동 실행) ──
+async function restoreTeacherSession() {
+  const result = await gasPost({action: "getTeacherSession"});
+  if (!result.ok) return; // 진행 중인 수업 없음 → 그냥 폼 표시
+
+  // 세션 복원
+  S.session = {
+    id:        result.sessionId,
+    subj:      result.subject,
+    cls:       result.cls,
+    teacher:   result.teacher,
+    dur:       result.remainSec,
+    remain:    result.remainSec,
+    startedAt: new Date()
+  };
+
+  // 출석 현황 복원
+  S.attendance = result.attended.map(a => ({
+    id: a.no, no: a.no, name: a.name, time: a.time
+  }));
+
+  // 화면 전환
+  document.getElementById('form-area').style.display = 'none';
+  document.getElementById('session-area').style.display = 'block';
+  document.getElementById('live-dot').classList.add('on');
+  document.getElementById('sess-lbl').textContent = `${S.session.subj} · ${S.session.cls}`;
+
+  buildQR();
+  startTimer();
+  refreshTable();
+  refreshStats();
+  toast(`${S.session.subj} 수업이 복원됐어요 ✅`, 'ok');
+}
+
+/* ══ 탭 ══ */
+function goTab(tab) {
+  ['teacher','student','manage','history'].forEach(t => {
+    document.getElementById('pg-'+t).classList.toggle('on', t===tab);
+    document.getElementById('nb-'+t).classList.toggle('on', t===tab);
+  });
+  if (tab==='manage') renderStudentList();
+  if (tab==='history') renderHistory();
+  if (tab==='student') syncTabUI();
+}
+
+/* ══ 세션 ══ */
+function genToken() {
+  return [...crypto.getRandomValues(new Uint8Array(16))]
+    .map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,24);
+}
+function classSts() {
+  return S.session ? S.students.filter(s=>s.cls===S.session.cls) : [];
+}
+
+async function startSession() {
+  const subj    = document.getElementById('f-subj').value.trim() || '수업';
+  const teacher = document.getElementById('f-teacher').value.trim() || '선생님';
+  const cls     = document.getElementById('f-cls').value;
+  const dur     = parseInt(document.getElementById('f-dur').value);
+
+  const btn = document.querySelector('#form-area .btn-red');
+  btn.disabled = true; btn.textContent = '생성 중...';
+
+  S.session = {
+    id: Date.now().toString(),
+    subj, teacher, cls, token: genToken(), dur, remain: dur, startedAt: new Date()
+  };
+  S.attendance = [];
+
+  // Google Sheets에 세션 저장 → 학생 폰이 조회 가능해짐
+  await gasPost({
+    action: "startSession",
+    sessionId: S.session.id,
+    subject: subj,
+    cls, teacher,
+    expiresAt: Date.now() + dur * 1000
+  });
+
+  btn.disabled = false; btn.textContent = '▶ QR 생성 및 수업 시작';
+
+  document.getElementById('form-area').style.display = 'none';
+  document.getElementById('session-area').style.display = 'block';
+  document.getElementById('live-dot').classList.add('on');
+  document.getElementById('sess-lbl').textContent = `${subj} · ${cls}`;
+
+  buildQR();
+  startTimer();
+  refreshTable();
+  refreshStats();
+  syncTabUI();
+  syncFullUI();
+  toast(`${subj} QR 생성 완료! 학생들이 스캔할 수 있어요.`, 'ok');
+}
+
+function buildQR() {
+  const box = document.getElementById('qr-render');
+  box.innerHTML = '';
+  // QR에 ?mode=student 파라미터가 붙은 URL 인코딩
+  const url = location.origin + location.pathname + '?mode=student';
+  new QRCode(box, {
+    text: url,
+    width: 172, height: 172,
+    colorDark: '#000000', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+  document.getElementById('qr-hint').textContent = '스캔하면 학생 출석 화면으로 이동';
+}
+
+function refreshQR() {
+  if (!S.session) return;
+  S.session.token = genToken();
+  S.session.remain = S.session.dur;
+  buildQR();
+  syncTabUI();
+  syncFullUI();
+  toast('QR 토큰 갱신됨', 'ok');
+}
+
+function startTimer() {
+  clearInterval(S.timerInt);
+  renderTimer();
+  S.timerInt = setInterval(() => {
+    S.session.remain--;
+    if (S.session.remain <= 0) {
+      S.session.remain = 0;
+      clearInterval(S.timerInt);
+      document.getElementById('qr-hint').textContent = '⛔ QR 만료 — [갱신] 버튼을 눌러주세요';
+      syncTabUI(); syncFullUI();
+      toast('QR이 만료됐어요. 갱신하거나 수업을 종료해주세요.', 'err');
+    }
+    renderTimer();
+  }, 1000);
+}
+
+function renderTimer() {
+  const s = S.session.remain;
+  const el = document.getElementById('timer-disp');
+  el.textContent = `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  el.className = 'timer-num ' + (s<=60?'t-end':s<=180?'t-warn':'t-ok');
+}
+
+function openEndModal() { document.getElementById('modal-end').classList.add('on'); }
+function closeModal()   { document.getElementById('modal-end').classList.remove('on'); }
+
+function endSession() {
+  closeModal();
+  if (!S.session) return;
+
+  // Google Sheets에 미출석자 기록
+  gasPost({
+    action: "endSession",
+    sessionId: S.session.id,
+    subject: S.session.subj,
+    cls: S.session.cls,
+    teacher: S.session.teacher
+  });
+
+  S.history.unshift({
+    subj: S.session.subj, cls: S.session.cls, teacher: S.session.teacher,
+    date: S.session.startedAt.toLocaleDateString('ko-KR') + ' ' +
+          S.session.startedAt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
+    total: classSts().length, present: S.attendance.length,
+    rate: classSts().length ? Math.round(S.attendance.length/classSts().length*100) : 0,
+    records: [...S.attendance]
+  });
+  clearInterval(S.timerInt);
+  S.session = null; S.attendance = [];
+  document.getElementById('session-area').style.display = 'none';
+  document.getElementById('form-area').style.display = 'block';
+  document.getElementById('live-dot').classList.remove('on');
+  syncTabUI(); syncFullUI();
+  toast('수업 종료됨. 스프레드시트에 저장됐어요 ✅', 'ok');
+}
+
+/* ══ 출석 처리 공통 (Google Sheets 저장) ══ */
+async function tryAttend(no) {
+  if (!S.session)             return {ok:false, msg:'진행 중인 수업이 없습니다.'};
+  if (S.session.remain <= 0)  return {ok:false, msg:'QR 시간이 만료됐습니다. 선생님께 갱신을 요청하세요.'};
+  if (!no)                    return {ok:false, msg:'학번을 입력해주세요.'};
+
+  // 로컬 중복 체크 (빠른 응답)
+  if (S.attendance.find(a=>a.no===no)) return {ok:false, msg:'이미 출석 처리됐습니다.'};
+
+  // Google Sheets에 저장
+  const result = await gasPost({
+    action: "attend",
+    sessionId: S.session.id,
+    subject: S.session.subj,
+    cls: S.session.cls,
+    teacher: S.session.teacher,
+    studentNo: no
+  });
+
+  if (!result.ok) return {ok:false, msg: result.msg};
+
+  // 로컬 상태에도 반영
+  S.attendance.push({id: no, no, name: result.name, time: result.time});
+  refreshTable(); refreshStats();
+  return {ok:true, st:{name: result.name, no}, time: result.time};
+}
+
+/* ── 탭 내 출석 ── */
+async function doAttend() {
+  const errEl = document.getElementById('s-err');
+  errEl.style.display = 'none';
+  const btn = document.querySelector('#pg-student .btn-green');
+  if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
+
+  const r = await tryAttend(document.getElementById('s-no').value.trim());
+
+  if (btn) { btn.disabled = false; btn.textContent = '✓ 출석하기'; }
+  if (!r.ok) { errEl.textContent = r.msg; errEl.style.display = 'block'; return; }
+  document.getElementById('s-form-wrap').style.display = 'none';
+  const ok = document.getElementById('s-ok');
+  ok.style.display = 'flex';
+  document.getElementById('ok-name').textContent = r.st.name + ' 학생';
+  document.getElementById('ok-meta').textContent =
+    `과목: ${S.session.subj}\n담당: ${S.session.teacher} 선생님\n출석 시각: ${r.time}`;
+}
+function resetTab() {
+  document.getElementById('s-form-wrap').style.display = 'flex';
+  document.getElementById('s-ok').style.display = 'none';
+  document.getElementById('s-no').value = '';
+  document.getElementById('s-err').style.display = 'none';
+}
+
+/* ── 전체화면 출석 (QR 스캔) ── */
+async function doAttendFull() {
+  const errEl = document.getElementById('sf-err');
+  errEl.style.display = 'none';
+  const btn = document.querySelector('#student-fullscreen .btn-green');
+  if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
+
+  const r = await tryAttend(document.getElementById('sf-no').value.trim());
+
+  if (btn) { btn.disabled = false; btn.textContent = '✓ 출석하기'; }
+  if (!r.ok) { errEl.textContent = r.msg; errEl.style.display = 'block'; return; }
+  document.getElementById('sf-form').style.display = 'none';
+  const ok = document.getElementById('sf-ok');
+  ok.style.display = 'flex';
+  document.getElementById('sfok-name').textContent = r.st.name + ' 학생';
+  document.getElementById('sfok-meta').textContent =
+    `과목: ${S.session.subj}\n담당: ${S.session.teacher} 선생님\n출석 시각: ${r.time}`;
+}
+
+/* ── UI 동기화 ── */
+function syncTabUI() {
+  const on = S.session && S.session.remain > 0;
+  document.getElementById('s-title').textContent = on ? `${S.session.subj} 출석` : '출석 체크';
+  document.getElementById('s-sub').textContent = on
+    ? `${S.session.cls} · ${S.session.teacher} 선생님\n학번을 입력하고 출석하세요`
+    : '진행 중인 수업이 없습니다.\n선생님이 QR을 생성하면 입력창이 나타납니다.';
+  const iw = document.getElementById('s-input-wrap');
+  iw.style.display = on ? 'flex' : 'none';
+  if (on) { iw.style.flexDirection='column'; iw.style.alignItems='center'; }
+}
+function syncFullUI() {
+  const on = S.session && S.session.remain > 0;
+  document.getElementById('sf-title').textContent = on ? `${S.session.subj} 출석` : '출석 체크';
+  document.getElementById('sf-sub').textContent = on
+    ? `${S.session.cls} · ${S.session.teacher} 선생님\n학번을 입력하고 출석하세요`
+    : '진행 중인 수업이 없습니다.\n선생님이 QR을 생성할 때까지 기다려주세요.';
+  const iw = document.getElementById('sf-input-wrap');
+  iw.style.display = on ? 'flex' : 'none';
+  if (on) { iw.style.flexDirection='column'; iw.style.alignItems='center'; }
+}
+
+/* ══ 출석 테이블 & 통계 ══ */
+function refreshTable() {
+  document.getElementById('att-body').innerHTML = classSts().map(st => {
+    const r = S.attendance.find(a=>a.id===st.id);
+    return `<tr>
+      <td><strong>${st.name}</strong></td>
+      <td class="mono">${st.no}</td>
+      <td class="mono" style="font-size:10px">${r?r.time:'—'}</td>
+      <td><span class="badge ${r?'b-ok':'b-no'}">${r?'출석':'미출석'}</span></td>
+    </tr>`;
+  }).join('');
+}
+function refreshStats() {
+  const total = classSts().length;
+  const present = S.attendance.length;
+  const rate = total ? Math.round(present/total*100) : 0;
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-present').textContent = present;
+  document.getElementById('s-absent').textContent = total - present;
+  document.getElementById('s-rate').textContent = rate + '%';
+  document.getElementById('prog').style.width = rate + '%';
+  document.getElementById('prog-lbl').textContent = `${present} / ${total}명 출석`;
+}
+
+/* ══ 명단 관리 ══ */
+function toggleAddForm() {
+  const f = document.getElementById('add-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+function addStudent() {
+  const name = document.getElementById('n-name').value.trim();
+  const no   = document.getElementById('n-no').value.trim();
+  const cls  = document.getElementById('n-cls').value;
+  if (!name||!no) { toast('이름과 학번을 입력해주세요', 'err'); return; }
+  if (S.students.find(s=>s.no===no)) { toast('이미 존재하는 학번이에요', 'err'); return; }
+  S.students.push({id:S.nextId++, name, no, cls});
+  document.getElementById('n-name').value='';
+  document.getElementById('n-no').value='';
+  document.getElementById('add-form').style.display='none';
+  renderStudentList();
+  toast(`${name} 학생 등록됨`, 'ok');
+}
+function removeStudent(id) {
+  if (!confirm('정말 삭제하시겠어요?')) return;
+  S.students = S.students.filter(s=>s.id!==id);
+  renderStudentList();
+  toast('삭제됐어요', 'ok');
+}
+const AVA_COLORS = ['#e94560','#f5a623','#00c896','#5eb8ff','#a29bfe','#fd79a8','#fdcb6e','#55efc4','#e17055','#74b9ff'];
+function renderStudentList() {
+  const el = document.getElementById('s-list');
+  if (!S.students.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">👤</div>등록된 학생이 없습니다.</div>';
+    return;
+  }
+  el.innerHTML = S.students.map((st,i) => `
+    <div class="s-row">
+      <div class="ava" style="background:${AVA_COLORS[i%AVA_COLORS.length]}">${st.name[0]}</div>
+      <div class="sr-name">${st.name}</div>
+      <div class="sr-no">${st.no}</div>
+      <div class="sr-cls">${st.cls}</div>
+      <button class="btn btn-ghost btn-sm btn-del" onclick="removeStudent(${st.id})">삭제</button>
+    </div>`).join('');
+}
+
+/* ══ 기록 ══ */
+function renderHistory() {
+  const el = document.getElementById('hist-list');
+  if (!S.history.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>완료된 수업이 아직 없어요.</div>';
+    return;
+  }
+  el.innerHTML = S.history.map((h,i) => `
+    <div class="hist-row" onclick="toggleDetail(${i})">
+      <div>
+        <div class="hist-subj">${h.subj} <span style="font-weight:400;color:var(--muted);font-size:12px">${h.cls}</span></div>
+        <div class="hist-info">${h.teacher} 선생님 · ${h.date}</div>
+        <div id="hd-${i}" class="hist-detail">출석: ${h.records.map(r=>r.name).join(', ')||'없음'}</div>
+      </div>
+      <div style="text-align:right;padding-left:16px">
+        <div class="hist-rate">${h.present}/${h.total}</div>
+        <div style="font-size:10px;color:var(--muted)">${h.rate}%</div>
+      </div>
+    </div>`).join('');
+}
+function toggleDetail(i) {
+  const el = document.getElementById('hd-'+i);
+  el.style.display = el.style.display==='none' ? 'block' : 'none';
+}
+
+/* ══ CSV ══ */
+function exportCSV() {
+  if (!S.session) return;
+  let csv = '\uFEFF이름,학번,학년반,상태,출석시각\n';
+  classSts().forEach(st => {
+    const r = S.attendance.find(a=>a.id===st.id);
+    csv += `${st.name},${st.no},${st.cls},${r?'출석':'미출석'},${r?r.time:''}\n`;
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  const d = S.session.startedAt.toLocaleDateString('ko-KR').replace(/\.\s*/g,'-').replace(/-$/,'');
+  a.download = `출석_${S.session.subj}_${d}.csv`;
+  a.click();
+  toast('CSV 저장됐어요 📥', 'ok');
+}
+
+/* ══ 토스트 ══ */
+let _tt;
+function toast(msg, type='ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast show ${type}`;
+  clearTimeout(_tt);
+  _tt = setTimeout(() => el.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
