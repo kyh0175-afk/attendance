@@ -1360,9 +1360,6 @@ function handleExcelUpload(event) {
         return;
       }
 
-      // 그룹별 요일 집계 (같은 프로그램+장소면 같은 요일 적용)
-      const groupDaysFromFile = {};
-
       let added = 0, skipped = 0, updated = 0;
       rows.forEach(row => {
         const no      = String(row['학번']).replace(/\.0$/, '').replace(/[^0-9]/g, '').trim();
@@ -1371,46 +1368,28 @@ function handleExcelUpload(event) {
         const cls     = String(row['장소']).trim().replace(/\s+/g, '');
         if (!no || !name || !program || !cls) { skipped++; return; }
 
-        // 요일 열 파싱 (O, o, ○, 1, true, v, V → 출석 요일)
+        // 요일 열 파싱 — O, o, ○, v, ✓, 1 표시된 열만 출석 요일로 인식
         const days = DAY_COLS.filter(d => {
-          const val = String(row[d] || '').trim().toLowerCase();
-          return ['o','○','1','true','v','✓','✔','x'].includes(val) && val !== '';
-          // 'x'는 헷갈릴 수 있으니 O/o/v/1만 인식
-        }).filter(d => {
           const val = String(row[d] || '').trim().toLowerCase();
           return ['o','○','1','true','v','✓','✔'].includes(val);
         });
 
-        // 그룹 요일 집계
-        const grpKey = program + '||' + cls;
-        if (days.length && !groupDaysFromFile[grpKey]) {
-          groupDaysFromFile[grpKey] = days;
-        }
-
-        // 학생 추가 or 업데이트
+        // 학생 추가 or 업데이트 (학번이 같으면 요일 포함 전체 업데이트)
         const existing = S.students.find(s => s.no === no);
         if (existing) {
-          // 이미 있으면 이름/그룹 업데이트
-          existing.name = name;
+          existing.name    = name;
           existing.program = program;
-          existing.cls = cls;
+          existing.cls     = cls;
+          existing.days    = days;
           updated++;
         } else {
-          S.students.push({id: S.nextId++, name, no, program, cls, days: []});
+          S.students.push({id: S.nextId++, name, no, program, cls, days});
           added++;
         }
       });
 
-      // 그룹 요일 Sheets에 저장 및 로컬 반영
-      Object.entries(groupDaysFromFile).forEach(async ([key, days]) => {
-        S.groupDays[key] = days;
-        const [program, cls] = key.split('||');
-        await gasPost({action: "saveGroupDays", program, cls, days});
-      });
-
       renderStudentList();
-      renderGroupDays();
-      saveStudentsToSheets();
+      saveStudentsToSheets();  // days 포함해서 Sheets에 저장
 
       const resultEl = document.getElementById('upload-result');
       const msgEl    = document.getElementById('upload-msg');
