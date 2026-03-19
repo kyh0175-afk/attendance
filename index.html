@@ -363,10 +363,19 @@ tbody tr:last-child td{border-bottom:none}
             <div style="font-weight:700;font-size:15px">출석 현황</div>
             <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📥 CSV 저장</button>
           </div>
+          <!-- 수동 출석 입력 -->
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <input id="manual-no" type="text" inputmode="numeric" placeholder="학번 직접 입력 (인터넷 불가 학생)"
+              style="flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);
+              border-radius:8px;padding:8px 12px;color:var(--text);font-family:inherit;font-size:13px;outline:none"
+              onkeydown="if(event.key==='Enter')manualAttend()"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            <button class="btn btn-green btn-sm" onclick="manualAttend()">✓ 수동 출석</button>
+          </div>
           <div class="prog-bg"><div class="prog-fill" id="prog" style="width:0%"></div></div>
           <div class="prog-lbl" id="prog-lbl">0 / 0명</div>
           <table>
-            <thead><tr><th>이름</th><th>학번</th><th>시각</th><th>상태</th></tr></thead>
+            <thead><tr><th>이름</th><th>학번</th><th>시각</th><th>상태</th><th></th></tr></thead>
             <tbody id="att-body"></tbody>
           </table>
         </div>
@@ -600,6 +609,55 @@ tbody tr:last-child td{border-bottom:none}
     <div class="modal-btns">
       <button class="btn btn-ghost btn-sm" onclick="closeModal()">취소</button>
       <button class="btn btn-red btn-sm" onclick="endSession()">종료</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 수동 등록 모달 ══ -->
+<div class="modal-bg" id="modal-manual-reg">
+  <div class="modal" style="max-width:400px">
+    <h3>미등록 학생 출석 처리</h3>
+    <p>명단에 없는 학생이에요. 이름과 출석 요일을 입력하면 등록 후 바로 출석 처리됩니다.</p>
+    <div class="field">
+      <label>학번</label>
+      <input id="mreg-no" type="text" readonly
+        style="background:rgba(255,255,255,.03);color:var(--muted);cursor:default">
+    </div>
+    <div class="field">
+      <label>이름</label>
+      <input id="mreg-name" type="text" placeholder="홍길동"
+        onkeydown="if(event.key==='Enter')document.getElementById('mreg-name').blur()">
+    </div>
+    <div class="field">
+      <label>출석 요일 <span style="font-weight:400;color:var(--muted);font-size:11px">(해당 요일 모두 선택)</span></label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+        <button class="mreg-day-btn" data-day="월" onclick="toggleMregDay(this)"
+          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
+          background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">월</button>
+        <button class="mreg-day-btn" data-day="화" onclick="toggleMregDay(this)"
+          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
+          background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">화</button>
+        <button class="mreg-day-btn" data-day="수" onclick="toggleMregDay(this)"
+          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
+          background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">수</button>
+        <button class="mreg-day-btn" data-day="목" onclick="toggleMregDay(this)"
+          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
+          background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">목</button>
+        <button class="mreg-day-btn" data-day="금" onclick="toggleMregDay(this)"
+          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
+          background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">금</button>
+        <button class="mreg-day-btn" data-day="토" onclick="toggleMregDay(this)"
+          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
+          background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">토</button>
+        <button class="mreg-day-btn" data-day="일" onclick="toggleMregDay(this)"
+          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
+          background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">일</button>
+      </div>
+    </div>
+    <div id="mreg-err" style="color:var(--accent);font-size:13px;margin-bottom:12px;display:none"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost btn-sm" onclick="closeMregModal()">취소</button>
+      <button class="btn btn-green btn-sm" onclick="confirmMregAttend()">등록 후 출석</button>
     </div>
   </div>
 </div>
@@ -1165,6 +1223,8 @@ function refreshTable() {
       <td class="mono">${st.no}</td>
       <td class="mono" style="font-size:11px">${timeCell}</td>
       <td><span class="badge ${r?'b-ok':'b-no'}">${r?'출석':'미출석'}</span></td>
+      <td>${r ? '' : `<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 10px;color:var(--ok);border-color:rgba(0,200,150,.3)"
+        onclick="manualAttendNo('${st.no}')">출석↑</button>`}</td>
     </tr>`;
   }).join('');
 }
@@ -1388,6 +1448,96 @@ function toggleHistDetail(id) {
 }
 
 function renderHistory() { loadHistory(); }
+
+/* ══ 수동 출석 처리 ══ */
+async function manualAttend() {
+  const input = document.getElementById('manual-no');
+  const no = input.value.trim();
+  if (!no) { toast('학번을 입력해주세요', 'err'); return; }
+
+  const result = await tryAttend(no);
+  if (!result.ok) {
+    if (result.msg === '등록되지 않은 학번입니다.') {
+      // 미등록 → 모달 열기
+      openMregModal(no);
+      input.value = '';
+    } else {
+      toast(result.msg, 'err');
+    }
+    return;
+  }
+  input.value = '';
+  refreshTable();
+  refreshStats();
+  toast(`${result.st.name} 수동 출석 완료 ✅`, 'ok');
+}
+
+// 수동 등록 모달 열기
+function openMregModal(no) {
+  document.getElementById('mreg-no').value = no;
+  document.getElementById('mreg-name').value = '';
+  document.getElementById('mreg-err').style.display = 'none';
+  // 요일 버튼 초기화
+  document.querySelectorAll('.mreg-day-btn').forEach(btn => {
+    btn.dataset.active = '';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.background  = 'transparent';
+    btn.style.color       = 'var(--muted)';
+  });
+  document.getElementById('modal-manual-reg').classList.add('on');
+  setTimeout(() => document.getElementById('mreg-name').focus(), 100);
+}
+
+function closeMregModal() {
+  document.getElementById('modal-manual-reg').classList.remove('on');
+}
+
+function toggleMregDay(btn) {
+  const active = btn.dataset.active === 'true';
+  btn.dataset.active    = active ? '' : 'true';
+  btn.style.borderColor = active ? 'var(--border)'           : 'var(--ok)';
+  btn.style.background  = active ? 'transparent'             : 'rgba(0,200,150,.15)';
+  btn.style.color       = active ? 'var(--muted)'            : 'var(--ok)';
+}
+
+async function confirmMregAttend() {
+  const no   = document.getElementById('mreg-no').value.trim();
+  const name = document.getElementById('mreg-name').value.trim();
+  const errEl = document.getElementById('mreg-err');
+  errEl.style.display = 'none';
+
+  if (!name) { errEl.textContent = '이름을 입력해주세요.'; errEl.style.display = 'block'; return; }
+
+  const days = [...document.querySelectorAll('.mreg-day-btn')]
+    .filter(b => b.dataset.active === 'true').map(b => b.dataset.day);
+
+  const prog = S.session.subj.trim();
+  const cls  = S.session.cls.trim();
+
+  // 로컬 명단 추가
+  S.students.push({id: S.nextId++, name, no, program: prog, cls, days});
+
+  // Sheets 등록
+  await gasPost({action: "registerStudent", student: {no, name, program: prog, cls}});
+  if (days.length) await gasPost({action: "saveDays", no, days});
+
+  // 출석 처리
+  const r = await tryAttend(no);
+  closeMregModal();
+
+  if (!r.ok) { toast(r.msg, 'err'); return; }
+  refreshTable();
+  refreshStats();
+  toast(`${name} 등록 및 수동 출석 완료 ✅`, 'ok');
+}
+
+async function manualAttendNo(no) {
+  const result = await tryAttend(no);
+  if (!result.ok) { toast(result.msg, 'err'); return; }
+  toast(`${result.st.name} 수동 출석 완료 ✅`, 'ok');
+  refreshTable();
+  refreshStats();
+}
 
 /* ══ CSV ══ */
 function exportCSV() {
