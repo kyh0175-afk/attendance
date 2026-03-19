@@ -839,9 +839,15 @@ async function gasPost(payload) {
 
       await loadStudentsFromSheets();
 
-      // 장소 텍스트 표시
+      // 장소 텍스트 즉시 표시 (teacherParam 고정)
       const clsDisplay = document.getElementById('f-cls-display');
       if (clsDisplay) clsDisplay.textContent = teacherParam;
+
+      // hidden select에도 값 세팅
+      const clsSel = document.getElementById('f-cls');
+      if (clsSel) {
+        clsSel.innerHTML = `<option value="${teacherParam}" selected>${teacherParam}</option>`;
+      }
 
 
 
@@ -850,22 +856,6 @@ async function gasPost(payload) {
       if (match) {
         const subjSel = document.getElementById('f-subj');
         [...subjSel.options].forEach(o => { if (o.value === match.program) o.selected = true; });
-        updateClsByProgram();
-        setTimeout(() => {
-          const clsSel = document.getElementById('f-cls');
-          [...clsSel.options].forEach(o => { if (o.value.trim() === teacherParam.trim()) o.selected = true; });
-        }, 150);
-      } else {
-        // 명단에 없는 장소도 select에 추가
-        setTimeout(() => {
-          const clsSel = document.getElementById('f-cls');
-          if (![...clsSel.options].some(o => o.value.trim() === teacherParam.trim())) {
-            const opt = new Option(teacherParam, teacherParam, true, true);
-            clsSel.add(opt);
-          } else {
-            [...clsSel.options].forEach(o => { if (o.value.trim() === teacherParam.trim()) o.selected = true; });
-          }
-        }, 150);
       }
 
       renderStudentList();
@@ -1024,11 +1014,6 @@ function classSts() {
 function updateClsByProgram() {
   const prog  = document.getElementById('f-subj').value;
   const clsSel = document.getElementById('f-cls');
-  // teacher 파라미터 있으면 텍스트만 표시하고 select는 값만 세팅
-  if (S.teacherRoom) {
-    const clsDisplay = document.getElementById('f-cls-display');
-    if (clsDisplay) clsDisplay.textContent = S.teacherRoom;
-  }
 
   // 학생 명단에서 해당 프로그램의 장소 목록 추출
   const places = [...new Set(
