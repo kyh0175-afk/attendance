@@ -1508,6 +1508,12 @@ async function confirmMregAttend() {
 
   if (!name) { errEl.textContent = '이름을 입력해주세요.'; errEl.style.display = 'block'; return; }
 
+  // 중복 클릭 방지
+  const confirmBtn = document.querySelector('#modal-manual-reg .btn-green');
+  if (confirmBtn.disabled) return;
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = '처리 중...';
+
   const days = [...document.querySelectorAll('.mreg-day-btn')]
     .filter(b => b.dataset.active === 'true').map(b => b.dataset.day);
 
@@ -1524,6 +1530,8 @@ async function confirmMregAttend() {
   // 출석 처리
   const r = await tryAttend(no);
   closeMregModal();
+  confirmBtn.disabled = false;
+  confirmBtn.textContent = '등록 후 출석';
 
   if (!r.ok) { toast(r.msg, 'err'); return; }
   refreshTable();
