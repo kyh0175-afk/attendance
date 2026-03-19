@@ -431,6 +431,42 @@ tbody tr:last-child td{border-bottom:none}
             style="margin-bottom:0;font-family:inherit;font-size:18px"
             onkeydown="if(event.key==='Enter')doRegisterAndAttend()">
         </div>
+        <!-- 출석 요일 선택 -->
+        <div style="width:100%;max-width:320px;margin-bottom:16px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-align:left">
+            출석 요일 <span style="font-weight:400;opacity:.7">(해당 요일 모두 선택)</span>
+          </div>
+          <div style="display:flex;gap:6px;justify-content:center">
+            <button class="sf-day-btn" data-day="월" onclick="toggleRegDay(this)"
+              style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
+              background:transparent;color:var(--muted);font-size:13px;font-weight:600;
+              cursor:pointer;transition:all .15s">월</button>
+            <button class="sf-day-btn" data-day="화" onclick="toggleRegDay(this)"
+              style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
+              background:transparent;color:var(--muted);font-size:13px;font-weight:600;
+              cursor:pointer;transition:all .15s">화</button>
+            <button class="sf-day-btn" data-day="수" onclick="toggleRegDay(this)"
+              style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
+              background:transparent;color:var(--muted);font-size:13px;font-weight:600;
+              cursor:pointer;transition:all .15s">수</button>
+            <button class="sf-day-btn" data-day="목" onclick="toggleRegDay(this)"
+              style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
+              background:transparent;color:var(--muted);font-size:13px;font-weight:600;
+              cursor:pointer;transition:all .15s">목</button>
+            <button class="sf-day-btn" data-day="금" onclick="toggleRegDay(this)"
+              style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
+              background:transparent;color:var(--muted);font-size:13px;font-weight:600;
+              cursor:pointer;transition:all .15s">금</button>
+            <button class="sf-day-btn" data-day="토" onclick="toggleRegDay(this)"
+              style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
+              background:transparent;color:var(--muted);font-size:13px;font-weight:600;
+              cursor:pointer;transition:all .15s">토</button>
+            <button class="sf-day-btn" data-day="일" onclick="toggleRegDay(this)"
+              style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
+              background:transparent;color:var(--muted);font-size:13px;font-weight:600;
+              cursor:pointer;transition:all .15s">일</button>
+          </div>
+        </div>
         <div class="err-box" id="sf-reg-err"></div>
         <div style="display:flex;gap:10px">
           <button class="btn btn-ghost" onclick="cancelRegister()">← 취소</button>
@@ -998,8 +1034,31 @@ function showRegisterForm(no) {
   document.getElementById('sf-reg-no-display').textContent = no;
   document.getElementById('sf-reg-name').value = '';
   document.getElementById('sf-reg-err').style.display = 'none';
+  // 요일 버튼 초기화
+  document.querySelectorAll('.sf-day-btn').forEach(btn => {
+    btn.style.borderColor = 'var(--border)';
+    btn.style.background  = 'transparent';
+    btn.style.color       = 'var(--muted)';
+    btn.dataset.active    = '';
+  });
   const rw = document.getElementById('sf-register-wrap');
   rw.style.display = 'flex'; rw.style.flexDirection = 'column'; rw.style.alignItems = 'center';
+}
+
+// 요일 버튼 토글
+function toggleRegDay(btn) {
+  const active = btn.dataset.active === 'true';
+  btn.dataset.active    = active ? '' : 'true';
+  btn.style.borderColor = active ? 'var(--border)'              : 'var(--ok)';
+  btn.style.background  = active ? 'transparent'                : 'rgba(0,200,150,.15)';
+  btn.style.color       = active ? 'var(--muted)'               : 'var(--ok)';
+}
+
+// 선택된 요일 가져오기
+function getSelectedRegDays() {
+  return [...document.querySelectorAll('.sf-day-btn')]
+    .filter(btn => btn.dataset.active === 'true')
+    .map(btn => btn.dataset.day);
 }
 
 function cancelRegister() {
@@ -1035,8 +1094,16 @@ async function doRegisterAndAttend() {
     return;
   }
 
-  // 로컬 명단에도 추가
-  S.students.push({id: S.nextId++, name, no, program: S.session.subj, cls: S.session.cls});
+  // 선택한 요일 가져오기
+  const regDays    = getSelectedRegDays();
+  const regProgram = S.session.subj.trim();
+  const regCls     = S.session.cls.trim();
+  // 로컬 명단에도 추가 (program/cls 정규화 + 선택 요일)
+  S.students.push({id: S.nextId++, name, no, program: regProgram, cls: regCls, days: regDays});
+  // Sheets에도 요일 저장
+  if (regDays.length) {
+    gasPost({action: "saveDays", no, days: regDays});
+  }
 
   // 교사 화면 즉시 갱신 (출석 테이블 + 통계 + 명단)
   refreshTable();
@@ -1356,6 +1423,16 @@ function startPolling() {
       const noStr = String(a.no).replace(/\.0$/, '');
       if (!S.attendance.find(x => String(x.no) === noStr)) {
         S.attendance.push({id: noStr, no: noStr, name: a.name, time: a.time});
+        updated = true;
+      }
+      // 출석자가 로컬 명단에 없으면 임시 추가 (임시 등록 학생 대응)
+      if (!S.students.find(s => String(s.no) === noStr)) {
+        S.students.push({
+          id: S.nextId++, name: a.name, no: noStr,
+          program: S.session.subj.trim(),
+          cls: S.session.cls.trim(),
+          days: []
+        });
         updated = true;
       }
     });
