@@ -297,6 +297,14 @@ pointer-events:none;white-space:nowrap;
   </div>
   <div style="color:var(--muted);font-size:14px;margin-bottom:40px">담당 장소를 선택해주세요</div>
   <div id="room-btn-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;width:100%;max-width:480px"></div>
+  <div style="margin-top:32px">
+    <a href="?mode=view" style="color:var(--muted);font-size:12px;text-decoration:none;
+      border:1px solid var(--border);border-radius:20px;padding:8px 20px;
+      background:transparent;cursor:pointer;transition:all .2s"
+      onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+      📊 확인용 페이지 (명단·기록·분석)
+    </a>
+  </div>
 </div>
 
 <!-- ══ 상단바 ══ -->
@@ -789,7 +797,23 @@ async function gasPost(payload) {
 /* ══ 진입 모드 감지 ══ */
 (async function init() {
   const params = new URLSearchParams(window.location.search);
-  if (params.get('mode') === 'student') {
+  if (params.get('mode') === 'view') {
+    // 확인용 페이지 — 명단/기록/분석만 표시
+    document.getElementById('room-select-screen').style.display = 'none';
+    // 교사/학생 탭 숨김
+    ['nb-teacher','nb-student'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    ['pg-teacher','pg-student'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    // 명단 탭으로 시작
+    await loadStudentsFromSheets();
+    goTab('history');
+
+  } else if (params.get('mode') === 'student') {
     document.getElementById('topbar').style.display = 'none';
     document.getElementById('room-select-screen').style.display = 'none'; // 장소 선택 화면 숨김
     ['pg-teacher','pg-student','pg-manage','pg-history','pg-analysis'].forEach(id => {
