@@ -317,9 +317,9 @@ tbody tr:last-child td{border-bottom:none}
       <div class="g2">
         <div class="field" id="f-subj-wrap"><label>프로그램</label>
           <select id="f-subj" onchange="updateClsByProgram()">
-            <option>방과후 독서시간</option>
-            <option>야간 독서시간</option>
             <option>심야 독서시간</option>
+            <option>야간 독서시간</option>
+            <option>방과후 독서시간</option>
           </select>
         </div>
         <div class="field"><label>담당 교사</label><input id="f-teacher" value="김선생" placeholder="이름"></div>
@@ -838,12 +838,7 @@ async function gasPost(payload) {
       const clsWrap = document.getElementById('f-cls-wrap');
       if (clsWrap) clsWrap.style.display = 'none';
 
-      // 해당 장소의 프로그램이 1개면 드롭다운도 숨기기
-      const roomPrograms = [...new Set(S.students.filter(s => s.cls.trim() === teacherParam.trim()).map(s => s.program))];
-      if (roomPrograms.length <= 1) {
-        const subjWrap = document.getElementById('f-subj-wrap');
-        if (subjWrap) subjWrap.style.display = 'none';
-      }
+
 
       // 해당 장소로 폼 자동 설정
       const match = S.students.find(s => s.cls.trim() === teacherParam.trim());
@@ -929,15 +924,9 @@ async function loadStudentsFromSheets() {
 
 }
 
-// 명단 기반으로 프로그램 목록 동적 업데이트
+// 프로그램 목록은 항상 고정 3개 표시
 function updateProgramOptions() {
-  const programs = [...new Set(S.students.map(s => s.program.trim()))].sort();
-  if (!programs.length) return;
-  const sel = document.getElementById('f-subj');
-  const cur = sel.value;
-  sel.innerHTML = programs.map(p =>
-    `<option value="${p}" ${p===cur?'selected':''}>${p}</option>`
-  ).join('');
+  // 동적 변경 없이 HTML에 고정된 옵션 그대로 유지
 }
 
 // ── 명단을 Sheets에 저장 (중복 요청 방지) ──
