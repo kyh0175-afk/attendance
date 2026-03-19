@@ -323,8 +323,8 @@ tbody tr:last-child td{border-bottom:none}
           <label>QR 유효 시간</label>
           <select id="f-dur">
             <option value="300">5분</option>
-            <option value="600" selected>10분</option>
-            <option value="900">15분</option>
+            <option value="600">10분</option>
+            <option value="900" selected>15분</option>
             <option value="1800">30분</option>
           </select>
         </div>
@@ -549,7 +549,10 @@ tbody tr:last-child td{border-bottom:none}
 <div class="page" id="pg-history">
   <div class="row-btw" style="margin-bottom:14px">
     <div style="font-size:17px;font-weight:800">수업 출석 기록</div>
-    <button class="btn btn-ghost btn-sm" onclick="loadHistory()">🔄 새로고침</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="openLateModal()">✚ 사후 출석</button>
+      <button class="btn btn-ghost btn-sm" onclick="loadHistory()">🔄 새로고침</button>
+    </div>
   </div>
   <div class="card"><div id="hist-list"><div class="empty"><div class="empty-icon">📋</div>기록 탭을 열면 자동으로 불러와요.</div></div></div>
 </div>
@@ -616,6 +619,34 @@ tbody tr:last-child td{border-bottom:none}
     <div class="modal-btns">
       <button class="btn btn-ghost btn-sm" onclick="closeModal()">취소</button>
       <button class="btn btn-red btn-sm" onclick="endSession()">종료</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 사후 출석 모달 ══ -->
+<div class="modal-bg" id="modal-late">
+  <div class="modal" style="max-width:440px">
+    <h3>사후 출석 처리</h3>
+    <p>수업 종료 후 뒤늦게 온 학생의 출석을 추가해요.<br>Sheets 출석기록에 직접 기록됩니다.</p>
+    <div class="field">
+      <label>수업 선택</label>
+      <select id="late-session" style="-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a8499' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px">
+        <option value="">수업을 선택해주세요</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>학번</label>
+      <input id="late-no" type="text" inputmode="numeric" placeholder="학번 입력"
+        onkeydown="if(event.key==='Enter')document.getElementById('late-no').blur()">
+    </div>
+    <div id="late-student-info" style="display:none;background:var(--card2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px">
+      <span id="late-student-name" style="font-weight:600"></span>
+      <span id="late-student-grade" style="color:var(--muted);margin-left:8px;font-size:11px"></span>
+    </div>
+    <div id="late-err" style="color:var(--accent);font-size:13px;margin-bottom:12px;display:none"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost btn-sm" onclick="closeLateModal()">취소</button>
+      <button class="btn btn-green btn-sm" id="late-confirm-btn" onclick="confirmLateAttend()">출석 추가</button>
     </div>
   </div>
 </div>
@@ -1452,6 +1483,7 @@ async function loadHistory() {
   });
 
   const list = Object.values(sessions).sort((a,b) => b.date.localeCompare(a.date));
+  window._histSessions = list; // 사후 출석용
 
   el.innerHTML = list.map((s, i) => {
     const rate = s.total ? Math.round(s.attended.length / s.total * 100) : 0;
@@ -1511,6 +1543,92 @@ async function loadHistory() {
 function toggleHistDetail(id) {
   const el = document.getElementById(id);
   if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+/* ══ 사후 출석 처리 ══ */
+function openLateModal() {
+  // 기록 탭의 세션 목록으로 수업 선택 옵션 구성
+  const sel = document.getElementById('late-session');
+  const sessions = window._histSessions || [];
+  if (!sessions.length) {
+    toast('먼저 기록 탭을 새로고침해주세요.', 'err'); return;
+  }
+  sel.innerHTML = '<option value="">수업을 선택해주세요</option>' +
+    sessions.map((s,i) => `<option value="${i}">${s.date} — ${s.subject} ${s.cls}</option>`).join('');
+
+  document.getElementById('late-no').value = '';
+  document.getElementById('late-student-info').style.display = 'none';
+  document.getElementById('late-err').style.display = 'none';
+  document.getElementById('modal-late').classList.add('on');
+}
+
+function closeLateModal() {
+  document.getElementById('modal-late').classList.remove('on');
+}
+
+// 학번 입력 시 학생 정보 미리보기
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('late-no')?.addEventListener('input', function() {
+    const no = this.value.trim();
+    const st = S.students.find(s => s.no === no);
+    const info = document.getElementById('late-student-info');
+    if (st) {
+      document.getElementById('late-student-name').textContent = st.name;
+      document.getElementById('late-student-grade').textContent = getGradeClass(st.no);
+      info.style.display = 'block';
+    } else {
+      info.style.display = 'none';
+    }
+  });
+});
+
+async function confirmLateAttend() {
+  const sessIdx = document.getElementById('late-session').value;
+  const no      = document.getElementById('late-no').value.trim();
+  const errEl   = document.getElementById('late-err');
+  errEl.style.display = 'none';
+
+  if (sessIdx === '') { errEl.textContent = '수업을 선택해주세요.'; errEl.style.display = 'block'; return; }
+  if (!no) { errEl.textContent = '학번을 입력해주세요.'; errEl.style.display = 'block'; return; }
+
+  const sessions = window._histSessions || [];
+  const sess = sessions[parseInt(sessIdx)];
+  if (!sess) { errEl.textContent = '수업 정보를 찾을 수 없어요.'; errEl.style.display = 'block'; return; }
+
+  // 이미 출석 여부 확인
+  const alreadyAttended = sess.attended.find(r => String(r.no) === String(no));
+  if (alreadyAttended) { errEl.textContent = '이미 출석 처리된 학생이에요.'; errEl.style.display = 'block'; return; }
+
+  // 학생 찾기 (없으면 학번만으로 처리)
+  const st = S.students.find(s => s.no === no);
+  const name = st ? st.name : `학번 ${no}`;
+
+  const btn = document.getElementById('late-confirm-btn');
+  btn.disabled = true; btn.textContent = '처리 중...';
+
+  // Sheets에 사후 출석 기록
+  const result = await gasPost({
+    action:    'lateAttend',
+    sessionId: sess.sessionId,
+    date:      sess.date,
+    subject:   sess.subject,
+    cls:       sess.cls,
+    teacher:   sess.teacher,
+    no,
+    name
+  });
+
+  btn.disabled = false; btn.textContent = '출석 추가';
+
+  if (!result.ok) {
+    errEl.textContent = result.msg || '처리 실패. 다시 시도해주세요.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  closeLateModal();
+  toast(`${name} 사후 출석 완료 ✅`, 'ok');
+  loadHistory(); // 기록 새로고침
 }
 
 function renderHistory() { loadHistory(); }
