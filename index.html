@@ -293,6 +293,7 @@ tbody tr:last-child td{border-bottom:none}
     <button class="nb" id="nb-student" onclick="goTab('student')"><span>📱</span><span class="lbl">학생</span></button>
     <button class="nb" id="nb-manage" onclick="goTab('manage')"><span>👥</span><span class="lbl">명단</span></button>
     <button class="nb" id="nb-history" onclick="goTab('history')"><span>📊</span><span class="lbl">기록</span></button>
+    <button class="nb" id="nb-analysis" onclick="goTab('analysis')"><span>📈</span><span class="lbl">분석</span></button>
   </nav>
 </div>
 
@@ -499,6 +500,14 @@ tbody tr:last-child td{border-bottom:none}
     </div>
   </div>
 
+  <!-- 그룹 출석 요일 설정 -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-head">그룹별 출석 요일 설정</div>
+    <div id="group-days-list">
+      <div style="color:var(--muted);font-size:13px">명단을 불러오는 중...</div>
+    </div>
+  </div>
+
   <div class="card"><div id="s-list"></div></div>
 </div>
 
@@ -549,6 +558,9 @@ const S = {
   nextId: 21,
   timerInt: null,
   pollInt: null,
+  analysisView: 'week',
+  analysisDate: new Date(),
+  groupDays: {},  // 'program||cls' → ['월','수','금']
 };
 
 /* ══ Google Apps Script 연결 URL ══ */
@@ -572,7 +584,7 @@ async function gasPost(payload) {
   const params = new URLSearchParams(window.location.search);
   if (params.get('mode') === 'student') {
     document.getElementById('topbar').style.display = 'none';
-    ['pg-teacher','pg-student','pg-manage','pg-history'].forEach(id => {
+    ['pg-teacher','pg-student','pg-manage','pg-history','pg-analysis'].forEach(id => {
       document.getElementById(id).style.display = 'none';
     });
     document.getElementById('student-fullscreen').style.display = 'block';
@@ -670,7 +682,7 @@ function goTab(tab) {
     document.getElementById('pg-'+t).classList.toggle('on', t===tab);
     document.getElementById('nb-'+t).classList.toggle('on', t===tab);
   });
-  if (tab==='manage') renderStudentList();
+  if (tab==='manage') { renderStudentList(); loadGroupDays(); }
   if (tab==='history') loadHistory();
   if (tab==='student') syncTabUI();
 }
@@ -970,6 +982,10 @@ async function doRegisterAndAttend() {
   // 로컬 명단에도 추가
   S.students.push({id: S.nextId++, name, no, program: S.session.subj, cls: S.session.cls});
 
+  // 교사 화면 즉시 갱신 (출석 테이블 + 통계 + 명단)
+  refreshTable();
+  refreshStats();
+
   // 출석 처리
   const r = await tryAttend(no);
   if (btn) { btn.disabled = false; btn.textContent = '등록 후 출석하기'; }
@@ -1075,9 +1091,12 @@ function renderStudentList() {
     return;
   }
 
+  // 학번 순 정렬
+  const sorted = [...S.students].sort((a, b) => String(a.no).localeCompare(String(b.no), undefined, {numeric:true}));
+
   // 프로그램+장소 조합으로 그룹화
   const groups = {};
-  S.students.forEach((st, i) => {
+  sorted.forEach((st, i) => {
     const key = `${st.program} — ${st.cls}`;
     if (!groups[key]) groups[key] = [];
     groups[key].push({...st, _idx: i});
@@ -1095,10 +1114,22 @@ function renderStudentList() {
       </button>
     </div>
     ${sts.map(st => `
-    <div class="s-row">
+    <div class="s-row" style="flex-wrap:wrap;gap:8px">
       <div class="ava" style="background:${AVA_COLORS[st._idx % AVA_COLORS.length]}">${st.name[0]}</div>
-      <div class="sr-name">${st.name}</div>
-      <div class="sr-no">${st.no}</div>
+      <div style="flex:1;min-width:80px">
+        <div class="sr-name">${st.name}</div>
+        <div class="sr-no">${st.no}</div>
+      </div>
+      <div style="display:flex;gap:3px;flex-wrap:wrap">
+        ${['월','화','수','목','금','토','일'].map(day => {
+          const active = (st.days||[]).includes(day);
+          return `<button onclick="toggleDay('${st.no}','${day}',this)"
+            style="width:26px;height:26px;border-radius:50%;border:1px solid ${active?'var(--ok)':'var(--border)'};
+            background:${active?'rgba(0,200,150,.15)':'transparent'};
+            color:${active?'var(--ok)':'var(--muted)'};font-size:11px;font-weight:600;
+            cursor:pointer;transition:all .15s">${day}</button>`;
+        }).join('')}
+      </div>
       <button class="btn btn-ghost btn-sm btn-del" onclick="removeStudent(${st.id})">삭제</button>
     </div>`).join('')}
   `).join('');
@@ -1117,6 +1148,27 @@ function removeGroup(groupName) {
 }
 
 /* ══ 기록 ══ */
+// ── 출석 요일 토글 ──
+async function toggleDay(no, day, btn) {
+  const st = S.students.find(s => s.no === no);
+  if (!st) return;
+  if (!st.days) st.days = [];
+
+  const idx = st.days.indexOf(day);
+  if (idx >= 0) st.days.splice(idx, 1);
+  else          st.days.push(day);
+
+  // 버튼 즉시 반영
+  const active = st.days.includes(day);
+  btn.style.borderColor = active ? 'var(--ok)' : 'var(--border)';
+  btn.style.background  = active ? 'rgba(0,200,150,.15)' : 'transparent';
+  btn.style.color       = active ? 'var(--ok)' : 'var(--muted)';
+
+  // Sheets 저장
+  await gasPost({action: "saveDays", no, days: st.days});
+  toast(`${st.name} 출석 요일 저장됨`, 'ok');
+}
+
 // ── 기록 Sheets에서 불러오기 ──
 async function loadHistory() {
   const el = document.getElementById('hist-list');
@@ -1265,6 +1317,31 @@ function stopPolling() {
 }
 
 /* ══ 토스트 ══ */
+/* ══ 분석 시트 수동 업데이트 ══ */
+async function loadAnalysis() {
+  // 분석 탭은 Sheets에서 직접 확인하는 방식
+}
+
+async function manualBuildAnalysis() {
+  const btn = document.getElementById('build-btn');
+  const res = document.getElementById('build-result');
+  btn.disabled = true; btn.textContent = '업데이트 중...';
+  res.style.display = 'none';
+
+  const result = await gasPost({action: "buildAnalysis"});
+
+  btn.disabled = false; btn.textContent = '📊 분석 시트 지금 업데이트';
+  res.style.display = 'block';
+  if (result.ok) {
+    res.style.color = 'var(--ok)';
+    res.textContent = '✅ ' + (result.msg || '분석 시트가 업데이트됐어요!');
+    toast('Google Sheets 분석 시트 업데이트 완료!', 'ok');
+  } else {
+    res.style.color = 'var(--accent)';
+    res.textContent = '❌ ' + (result.msg || '업데이트 실패');
+  }
+}
+
 /* ══ 엑셀 업로드 & 양식 다운로드 ══ */
 
 // 엑셀 업로드 처리
@@ -1333,6 +1410,327 @@ function downloadTemplate() {
   XLSX.utils.book_append_sheet(wb, ws, '명단');
   XLSX.writeFile(wb, '학생명단_양식.xlsx');
   toast('양식 파일이 다운로드됐어요 📥', 'ok');
+}
+
+/* ══ 그룹 출석 요일 ══ */
+
+async function loadGroupDays() {
+  const result = await gasPost({action: "getGroupDays"});
+  if (result.ok) {
+    S.groupDays = {};
+    result.groups.forEach(g => {
+      S.groupDays[g.program + "||" + g.cls] = g.days;
+    });
+  }
+  renderGroupDays();
+}
+
+function renderGroupDays() {
+  const el = document.getElementById('group-days-list');
+  if (!el) return;
+
+  // 학생 명단에서 유니크 그룹 추출
+  const groups = [...new Set(S.students.map(s => `${s.program}||${s.cls}`))];
+  if (!groups.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px">명단에 학생을 먼저 등록해주세요.</div>';
+    return;
+  }
+
+  const DAYS_ALL = ['월','화','수','목','금','토','일'];
+  el.innerHTML = groups.map(key => {
+    const [program, cls] = key.split('||');
+    const days = S.groupDays[key] || [];
+    return `
+      <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text)">
+          ${program} <span style="color:var(--muted);font-weight:400">— ${cls}</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${DAYS_ALL.map(day => {
+            const active = days.includes(day);
+            return `<button onclick="toggleGroupDay('${key}','${day}',this)"
+              style="width:36px;height:36px;border-radius:50%;
+              border:1px solid ${active?'var(--ok)':'var(--border)'};
+              background:${active?'rgba(0,200,150,.15)':'transparent'};
+              color:${active?'var(--ok)':'var(--muted)'};
+              font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">${day}</button>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }).join('');
+
+  // 마지막 구분선 제거
+  const lastBorder = el.querySelector('div:last-child');
+  if (lastBorder) lastBorder.style.borderBottom = 'none';
+}
+
+async function toggleGroupDay(key, day, btn) {
+  if (!S.groupDays[key]) S.groupDays[key] = [];
+  const days = S.groupDays[key];
+  const idx  = days.indexOf(day);
+  if (idx >= 0) days.splice(idx, 1);
+  else          days.push(day);
+
+  const active = days.includes(day);
+  btn.style.borderColor = active ? 'var(--ok)' : 'var(--border)';
+  btn.style.background  = active ? 'rgba(0,200,150,.15)' : 'transparent';
+  btn.style.color       = active ? 'var(--ok)' : 'var(--muted)';
+
+  const [program, cls] = key.split('||');
+  await gasPost({action:"saveGroupDays", program, cls, days});
+  toast(`${program} — ${cls} 요일 저장됨`, 'ok');
+}
+
+/* ══ 분석 탭 ══ */
+
+const DAYS_KR = ['일','월','화','수','목','금','토'];
+const DAYS_ALL = ['월','화','수','목','금','토','일'];
+
+function setAnalysisView(view) {
+  S.analysisView = view;
+  document.getElementById('view-week').style.background  = view === 'week'  ? 'var(--accent)' : '';
+  document.getElementById('view-week').style.color       = view === 'week'  ? '#fff' : '';
+  document.getElementById('view-month').style.background = view === 'month' ? 'var(--accent)' : '';
+  document.getElementById('view-month').style.color      = view === 'month' ? '#fff' : '';
+  renderAnalysis();
+}
+
+function navigateAnalysis(dir) {
+  const d = new Date(S.analysisDate);
+  if (S.analysisView === 'week') d.setDate(d.getDate() + dir * 7);
+  else                           d.setMonth(d.getMonth() + dir);
+  S.analysisDate = d;
+  renderAnalysis();
+}
+
+async function loadAnalysis() {
+  const el = document.getElementById('analysis-content');
+  el.innerHTML = '<div class="empty"><div style="font-size:24px;margin-bottom:8px">⏳</div>데이터를 불러오는 중...</div>';
+
+  // 출석기록 + 학생명단 동시 로드
+  const [histResult, stuResult] = await Promise.all([
+    gasPost({action: "getHistory"}),
+    gasPost({action: "getStudents"})
+  ]);
+
+  if (!histResult.ok) { el.innerHTML = '<div class="empty">데이터 로드 실패</div>'; return; }
+
+  // 학생 명단 갱신 (days 포함)
+  if (stuResult.ok && stuResult.students.length) {
+    S.students = stuResult.students.map((s,i) => ({...s, id:i+1}));
+  }
+
+  // 그룹 셀렉트 옵션 갱신
+  const groups = [...new Set(S.students.map(s => `${s.program} — ${s.cls}`))];
+  const sel = document.getElementById('analysis-group');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">전체 그룹</option>' +
+    groups.map(g => `<option value="${g}" ${g===cur?'selected':''}>${g}</option>`).join('');
+
+  // 출석 데이터 파싱
+  window._attendanceRecords = histResult.records;
+
+  setAnalysisView(S.analysisView);
+}
+
+function renderAnalysis() {
+  const records = window._attendanceRecords || [];
+  if (!records.length && !S.students.length) {
+    document.getElementById('analysis-content').innerHTML =
+      '<div class="empty"><div class="empty-icon">📋</div>출석 기록이 없어요.</div>';
+    return;
+  }
+
+  const groupFilter = document.getElementById('analysis-group').value;
+  const students = groupFilter
+    ? S.students.filter(s => `${s.program} — ${s.cls}` === groupFilter)
+    : S.students;
+
+  // 출석한 날짜 집합 (학번 → Set<날짜>)
+  const attendMap = {};
+  records.filter(r => r.status === '출석').forEach(r => {
+    if (!attendMap[r.no]) attendMap[r.no] = new Set();
+    attendMap[r.no].add(r.date);
+  });
+
+  if (S.analysisView === 'week') renderWeekView(students, attendMap);
+  else                           renderMonthView(students, attendMap);
+}
+
+function getWeekDates(baseDate) {
+  const d = new Date(baseDate);
+  const day = d.getDay(); // 0=일
+  const monday = new Date(d);
+  monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+  return Array.from({length:7}, (_, i) => {
+    const dd = new Date(monday);
+    dd.setDate(monday.getDate() + i);
+    return dd;
+  });
+}
+
+function fmtDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function renderWeekView(students, attendMap) {
+  const dates = getWeekDates(S.analysisDate);
+  const label = `${fmtDate(dates[0])} ~ ${fmtDate(dates[6])}`;
+  document.getElementById('analysis-period-label').textContent = label;
+
+  const el = document.getElementById('analysis-content');
+  if (!students.length) {
+    el.innerHTML = '<div class="empty">해당 그룹에 학생이 없어요.</div>'; return;
+  }
+
+  const dayHeaders = dates.map(d =>
+    `<th style="text-align:center;padding:8px 6px;font-size:11px;font-weight:700;color:var(--muted);
+      ${d.getDay()===0?'color:#ff7096':d.getDay()===6?'color:var(--sky)':''}">
+      ${DAYS_KR[d.getDay()]}<br>
+      <span style="font-family:'DM Mono',monospace;font-size:10px;font-weight:400">${d.getDate()}</span>
+    </th>`
+  ).join('');
+
+  const rows = students.map(st => {
+    const studentDays = (st.days || []);
+    const cells = dates.map(d => {
+      const dateStr  = fmtDate(d);
+      const dayKr    = DAYS_KR[d.getDay()];
+      const isTarget = studentDays.includes(dayKr); // 출석 대상 요일
+      const attended = attendMap[st.no]?.has(dateStr);
+      const isToday  = dateStr === fmtDate(new Date());
+      const isFuture = d > new Date() && !isToday;
+
+      let cell = '';
+      if (isFuture)        cell = `<span style="color:var(--border)">-</span>`;
+      else if (!isTarget)  cell = `<span style="color:rgba(255,255,255,.12)">·</span>`;
+      else if (attended)   cell = `<span style="color:var(--ok);font-weight:700;font-size:16px">O</span>`;
+      else                 cell = `<span style="color:var(--accent);font-weight:700">X</span>`;
+
+      return `<td style="text-align:center;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.04);
+        ${isToday?'background:rgba(79,142,247,.08)':''}">${cell}</td>`;
+    }).join('');
+
+    const total  = dates.filter(d => (st.days||[]).includes(DAYS_KR[d.getDay()]) && d <= new Date()).length;
+    const done   = dates.filter(d => attendMap[st.no]?.has(fmtDate(d))).length;
+    const rate   = total ? Math.round(done/total*100) : 0;
+    const rColor = rate>=80?'var(--ok)':rate>=50?'var(--accent2)':'var(--accent)';
+
+    return `<tr>
+      <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap">
+        <div style="font-weight:600;font-size:13px">${st.name}</div>
+        <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">${st.no}</div>
+      </td>
+      ${cells}
+      <td style="text-align:center;padding:8px 8px;border-bottom:1px solid rgba(255,255,255,.04)">
+        <span style="font-family:'DM Mono',monospace;font-size:12px;color:${rColor}">${rate}%</span>
+      </td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="card" style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;min-width:500px">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:8px 12px;font-size:11px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">학생</th>
+            ${dayHeaders}
+            <th style="text-align:center;padding:8px;font-size:11px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">출석률</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--muted);text-align:center">
+      O = 출석 &nbsp;·&nbsp; X = 결석 &nbsp;·&nbsp; · = 비대상 요일 &nbsp;·&nbsp; - = 미래
+    </div>`;
+}
+
+function renderMonthView(students, attendMap) {
+  const y = S.analysisDate.getFullYear();
+  const m = S.analysisDate.getMonth();
+  document.getElementById('analysis-period-label').textContent =
+    `${y}년 ${m+1}월`;
+
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const allDates = Array.from({length:daysInMonth}, (_, i) => {
+    const d = new Date(y, m, i+1);
+    return {date: d, str: fmtDate(d), dayKr: DAYS_KR[d.getDay()]};
+  });
+
+  const el = document.getElementById('analysis-content');
+  if (!students.length) {
+    el.innerHTML = '<div class="empty">해당 그룹에 학생이 없어요.</div>'; return;
+  }
+
+  // 학생별 출석 요약 카드
+  const cards = students.map(st => {
+    const studentDays = st.days || [];
+    const targetDates = allDates.filter(d => studentDays.includes(d.dayKr) && d.date <= new Date());
+    const attendedDates = targetDates.filter(d => attendMap[st.no]?.has(d.str));
+    const rate = targetDates.length ? Math.round(attendedDates.length/targetDates.length*100) : 0;
+    const rColor = rate>=80?'var(--ok)':rate>=50?'var(--accent2)':'var(--accent)';
+
+    // 달력 미니 뷰 (주 단위)
+    const weeks = [];
+    let week = [];
+    const firstDay = new Date(y, m, 1).getDay();
+    for (let i = 0; i < firstDay; i++) week.push(null);
+    allDates.forEach(d => {
+      week.push(d);
+      if (week.length === 7) { weeks.push(week); week = []; }
+    });
+    if (week.length) weeks.push(week);
+
+    const calRows = weeks.map(w =>
+      `<tr>${w.map(d => {
+        if (!d) return '<td style="padding:2px"></td>';
+        const isTarget  = studentDays.includes(d.dayKr);
+        const attended  = attendMap[st.no]?.has(d.str);
+        const isFuture  = d.date > new Date();
+        const isToday   = d.str === fmtDate(new Date());
+        let bg = '', text = 'var(--muted)', label = d.date.getDate();
+        if (isToday) bg = 'rgba(79,142,247,.2)';
+        if (isTarget && !isFuture) {
+          bg = attended ? 'rgba(0,200,150,.18)' : 'rgba(233,69,96,.15)';
+          text = attended ? 'var(--ok)' : 'var(--accent)';
+        }
+        return `<td style="padding:2px;text-align:center">
+          <div style="width:24px;height:24px;border-radius:50%;background:${bg};
+            display:flex;align-items:center;justify-content:center;
+            font-size:10px;color:${text};margin:auto;
+            ${isTarget&&!isFuture?'font-weight:700':''}">
+            ${label}
+          </div></td>`;
+      }).join('')}</tr>`
+    ).join('');
+
+    return `
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div>
+            <div style="font-weight:700;font-size:14px">${st.name}
+              <span style="font-weight:400;color:var(--muted);font-size:11px;margin-left:6px;font-family:'DM Mono',monospace">${st.no}</span>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">
+              출석 요일: ${studentDays.join(', ') || '미설정'}
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:${rColor}">${rate}%</div>
+            <div style="font-size:10px;color:var(--muted)">${attendedDates.length}/${targetDates.length}일</div>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr>${['일','월','화','수','목','금','토'].map((d,i) =>
+            `<th style="text-align:center;font-size:10px;color:${i===0?'#ff7096':i===6?'var(--sky)':'var(--muted)'};padding:2px;font-weight:600">${d}</th>`
+          ).join('')}</tr></thead>
+          <tbody>${calRows}</tbody>
+        </table>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = cards;
 }
 
 let _tt;
