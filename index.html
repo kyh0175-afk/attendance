@@ -58,8 +58,7 @@ position:sticky;top:0;z-index:200;
 }
 .logo{
 font-size:16px;font-weight:900;letter-spacing:-.5px;white-space:nowrap;
-background:linear-gradient(130deg,var(–accent),var(–accent2));
--webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+color:#e94560;
 }
 .topbar-nav{display:flex;gap:2px;margin-left:auto}
 .nb{
@@ -297,12 +296,10 @@ pointer-events:none;white-space:nowrap;
 
 <div id="room-select-screen" style="display:none;min-height:100vh;
   display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px">
-  <div style="font-size:28px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px;
-    background:linear-gradient(130deg,var(--accent),var(--accent2));
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">
+  <div style="font-size:28px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px;color:#e94560">
     코스모스 독서시간 출석
   </div>
-  <div style="color:var(--muted);font-size:14px;margin-bottom:40px">담당 장소를 선택해주세요</div>
+  <div style="color:#7a8499;font-size:14px;margin-bottom:40px">담당 장소를 선택해주세요</div>
   <div id="room-btn-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;width:100%;max-width:480px"></div>
   <div style="margin-top:32px">
     <a href="?mode=view" style="color:var(--muted);font-size:12px;text-decoration:none;
@@ -934,12 +931,12 @@ function renderRoomSelectButtons() {
   const grid = document.getElementById('room-btn-grid');
 
   const colors = [
-    {bg:'rgba(233,69,96,.15)',  border:'rgba(233,69,96,.35)',  text:'var(--accent)'},
-    {bg:'rgba(94,184,255,.15)', border:'rgba(94,184,255,.35)', text:'var(--sky)'},
-    {bg:'rgba(0,200,150,.15)',  border:'rgba(0,200,150,.35)',  text:'var(--ok)'},
-    {bg:'rgba(245,166,35,.15)', border:'rgba(245,166,35,.35)', text:'var(--accent2)'},
-    {bg:'rgba(163,110,255,.15)',border:'rgba(163,110,255,.35)',text:'#a36eff'},
-    {bg:'rgba(255,107,158,.15)',border:'rgba(255,107,158,.35)',text:'#ff6b9e'},
+    {bg:'rgba(233,69,96,.25)',  border:'rgba(233,69,96,.5)',  text:'#e94560'},
+    {bg:'rgba(94,184,255,.2)',  border:'rgba(94,184,255,.45)', text:'#5eb8ff'},
+    {bg:'rgba(0,200,150,.2)',   border:'rgba(0,200,150,.45)',  text:'#00c896'},
+    {bg:'rgba(245,166,35,.2)',  border:'rgba(245,166,35,.45)', text:'#f5a623'},
+    {bg:'rgba(163,110,255,.2)', border:'rgba(163,110,255,.45)',text:'#a36eff'},
+    {bg:'rgba(255,107,158,.2)', border:'rgba(255,107,158,.45)',text:'#ff6b9e'},
   ];
 
   grid.innerHTML = ordered.map((room, i) => {
