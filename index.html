@@ -982,28 +982,25 @@ async function autoEndSession() {
   toast('수업이 자동 종료됐어요. 출석 기록이 저장됐습니다 ✅', 'ok');
 }
 
-function endSession() {
+async function endSession() {
   closeModal();
   if (!S.session || _autoEnding) return;
   _autoEnding = true;
 
-  // Google Sheets에 미출석자 기록
-  gasPost({
-    action: "endSession",
-    sessionId: S.session.id,
-    subject: S.session.subj,
-    cls: S.session.cls,
-    teacher: S.session.teacher
-  });
+  // 세션 정보를 먼저 저장 (S.session 초기화 전에)
+  const sessionSnap = {
+    id:      S.session.id,
+    subj:    S.session.subj,
+    cls:     S.session.cls,
+    teacher: S.session.teacher,
+    startedAt: S.session.startedAt
+  };
+  const clsStudents  = classSts();
+  const presentCount = S.attendance.length;
+  const totalCount   = clsStudents.length;
+  const histRecords  = [...S.attendance];
 
-  S.history.unshift({
-    subj: S.session.subj, cls: S.session.cls, teacher: S.session.teacher,
-    date: S.session.startedAt.toLocaleDateString('ko-KR') + ' ' +
-          S.session.startedAt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
-    total: classSts().length, present: S.attendance.length,
-    rate: classSts().length ? Math.round(S.attendance.length/classSts().length*100) : 0,
-    records: [...S.attendance]
-  });
+  // 화면 먼저 전환 (UX 개선)
   clearInterval(S.timerInt);
   stopPolling();
   S.session = null; S.attendance = [];
@@ -1011,8 +1008,32 @@ function endSession() {
   document.getElementById('form-area').style.display = 'block';
   document.getElementById('live-dot').classList.remove('on');
   syncTabUI(); syncFullUI();
+  toast('수업 종료 중... 기록 저장 중이에요 ⏳', 'ok');
+
+  // Google Sheets에 미출석자 기록 (await로 완료 보장)
+  await gasPost({
+    action:    "endSession",
+    sessionId: sessionSnap.id,
+    subject:   sessionSnap.subj,
+    cls:       sessionSnap.cls,
+    teacher:   sessionSnap.teacher
+  });
+
+  // 로컬 기록 저장
+  S.history.unshift({
+    subj:    sessionSnap.subj,
+    cls:     sessionSnap.cls,
+    teacher: sessionSnap.teacher,
+    date:    sessionSnap.startedAt.toLocaleDateString('ko-KR') + ' ' +
+             sessionSnap.startedAt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
+    total:   totalCount,
+    present: presentCount,
+    rate:    totalCount ? Math.round(presentCount/totalCount*100) : 0,
+    records: histRecords
+  });
+
   _autoEnding = false;
-  toast('수업 종료됨. 스프레드시트에 저장됐어요 ✅', 'ok');
+  toast('수업 종료됨. 출석 기록이 저장됐어요 ✅', 'ok');
 }
 
 /* ══ 출석 처리 공통 (Google Sheets 저장) ══ */
