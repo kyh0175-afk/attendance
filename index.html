@@ -559,45 +559,47 @@ tbody tr:last-child td{border-bottom:none}
 
 <!-- ══ 분석 탭 ══ -->
 <div class="page" id="pg-analysis">
-  <div style="font-size:17px;font-weight:800;margin-bottom:16px">출석 분석</div>
-
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-head">Google Sheets 분석 시트 업데이트</div>
-    <div style="color:var(--muted);font-size:13px;line-height:1.8;margin-bottom:16px">
-      수동으로 업데이트하려면 아래 버튼을 클릭하세요.<br>
-      매일 자정에 Apps Script 트리거로 자동 업데이트됩니다.
+  <div class="row-btw" style="margin-bottom:16px">
+    <div style="font-size:17px;font-weight:800">출석 분석</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <select id="analysis-group" style="background:var(--card);border:1px solid var(--border);
+        border-radius:8px;padding:7px 12px;color:var(--text);font-family:inherit;font-size:13px;outline:none"
+        onchange="renderAnalysis()">
+        <option value="">전체 그룹</option>
+      </select>
+      <div style="display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+        <button id="view-week" onclick="setAnalysisView('week')"
+          style="padding:7px 14px;border:none;background:var(--accent);color:#fff;
+          font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">주별</button>
+        <button id="view-month" onclick="setAnalysisView('month')"
+          style="padding:7px 14px;border:none;background:var(--card);color:var(--muted);
+          font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">월별</button>
+      </div>
+      <button onclick="loadAnalysis()" style="padding:7px 12px;border:1px solid var(--border);
+        border-radius:8px;background:var(--card);color:var(--text);font-family:inherit;
+        font-size:13px;cursor:pointer">🔄</button>
     </div>
-    <button class="btn btn-red" onclick="manualBuildAnalysis()" id="build-btn">
-      📊 분석 시트 지금 업데이트
+  </div>
+
+  <!-- 날짜 네비게이션 -->
+  <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px">
+    <button onclick="navigateAnalysis(-1)" style="padding:7px 16px;border:1px solid var(--border);
+      border-radius:8px;background:var(--card);color:var(--text);font-family:inherit;font-size:13px;cursor:pointer">← 이전</button>
+    <div style="font-size:15px;font-weight:700;min-width:180px;text-align:center" id="analysis-period-label">—</div>
+    <button onclick="navigateAnalysis(1)" style="padding:7px 16px;border:1px solid var(--border);
+      border-radius:8px;background:var(--card);color:var(--text);font-family:inherit;font-size:13px;cursor:pointer">다음 →</button>
+  </div>
+
+  <!-- Sheets 업데이트 버튼 -->
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+    <button class="btn btn-ghost btn-sm" onclick="manualBuildAnalysis()" id="build-btn">
+      📊 Sheets 분석 시트 업데이트
     </button>
-    <div id="build-result" style="margin-top:12px;font-size:13px;display:none"></div>
+    <div id="build-result" style="font-size:13px;display:none"></div>
   </div>
 
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-head">생성되는 시트 안내</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <div style="background:var(--card2);border-radius:10px;padding:16px">
-        <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:var(--sky)">📋 출석분석_학생별</div>
-        <div style="font-size:12px;color:var(--muted);line-height:1.8">
-          행 = 학생<br>열 = 날짜<br>O = 출석 / X = 결석<br>우측 출석률 자동 계산
-        </div>
-      </div>
-      <div style="background:var(--card2);border-radius:10px;padding:16px">
-        <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:var(--ok)">📅 출석분석_날짜별</div>
-        <div style="font-size:12px;color:var(--muted);line-height:1.8">
-          행 = 날짜<br>열 = 학생<br>O = 출석 / X = 결석<br>우측 일별 출석률
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-head">O/X 표시 기준</div>
-    <div style="font-size:12px;color:var(--muted);line-height:1.8">
-      출석 대상 요일 + 출석 → O (초록)<br>
-      출석 대상 요일 + 미출석 → X (빨강)<br>
-      비대상 요일 → 빈칸
-    </div>
+  <div id="analysis-content">
+    <div class="empty"><div style="font-size:24px;margin-bottom:8px">📈</div>데이터를 불러오는 중...</div>
   </div>
 </div>
 
@@ -1610,9 +1612,6 @@ function stopPolling() {
 
 /* ══ 토스트 ══ */
 /* ══ 분석 시트 수동 업데이트 ══ */
-async function loadAnalysis() {
-  // 분석 탭은 Sheets에서 직접 확인하는 방식
-}
 
 async function manualBuildAnalysis() {
   const btn = document.getElementById('build-btn');
