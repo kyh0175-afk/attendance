@@ -8,13 +8,15 @@
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-html, body {
+html {
   background: #0e1117 !important;
 }
-/* 그라데이션 텍스트 등 color 재정의 필요한 요소 제외하고 기본 글자색 고정 */
 body {
-  color: #e6eaf3;
+  background: #0e1117 !important;
+  color: #edf0f7 !important;
 }
+/* 그라데이션 등 color 재정의가 필요한 요소는 인라인 스타일로 처리 */
+a { color: inherit; }
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
@@ -314,7 +316,7 @@ pointer-events:none;white-space:nowrap;
 <!-- ══ 상단바 ══ -->
 
 <div class="topbar" id="topbar">
-  <div class="logo">코스모스 독서시간 출석</div>
+  <div class="logo" onclick="location.href=location.pathname" style="cursor:pointer;color:#e94560 !important" title="처음으로">코스모스 독서시간 출석</div>
   <div class="live-dot" id="live-dot"></div>
   <nav class="topbar-nav">
     <button class="nb on" id="nb-teacher" onclick="goTab('teacher')"><span>🎓</span><span class="lbl">교사</span></button>
@@ -804,6 +806,8 @@ async function gasPost(payload) {
   if (params.get('mode') === 'view') {
     // 확인용 페이지 — 명단/기록/분석만 표시
     document.getElementById('room-select-screen').style.display = 'none';
+    document.body.style.background = '#0e1117';
+    document.body.style.color = '#edf0f7';
     // 교사/학생 탭 숨김
     ['nb-teacher','nb-student'].forEach(id => {
       const el = document.getElementById(id);
@@ -2429,7 +2433,7 @@ function renderWeekView(students, attendMap) {
       } else if (attended && !isTarget) {
         cell = `<span style="color:#5eb8ff;font-size:18px;line-height:1">●</span>`;
       } else if (!isTarget) {
-        cell = `<span style="color:rgba(255,255,255,0.25);font-size:15px">·</span>`;
+        cell = `<span style="color:rgba(255,255,255,0.35);font-size:18px;line-height:1">·</span>`;
       } else {
         cell = `<span style="color:#e94560;font-weight:700">X</span>`;
       }
