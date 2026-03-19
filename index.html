@@ -1154,7 +1154,8 @@ function syncFullUI() {
 
 /* ══ 출석 테이블 & 통계 ══ */
 function refreshTable() {
-  document.getElementById('att-body').innerHTML = classSts().map(st => {
+  const sorted = [...classSts()].sort((a,b) => String(a.no).localeCompare(String(b.no), undefined, {numeric:true}));
+  document.getElementById('att-body').innerHTML = sorted.map(st => {
     const r = S.attendance.find(a => String(a.no) === String(st.no));
     const timeCell = r
       ? `<span style="color:var(--ok);font-weight:600">${r.time}</span>`
