@@ -1661,7 +1661,7 @@ function addStudent() {
   const program = document.getElementById('n-program').value;
   const cls     = document.getElementById('n-cls').value;
   if (!name || !no) { toast('이름과 학번을 입력해주세요', 'err'); return; }
-  if (S.students.find(s => s.no === no)) { toast('이미 존재하는 학번이에요', 'err'); return; }
+  if (S.students.find(s => s.no === no && s.program === program && s.cls === cls)) { toast('이미 존재하는 학번+프로그램+장소 조합이에요', 'err'); return; }
   S.students.push({id: S.nextId++, name, no, program, cls});
   document.getElementById('n-name').value = '';
   document.getElementById('n-no').value = '';
@@ -2300,13 +2300,13 @@ function handleExcelUpload(event) {
           return ['o','○','1','true','v','✓','✔'].includes(val);
         });
 
-        // 학생 추가 or 업데이트 (학번이 같으면 요일 포함 전체 업데이트)
-        const existing = S.students.find(s => s.no === no);
+        // 학번+프로그램+장소 조합으로 중복 체크 (한 학생이 여러 프로그램 가능)
+        const existing = S.students.find(s =>
+          s.no === no && s.program === program && s.cls === cls
+        );
         if (existing) {
-          existing.name    = name;
-          existing.program = program;
-          existing.cls     = cls;
-          existing.days    = days;
+          existing.name = name;
+          existing.days = days;
           updated++;
         } else {
           S.students.push({id: S.nextId++, name, no, program, cls, days});
