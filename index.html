@@ -500,14 +500,6 @@ tbody tr:last-child td{border-bottom:none}
     </div>
   </div>
 
-  <!-- 그룹 출석 요일 설정 -->
-  <div class="card" style="margin-bottom:14px">
-    <div class="card-head">그룹별 출석 요일 설정</div>
-    <div id="group-days-list">
-      <div style="color:var(--muted);font-size:13px">명단을 불러오는 중...</div>
-    </div>
-  </div>
-
   <div class="card"><div id="s-list"></div></div>
 </div>
 
@@ -682,7 +674,7 @@ function goTab(tab) {
     document.getElementById('pg-'+t).classList.toggle('on', t===tab);
     document.getElementById('nb-'+t).classList.toggle('on', t===tab);
   });
-  if (tab==='manage') { renderStudentList(); loadGroupDays(); }
+  if (tab==='manage') renderStudentList();
   if (tab==='history') loadHistory();
   if (tab==='student') syncTabUI();
 }
@@ -1345,6 +1337,8 @@ async function manualBuildAnalysis() {
 /* ══ 엑셀 업로드 & 양식 다운로드 ══ */
 
 // 엑셀 업로드 처리
+const DAY_COLS = ['월','화','수','목','금','토','일'];
+
 function handleExcelUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -1358,54 +1352,101 @@ function handleExcelUpload(event) {
 
       if (!rows.length) { toast('파일에 데이터가 없어요', 'err'); return; }
 
-      // 헤더 확인 (프로그램, 장소, 학번, 이름)
-      const first = rows[0];
-      const keys  = Object.keys(first);
+      // 필수 헤더 확인
+      const keys = Object.keys(rows[0]);
       const hasRequired = ['프로그램','장소','학번','이름'].every(k => keys.includes(k));
       if (!hasRequired) {
         toast('헤더가 맞지 않아요. 양식을 다운받아 사용해주세요.', 'err');
         return;
       }
 
-      let added = 0, skipped = 0;
+      // 그룹별 요일 집계 (같은 프로그램+장소면 같은 요일 적용)
+      const groupDaysFromFile = {};
+
+      let added = 0, skipped = 0, updated = 0;
       rows.forEach(row => {
         const no      = String(row['학번']).replace(/\.0$/, '').replace(/[^0-9]/g, '').trim();
         const name    = String(row['이름']).trim();
         const program = String(row['프로그램']).trim().replace(/\s+/g, ' ');
         const cls     = String(row['장소']).trim().replace(/\s+/g, '');
         if (!no || !name || !program || !cls) { skipped++; return; }
-        if (S.students.find(s => s.no === no)) { skipped++; return; }
-        S.students.push({id: S.nextId++, name, no, program, cls});
-        added++;
+
+        // 요일 열 파싱 (O, o, ○, 1, true, v, V → 출석 요일)
+        const days = DAY_COLS.filter(d => {
+          const val = String(row[d] || '').trim().toLowerCase();
+          return ['o','○','1','true','v','✓','✔','x'].includes(val) && val !== '';
+          // 'x'는 헷갈릴 수 있으니 O/o/v/1만 인식
+        }).filter(d => {
+          const val = String(row[d] || '').trim().toLowerCase();
+          return ['o','○','1','true','v','✓','✔'].includes(val);
+        });
+
+        // 그룹 요일 집계
+        const grpKey = program + '||' + cls;
+        if (days.length && !groupDaysFromFile[grpKey]) {
+          groupDaysFromFile[grpKey] = days;
+        }
+
+        // 학생 추가 or 업데이트
+        const existing = S.students.find(s => s.no === no);
+        if (existing) {
+          // 이미 있으면 이름/그룹 업데이트
+          existing.name = name;
+          existing.program = program;
+          existing.cls = cls;
+          updated++;
+        } else {
+          S.students.push({id: S.nextId++, name, no, program, cls, days: []});
+          added++;
+        }
+      });
+
+      // 그룹 요일 Sheets에 저장 및 로컬 반영
+      Object.entries(groupDaysFromFile).forEach(async ([key, days]) => {
+        S.groupDays[key] = days;
+        const [program, cls] = key.split('||');
+        await gasPost({action: "saveGroupDays", program, cls, days});
       });
 
       renderStudentList();
+      renderGroupDays();
       saveStudentsToSheets();
 
       const resultEl = document.getElementById('upload-result');
       const msgEl    = document.getElementById('upload-msg');
       resultEl.style.display = 'block';
-      msgEl.textContent = `✅ ${added}명 추가됨${skipped ? ` (${skipped}명 중복/오류 건너뜀)` : ''}`;
+      let msg = '';
+      if (added)   msg += `${added}명 추가`;
+      if (updated) msg += `${updated ? (added?', ':'') : ''}${updated}명 업데이트`;
+      if (skipped) msg += ` (${skipped}명 오류 건너뜀)`;
+      msgEl.textContent = '✅ ' + msg;
       setTimeout(() => resultEl.style.display = 'none', 4000);
-      toast(`${added}명 명단에 추가됐어요`, 'ok');
+      toast(`명단 업로드 완료!`, 'ok');
     } catch(err) {
       toast('파일 읽기 오류: ' + err.message, 'err');
     }
-    event.target.value = ''; // 같은 파일 재업로드 허용
+    event.target.value = '';
   };
   reader.readAsArrayBuffer(file);
 }
 
-// 엑셀 양식 다운로드
+// 엑셀 양식 다운로드 (요일 열 방식)
 function downloadTemplate() {
+  const header = ['프로그램', '장소', '학번', '이름', '월', '화', '수', '목', '금', '토', '일'];
   const ws = XLSX.utils.aoa_to_sheet([
-    ['프로그램', '장소', '학번', '이름'],
-    ['방과후 독서시간', '아우름', '20240101', '홍길동'],
-    ['야간 독서시간',   '해오름', '20240102', '김철수'],
-    ['심야 독서시간',   '리케이온','20240103', '이영희'],
+    header,
+    ['방과후 독서시간', '교과1실', '10101', '홍길동', 'O', '', 'O', '', 'O', '', ''],
+    ['방과후 독서시간', '교과1실', '10102', '김철수', 'O', '', 'O', '', 'O', '', ''],
+    ['야간 독서시간',   '해오름',  '20101', '이영희', '', 'O', '', 'O', '', '', ''],
+    ['심야 독서시간',   '리케이온','30101', '박민수', 'O', 'O', 'O', 'O', 'O', '', ''],
   ]);
-  // 열 너비 설정
-  ws['!cols'] = [{wch:18},{wch:12},{wch:12},{wch:10}];
+
+  // 열 너비
+  ws['!cols'] = [
+    {wch:18},{wch:12},{wch:10},{wch:10},
+    {wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5}
+  ];
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '명단');
   XLSX.writeFile(wb, '학생명단_양식.xlsx');
