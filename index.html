@@ -565,7 +565,12 @@ tbody tr:last-child td{border-bottom:none}
       <select id="analysis-group" style="background:var(--card);border:1px solid var(--border);
         border-radius:8px;padding:7px 12px;color:var(--text);font-family:inherit;font-size:13px;outline:none"
         onchange="renderAnalysis()">
-        <option value="">전체 그룹</option>
+        <option value="">전체 프로그램</option>
+      </select>
+      <select id="analysis-grade" style="background:var(--card);border:1px solid var(--border);
+        border-radius:8px;padding:7px 12px;color:var(--text);font-family:inherit;font-size:13px;outline:none"
+        onchange="renderAnalysis()">
+        <option value="">전체 학년/반</option>
       </select>
       <div style="display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden">
         <button id="view-week" onclick="setAnalysisView('week')"
@@ -1863,12 +1868,24 @@ async function loadAnalysis() {
     S.students = stuResult.students.map((s,i) => ({...s, id:i+1}));
   }
 
-  // 그룹 셀렉트 옵션 갱신
-  const groups = [...new Set(S.students.map(s => `${s.program} — ${s.cls}`))];
+  // 프로그램+장소 셀렉트 옵션 갱신
+  const groups = [...new Set(S.students.map(s => `${s.program} — ${s.cls}`))].sort();
   const sel = document.getElementById('analysis-group');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">전체 그룹</option>' +
-    groups.map(g => `<option value="${g}" ${g===cur?'selected':''}>${g}</option>`).join('');
+  const curG = sel.value;
+  sel.innerHTML = '<option value="">전체 프로그램</option>' +
+    groups.map(g => `<option value="${g}" ${g===curG?'selected':''}>${g}</option>`).join('');
+
+  // 학년+반 셀렉트 옵션 갱신 (학번에서 자동 추출)
+  const gradeSet = new Set();
+  S.students.forEach(s => {
+    const gr = getGradeClass(s.no);
+    if (gr) gradeSet.add(gr);
+  });
+  const gradeList = [...gradeSet].sort((a,b) => a.localeCompare(b, undefined, {numeric:true}));
+  const gsel = document.getElementById('analysis-grade');
+  const curGr = gsel.value;
+  gsel.innerHTML = '<option value="">전체 학년/반</option>' +
+    gradeList.map(g => `<option value="${g}" ${g===curGr?'selected':''}>${g}</option>`).join('');
 
   // 출석 데이터 파싱
   window._attendanceRecords = histResult.records;
@@ -1885,9 +1902,10 @@ function renderAnalysis() {
   }
 
   const groupFilter = document.getElementById('analysis-group').value;
-  const students = groupFilter
-    ? S.students.filter(s => `${s.program} — ${s.cls}` === groupFilter)
-    : S.students;
+  const gradeFilter = document.getElementById('analysis-grade').value;
+  let students = S.students;
+  if (groupFilter) students = students.filter(s => `${s.program} — ${s.cls}` === groupFilter);
+  if (gradeFilter) students = students.filter(s => getGradeClass(s.no) === gradeFilter);
 
   // 출석한 날짜 집합 (학번 → Set<날짜>)
   const attendMap = {};
@@ -1898,6 +1916,17 @@ function renderAnalysis() {
 
   if (S.analysisView === 'week') renderWeekView(students, attendMap);
   else                           renderMonthView(students, attendMap);
+}
+
+// 학번에서 학년/반 추출 (5자리: 1번째=학년, 3번째=반)
+// 예: 10101 → "1학년 1반", 20304 → "2학년 3반"
+function getGradeClass(no) {
+  const s = String(no).replace(/[^0-9]/g, '');
+  if (s.length < 3) return '';
+  const grade = s[0];
+  const cls   = s[2];
+  if (!grade || !cls || grade==='0' || cls==='0') return '';
+  return `${grade}학년 ${cls}반`;
 }
 
 function getWeekDates(baseDate) {
@@ -1962,7 +1991,9 @@ function renderWeekView(students, attendMap) {
     return `<tr>
       <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap">
         <div style="font-weight:600;font-size:13px">${st.name}</div>
-        <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">${st.no}</div>
+        <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">
+          ${st.no} <span style="font-family:inherit;margin-left:4px">${getGradeClass(st.no)}</span>
+        </div>
       </td>
       ${cells}
       <td style="text-align:center;padding:8px 8px;border-bottom:1px solid rgba(255,255,255,.04)">
