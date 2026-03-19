@@ -923,15 +923,18 @@ async function gasPost(payload) {
       // teacher 파라미터 있음 → 해당 장소 교사 화면 바로 진입
       document.getElementById('room-select-screen').style.display = 'none';
 
-      // 출석용: 명단/분석 탭 숨김
-      ['nb-manage','nb-analysis'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
-      });
-      ['pg-manage','pg-analysis'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
-      });
+      // 출석용(from=attendance)이면 명단/분석 탭 숨김
+      const fromAttendance = params.get('from') === 'attendance';
+      if (fromAttendance) {
+        ['nb-manage','nb-analysis'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.style.display = 'none';
+        });
+        ['pg-manage','pg-analysis'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.style.display = 'none';
+        });
+      }
 
       // 상단에 장소 배지 표시
       const badge = document.createElement('div');
@@ -1013,7 +1016,8 @@ function confirmPw() {
     return;
   }
   closePwModal();
-  location.href = location.pathname + '?mode=' + _pwTarget;
+  // URL 파라미터로 이동 (history.pushState 없이 바로 이동)
+  window.location.replace(location.pathname + '?mode=' + _pwTarget);
 }
 
 // ── 장소 선택 버튼 렌더링 ──
@@ -1055,7 +1059,7 @@ function renderRoomSelectButtons() {
 }
 
 function enterRoom(encodedRoom) {
-  location.href = location.pathname + '?teacher=' + encodedRoom;
+  location.href = location.pathname + '?teacher=' + encodedRoom + '&from=attendance';
 }
 
 // ── Sheets에서 명단 불러오기 ──
