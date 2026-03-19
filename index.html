@@ -2423,18 +2423,14 @@ function renderWeekView(students, attendMap) {
 
       let cell = '';
       if (isFuture) {
-        cell = `<span style="color:rgba(255,255,255,0.1)">-</span>`;
+        cell = `<span style="color:rgba(255,255,255,0.3);font-size:13px">-</span>`;
       } else if (attended && isTarget) {
-        // 출석 대상 요일 + 출석 → 초록 ●
         cell = `<span style="color:#00c896;font-size:18px;line-height:1">●</span>`;
       } else if (attended && !isTarget) {
-        // 비대상 요일 + 출석 → 파란 ● (자율출석)
         cell = `<span style="color:#5eb8ff;font-size:18px;line-height:1">●</span>`;
       } else if (!isTarget) {
-        // 비대상 요일 + 미출석 → 점
-        cell = `<span style="color:rgba(255,255,255,.12)">·</span>`;
+        cell = `<span style="color:rgba(255,255,255,0.25);font-size:15px">·</span>`;
       } else {
-        // 대상 요일 + 미출석 → X
         cell = `<span style="color:#e94560;font-weight:700">X</span>`;
       }
 
