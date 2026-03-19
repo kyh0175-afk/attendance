@@ -304,7 +304,7 @@ tbody tr:last-child td{border-bottom:none}
       <div class="card-head">새 수업 시작</div>
       <div class="g2">
         <div class="field"><label>프로그램</label>
-          <select id="f-subj">
+          <select id="f-subj" onchange="updateClsByProgram()">
             <option>방과후 독서시간</option>
             <option>야간 독서시간</option>
             <option>심야 독서시간</option>
@@ -316,10 +316,7 @@ tbody tr:last-child td{border-bottom:none}
         <div class="field">
           <label>장소</label>
           <select id="f-cls">
-            <option>아우름</option>
-            <option>교과1실</option>
-            <option>해오름</option>
-            <option>리케이온</option>
+            <option>장소를 선택해주세요</option>
           </select>
         </div>
         <div class="field">
@@ -776,6 +773,20 @@ async function loadStudentsFromSheets() {
     S.students = result.students.map((s, i) => ({...s, id: i + 1}));
     S.nextId   = S.students.length + 1;
   }
+  // 명단 로드 후 프로그램 목록 + 장소 목록 동적 업데이트
+  updateProgramOptions();
+  updateClsByProgram();
+}
+
+// 명단 기반으로 프로그램 목록 동적 업데이트
+function updateProgramOptions() {
+  const programs = [...new Set(S.students.map(s => s.program.trim()))].sort();
+  if (!programs.length) return;
+  const sel = document.getElementById('f-subj');
+  const cur = sel.value;
+  sel.innerHTML = programs.map(p =>
+    `<option value="${p}" ${p===cur?'selected':''}>${p}</option>`
+  ).join('');
 }
 
 // ── 명단을 Sheets에 저장 (중복 요청 방지) ──
@@ -860,6 +871,27 @@ function classSts() {
     s.program.trim() === subj &&
     s.cls.trim().replace(/\s+/g, '') === cls
   );
+}
+
+// 프로그램 선택 시 해당 장소만 필터링
+function updateClsByProgram() {
+  const prog  = document.getElementById('f-subj').value;
+  const clsSel = document.getElementById('f-cls');
+
+  // 학생 명단에서 해당 프로그램의 장소 목록 추출
+  const places = [...new Set(
+    S.students
+      .filter(s => s.program.trim() === prog.trim())
+      .map(s => s.cls.trim())
+  )].sort();
+
+  if (places.length) {
+    clsSel.innerHTML = places.map(p => `<option value="${p}">${p}</option>`).join('');
+  } else {
+    // 명단이 아직 없으면 기본 목록 표시
+    clsSel.innerHTML = ['아우름','교과1실','해오름','리케이온']
+      .map(p => `<option value="${p}">${p}</option>`).join('');
+  }
 }
 
 async function startSession() {
