@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -19,65 +18,66 @@ body {
 a { color: inherit; }
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
 
+
 :root {
-–ink: #0e1117;
-–card: rgba(255,255,255,0.05);
-–card2: rgba(255,255,255,0.09);
-–border: rgba(255,255,255,0.1);
-–border2: rgba(255,255,255,0.18);
-–accent: #e94560;
-–accent2: #f5a623;
-–ok: #00c896;
-–sky: #5eb8ff;
-–text: #edf0f7;
-–muted: #7a8499;
-–r: 14px;
-–r-sm: 10px;
+  --ink: #0e1117;
+  --card: rgba(255,255,255,0.05);
+  --card2: rgba(255,255,255,0.09);
+  --border: rgba(255,255,255,0.1);
+  --border2: rgba(255,255,255,0.18);
+  --accent: #e94560;
+  --accent2: #f5a623;
+  --ok: #00c896;
+  --sky: #5eb8ff;
+  --text: #edf0f7;
+  --muted: #7a8499;
+  --r: 14px;
+  --r-sm: 10px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{
-font-family:‘Noto Sans KR’,sans-serif;
-background:#0e1117;color:#edf0f7;
-min-height:100vh;font-size:14px;line-height:1.5;
--webkit-tap-highlight-color:transparent;
+  font-family:'Noto Sans KR',sans-serif;
+  background:#0e1117;color:#edf0f7;
+  min-height:100vh;font-size:14px;line-height:1.5;
+  -webkit-tap-highlight-color:transparent;
 }
 body::before{
-content:’’;position:fixed;inset:0;z-index:0;pointer-events:none;
-background:
-radial-gradient(ellipse 70% 50% at 15% 5%,rgba(233,69,96,.1) 0%,transparent 55%),
-radial-gradient(ellipse 50% 60% at 85% 85%,rgba(94,184,255,.07) 0%,transparent 55%);
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 5%,rgba(233,69,96,.1) 0%,transparent 55%),
+    radial-gradient(ellipse 50% 60% at 85% 85%,rgba(94,184,255,.07) 0%,transparent 55%);
 }
 .wrap{position:relative;z-index:1}
 
 /* topbar */
 .topbar{
-display:flex;align-items:center;gap:12px;
-padding:0 20px;height:56px;
-background:rgba(14,17,23,.88);
-backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-border-bottom:1px solid rgba(255,255,255,0.1);
-position:sticky;top:0;z-index:200;
+  display:flex;align-items:center;gap:12px;
+  padding:0 20px;height:56px;
+  background:rgba(14,17,23,.88);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,0.1);
+  position:sticky;top:0;z-index:200;
 }
 .logo{
-font-size:16px;font-weight:900;letter-spacing:-.5px;white-space:nowrap;
-color:#e94560;
+  font-size:16px;font-weight:900;letter-spacing:-.5px;white-space:nowrap;
+  color:#e94560;
 }
 .topbar-nav{display:flex;gap:2px;margin-left:auto}
 .nb{
-display:flex;align-items:center;gap:6px;
-padding:7px 13px;border-radius:8px;border:none;
-background:transparent;color:#7a8499;
-font-family:inherit;font-size:13px;font-weight:500;
-cursor:pointer;transition:all .18s;
+  display:flex;align-items:center;gap:6px;
+  padding:7px 13px;border-radius:8px;border:none;
+  background:transparent;color:#7a8499;
+  font-family:inherit;font-size:13px;font-weight:500;
+  cursor:pointer;transition:all .18s;
 }
 .nb:hover{background:rgba(255,255,255,0.09);color:#edf0f7}
 .nb.on{background:rgba(255,255,255,0.09);color:#edf0f7}
 .nb .lbl{display:none}
 @media(min-width:520px){.nb .lbl{display:inline}}
 .live-dot{
-width:7px;height:7px;border-radius:50%;
-background:#e94560;display:none;flex-shrink:0;
-animation:pulse 1.4s ease-in-out infinite;
+  width:7px;height:7px;border-radius:50%;
+  background:#e94560;display:none;flex-shrink:0;
+  animation:pulse 1.4s ease-in-out infinite;
 }
 .live-dot.on{display:block}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.75)}}
@@ -88,8 +88,8 @@ animation:pulse 1.4s ease-in-out infinite;
 
 /* card */
 .card{
-background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
-border-radius:14px;padding:22px;margin-bottom:14px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+  border-radius:14px;padding:22px;margin-bottom:14px;
 }
 .card-head{font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:#7a8499;margin-bottom:16px}
 .row-btw{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -98,16 +98,16 @@ border-radius:14px;padding:22px;margin-bottom:14px;
 .field{margin-bottom:14px}
 .field label{display:block;font-size:11px;font-weight:600;color:#7a8499;margin-bottom:5px;letter-spacing:.4px}
 .field input,.field select{
-width:100%;background:rgba(255,255,255,.05);
-border:1px solid rgba(255,255,255,0.1);border-radius:10px;
-padding:10px 13px;color:#edf0f7;font-family:inherit;font-size:14px;
-outline:none;transition:border-color .2s,background .2s;
--webkit-appearance:none;appearance:none;
+  width:100%;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,0.1);border-radius:10px;
+  padding:10px 13px;color:#edf0f7;font-family:inherit;font-size:14px;
+  outline:none;transition:border-color .2s,background .2s;
+  -webkit-appearance:none;appearance:none;
 }
 .field input:focus,.field select:focus{border-color:#e94560;background:rgba(233,69,96,.06)}
 .field select{
-background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’ viewBox=‘0 0 12 8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%237a8499’ stroke-width=‘1.5’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
-background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a8499' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
 }
 .field select option{background:#1a1f2e;color:#edf0f7}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -115,10 +115,10 @@ background-repeat:no-repeat;background-position:right 12px center;padding-right:
 
 /* buttons */
 .btn{
-display:inline-flex;align-items:center;justify-content:center;gap:7px;
-padding:10px 20px;border:none;border-radius:10px;
-font-family:inherit;font-size:13px;font-weight:600;
-cursor:pointer;transition:all .15s;white-space:nowrap;
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:10px 20px;border:none;border-radius:10px;
+  font-family:inherit;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
 }
 .btn-red{background:#e94560;color:#fff}
 .btn-red:hover{filter:brightness(1.12);transform:translateY(-1px)}
@@ -137,7 +137,7 @@ cursor:pointer;transition:all .15s;white-space:nowrap;
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
 @media(max-width:480px){.stats{grid-template-columns:repeat(2,1fr)}}
 .stat{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:16px 12px;text-align:center}
-.sn{font-family:‘DM Mono’,monospace;font-size:28px;font-weight:500;line-height:1}
+.sn{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;line-height:1}
 .sl{font-size:10px;color:#7a8499;margin-top:5px;letter-spacing:.6px;text-transform:uppercase}
 .c-sky{color:#5eb8ff}.c-ok{color:#00c896}.c-red{color:#e94560}.c-amber{color:#f5a623}
 
@@ -145,21 +145,21 @@ cursor:pointer;transition:all .15s;white-space:nowrap;
 .qr-layout{display:flex;gap:18px;align-items:flex-start}
 @media(max-width:640px){.qr-layout{flex-direction:column}}
 .qr-panel{
-flex-shrink:0;width:244px;
-background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
-border-radius:14px;padding:20px;
-display:flex;flex-direction:column;align-items:center;gap:13px;
+  flex-shrink:0;width:244px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+  border-radius:14px;padding:20px;
+  display:flex;flex-direction:column;align-items:center;gap:13px;
 }
 @media(max-width:640px){.qr-panel{width:100%}}
 .qr-box{background:#fff;border-radius:10px;padding:10px;line-height:0}
-.timer-num{font-family:‘DM Mono’,monospace;font-size:40px;font-weight:500;letter-spacing:-1px;transition:color .4s;line-height:1}
+.timer-num{font-family:'DM Mono',monospace;font-size:40px;font-weight:500;letter-spacing:-1px;transition:color .4s;line-height:1}
 .timer-lbl{font-size:10px;color:#7a8499;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
 .t-ok{color:#00c896}.t-warn{color:#f5a623}.t-end{color:#e94560}
 .live-pill{
-display:flex;align-items:center;gap:6px;
-background:rgba(233,69,96,.14);border:1px solid rgba(233,69,96,.28);
-color:#ff7096;padding:5px 12px;border-radius:20px;
-font-size:11px;font-weight:700;
+  display:flex;align-items:center;gap:6px;
+  background:rgba(233,69,96,.14);border:1px solid rgba(233,69,96,.28);
+  color:#ff7096;padding:5px 12px;border-radius:20px;
+  font-size:11px;font-weight:700;
 }
 .pill-dot{width:6px;height:6px;border-radius:50%;background:#e94560;animation:pulse 1.2s infinite}
 .qr-hint{font-size:10px;color:#7a8499;text-align:center}
@@ -178,45 +178,45 @@ tbody tr{transition:background .12s}
 tbody tr:hover td{background:rgba(255,255,255,0.09)}
 tbody td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
 tbody tr:last-child td{border-bottom:none}
-.mono{font-family:‘DM Mono’,monospace;font-size:11px;color:#7a8499}
+.mono{font-family:'DM Mono',monospace;font-size:11px;color:#7a8499}
 .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700}
 .b-ok{background:rgba(0,200,150,.14);color:#00c896;border:1px solid rgba(0,200,150,.28)}
 .b-no{background:rgba(233,69,96,.1);color:#ff7096;border:1px solid rgba(233,69,96,.2)}
 
 /* student page (탭 내) */
 .s-hero{
-min-height:72vh;display:flex;flex-direction:column;
-align-items:center;justify-content:center;
-padding:32px 20px;text-align:center;
+  min-height:72vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:32px 20px;text-align:center;
 }
 .s-icon{
-width:72px;height:72px;border-radius:20px;margin-bottom:22px;
-background:linear-gradient(135deg,#e94560,#ff6b35);
-display:flex;align-items:center;justify-content:center;font-size:32px;
-box-shadow:0 14px 44px rgba(233,69,96,.3);
+  width:72px;height:72px;border-radius:20px;margin-bottom:22px;
+  background:linear-gradient(135deg,#e94560,#ff6b35);
+  display:flex;align-items:center;justify-content:center;font-size:32px;
+  box-shadow:0 14px 44px rgba(233,69,96,.3);
 }
 .s-title{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
 .s-sub{color:#7a8499;font-size:14px;line-height:1.75;margin-bottom:30px;white-space:pre-line}
 .big-input{
-width:100%;max-width:320px;
-background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,0.1);border-radius:14px;
-padding:17px 20px;color:#edf0f7;
-font-family:‘DM Mono’,monospace;font-size:20px;text-align:center;outline:none;
-transition:border-color .2s,background .2s;margin-bottom:12px;
--webkit-appearance:none;
+  width:100%;max-width:320px;
+  background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,0.1);border-radius:14px;
+  padding:17px 20px;color:#edf0f7;
+  font-family:'DM Mono',monospace;font-size:20px;text-align:center;outline:none;
+  transition:border-color .2s,background .2s;margin-bottom:12px;
+  -webkit-appearance:none;
 }
 .big-input:focus{border-color:#e94560;background:rgba(233,69,96,.07)}
-.big-input::placeholder{font-family:‘Noto Sans KR’,sans-serif;font-size:14px;color:#7a8499}
+.big-input::placeholder{font-family:'Noto Sans KR',sans-serif;font-size:14px;color:#7a8499}
 .err-box{
-background:rgba(233,69,96,.1);border:1px solid rgba(233,69,96,.28);
-border-radius:8px;padding:10px 16px;color:#ff7096;font-size:13px;
-max-width:320px;margin-bottom:12px;display:none;
+  background:rgba(233,69,96,.1);border:1px solid rgba(233,69,96,.28);
+  border-radius:8px;padding:10px 16px;color:#ff7096;font-size:13px;
+  max-width:320px;margin-bottom:12px;display:none;
 }
 .ok-card{
-background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.24);
-border-radius:18px;padding:32px 28px;max-width:340px;
-display:none;flex-direction:column;align-items:center;gap:6px;
-animation:fadeUp .35s ease-out;
+  background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.24);
+  border-radius:18px;padding:32px 28px;max-width:340px;
+  display:none;flex-direction:column;align-items:center;gap:6px;
+  animation:fadeUp .35s ease-out;
 }
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .ok-icon{font-size:48px;margin-bottom:10px}
@@ -226,48 +226,48 @@ animation:fadeUp .35s ease-out;
 /* student fullscreen */
 #student-fullscreen{display:none;min-height:100vh;background:#0e1117}
 .sf-page{
-min-height:100vh;display:flex;flex-direction:column;
-align-items:center;justify-content:center;
-padding:40px 24px;text-align:center;
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:40px 24px;text-align:center;
 }
 
 /* manage */
 .s-row{
-display:flex;align-items:center;gap:12px;
-padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .12s;
+  display:flex;align-items:center;gap:12px;
+  padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .12s;
 }
 .s-row:hover{background:rgba(255,255,255,0.09)}
 .s-row:last-child{border-bottom:none}
 .ava{
-width:34px;height:34px;border-radius:50%;flex-shrink:0;
-display:flex;align-items:center;justify-content:center;
-font-weight:700;font-size:13px;color:#fff;
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:13px;color:#fff;
 }
 .sr-name{font-weight:600;flex:1;font-size:13px}
-.sr-no{font-family:‘DM Mono’,monospace;font-size:11px;color:#7a8499;min-width:84px}
+.sr-no{font-family:'DM Mono',monospace;font-size:11px;color:#7a8499;min-width:84px}
 .sr-cls{font-size:11px;color:#7a8499;min-width:78px}
 
 /* history */
 .hist-row{
-display:flex;align-items:center;justify-content:space-between;
-padding:14px;border-bottom:1px solid rgba(255,255,255,.04);
-cursor:pointer;transition:background .12s;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px;border-bottom:1px solid rgba(255,255,255,.04);
+  cursor:pointer;transition:background .12s;
 }
 .hist-row:hover{background:rgba(255,255,255,0.09)}
 .hist-row:last-child{border-bottom:none}
 .hist-subj{font-weight:700;font-size:14px}
 .hist-info{font-size:11px;color:#7a8499;margin-top:3px}
 .hist-detail{display:none;font-size:12px;color:#7a8499;margin-top:8px;line-height:1.8}
-.hist-rate{font-family:‘DM Mono’,monospace;font-size:16px;font-weight:500;color:#00c896;white-space:nowrap}
+.hist-rate{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;color:#00c896;white-space:nowrap}
 
 .empty{text-align:center;padding:48px 20px;color:#7a8499}
 .empty-icon{font-size:32px;margin-bottom:10px}
 
 /* modal */
 .modal-bg{
-display:none;position:fixed;inset:0;z-index:300;
-background:rgba(0,0,0,.65);backdrop-filter:blur(8px);
-align-items:center;justify-content:center;padding:20px;
+  display:none;position:fixed;inset:0;z-index:300;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(8px);
+  align-items:center;justify-content:center;padding:20px;
 }
 .modal-bg.on{display:flex}
 .modal{background:#1a1f2e;border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:26px;width:100%;max-width:380px}
@@ -277,25 +277,86 @@ align-items:center;justify-content:center;padding:20px;
 
 /* toast */
 .toast{
-position:fixed;bottom:24px;left:50%;
-transform:translateX(-50%) translateY(60px);
-background:#1e2435;border:1px solid rgba(255,255,255,0.1);
-border-radius:10px;padding:11px 18px;
-font-size:13px;font-weight:500;
-z-index:400;transition:transform .28s cubic-bezier(.34,1.56,.64,1);
-pointer-events:none;white-space:nowrap;
+  position:fixed;bottom:24px;left:50%;
+  transform:translateX(-50%) translateY(60px);
+  background:#1e2435;border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;padding:11px 18px;
+  font-size:13px;font-weight:500;
+  z-index:400;transition:transform .28s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:none;white-space:nowrap;
 }
 .toast.show{transform:translateX(-50%) translateY(0)}
 .toast.ok{border-color:rgba(0,200,150,.35);color:#00c896}
 .toast.err{border-color:rgba(233,69,96,.35);color:#ff7096}
 </style>
-
 </head>
 <body>
 <div class="wrap" id="app">
 
-<!-- ══ 장소 선택 화면 ══ -->
+<!-- ══ 메인 화면 ══ -->
+<div id="main-screen" style="display:none;min-height:100vh;
+  flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;position:relative">
 
+  <!-- 관리용 버튼 (우측 상단) -->
+  <button onclick="goAdmin()"
+    style="position:absolute;top:24px;right:24px;
+    background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);
+    border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:all .2s"
+    onmouseover="this.style.background='rgba(255,255,255,0.12)'"
+    onmouseout="this.style.background='rgba(255,255,255,0.07)'"
+    title="관리용 페이지">⚙️</button>
+
+  <div style="font-size:30px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px;color:#e94560">
+    코스모스 독서시간 출석
+  </div>
+  <div style="color:#7a8499;font-size:14px;margin-bottom:56px">용도를 선택해주세요</div>
+
+  <div style="display:flex;gap:20px;width:100%;max-width:480px">
+    <!-- 출석용 -->
+    <button onclick="goAttendance()"
+      style="flex:1;background:rgba(233,69,96,.2);border:1px solid rgba(233,69,96,.45);
+      border-radius:20px;padding:36px 20px;cursor:pointer;transition:all .2s;text-align:center"
+      onmouseover="this.style.transform='translateY(-3px)';this.style.filter='brightness(1.15)'"
+      onmouseout="this.style.transform='';this.style.filter=''">
+      <div style="font-size:36px;margin-bottom:12px">📋</div>
+      <div style="font-size:20px;font-weight:800;color:#e94560;margin-bottom:6px">출석용</div>
+      <div style="font-size:12px;color:#7a8499;line-height:1.6">QR 출석 처리<br>장소별 접속</div>
+    </button>
+
+    <!-- 확인용 -->
+    <button onclick="goView()"
+      style="flex:1;background:rgba(94,184,255,.15);border:1px solid rgba(94,184,255,.4);
+      border-radius:20px;padding:36px 20px;cursor:pointer;transition:all .2s;text-align:center"
+      onmouseover="this.style.transform='translateY(-3px)';this.style.filter='brightness(1.15)'"
+      onmouseout="this.style.transform='';this.style.filter=''">
+      <div style="font-size:36px;margin-bottom:12px">📊</div>
+      <div style="font-size:20px;font-weight:800;color:#5eb8ff;margin-bottom:6px">확인용</div>
+      <div style="font-size:12px;color:#7a8499;line-height:1.6">기록 · 분석<br>출석 현황 조회</div>
+    </button>
+  </div>
+</div>
+
+<!-- ══ 비밀번호 모달 ══ -->
+<div class="modal-bg" id="modal-pw">
+  <div class="modal" style="max-width:340px;text-align:center">
+    <div style="font-size:24px;margin-bottom:8px" id="pw-icon">🔒</div>
+    <h3 id="pw-title" style="margin-bottom:6px">비밀번호 입력</h3>
+    <p id="pw-desc" style="margin-bottom:20px;font-size:13px;color:#7a8499"></p>
+    <input id="pw-input" type="password" placeholder="비밀번호"
+      style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+      border-radius:10px;padding:12px 16px;color:#edf0f7;font-family:inherit;font-size:16px;
+      outline:none;text-align:center;box-sizing:border-box;margin-bottom:8px"
+      onkeydown="if(event.key==='Enter')confirmPw()">
+    <div id="pw-err" style="color:#e94560;font-size:12px;height:18px;margin-bottom:8px"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="closePwModal()">취소</button>
+      <button class="btn btn-green btn-sm" style="flex:1" onclick="confirmPw()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 장소 선택 화면 ══ -->
 <div id="room-select-screen" style="display:none;min-height:100vh;
   display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px">
   <div style="font-size:28px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px;color:#e94560">
@@ -303,20 +364,12 @@ pointer-events:none;white-space:nowrap;
   </div>
   <div style="color:#7a8499;font-size:14px;margin-bottom:40px">담당 장소를 선택해주세요</div>
   <div id="room-btn-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;width:100%;max-width:480px"></div>
-  <div style="margin-top:32px">
-    <a href="?mode=view" style="color:#7a8499;font-size:12px;text-decoration:none;
-      border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:8px 20px;
-      background:transparent;cursor:pointer;transition:all .2s"
-      onmouseover="this.style.color='#edf0f7'" onmouseout="this.style.color='#7a8499'">
-      📊 확인용 페이지 (명단·기록·분석)
-    </a>
-  </div>
+
 </div>
 
 <!-- ══ 상단바 ══ -->
-
 <div class="topbar" id="topbar">
-  <div class="logo" onclick="location.href=location.pathname" style="cursor:pointer;color:#e94560 !important" title="처음으로">코스모스 독서시간 출석</div>
+  <div class="logo" onclick="location.href=location.pathname" style="cursor:pointer;color:#e94560 !important" title="처음 화면으로">코스모스 독서시간 출석</div>
   <div class="live-dot" id="live-dot"></div>
   <nav class="topbar-nav">
     <button class="nb on" id="nb-teacher" onclick="goTab('teacher')"><span>🎓</span><span class="lbl">교사</span></button>
@@ -328,7 +381,6 @@ pointer-events:none;white-space:nowrap;
 </div>
 
 <!-- ══ 교사 탭 ══ -->
-
 <div class="page on" id="pg-teacher">
   <div id="form-area">
     <div class="card">
@@ -418,7 +470,6 @@ pointer-events:none;white-space:nowrap;
 </div>
 
 <!-- ══ 학생 탭 (일반 탭 접속용) ══ -->
-
 <div class="page" id="pg-student">
   <div class="s-hero">
     <div id="s-form-wrap" style="display:flex;flex-direction:column;align-items:center;text-align:center;width:100%">
@@ -443,7 +494,6 @@ pointer-events:none;white-space:nowrap;
 </div>
 
 <!-- ══ 학생 전용 전체화면 (QR 스캔 진입) ══ -->
-
 <div id="student-fullscreen">
   <div class="sf-page">
     <div id="sf-form" style="display:flex;flex-direction:column;align-items:center;text-align:center;width:100%">
@@ -458,82 +508,78 @@ pointer-events:none;white-space:nowrap;
         <button class="btn btn-green" id="sf-attend-btn" style="padding:15px 48px;font-size:16px" onclick="doAttendFull()">✓ 출석하기</button>
       </div>
 
-```
-  <!-- 미등록 학생 자가 등록 폼 -->
-  <div id="sf-register-wrap" style="display:none;flex-direction:column;align-items:center;width:100%;margin-top:8px">
-    <div style="font-size:13px;color:#7a8499;margin-bottom:16px;line-height:1.7;text-align:center">
-      명단에 없는 학번이에요.<br>이름을 입력하면 바로 출석할 수 있어요.
-    </div>
-    <div style="width:100%;max-width:320px;margin-bottom:10px">
-      <div style="font-size:11px;color:#7a8499;margin-bottom:6px;text-align:left">학번</div>
-      <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:#edf0f7;
-        background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;
-        padding:12px 16px;text-align:center" id="sf-reg-no-display"></div>
-    </div>
-    <div style="width:100%;max-width:320px;margin-bottom:14px">
-      <div style="font-size:11px;color:#7a8499;margin-bottom:6px;text-align:left">이름</div>
-      <input class="big-input" id="sf-reg-name" type="text" placeholder="이름 입력"
-        style="margin-bottom:0;font-family:inherit;font-size:18px"
-        onkeydown="if(event.key==='Enter')doRegisterAndAttend()">
-    </div>
-    <!-- 출석 요일 선택 -->
-    <div style="width:100%;max-width:320px;margin-bottom:16px">
-      <div style="font-size:11px;color:#7a8499;margin-bottom:8px;text-align:left">
-        출석 요일 <span style="font-weight:400;opacity:.7">(해당 요일 모두 선택)</span>
+      <!-- 미등록 학생 자가 등록 폼 -->
+      <div id="sf-register-wrap" style="display:none;flex-direction:column;align-items:center;width:100%;margin-top:8px">
+        <div style="font-size:13px;color:#7a8499;margin-bottom:16px;line-height:1.7;text-align:center">
+          명단에 없는 학번이에요.<br>이름을 입력하면 바로 출석할 수 있어요.
+        </div>
+        <div style="width:100%;max-width:320px;margin-bottom:10px">
+          <div style="font-size:11px;color:#7a8499;margin-bottom:6px;text-align:left">학번</div>
+          <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:#edf0f7;
+            background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;
+            padding:12px 16px;text-align:center" id="sf-reg-no-display"></div>
+        </div>
+        <div style="width:100%;max-width:320px;margin-bottom:14px">
+          <div style="font-size:11px;color:#7a8499;margin-bottom:6px;text-align:left">이름</div>
+          <input class="big-input" id="sf-reg-name" type="text" placeholder="이름 입력"
+            style="margin-bottom:0;font-family:inherit;font-size:18px"
+            onkeydown="if(event.key==='Enter')doRegisterAndAttend()">
+        </div>
+        <!-- 출석 요일 선택 -->
+        <div style="width:100%;max-width:320px;margin-bottom:16px">
+          <div style="font-size:11px;color:#7a8499;margin-bottom:8px;text-align:left">
+            출석 요일 <span style="font-weight:400;opacity:.7">(해당 요일 모두 선택)</span>
+          </div>
+          <div style="display:flex;gap:6px;justify-content:center">
+            <button class="sf-day-btn" data-day="월" onclick="toggleRegDay(this)"
+              style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+              background:transparent;color:#7a8499;font-size:13px;font-weight:600;
+              cursor:pointer;transition:all .15s">월</button>
+            <button class="sf-day-btn" data-day="화" onclick="toggleRegDay(this)"
+              style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+              background:transparent;color:#7a8499;font-size:13px;font-weight:600;
+              cursor:pointer;transition:all .15s">화</button>
+            <button class="sf-day-btn" data-day="수" onclick="toggleRegDay(this)"
+              style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+              background:transparent;color:#7a8499;font-size:13px;font-weight:600;
+              cursor:pointer;transition:all .15s">수</button>
+            <button class="sf-day-btn" data-day="목" onclick="toggleRegDay(this)"
+              style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+              background:transparent;color:#7a8499;font-size:13px;font-weight:600;
+              cursor:pointer;transition:all .15s">목</button>
+            <button class="sf-day-btn" data-day="금" onclick="toggleRegDay(this)"
+              style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+              background:transparent;color:#7a8499;font-size:13px;font-weight:600;
+              cursor:pointer;transition:all .15s">금</button>
+            <button class="sf-day-btn" data-day="토" onclick="toggleRegDay(this)"
+              style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+              background:transparent;color:#7a8499;font-size:13px;font-weight:600;
+              cursor:pointer;transition:all .15s">토</button>
+            <button class="sf-day-btn" data-day="일" onclick="toggleRegDay(this)"
+              style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+              background:transparent;color:#7a8499;font-size:13px;font-weight:600;
+              cursor:pointer;transition:all .15s">일</button>
+          </div>
+        </div>
+        <div class="err-box" id="sf-reg-err"></div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-ghost" onclick="cancelRegister()">← 취소</button>
+          <button class="btn btn-green" style="padding:14px 36px;font-size:15px" onclick="doRegisterAndAttend()">
+            등록 후 출석하기
+          </button>
+        </div>
       </div>
-      <div style="display:flex;gap:6px;justify-content:center">
-        <button class="sf-day-btn" data-day="월" onclick="toggleRegDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
-          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
-          cursor:pointer;transition:all .15s">월</button>
-        <button class="sf-day-btn" data-day="화" onclick="toggleRegDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
-          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
-          cursor:pointer;transition:all .15s">화</button>
-        <button class="sf-day-btn" data-day="수" onclick="toggleRegDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
-          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
-          cursor:pointer;transition:all .15s">수</button>
-        <button class="sf-day-btn" data-day="목" onclick="toggleRegDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
-          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
-          cursor:pointer;transition:all .15s">목</button>
-        <button class="sf-day-btn" data-day="금" onclick="toggleRegDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
-          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
-          cursor:pointer;transition:all .15s">금</button>
-        <button class="sf-day-btn" data-day="토" onclick="toggleRegDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
-          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
-          cursor:pointer;transition:all .15s">토</button>
-        <button class="sf-day-btn" data-day="일" onclick="toggleRegDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
-          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
-          cursor:pointer;transition:all .15s">일</button>
-      </div>
     </div>
-    <div class="err-box" id="sf-reg-err"></div>
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-ghost" onclick="cancelRegister()">← 취소</button>
-      <button class="btn btn-green" style="padding:14px 36px;font-size:15px" onclick="doRegisterAndAttend()">
-        등록 후 출석하기
-      </button>
+    <div class="ok-card" id="sf-ok">
+      <div class="ok-icon">✅</div>
+      <div class="ok-name" id="sfok-name"></div>
+      <div class="ok-meta" id="sfok-meta"></div>
+      <div style="margin-top:20px;font-size:12px;color:#7a8499">이 창을 닫아도 됩니다</div>
     </div>
-  </div>
-</div>
-<div class="ok-card" id="sf-ok">
-  <div class="ok-icon">✅</div>
-  <div class="ok-name" id="sfok-name"></div>
-  <div class="ok-meta" id="sfok-meta"></div>
-  <div style="margin-top:20px;font-size:12px;color:#7a8499">이 창을 닫아도 됩니다</div>
-</div>
-```
-
   </div>
 </div>
 
 <!-- ══ 명단 탭 ══ -->
-
 <div class="page" id="pg-manage">
   <div class="row-btw" style="margin-bottom:14px">
     <div style="font-size:17px;font-weight:800">학생 명단</div>
@@ -548,13 +594,11 @@ pointer-events:none;white-space:nowrap;
   </div>
 
   <!-- 엑셀 업로드 안내 -->
-
   <div id="upload-result" class="card" style="display:none;margin-bottom:14px;border-color:rgba(0,200,150,.3)">
     <div id="upload-msg" style="font-size:13px;color:#00c896"></div>
   </div>
 
   <!-- 학생 추가 폼 -->
-
   <div class="card" id="add-form" style="display:none;margin-bottom:14px">
     <div class="card-head">새 학생 등록</div>
     <div class="g2">
@@ -590,7 +634,6 @@ pointer-events:none;white-space:nowrap;
 </div>
 
 <!-- ══ 기록 탭 ══ -->
-
 <div class="page" id="pg-history">
   <div class="row-btw" style="margin-bottom:14px">
     <div style="font-size:17px;font-weight:800">수업 출석 기록</div>
@@ -603,7 +646,6 @@ pointer-events:none;white-space:nowrap;
 </div>
 
 <!-- ══ 분석 탭 ══ -->
-
 <div class="page" id="pg-analysis">
   <div class="row-btw" style="margin-bottom:16px">
     <div style="font-size:17px;font-weight:800">출석 분석</div>
@@ -633,7 +675,6 @@ pointer-events:none;white-space:nowrap;
   </div>
 
   <!-- 날짜 네비게이션 -->
-
   <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px">
     <button onclick="navigateAnalysis(-1)" style="padding:7px 16px;border:1px solid rgba(255,255,255,0.1);
       border-radius:8px;background:rgba(255,255,255,0.05);color:#edf0f7;font-family:inherit;font-size:13px;cursor:pointer">← 이전</button>
@@ -643,7 +684,6 @@ pointer-events:none;white-space:nowrap;
   </div>
 
   <!-- Sheets 업데이트 + 엑셀 다운로드 버튼 -->
-
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
     <button class="btn btn-ghost btn-sm" onclick="manualBuildAnalysis()" id="build-btn">
       📊 Sheets 분석 시트 업데이트
@@ -660,7 +700,6 @@ pointer-events:none;white-space:nowrap;
 </div>
 
 <!-- ══ 종료 모달 ══ -->
-
 <div class="modal-bg" id="modal-end">
   <div class="modal">
     <h3>수업을 종료할까요?</h3>
@@ -673,7 +712,6 @@ pointer-events:none;white-space:nowrap;
 </div>
 
 <!-- ══ 사후 출석 모달 ══ -->
-
 <div class="modal-bg" id="modal-late">
   <div class="modal" style="max-width:440px">
     <h3>사후 출석 처리</h3>
@@ -702,7 +740,6 @@ pointer-events:none;white-space:nowrap;
 </div>
 
 <!-- ══ 수동 등록 모달 ══ -->
-
 <div class="modal-bg" id="modal-manual-reg">
   <div class="modal" style="max-width:400px">
     <h3>미등록 학생 출석 처리</h3>
@@ -752,7 +789,6 @@ pointer-events:none;white-space:nowrap;
 </div>
 
 <!-- ══ 토스트 ══ -->
-
 <div class="toast" id="toast"></div>
 
 <script>
@@ -804,22 +840,28 @@ async function gasPost(payload) {
 (async function init() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('mode') === 'view') {
-    // 확인용 페이지 — 명단/기록/분석만 표시
+    // 확인용 페이지 — 기록/분석만 표시 (명단 숨김)
     document.getElementById('room-select-screen').style.display = 'none';
-    document.body.style.background = '#0e1117';
-    document.body.style.color = '#edf0f7';
-    // 교사/학생 탭 숨김
-    ['nb-teacher','nb-student'].forEach(id => {
+    document.getElementById('main-screen').style.display = 'none';
+    // 교사/학생/명단 탭 숨김
+    ['nb-teacher','nb-student','nb-manage'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
-    ['pg-teacher','pg-student'].forEach(id => {
+    ['pg-teacher','pg-student','pg-manage'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
-    // 명단 탭으로 시작
     await loadStudentsFromSheets();
     goTab('history');
+
+  } else if (params.get('mode') === 'admin') {
+    // 관리용 페이지 — 모든 탭
+    document.getElementById('room-select-screen').style.display = 'none';
+    document.getElementById('main-screen').style.display = 'none';
+    await loadStudentsFromSheets();
+    renderStudentList();
+    restoreTeacherSession();
 
   } else if (params.get('mode') === 'student') {
     document.getElementById('topbar').style.display = 'none';
@@ -869,19 +911,27 @@ async function gasPost(payload) {
     S.teacherRoom = teacherParam;
 
     if (!teacherParam) {
-      // teacher 파라미터 없음 → 장소 선택 화면 표시
+      // teacher 파라미터 없음 → 메인 화면 표시
       document.getElementById('topbar').style.display = 'none';
-      document.getElementById('room-select-screen').style.display = 'flex';
+      document.getElementById('main-screen').style.display = 'flex';
       ['pg-teacher','pg-student','pg-manage','pg-history','pg-analysis'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
-      // 버튼 먼저 그리고 명단은 백그라운드 로드
-      renderRoomSelectButtons();
-      loadStudentsFromSheets(); // await 없이 백그라운드 실행
+      loadStudentsFromSheets(); // 백그라운드 로드
     } else {
       // teacher 파라미터 있음 → 해당 장소 교사 화면 바로 진입
       document.getElementById('room-select-screen').style.display = 'none';
+
+      // 출석용: 명단/분석 탭 숨김
+      ['nb-manage','nb-analysis'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+      ['pg-manage','pg-analysis'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
 
       // 상단에 장소 배지 표시
       const badge = document.createElement('div');
@@ -917,6 +967,54 @@ async function gasPost(payload) {
     }
   }
 })();
+
+/* ══ 메인 화면 네비게이션 ══ */
+function goAttendance() {
+  // 비번 없이 바로 장소 선택 화면으로
+  document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('room-select-screen').style.display = 'flex';
+  document.getElementById('topbar').style.display = 'none';
+  renderRoomSelectButtons();
+}
+
+function goView() {
+  openPwModal('확인용 페이지', '명단·기록·분석을 확인할 수 있어요', '📊', 'view');
+}
+
+function goAdmin() {
+  openPwModal('관리용 페이지', '명단 관리 및 전체 설정에 접근해요', '⚙️', 'admin');
+}
+
+// 비밀번호 모달
+let _pwTarget = '';
+function openPwModal(title, desc, icon, target) {
+  _pwTarget = target;
+  document.getElementById('pw-title').textContent = title;
+  document.getElementById('pw-desc').textContent = desc;
+  document.getElementById('pw-icon').textContent = icon;
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-err').textContent = '';
+  document.getElementById('modal-pw').classList.add('on');
+  setTimeout(() => document.getElementById('pw-input').focus(), 100);
+}
+
+function closePwModal() {
+  document.getElementById('modal-pw').classList.remove('on');
+  _pwTarget = '';
+}
+
+function confirmPw() {
+  const val = document.getElementById('pw-input').value;
+  const PW  = {view: '1234', admin: 'yb18128!'};
+  if (val !== PW[_pwTarget]) {
+    document.getElementById('pw-err').textContent = '비밀번호가 틀렸어요.';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+    return;
+  }
+  closePwModal();
+  location.href = location.pathname + '?mode=' + _pwTarget;
+}
 
 // ── 장소 선택 버튼 렌더링 ──
 function renderRoomSelectButtons() {
@@ -2603,6 +2701,5 @@ function toast(msg, type='ok') {
   _tt = setTimeout(() => el.classList.remove('show'), 2800);
 }
 </script>
-
 </body>
 </html>
