@@ -265,8 +265,8 @@ tbody tr:last-child td{border-bottom:none}
 
 /* modal */
 .modal-bg{
-  display:none;position:fixed;inset:0;z-index:300;
-  background:rgba(0,0,0,.65);backdrop-filter:blur(8px);
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(8px);
   align-items:center;justify-content:center;padding:20px;
 }
 .modal-bg.on{display:flex}
@@ -1017,7 +1017,9 @@ function confirmPw() {
   }
   closePwModal();
   // URL 파라미터로 이동 (history.pushState 없이 바로 이동)
-  window.location.replace(location.pathname + '?mode=' + _pwTarget);
+  // 강제 페이지 이동
+  const url = location.origin + location.pathname + '?mode=' + _pwTarget;
+  window.location.assign(url);
 }
 
 // ── 장소 선택 버튼 렌더링 ──
