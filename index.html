@@ -770,6 +770,7 @@ async function gasPost(payload) {
   const params = new URLSearchParams(window.location.search);
   if (params.get('mode') === 'student') {
     document.getElementById('topbar').style.display = 'none';
+    document.getElementById('room-select-screen').style.display = 'none'; // 장소 선택 화면 숨김
     ['pg-teacher','pg-student','pg-manage','pg-history','pg-analysis'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
@@ -822,9 +823,9 @@ async function gasPost(payload) {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
-      // 명단 로드 후 장소 버튼 생성
-      await loadStudentsFromSheets();
+      // 버튼 먼저 그리고 명단은 백그라운드 로드
       renderRoomSelectButtons();
+      loadStudentsFromSheets(); // await 없이 백그라운드 실행
     } else {
       // teacher 파라미터 있음 → 해당 장소 교사 화면 바로 진입
       document.getElementById('room-select-screen').style.display = 'none';
