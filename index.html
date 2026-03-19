@@ -1004,21 +1004,21 @@ function openPwModal(title, desc, icon, target) {
 
 function closePwModal() {
   document.getElementById('modal-pw').classList.remove('on');
-  _pwTarget = '';
+  // _pwTarget은 confirmPw 이후에만 초기화
 }
 
 function confirmPw() {
-  const val = document.getElementById('pw-input').value.trim();
-  const errEl = document.getElementById('pw-err');
+  const val    = document.getElementById('pw-input').value.trim();
+  const errEl  = document.getElementById('pw-err');
+  const target = _pwTarget; // 로컬에 저장
 
-  if (_pwTarget === 'view'  && val !== '1234')      { errEl.textContent = '비밀번호가 틀렸어요.'; document.getElementById('pw-input').value=''; return; }
-  if (_pwTarget === 'admin' && val !== 'yb18128!')  { errEl.textContent = '비밀번호가 틀렸어요.'; document.getElementById('pw-input').value=''; return; }
+  if (target === 'view'  && val !== '1234')     { errEl.textContent = '비밀번호가 틀렸어요.'; document.getElementById('pw-input').value=''; return; }
+  if (target === 'admin' && val !== 'yb18128!') { errEl.textContent = '비밀번호가 틀렸어요.'; document.getElementById('pw-input').value=''; return; }
 
-  // 맞으면 이동
+  // 맞으면 모달 닫고 이동
   document.getElementById('modal-pw').classList.remove('on');
-  setTimeout(() => {
-    location.href = '?mode=' + _pwTarget;
-  }, 100);
+  _pwTarget = '';
+  location.href = location.pathname + '?mode=' + target;
 }
 
 // ── 장소 선택 버튼 렌더링 ──
