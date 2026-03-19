@@ -1,17 +1,30 @@
 <!DOCTYPE html>
 
-<html lang="ko" style="color-scheme:dark">
+<html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="color-scheme" content="dark">
 <title>코스모스 독서시간 출석</title>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-* { color-scheme: dark; }
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
 
+/* 라이트모드여도 항상 다크 테마 강제 */
+@media (prefers-color-scheme: light) {
+:root {
+–ink: #0e1117;
+–card: rgba(255,255,255,0.05);
+–card2: rgba(255,255,255,0.09);
+–border: rgba(255,255,255,0.08);
+–text: #e6eaf3;
+–muted: #7a8499;
+–accent: #e94560;
+–accent2: #f5a623;
+–ok: #00c896;
+–sky: #5eb8ff;
+}
+}
 :root {
 –ink: #0e1117;
 –card: rgba(255,255,255,0.05);
@@ -30,10 +43,9 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{
 font-family:‘Noto Sans KR’,sans-serif;
-background:#0e1117 !important;color:#e6eaf3 !important;
+background:var(–ink);color:var(–text);
 min-height:100vh;font-size:14px;line-height:1.5;
 -webkit-tap-highlight-color:transparent;
-color-scheme:dark;
 }
 body::before{
 content:’’;position:fixed;inset:0;z-index:0;pointer-events:none;
