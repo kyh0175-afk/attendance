@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 
-<html lang="ko">
+<html lang="ko" style="color-scheme:dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="color-scheme" content="dark">
 <title>코스모스 독서시간 출석</title>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
+* { color-scheme: dark; }
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
@@ -28,9 +30,10 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{
 font-family:‘Noto Sans KR’,sans-serif;
-background:var(–ink);color:var(–text);
+background:#0e1117 !important;color:#e6eaf3 !important;
 min-height:100vh;font-size:14px;line-height:1.5;
 -webkit-tap-highlight-color:transparent;
+color-scheme:dark;
 }
 body::before{
 content:’’;position:fixed;inset:0;z-index:0;pointer-events:none;
