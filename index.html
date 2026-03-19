@@ -1041,7 +1041,7 @@ function updateClsByProgram() {
 async function startSession() {
   const subj    = document.getElementById('f-subj').value.trim() || '수업';
   const teacher = document.getElementById('f-teacher').value.trim() || '선생님';
-  const cls     = document.getElementById('f-cls').value;
+  const cls     = S.teacherRoom || document.getElementById('f-cls').value; // teacherRoom 우선
   const dur     = parseInt(document.getElementById('f-dur').value);
 
   const btn = document.querySelector('#form-area .btn-red');
