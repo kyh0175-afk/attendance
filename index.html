@@ -562,13 +562,13 @@ tbody tr:last-child td{border-bottom:none}
   <div class="row-btw" style="margin-bottom:16px">
     <div style="font-size:17px;font-weight:800">출석 분석</div>
     <div style="display:flex;gap:8px;align-items:center">
-      <select id="analysis-group" style="background:var(--card);border:1px solid var(--border);
-        border-radius:8px;padding:7px 12px;color:var(--text);font-family:inherit;font-size:13px;outline:none"
+      <select id="analysis-group" style="background:#fff;border:1px solid var(--border);
+        border-radius:8px;padding:7px 12px;color:#111;font-family:inherit;font-size:13px;outline:none"
         onchange="renderAnalysis()">
         <option value="">전체 프로그램</option>
       </select>
-      <select id="analysis-grade" style="background:var(--card);border:1px solid var(--border);
-        border-radius:8px;padding:7px 12px;color:var(--text);font-family:inherit;font-size:13px;outline:none"
+      <select id="analysis-grade" style="background:#fff;border:1px solid var(--border);
+        border-radius:8px;padding:7px 12px;color:#111;font-family:inherit;font-size:13px;outline:none"
         onchange="renderAnalysis()">
         <option value="">전체 학년/반</option>
       </select>
@@ -1968,24 +1968,40 @@ function renderWeekView(students, attendMap) {
     const cells = dates.map(d => {
       const dateStr  = fmtDate(d);
       const dayKr    = DAYS_KR[d.getDay()];
-      const isTarget = studentDays.includes(dayKr); // 출석 대상 요일
+      const isTarget = studentDays.includes(dayKr);
       const attended = attendMap[st.no]?.has(dateStr);
       const isToday  = dateStr === fmtDate(new Date());
       const isFuture = d > new Date() && !isToday;
 
       let cell = '';
-      if (isFuture)        cell = `<span style="color:var(--border)">-</span>`;
-      else if (!isTarget)  cell = `<span style="color:rgba(255,255,255,.12)">·</span>`;
-      else if (attended)   cell = `<span style="color:var(--ok);font-weight:700;font-size:16px">O</span>`;
-      else                 cell = `<span style="color:var(--accent);font-weight:700">X</span>`;
+      if (isFuture) {
+        cell = `<span style="color:var(--border)">-</span>`;
+      } else if (attended && isTarget) {
+        // 출석 대상 요일 + 출석 → 초록 ●
+        cell = `<span style="color:var(--ok);font-size:18px;line-height:1">●</span>`;
+      } else if (attended && !isTarget) {
+        // 비대상 요일 + 출석 → 파란 ● (자율출석)
+        cell = `<span style="color:var(--sky);font-size:18px;line-height:1">●</span>`;
+      } else if (!isTarget) {
+        // 비대상 요일 + 미출석 → 점
+        cell = `<span style="color:rgba(255,255,255,.12)">·</span>`;
+      } else {
+        // 대상 요일 + 미출석 → X
+        cell = `<span style="color:var(--accent);font-weight:700">X</span>`;
+      }
 
       return `<td style="text-align:center;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.04);
         ${isToday?'background:rgba(79,142,247,.08)':''}">${cell}</td>`;
     }).join('');
 
-    const total  = dates.filter(d => (st.days||[]).includes(DAYS_KR[d.getDay()]) && d <= new Date()).length;
-    const done   = dates.filter(d => attendMap[st.no]?.has(fmtDate(d))).length;
-    const rate   = total ? Math.round(done/total*100) : 0;
+    // 출석 통계
+    const today = new Date(); today.setHours(23,59,59,999);
+    const targetDates  = dates.filter(d => studentDays.includes(DAYS_KR[d.getDay()]) && d <= today);
+    const attendDates  = dates.filter(d => attendMap[st.no]?.has(fmtDate(d)) && d <= today);
+    const targetAttend = attendDates.filter(d => studentDays.includes(DAYS_KR[d.getDay()])).length;
+    const selfAttend   = attendDates.length - targetAttend; // 자율출석 횟수
+    const total  = targetDates.length;
+    const rate   = total ? Math.round(targetAttend/total*100) : 0;
     const rColor = rate>=80?'var(--ok)':rate>=50?'var(--accent2)':'var(--accent)';
 
     return `<tr>
@@ -1996,8 +2012,9 @@ function renderWeekView(students, attendMap) {
         </div>
       </td>
       ${cells}
-      <td style="text-align:center;padding:8px 8px;border-bottom:1px solid rgba(255,255,255,.04)">
+      <td style="text-align:center;padding:8px 8px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap">
         <span style="font-family:'DM Mono',monospace;font-size:12px;color:${rColor}">${rate}%</span>
+        ${selfAttend > 0 ? `<br><span style="font-size:10px;color:var(--sky)">자율 +${selfAttend}</span>` : ''}
       </td>
     </tr>`;
   }).join('');
@@ -2016,7 +2033,10 @@ function renderWeekView(students, attendMap) {
       </table>
     </div>
     <div style="margin-top:10px;font-size:11px;color:var(--muted);text-align:center">
-      O = 출석 &nbsp;·&nbsp; X = 결석 &nbsp;·&nbsp; · = 비대상 요일 &nbsp;·&nbsp; - = 미래
+      <span style="color:var(--ok)">●</span> 출석 &nbsp;·&nbsp;
+      <span style="color:var(--sky)">●</span> 자율출석 &nbsp;·&nbsp;
+      <span style="color:var(--accent)">X</span> 결석 &nbsp;·&nbsp;
+      · 비대상 요일 &nbsp;·&nbsp; - 미래
     </div>`;
 }
 
@@ -2056,6 +2076,12 @@ function renderMonthView(students, attendMap) {
     });
     if (week.length) weeks.push(week);
 
+    // 자율출석 계산
+    const selfDates = allDates.filter(d =>
+      !studentDays.includes(d.dayKr) && attendMap[st.no]?.has(d.str) && d.date <= new Date()
+    );
+    const selfCount = selfDates.length;
+
     const calRows = weeks.map(w =>
       `<tr>${w.map(d => {
         if (!d) return '<td style="padding:2px"></td>';
@@ -2063,17 +2089,24 @@ function renderMonthView(students, attendMap) {
         const attended  = attendMap[st.no]?.has(d.str);
         const isFuture  = d.date > new Date();
         const isToday   = d.str === fmtDate(new Date());
-        let bg = '', text = 'var(--muted)', label = d.date.getDate();
-        if (isToday) bg = 'rgba(79,142,247,.2)';
-        if (isTarget && !isFuture) {
-          bg = attended ? 'rgba(0,200,150,.18)' : 'rgba(233,69,96,.15)';
-          text = attended ? 'var(--ok)' : 'var(--accent)';
+        let bg = '', text = 'var(--muted)';
+        const label = d.date.getDate();
+        if (isToday) bg = 'rgba(79,142,247,.15)';
+        if (!isFuture && attended && isTarget) {
+          // 출석 대상 + 출석 → 초록
+          bg = 'rgba(0,200,150,.25)'; text = 'var(--ok)';
+        } else if (!isFuture && attended && !isTarget) {
+          // 비대상 + 출석 → 파랑 (자율출석)
+          bg = 'rgba(94,184,255,.25)'; text = 'var(--sky)';
+        } else if (!isFuture && isTarget) {
+          // 대상 + 미출석 → 빨강
+          bg = 'rgba(233,69,96,.15)'; text = 'var(--accent)';
         }
         return `<td style="padding:2px;text-align:center">
           <div style="width:24px;height:24px;border-radius:50%;background:${bg};
             display:flex;align-items:center;justify-content:center;
             font-size:10px;color:${text};margin:auto;
-            ${isTarget&&!isFuture?'font-weight:700':''}">
+            ${(!isFuture&&(attended||isTarget))?'font-weight:700':''}">
             ${label}
           </div></td>`;
       }).join('')}</tr>`
@@ -2084,7 +2117,7 @@ function renderMonthView(students, attendMap) {
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
           <div>
             <div style="font-weight:700;font-size:14px">${st.name}
-              <span style="font-weight:400;color:var(--muted);font-size:11px;margin-left:6px;font-family:'DM Mono',monospace">${st.no}</span>
+              <span style="font-weight:400;color:var(--muted);font-size:11px;margin-left:6px;font-family:'DM Mono',monospace">${st.no} ${getGradeClass(st.no)}</span>
             </div>
             <div style="font-size:11px;color:var(--muted);margin-top:2px">
               출석 요일: ${studentDays.join(', ') || '미설정'}
@@ -2093,6 +2126,7 @@ function renderMonthView(students, attendMap) {
           <div style="text-align:right">
             <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:${rColor}">${rate}%</div>
             <div style="font-size:10px;color:var(--muted)">${attendedDates.length}/${targetDates.length}일</div>
+            ${selfCount > 0 ? `<div style="font-size:10px;color:var(--sky);margin-top:2px">자율출석 +${selfCount}일</div>` : ''}
           </div>
         </div>
         <table style="width:100%;border-collapse:collapse">
@@ -2101,6 +2135,11 @@ function renderMonthView(students, attendMap) {
           ).join('')}</tr></thead>
           <tbody>${calRows}</tbody>
         </table>
+        <div style="margin-top:8px;font-size:10px;color:var(--muted);text-align:center">
+          <span style="color:var(--ok)">●</span> 출석 &nbsp;
+          <span style="color:var(--sky)">●</span> 자율출석 &nbsp;
+          <span style="color:var(--accent)">●</span> 결석
+        </div>
       </div>`;
   }).join('');
 
