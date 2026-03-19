@@ -582,7 +582,13 @@ async function gasPost(payload) {
     document.getElementById('student-fullscreen').style.display = 'block';
     document.getElementById('sf-sub').textContent = '수업 정보를 불러오는 중...';
     const sid = params.get('sid') || '';
-    const result = await gasPost({action: "getSession", sessionId: sid});
+    let result = {ok: false, msg: '서버 연결 실패'};
+    try {
+      result = await gasPost({action: "getSession", sessionId: sid});
+    } catch(e) {
+      result = {ok: false, msg: '네트워크 오류: ' + e.message};
+    }
+
     if (result.ok) {
       S.session = {
         id: result.sessionId, subj: result.subject,
@@ -592,8 +598,21 @@ async function gasPost(payload) {
       };
       S.attendance = [];
       startTimer();
+      syncFullUI();
+    } else {
+      // 세션 조회 실패 시 오류 메시지 표시
+      document.getElementById('sf-title').textContent = '출석 체크';
+      document.getElementById('sf-sub').textContent =
+        (result.msg || '수업 정보를 불러올 수 없어요.') +
+        '\n\n선생님께 QR을 다시 생성해 달라고 요청하거나\n페이지를 새로고침 해보세요.';
+      // 재시도 버튼 표시
+      const retryBtn = document.createElement('button');
+      retryBtn.className = 'btn btn-ghost';
+      retryBtn.textContent = '🔄 다시 시도';
+      retryBtn.style.marginTop = '20px';
+      retryBtn.onclick = () => location.reload();
+      document.getElementById('sf-form').appendChild(retryBtn);
     }
-    syncFullUI();
   } else {
     // 교사 화면 — 명단 로드 후 세션 복원
     document.getElementById('student-fullscreen').style.display = 'none';
