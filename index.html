@@ -351,7 +351,8 @@ tbody tr:last-child td{border-bottom:none}
     <div id="pw-err" style="color:#e94560;font-size:12px;height:18px;margin-bottom:8px"></div>
     <div style="display:flex;gap:10px">
       <button class="btn btn-ghost btn-sm" style="flex:1" onclick="closePwModal()">취소</button>
-      <button class="btn btn-green btn-sm" style="flex:1" onclick="confirmPw()">확인</button>
+      <button class="btn btn-green btn-sm" style="flex:1" id="pw-confirm-btn"
+        onclick="confirmPw()">확인</button>
     </div>
   </div>
 </div>
@@ -1007,19 +1008,17 @@ function closePwModal() {
 }
 
 function confirmPw() {
-  const val = document.getElementById('pw-input').value;
-  const PW  = {view: '1234', admin: 'yb18128!'};
-  if (val !== PW[_pwTarget]) {
-    document.getElementById('pw-err').textContent = '비밀번호가 틀렸어요.';
-    document.getElementById('pw-input').value = '';
-    document.getElementById('pw-input').focus();
-    return;
-  }
-  closePwModal();
-  // URL 파라미터로 이동 (history.pushState 없이 바로 이동)
-  // 강제 페이지 이동
-  const url = location.origin + location.pathname + '?mode=' + _pwTarget;
-  window.location.assign(url);
+  const val = document.getElementById('pw-input').value.trim();
+  const errEl = document.getElementById('pw-err');
+
+  if (_pwTarget === 'view'  && val !== '1234')      { errEl.textContent = '비밀번호가 틀렸어요.'; document.getElementById('pw-input').value=''; return; }
+  if (_pwTarget === 'admin' && val !== 'yb18128!')  { errEl.textContent = '비밀번호가 틀렸어요.'; document.getElementById('pw-input').value=''; return; }
+
+  // 맞으면 이동
+  document.getElementById('modal-pw').classList.remove('on');
+  setTimeout(() => {
+    location.href = '?mode=' + _pwTarget;
+  }, 100);
 }
 
 // ── 장소 선택 버튼 렌더링 ──
