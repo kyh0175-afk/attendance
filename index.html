@@ -592,10 +592,13 @@ tbody tr:last-child td{border-bottom:none}
       border-radius:8px;background:var(--card);color:var(--text);font-family:inherit;font-size:13px;cursor:pointer">다음 →</button>
   </div>
 
-  <!-- Sheets 업데이트 버튼 -->
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+  <!-- Sheets 업데이트 + 엑셀 다운로드 버튼 -->
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
     <button class="btn btn-ghost btn-sm" onclick="manualBuildAnalysis()" id="build-btn">
       📊 Sheets 분석 시트 업데이트
+    </button>
+    <button class="btn btn-ghost btn-sm" onclick="downloadAnalysisExcel()">
+      📥 엑셀 다운로드
     </button>
     <div id="build-result" style="font-size:13px;display:none"></div>
   </div>
@@ -1673,6 +1676,138 @@ function stopPolling() {
 
 /* ══ 토스트 ══ */
 /* ══ 분석 시트 수동 업데이트 ══ */
+
+// ── 분석 결과 엑셀 다운로드 ──
+function downloadAnalysisExcel() {
+  const records  = window._attendanceRecords || [];
+  const groupFilter = document.getElementById('analysis-group').value;
+  const gradeFilter = document.getElementById('analysis-grade').value;
+
+  if (!records.length || !S.students.length) {
+    toast('분석 데이터가 없어요. 먼저 분석 탭을 열어주세요.', 'err'); return;
+  }
+
+  let students = S.students;
+  if (groupFilter) students = students.filter(s => `${s.program} — ${s.cls}` === groupFilter);
+  if (gradeFilter) students = students.filter(s => getGradeClass(s.no) === gradeFilter);
+  students = [...students].sort((a,b) => String(a.no).localeCompare(String(b.no), undefined, {numeric:true}));
+
+  // 출석 맵 (학번 → Set<날짜>)
+  const attendMap = {};
+  records.filter(r => r.status === '출석').forEach(r => {
+    if (!attendMap[r.no]) attendMap[r.no] = new Set();
+    attendMap[r.no].add(r.date);
+  });
+
+  const wb = XLSX.utils.book_new();
+
+  if (S.analysisView === 'week') {
+    // 주별 시트
+    const dates = getWeekDates(S.analysisDate);
+    const label = `${fmtDate(dates[0])}~${fmtDate(dates[6])}`;
+    const header = ['이름','학번','학년반','출석요일',
+      ...dates.map(d => `${d.getMonth()+1}/${d.getDate()}(${DAYS_KR[d.getDay()]})`),
+      '출석','대상','출석률','자율출석'];
+    const rows = [header];
+
+    students.forEach(st => {
+      const studentDays = st.days || [];
+      const today = new Date(); today.setHours(23,59,59,999);
+      const cells = dates.map(d => {
+        const dateStr  = fmtDate(d);
+        const dayKr    = DAYS_KR[d.getDay()];
+        const isTarget = studentDays.includes(dayKr);
+        const attended = attendMap[st.no]?.has(dateStr);
+        const isFuture = d > today;
+        if (isFuture)               return '-';
+        if (attended && isTarget)   return 'O';
+        if (attended && !isTarget)  return '자율';
+        if (!isTarget)              return '';
+        return 'X';
+      });
+      const targetDates  = dates.filter(d => studentDays.includes(DAYS_KR[d.getDay()]) && d <= today);
+      const attendDates  = dates.filter(d => attendMap[st.no]?.has(fmtDate(d)) && d <= today);
+      const targetAttend = attendDates.filter(d => studentDays.includes(DAYS_KR[d.getDay()])).length;
+      const selfAttend   = attendDates.length - targetAttend;
+      const total        = targetDates.length;
+      const rate         = total ? Math.round(targetAttend/total*100)+'%' : '-';
+      rows.push([st.name, st.no, getGradeClass(st.no), studentDays.join(','),
+        ...cells, targetAttend, total, rate, selfAttend]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    // 헤더 열 너비
+    ws['!cols'] = [
+      {wch:10},{wch:10},{wch:10},{wch:14},
+      ...dates.map(() => ({wch:8})),
+      {wch:6},{wch:6},{wch:8},{wch:8}
+    ];
+    XLSX.utils.book_append_sheet(wb, ws, '주별출석');
+    XLSX.writeFile(wb, `출석분석_주별_${label}.xlsx`);
+
+  } else {
+    // 월별 시트
+    const y = S.analysisDate.getFullYear();
+    const m = S.analysisDate.getMonth();
+    const daysInMonth = new Date(y, m+1, 0).getDate();
+    const allDates = Array.from({length:daysInMonth}, (_, i) => {
+      const d = new Date(y, m, i+1);
+      return {date:d, str:fmtDate(d), dayKr:DAYS_KR[d.getDay()]};
+    });
+    const label = `${y}년${m+1}월`;
+    const header = ['이름','학번','학년반','출석요일',
+      ...allDates.map(d => `${d.date.getDate()}(${d.dayKr})`),
+      '출석','대상','출석률','자율출석'];
+    const rows = [header];
+    const today = new Date(); today.setHours(23,59,59,999);
+
+    students.forEach(st => {
+      const studentDays = st.days || [];
+      const cells = allDates.map(d => {
+        const isTarget = studentDays.includes(d.dayKr);
+        const attended = attendMap[st.no]?.has(d.str);
+        const isFuture = d.date > today;
+        if (isFuture)               return '-';
+        if (attended && isTarget)   return 'O';
+        if (attended && !isTarget)  return '자율';
+        if (!isTarget)              return '';
+        return 'X';
+      });
+      const targetDates  = allDates.filter(d => studentDays.includes(d.dayKr) && d.date <= today);
+      const attendDates  = allDates.filter(d => attendMap[st.no]?.has(d.str) && d.date <= today);
+      const targetAttend = attendDates.filter(d => studentDays.includes(d.dayKr)).length;
+      const selfAttend   = attendDates.length - targetAttend;
+      const total        = targetDates.length;
+      const rate         = total ? Math.round(targetAttend/total*100)+'%' : '-';
+      rows.push([st.name, st.no, getGradeClass(st.no), studentDays.join(','),
+        ...cells, targetAttend, total, rate, selfAttend]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [
+      {wch:10},{wch:10},{wch:10},{wch:14},
+      ...allDates.map(() => ({wch:5})),
+      {wch:6},{wch:6},{wch:8},{wch:8}
+    ];
+
+    // O=초록, X=빨강, 자율=파랑 색상 적용
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = 1; R <= range.e.r; R++) {
+      for (let C = 4; C <= 4+allDates.length-1; C++) {
+        const cell = ws[XLSX.utils.encode_cell({r:R, c:C})];
+        if (!cell) continue;
+        if (cell.v === 'O')   cell.s = {fill:{fgColor:{rgb:'C6EFCE'}}, font:{color:{rgb:'276221'}, bold:true}};
+        if (cell.v === 'X')   cell.s = {fill:{fgColor:{rgb:'FFC7CE'}}, font:{color:{rgb:'9C0006'}, bold:true}};
+        if (cell.v === '자율') cell.s = {fill:{fgColor:{rgb:'DDEEFF'}}, font:{color:{rgb:'0070C0'}, bold:true}};
+      }
+    }
+
+    XLSX.utils.book_append_sheet(wb, ws, '월별출석');
+    XLSX.writeFile(wb, `출석분석_${label}.xlsx`);
+  }
+
+  toast('엑셀 파일이 다운로드됐어요 📥', 'ok');
+}
 
 async function manualBuildAnalysis() {
   const btn = document.getElementById('build-btn');
