@@ -797,24 +797,11 @@ tbody tr:last-child td{border-bottom:none}
 <script>
 /* ══ 데이터 ══ */
 const S = {
-  students: [
-    {id:1,  name:'김민준', no:'20240101', program:'방과후 독서시간', cls:'아우름'},
-    {id:2,  name:'이서연', no:'20240102', program:'방과후 독서시간', cls:'아우름'},
-    {id:3,  name:'박지호', no:'20240103', program:'방과후 독서시간', cls:'아우름'},
-    {id:4,  name:'최수아', no:'20240104', program:'방과후 독서시간', cls:'아우름'},
-    {id:5,  name:'정우진', no:'20240105', program:'야간 독서시간',   cls:'해오름'},
-    {id:6,  name:'강하늘', no:'20240106', program:'야간 독서시간',   cls:'해오름'},
-    {id:7,  name:'오지민', no:'20240107', program:'야간 독서시간',   cls:'해오름'},
-    {id:8,  name:'윤채원', no:'20240108', program:'야간 독서시간',   cls:'해오름'},
-    {id:9,  name:'한도윤', no:'20240109', program:'심야 독서시간',   cls:'리케이온'},
-    {id:10, name:'임지아', no:'20240110', program:'심야 독서시간',   cls:'리케이온'},
-    {id:11, name:'신예준', no:'20240111', program:'심야 독서시간',   cls:'리케이온'},
-    {id:12, name:'조나연', no:'20240112', program:'심야 독서시간',   cls:'리케이온'},
-  ],
+  students: [],
   session: null,
   attendance: [],
   history: [],
-  nextId: 21,
+  nextId: 1,
   timerInt: null,
   pollInt: null,
   analysisView: 'week',
@@ -1091,6 +1078,9 @@ function enterRoom(encodedRoom) {
 
 // ── Sheets에서 명단 불러오기 ──
 async function loadStudentsFromSheets() {
+  // 저장 중이면 로드하지 않음 (업로드 직후 덮어쓰기 방지)
+  if (_savingStudents) return;
+
   const result = await gasPost({action: "getStudents"});
   if (result.ok && result.students.length > 0) {
     S.students = result.students.map((s, i) => ({...s, id: i + 1}));
@@ -1099,7 +1089,6 @@ async function loadStudentsFromSheets() {
   // 명단 로드 후 프로그램 목록 + 장소 목록 동적 업데이트
   updateProgramOptions();
   updateClsByProgram();
-
 }
 
 // 프로그램 목록은 항상 고정 3개 표시
