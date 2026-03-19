@@ -137,7 +137,7 @@ body::before{
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
 @media(max-width:480px){.stats{grid-template-columns:repeat(2,1fr)}}
 .stat{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:16px 12px;text-align:center}
-.sn{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;line-height:1}
+.sn{font-family:'DM Mono',monospace;font-size:28px;font-weight:700;line-height:1}
 .sl{font-size:10px;color:#7a8499;margin-top:5px;letter-spacing:.6px;text-transform:uppercase}
 .c-sky{color:#5eb8ff}.c-ok{color:#00c896}.c-red{color:#e94560}.c-amber{color:#f5a623}
 
@@ -152,7 +152,7 @@ body::before{
 }
 @media(max-width:640px){.qr-panel{width:100%}}
 .qr-box{background:#fff;border-radius:10px;padding:10px;line-height:0}
-.timer-num{font-family:'DM Mono',monospace;font-size:40px;font-weight:500;letter-spacing:-1px;transition:color .4s;line-height:1}
+.timer-num{font-family:'DM Mono',monospace;font-size:40px;font-weight:700;letter-spacing:-1px;transition:color .4s;line-height:1}
 .timer-lbl{font-size:10px;color:#7a8499;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
 .t-ok{color:#00c896}.t-warn{color:#f5a623}.t-end{color:#e94560}
 .live-pill{
@@ -178,7 +178,7 @@ tbody tr{transition:background .12s}
 tbody tr:hover td{background:rgba(255,255,255,0.09)}
 tbody td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
 tbody tr:last-child td{border-bottom:none}
-.mono{font-family:'DM Mono',monospace;font-size:11px;color:#7a8499}
+.mono{font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:#7a8499}
 .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700}
 .b-ok{background:rgba(0,200,150,.14);color:#00c896;border:1px solid rgba(0,200,150,.28)}
 .b-no{background:rgba(233,69,96,.1);color:#ff7096;border:1px solid rgba(233,69,96,.2)}
@@ -258,7 +258,7 @@ tbody tr:last-child td{border-bottom:none}
 .hist-subj{font-weight:700;font-size:14px}
 .hist-info{font-size:11px;color:#7a8499;margin-top:3px}
 .hist-detail{display:none;font-size:12px;color:#7a8499;margin-top:8px;line-height:1.8}
-.hist-rate{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;color:#00c896;white-space:nowrap}
+.hist-rate{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:#00c896;white-space:nowrap}
 
 .empty{text-align:center;padding:48px 20px;color:#7a8499}
 .empty-icon{font-size:32px;margin-bottom:10px}
@@ -1814,7 +1814,7 @@ async function loadHistory() {
           </div>
         </div>
         <div style="text-align:right;padding-left:16px;flex-shrink:0">
-          <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:${rateColor}">
+          <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:${rateColor}">
             ${s.attended.length}/${s.total}
           </div>
           <div style="font-size:10px;color:#7a8499">${rate}% 출석</div>
