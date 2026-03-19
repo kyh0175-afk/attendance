@@ -830,13 +830,16 @@ async function restoreTeacherSession() {
 
 /* ══ 탭 ══ */
 function goTab(tab) {
-  ['teacher','student','manage','history'].forEach(t => {
-    document.getElementById('pg-'+t).classList.toggle('on', t===tab);
-    document.getElementById('nb-'+t).classList.toggle('on', t===tab);
+  ['teacher','student','manage','history','analysis'].forEach(t => {
+    const pg = document.getElementById('pg-'+t);
+    const nb = document.getElementById('nb-'+t);
+    if (pg) pg.classList.toggle('on', t===tab);
+    if (nb) nb.classList.toggle('on', t===tab);
   });
-  if (tab==='manage') renderStudentList();
-  if (tab==='history') loadHistory();
-  if (tab==='student') syncTabUI();
+  if (tab==='manage')   { renderStudentList(); loadGroupDays(); }
+  if (tab==='history')  loadHistory();
+  if (tab==='student')  syncTabUI();
+  if (tab==='analysis') loadAnalysis();
 }
 
 /* ══ 세션 ══ */
