@@ -35,7 +35,7 @@ body {
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{
 font-family:‘Noto Sans KR’,sans-serif;
-background:var(–ink);color:var(–text);
+background:#0e1117;color:#edf0f7;
 min-height:100vh;font-size:14px;line-height:1.5;
 -webkit-tap-highlight-color:transparent;
 }
@@ -53,7 +53,7 @@ display:flex;align-items:center;gap:12px;
 padding:0 20px;height:56px;
 background:rgba(14,17,23,.88);
 backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-border-bottom:1px solid var(–border);
+border-bottom:1px solid rgba(255,255,255,0.1);
 position:sticky;top:0;z-index:200;
 }
 .logo{
@@ -64,17 +64,17 @@ color:#e94560;
 .nb{
 display:flex;align-items:center;gap:6px;
 padding:7px 13px;border-radius:8px;border:none;
-background:transparent;color:var(–muted);
+background:transparent;color:#7a8499;
 font-family:inherit;font-size:13px;font-weight:500;
 cursor:pointer;transition:all .18s;
 }
-.nb:hover{background:var(–card2);color:var(–text)}
-.nb.on{background:var(–card2);color:var(–text)}
+.nb:hover{background:rgba(255,255,255,0.09);color:#edf0f7}
+.nb.on{background:rgba(255,255,255,0.09);color:#edf0f7}
 .nb .lbl{display:none}
 @media(min-width:520px){.nb .lbl{display:inline}}
 .live-dot{
 width:7px;height:7px;border-radius:50%;
-background:var(–accent);display:none;flex-shrink:0;
+background:#e94560;display:none;flex-shrink:0;
 animation:pulse 1.4s ease-in-out infinite;
 }
 .live-dot.on{display:block}
@@ -86,44 +86,44 @@ animation:pulse 1.4s ease-in-out infinite;
 
 /* card */
 .card{
-background:var(–card);border:1px solid var(–border);
-border-radius:var(–r);padding:22px;margin-bottom:14px;
+background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+border-radius:14px;padding:22px;margin-bottom:14px;
 }
-.card-head{font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(–muted);margin-bottom:16px}
+.card-head{font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:#7a8499;margin-bottom:16px}
 .row-btw{display:flex;align-items:center;justify-content:space-between;gap:12px}
 
 /* form */
 .field{margin-bottom:14px}
-.field label{display:block;font-size:11px;font-weight:600;color:var(–muted);margin-bottom:5px;letter-spacing:.4px}
+.field label{display:block;font-size:11px;font-weight:600;color:#7a8499;margin-bottom:5px;letter-spacing:.4px}
 .field input,.field select{
 width:100%;background:rgba(255,255,255,.05);
-border:1px solid var(–border);border-radius:var(–r-sm);
-padding:10px 13px;color:var(–text);font-family:inherit;font-size:14px;
+border:1px solid rgba(255,255,255,0.1);border-radius:10px;
+padding:10px 13px;color:#edf0f7;font-family:inherit;font-size:14px;
 outline:none;transition:border-color .2s,background .2s;
 -webkit-appearance:none;appearance:none;
 }
-.field input:focus,.field select:focus{border-color:var(–accent);background:rgba(233,69,96,.06)}
+.field input:focus,.field select:focus{border-color:#e94560;background:rgba(233,69,96,.06)}
 .field select{
 background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’ viewBox=‘0 0 12 8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%237a8499’ stroke-width=‘1.5’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
 background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
 }
-.field select option{background:#1a1f2e;color:var(–text)}
+.field select option{background:#1a1f2e;color:#edf0f7}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:480px){.g2{grid-template-columns:1fr}}
 
 /* buttons */
 .btn{
 display:inline-flex;align-items:center;justify-content:center;gap:7px;
-padding:10px 20px;border:none;border-radius:var(–r-sm);
+padding:10px 20px;border:none;border-radius:10px;
 font-family:inherit;font-size:13px;font-weight:600;
 cursor:pointer;transition:all .15s;white-space:nowrap;
 }
-.btn-red{background:var(–accent);color:#fff}
+.btn-red{background:#e94560;color:#fff}
 .btn-red:hover{filter:brightness(1.12);transform:translateY(-1px)}
-.btn-green{background:var(–ok);color:#003d2b}
+.btn-green{background:#00c896;color:#003d2b}
 .btn-green:hover{filter:brightness(1.1);transform:translateY(-1px)}
-.btn-ghost{background:var(–card);color:var(–text);border:1px solid var(–border)}
-.btn-ghost:hover{background:var(–card2);border-color:var(–border2)}
+.btn-ghost{background:rgba(255,255,255,0.05);color:#edf0f7;border:1px solid rgba(255,255,255,0.1)}
+.btn-ghost:hover{background:rgba(255,255,255,0.09);border-color:rgba(255,255,255,0.18)}
 .btn-full{width:100%;padding:13px;font-size:14px}
 .btn-sm{padding:6px 13px;font-size:12px}
 .btn-del{color:#ff7096;border-color:rgba(233,69,96,.25)}
@@ -134,33 +134,33 @@ cursor:pointer;transition:all .15s;white-space:nowrap;
 /* stats */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
 @media(max-width:480px){.stats{grid-template-columns:repeat(2,1fr)}}
-.stat{background:var(–card);border:1px solid var(–border);border-radius:12px;padding:16px 12px;text-align:center}
+.stat{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:16px 12px;text-align:center}
 .sn{font-family:‘DM Mono’,monospace;font-size:28px;font-weight:500;line-height:1}
-.sl{font-size:10px;color:var(–muted);margin-top:5px;letter-spacing:.6px;text-transform:uppercase}
-.c-sky{color:var(–sky)}.c-ok{color:var(–ok)}.c-red{color:var(–accent)}.c-amber{color:var(–accent2)}
+.sl{font-size:10px;color:#7a8499;margin-top:5px;letter-spacing:.6px;text-transform:uppercase}
+.c-sky{color:#5eb8ff}.c-ok{color:#00c896}.c-red{color:#e94560}.c-amber{color:#f5a623}
 
 /* QR layout */
 .qr-layout{display:flex;gap:18px;align-items:flex-start}
 @media(max-width:640px){.qr-layout{flex-direction:column}}
 .qr-panel{
 flex-shrink:0;width:244px;
-background:var(–card);border:1px solid var(–border);
-border-radius:var(–r);padding:20px;
+background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+border-radius:14px;padding:20px;
 display:flex;flex-direction:column;align-items:center;gap:13px;
 }
 @media(max-width:640px){.qr-panel{width:100%}}
 .qr-box{background:#fff;border-radius:10px;padding:10px;line-height:0}
 .timer-num{font-family:‘DM Mono’,monospace;font-size:40px;font-weight:500;letter-spacing:-1px;transition:color .4s;line-height:1}
-.timer-lbl{font-size:10px;color:var(–muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px}
-.t-ok{color:var(–ok)}.t-warn{color:var(–accent2)}.t-end{color:var(–accent)}
+.timer-lbl{font-size:10px;color:#7a8499;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+.t-ok{color:#00c896}.t-warn{color:#f5a623}.t-end{color:#e94560}
 .live-pill{
 display:flex;align-items:center;gap:6px;
 background:rgba(233,69,96,.14);border:1px solid rgba(233,69,96,.28);
 color:#ff7096;padding:5px 12px;border-radius:20px;
 font-size:11px;font-weight:700;
 }
-.pill-dot{width:6px;height:6px;border-radius:50%;background:var(–accent);animation:pulse 1.2s infinite}
-.qr-hint{font-size:10px;color:var(–muted);text-align:center}
+.pill-dot{width:6px;height:6px;border-radius:50%;background:#e94560;animation:pulse 1.2s infinite}
+.qr-hint{font-size:10px;color:#7a8499;text-align:center}
 .qr-btns{display:flex;gap:8px;width:100%}
 .qr-btns .btn{flex:1;font-size:11px;padding:7px 4px}
 
@@ -168,17 +168,17 @@ font-size:11px;font-weight:700;
 .att-panel{flex:1;min-width:0}
 .att-panel .card{margin-bottom:0}
 .prog-bg{background:rgba(255,255,255,.08);border-radius:4px;height:4px;margin:8px 0 3px}
-.prog-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(–accent),var(–ok));transition:width .4s}
-.prog-lbl{font-size:11px;color:var(–muted);text-align:right}
+.prog-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#e94560,#00c896);transition:width .4s}
+.prog-lbl{font-size:11px;color:#7a8499;text-align:right}
 table{width:100%;border-collapse:collapse;margin-top:12px}
-thead th{text-align:left;padding:9px 10px;font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(–muted);border-bottom:1px solid var(–border)}
+thead th{text-align:left;padding:9px 10px;font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:#7a8499;border-bottom:1px solid rgba(255,255,255,0.1)}
 tbody tr{transition:background .12s}
-tbody tr:hover td{background:var(–card2)}
+tbody tr:hover td{background:rgba(255,255,255,0.09)}
 tbody td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
 tbody tr:last-child td{border-bottom:none}
-.mono{font-family:‘DM Mono’,monospace;font-size:11px;color:var(–muted)}
+.mono{font-family:‘DM Mono’,monospace;font-size:11px;color:#7a8499}
 .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700}
-.b-ok{background:rgba(0,200,150,.14);color:var(–ok);border:1px solid rgba(0,200,150,.28)}
+.b-ok{background:rgba(0,200,150,.14);color:#00c896;border:1px solid rgba(0,200,150,.28)}
 .b-no{background:rgba(233,69,96,.1);color:#ff7096;border:1px solid rgba(233,69,96,.2)}
 
 /* student page (탭 내) */
@@ -189,22 +189,22 @@ padding:32px 20px;text-align:center;
 }
 .s-icon{
 width:72px;height:72px;border-radius:20px;margin-bottom:22px;
-background:linear-gradient(135deg,var(–accent),#ff6b35);
+background:linear-gradient(135deg,#e94560,#ff6b35);
 display:flex;align-items:center;justify-content:center;font-size:32px;
 box-shadow:0 14px 44px rgba(233,69,96,.3);
 }
 .s-title{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
-.s-sub{color:var(–muted);font-size:14px;line-height:1.75;margin-bottom:30px;white-space:pre-line}
+.s-sub{color:#7a8499;font-size:14px;line-height:1.75;margin-bottom:30px;white-space:pre-line}
 .big-input{
 width:100%;max-width:320px;
-background:rgba(255,255,255,.07);border:2px solid var(–border);border-radius:14px;
-padding:17px 20px;color:var(–text);
+background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,0.1);border-radius:14px;
+padding:17px 20px;color:#edf0f7;
 font-family:‘DM Mono’,monospace;font-size:20px;text-align:center;outline:none;
 transition:border-color .2s,background .2s;margin-bottom:12px;
 -webkit-appearance:none;
 }
-.big-input:focus{border-color:var(–accent);background:rgba(233,69,96,.07)}
-.big-input::placeholder{font-family:‘Noto Sans KR’,sans-serif;font-size:14px;color:var(–muted)}
+.big-input:focus{border-color:#e94560;background:rgba(233,69,96,.07)}
+.big-input::placeholder{font-family:‘Noto Sans KR’,sans-serif;font-size:14px;color:#7a8499}
 .err-box{
 background:rgba(233,69,96,.1);border:1px solid rgba(233,69,96,.28);
 border-radius:8px;padding:10px 16px;color:#ff7096;font-size:13px;
@@ -218,11 +218,11 @@ animation:fadeUp .35s ease-out;
 }
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .ok-icon{font-size:48px;margin-bottom:10px}
-.ok-name{font-size:22px;font-weight:800;color:var(–ok)}
-.ok-meta{color:var(–muted);font-size:13px;line-height:2;text-align:center;white-space:pre-line}
+.ok-name{font-size:22px;font-weight:800;color:#00c896}
+.ok-meta{color:#7a8499;font-size:13px;line-height:2;text-align:center;white-space:pre-line}
 
 /* student fullscreen */
-#student-fullscreen{display:none;min-height:100vh;background:var(–ink)}
+#student-fullscreen{display:none;min-height:100vh;background:#0e1117}
 .sf-page{
 min-height:100vh;display:flex;flex-direction:column;
 align-items:center;justify-content:center;
@@ -234,7 +234,7 @@ padding:40px 24px;text-align:center;
 display:flex;align-items:center;gap:12px;
 padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .12s;
 }
-.s-row:hover{background:var(–card2)}
+.s-row:hover{background:rgba(255,255,255,0.09)}
 .s-row:last-child{border-bottom:none}
 .ava{
 width:34px;height:34px;border-radius:50%;flex-shrink:0;
@@ -242,8 +242,8 @@ display:flex;align-items:center;justify-content:center;
 font-weight:700;font-size:13px;color:#fff;
 }
 .sr-name{font-weight:600;flex:1;font-size:13px}
-.sr-no{font-family:‘DM Mono’,monospace;font-size:11px;color:var(–muted);min-width:84px}
-.sr-cls{font-size:11px;color:var(–muted);min-width:78px}
+.sr-no{font-family:‘DM Mono’,monospace;font-size:11px;color:#7a8499;min-width:84px}
+.sr-cls{font-size:11px;color:#7a8499;min-width:78px}
 
 /* history */
 .hist-row{
@@ -251,14 +251,14 @@ display:flex;align-items:center;justify-content:space-between;
 padding:14px;border-bottom:1px solid rgba(255,255,255,.04);
 cursor:pointer;transition:background .12s;
 }
-.hist-row:hover{background:var(–card2)}
+.hist-row:hover{background:rgba(255,255,255,0.09)}
 .hist-row:last-child{border-bottom:none}
 .hist-subj{font-weight:700;font-size:14px}
-.hist-info{font-size:11px;color:var(–muted);margin-top:3px}
-.hist-detail{display:none;font-size:12px;color:var(–muted);margin-top:8px;line-height:1.8}
-.hist-rate{font-family:‘DM Mono’,monospace;font-size:16px;font-weight:500;color:var(–ok);white-space:nowrap}
+.hist-info{font-size:11px;color:#7a8499;margin-top:3px}
+.hist-detail{display:none;font-size:12px;color:#7a8499;margin-top:8px;line-height:1.8}
+.hist-rate{font-family:‘DM Mono’,monospace;font-size:16px;font-weight:500;color:#00c896;white-space:nowrap}
 
-.empty{text-align:center;padding:48px 20px;color:var(–muted)}
+.empty{text-align:center;padding:48px 20px;color:#7a8499}
 .empty-icon{font-size:32px;margin-bottom:10px}
 
 /* modal */
@@ -268,23 +268,23 @@ background:rgba(0,0,0,.65);backdrop-filter:blur(8px);
 align-items:center;justify-content:center;padding:20px;
 }
 .modal-bg.on{display:flex}
-.modal{background:#1a1f2e;border:1px solid var(–border);border-radius:18px;padding:26px;width:100%;max-width:380px}
+.modal{background:#1a1f2e;border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:26px;width:100%;max-width:380px}
 .modal h3{font-size:17px;font-weight:800;margin-bottom:6px}
-.modal p{color:var(–muted);font-size:13px;margin-bottom:20px;line-height:1.6}
+.modal p{color:#7a8499;font-size:13px;margin-bottom:20px;line-height:1.6}
 .modal-btns{display:flex;gap:10px;justify-content:flex-end}
 
 /* toast */
 .toast{
 position:fixed;bottom:24px;left:50%;
 transform:translateX(-50%) translateY(60px);
-background:#1e2435;border:1px solid var(–border);
+background:#1e2435;border:1px solid rgba(255,255,255,0.1);
 border-radius:10px;padding:11px 18px;
 font-size:13px;font-weight:500;
 z-index:400;transition:transform .28s cubic-bezier(.34,1.56,.64,1);
 pointer-events:none;white-space:nowrap;
 }
 .toast.show{transform:translateX(-50%) translateY(0)}
-.toast.ok{border-color:rgba(0,200,150,.35);color:var(–ok)}
+.toast.ok{border-color:rgba(0,200,150,.35);color:#00c896}
 .toast.err{border-color:rgba(233,69,96,.35);color:#ff7096}
 </style>
 
@@ -302,10 +302,10 @@ pointer-events:none;white-space:nowrap;
   <div style="color:#7a8499;font-size:14px;margin-bottom:40px">담당 장소를 선택해주세요</div>
   <div id="room-btn-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;width:100%;max-width:480px"></div>
   <div style="margin-top:32px">
-    <a href="?mode=view" style="color:var(--muted);font-size:12px;text-decoration:none;
-      border:1px solid var(--border);border-radius:20px;padding:8px 20px;
+    <a href="?mode=view" style="color:#7a8499;font-size:12px;text-decoration:none;
+      border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:8px 20px;
       background:transparent;cursor:pointer;transition:all .2s"
-      onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">
+      onmouseover="this.style.color='#edf0f7'" onmouseout="this.style.color='#7a8499'">
       📊 확인용 페이지 (명단·기록·분석)
     </a>
   </div>
@@ -344,8 +344,8 @@ pointer-events:none;white-space:nowrap;
       <div class="g2">
         <div class="field" id="f-cls-wrap">
           <label>장소</label>
-          <div id="f-cls-display" style="background:var(--card2);border:1px solid var(--border);
-            border-radius:10px;padding:12px 16px;font-size:15px;font-weight:600;color:var(--text)">
+          <div id="f-cls-display" style="background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.1);
+            border-radius:10px;padding:12px 16px;font-size:15px;font-weight:600;color:#edf0f7">
             —
           </div>
           <!-- 실제 값 전달용 hidden select -->
@@ -397,10 +397,10 @@ pointer-events:none;white-space:nowrap;
           <!-- 수동 출석 입력 -->
           <div style="display:flex;gap:8px;margin-bottom:10px">
             <input id="manual-no" type="text" inputmode="numeric" placeholder="학번 직접 입력 (인터넷 불가 학생)"
-              style="flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);
-              border-radius:8px;padding:8px 12px;color:var(--text);font-family:inherit;font-size:13px;outline:none"
+              style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,0.1);
+              border-radius:8px;padding:8px 12px;color:#edf0f7;font-family:inherit;font-size:13px;outline:none"
               onkeydown="if(event.key==='Enter')manualAttend()"
-              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+              onfocus="this.style.borderColor='#e94560'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
             <button class="btn btn-green btn-sm" onclick="manualAttend()">✓ 수동 출석</button>
           </div>
           <div class="prog-bg"><div class="prog-fill" id="prog" style="width:0%"></div></div>
@@ -459,54 +459,54 @@ pointer-events:none;white-space:nowrap;
 ```
   <!-- 미등록 학생 자가 등록 폼 -->
   <div id="sf-register-wrap" style="display:none;flex-direction:column;align-items:center;width:100%;margin-top:8px">
-    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.7;text-align:center">
+    <div style="font-size:13px;color:#7a8499;margin-bottom:16px;line-height:1.7;text-align:center">
       명단에 없는 학번이에요.<br>이름을 입력하면 바로 출석할 수 있어요.
     </div>
     <div style="width:100%;max-width:320px;margin-bottom:10px">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-align:left">학번</div>
-      <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:var(--text);
-        background:var(--card);border:1px solid var(--border);border-radius:10px;
+      <div style="font-size:11px;color:#7a8499;margin-bottom:6px;text-align:left">학번</div>
+      <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:#edf0f7;
+        background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;
         padding:12px 16px;text-align:center" id="sf-reg-no-display"></div>
     </div>
     <div style="width:100%;max-width:320px;margin-bottom:14px">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-align:left">이름</div>
+      <div style="font-size:11px;color:#7a8499;margin-bottom:6px;text-align:left">이름</div>
       <input class="big-input" id="sf-reg-name" type="text" placeholder="이름 입력"
         style="margin-bottom:0;font-family:inherit;font-size:18px"
         onkeydown="if(event.key==='Enter')doRegisterAndAttend()">
     </div>
     <!-- 출석 요일 선택 -->
     <div style="width:100%;max-width:320px;margin-bottom:16px">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-align:left">
+      <div style="font-size:11px;color:#7a8499;margin-bottom:8px;text-align:left">
         출석 요일 <span style="font-weight:400;opacity:.7">(해당 요일 모두 선택)</span>
       </div>
       <div style="display:flex;gap:6px;justify-content:center">
         <button class="sf-day-btn" data-day="월" onclick="toggleRegDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
-          background:transparent;color:var(--muted);font-size:13px;font-weight:600;
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
           cursor:pointer;transition:all .15s">월</button>
         <button class="sf-day-btn" data-day="화" onclick="toggleRegDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
-          background:transparent;color:var(--muted);font-size:13px;font-weight:600;
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
           cursor:pointer;transition:all .15s">화</button>
         <button class="sf-day-btn" data-day="수" onclick="toggleRegDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
-          background:transparent;color:var(--muted);font-size:13px;font-weight:600;
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
           cursor:pointer;transition:all .15s">수</button>
         <button class="sf-day-btn" data-day="목" onclick="toggleRegDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
-          background:transparent;color:var(--muted);font-size:13px;font-weight:600;
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
           cursor:pointer;transition:all .15s">목</button>
         <button class="sf-day-btn" data-day="금" onclick="toggleRegDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
-          background:transparent;color:var(--muted);font-size:13px;font-weight:600;
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
           cursor:pointer;transition:all .15s">금</button>
         <button class="sf-day-btn" data-day="토" onclick="toggleRegDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
-          background:transparent;color:var(--muted);font-size:13px;font-weight:600;
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
           cursor:pointer;transition:all .15s">토</button>
         <button class="sf-day-btn" data-day="일" onclick="toggleRegDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
-          background:transparent;color:var(--muted);font-size:13px;font-weight:600;
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
           cursor:pointer;transition:all .15s">일</button>
       </div>
     </div>
@@ -523,7 +523,7 @@ pointer-events:none;white-space:nowrap;
   <div class="ok-icon">✅</div>
   <div class="ok-name" id="sfok-name"></div>
   <div class="ok-meta" id="sfok-meta"></div>
-  <div style="margin-top:20px;font-size:12px;color:var(--muted)">이 창을 닫아도 됩니다</div>
+  <div style="margin-top:20px;font-size:12px;color:#7a8499">이 창을 닫아도 됩니다</div>
 </div>
 ```
 
@@ -548,7 +548,7 @@ pointer-events:none;white-space:nowrap;
   <!-- 엑셀 업로드 안내 -->
 
   <div id="upload-result" class="card" style="display:none;margin-bottom:14px;border-color:rgba(0,200,150,.3)">
-    <div id="upload-msg" style="font-size:13px;color:var(--ok)"></div>
+    <div id="upload-msg" style="font-size:13px;color:#00c896"></div>
   </div>
 
   <!-- 학생 추가 폼 -->
@@ -606,26 +606,26 @@ pointer-events:none;white-space:nowrap;
   <div class="row-btw" style="margin-bottom:16px">
     <div style="font-size:17px;font-weight:800">출석 분석</div>
     <div style="display:flex;gap:8px;align-items:center">
-      <select id="analysis-group" style="background:#fff;border:1px solid var(--border);
+      <select id="analysis-group" style="background:#fff;border:1px solid rgba(255,255,255,0.1);
         border-radius:8px;padding:7px 12px;color:#111;font-family:inherit;font-size:13px;outline:none"
         onchange="renderAnalysis()">
         <option value="">전체 프로그램</option>
       </select>
-      <select id="analysis-grade" style="background:#fff;border:1px solid var(--border);
+      <select id="analysis-grade" style="background:#fff;border:1px solid rgba(255,255,255,0.1);
         border-radius:8px;padding:7px 12px;color:#111;font-family:inherit;font-size:13px;outline:none"
         onchange="renderAnalysis()">
         <option value="">전체 학년/반</option>
       </select>
-      <div style="display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+      <div style="display:flex;border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden">
         <button id="view-week" onclick="setAnalysisView('week')"
-          style="padding:7px 14px;border:none;background:var(--accent);color:#fff;
+          style="padding:7px 14px;border:none;background:#e94560;color:#fff;
           font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">주별</button>
         <button id="view-month" onclick="setAnalysisView('month')"
-          style="padding:7px 14px;border:none;background:var(--card);color:var(--muted);
+          style="padding:7px 14px;border:none;background:rgba(255,255,255,0.05);color:#7a8499;
           font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">월별</button>
       </div>
-      <button onclick="loadAnalysis()" style="padding:7px 12px;border:1px solid var(--border);
-        border-radius:8px;background:var(--card);color:var(--text);font-family:inherit;
+      <button onclick="loadAnalysis()" style="padding:7px 12px;border:1px solid rgba(255,255,255,0.1);
+        border-radius:8px;background:rgba(255,255,255,0.05);color:#edf0f7;font-family:inherit;
         font-size:13px;cursor:pointer">🔄</button>
     </div>
   </div>
@@ -633,11 +633,11 @@ pointer-events:none;white-space:nowrap;
   <!-- 날짜 네비게이션 -->
 
   <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px">
-    <button onclick="navigateAnalysis(-1)" style="padding:7px 16px;border:1px solid var(--border);
-      border-radius:8px;background:var(--card);color:var(--text);font-family:inherit;font-size:13px;cursor:pointer">← 이전</button>
+    <button onclick="navigateAnalysis(-1)" style="padding:7px 16px;border:1px solid rgba(255,255,255,0.1);
+      border-radius:8px;background:rgba(255,255,255,0.05);color:#edf0f7;font-family:inherit;font-size:13px;cursor:pointer">← 이전</button>
     <div style="font-size:15px;font-weight:700;min-width:180px;text-align:center" id="analysis-period-label">—</div>
-    <button onclick="navigateAnalysis(1)" style="padding:7px 16px;border:1px solid var(--border);
-      border-radius:8px;background:var(--card);color:var(--text);font-family:inherit;font-size:13px;cursor:pointer">다음 →</button>
+    <button onclick="navigateAnalysis(1)" style="padding:7px 16px;border:1px solid rgba(255,255,255,0.1);
+      border-radius:8px;background:rgba(255,255,255,0.05);color:#edf0f7;font-family:inherit;font-size:13px;cursor:pointer">다음 →</button>
   </div>
 
   <!-- Sheets 업데이트 + 엑셀 다운로드 버튼 -->
@@ -687,11 +687,11 @@ pointer-events:none;white-space:nowrap;
       <input id="late-no" type="text" inputmode="numeric" placeholder="학번 입력"
         onkeydown="if(event.key==='Enter')document.getElementById('late-no').blur()">
     </div>
-    <div id="late-student-info" style="display:none;background:var(--card2);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px">
+    <div id="late-student-info" style="display:none;background:rgba(255,255,255,0.09);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px">
       <span id="late-student-name" style="font-weight:600"></span>
-      <span id="late-student-grade" style="color:var(--muted);margin-left:8px;font-size:11px"></span>
+      <span id="late-student-grade" style="color:#7a8499;margin-left:8px;font-size:11px"></span>
     </div>
-    <div id="late-err" style="color:var(--accent);font-size:13px;margin-bottom:12px;display:none"></div>
+    <div id="late-err" style="color:#e94560;font-size:13px;margin-bottom:12px;display:none"></div>
     <div class="modal-btns">
       <button class="btn btn-ghost btn-sm" onclick="closeLateModal()">취소</button>
       <button class="btn btn-green btn-sm" id="late-confirm-btn" onclick="confirmLateAttend()">출석 추가</button>
@@ -708,7 +708,7 @@ pointer-events:none;white-space:nowrap;
     <div class="field">
       <label>학번</label>
       <input id="mreg-no" type="text" readonly
-        style="background:rgba(255,255,255,.03);color:var(--muted);cursor:default">
+        style="background:rgba(255,255,255,.03);color:#7a8499;cursor:default">
     </div>
     <div class="field">
       <label>이름</label>
@@ -716,32 +716,32 @@ pointer-events:none;white-space:nowrap;
         onkeydown="if(event.key==='Enter')document.getElementById('mreg-name').blur()">
     </div>
     <div class="field">
-      <label>출석 요일 <span style="font-weight:400;color:var(--muted);font-size:11px">(해당 요일 모두 선택)</span></label>
+      <label>출석 요일 <span style="font-weight:400;color:#7a8499;font-size:11px">(해당 요일 모두 선택)</span></label>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
         <button class="mreg-day-btn" data-day="월" onclick="toggleMregDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
-          background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">월</button>
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">월</button>
         <button class="mreg-day-btn" data-day="화" onclick="toggleMregDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
-          background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">화</button>
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">화</button>
         <button class="mreg-day-btn" data-day="수" onclick="toggleMregDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
-          background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">수</button>
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">수</button>
         <button class="mreg-day-btn" data-day="목" onclick="toggleMregDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
-          background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">목</button>
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">목</button>
         <button class="mreg-day-btn" data-day="금" onclick="toggleMregDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
-          background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">금</button>
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">금</button>
         <button class="mreg-day-btn" data-day="토" onclick="toggleMregDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
-          background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">토</button>
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">토</button>
         <button class="mreg-day-btn" data-day="일" onclick="toggleMregDay(this)"
-          style="width:38px;height:38px;border-radius:50%;border:1px solid var(--border);
-          background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">일</button>
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">일</button>
       </div>
     </div>
-    <div id="mreg-err" style="color:var(--accent);font-size:13px;margin-bottom:12px;display:none"></div>
+    <div id="mreg-err" style="color:#e94560;font-size:13px;margin-bottom:12px;display:none"></div>
     <div class="modal-btns">
       <button class="btn btn-ghost btn-sm" onclick="closeMregModal()">취소</button>
       <button class="btn btn-green btn-sm" onclick="confirmMregAttend()">등록 후 출석</button>
@@ -881,7 +881,7 @@ async function gasPost(payload) {
 
       // 상단에 장소 배지 표시
       const badge = document.createElement('div');
-      badge.style.cssText = 'background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.3);color:var(--sky);padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer';
+      badge.style.cssText = 'background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.3);color:#5eb8ff;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer';
       badge.textContent = `📍 ${teacherParam}`;
       badge.title = '클릭하면 장소 선택 화면으로';
       badge.onclick = () => { location.href = location.pathname; };
@@ -1354,9 +1354,9 @@ function showRegisterForm(no) {
   document.getElementById('sf-reg-err').style.display = 'none';
   // 요일 버튼 초기화
   document.querySelectorAll('.sf-day-btn').forEach(btn => {
-    btn.style.borderColor = 'var(--border)';
+    btn.style.borderColor = 'rgba(255,255,255,0.1)';
     btn.style.background  = 'transparent';
-    btn.style.color       = 'var(--muted)';
+    btn.style.color       = '#7a8499';
     btn.dataset.active    = '';
   });
   const rw = document.getElementById('sf-register-wrap');
@@ -1367,9 +1367,9 @@ function showRegisterForm(no) {
 function toggleRegDay(btn) {
   const active = btn.dataset.active === 'true';
   btn.dataset.active    = active ? '' : 'true';
-  btn.style.borderColor = active ? 'var(--border)'              : 'var(--ok)';
+  btn.style.borderColor = active ? 'rgba(255,255,255,0.1)'              : '#00c896';
   btn.style.background  = active ? 'transparent'                : 'rgba(0,200,150,.15)';
-  btn.style.color       = active ? 'var(--muted)'               : 'var(--ok)';
+  btn.style.color       = active ? '#7a8499'               : '#00c896';
 }
 
 // 선택된 요일 가져오기
@@ -1476,14 +1476,14 @@ function refreshTable() {
   document.getElementById('att-body').innerHTML = sorted.map(st => {
     const r = S.attendance.find(a => String(a.no) === String(st.no));
     const timeCell = r
-      ? `<span style="color:var(--ok);font-weight:600">${r.time}</span>`
-      : `<span style="color:var(--muted)">—</span>`;
+      ? `<span style="color:#00c896;font-weight:600">${r.time}</span>`
+      : `<span style="color:#7a8499">—</span>`;
     return `<tr>
       <td><strong>${st.name}</strong></td>
       <td class="mono">${st.no}</td>
       <td class="mono" style="font-size:11px">${timeCell}</td>
       <td><span class="badge ${r?'b-ok':'b-no'}">${r?'출석':'미출석'}</span></td>
-      <td>${r ? '' : `<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 10px;color:var(--ok);border-color:rgba(0,200,150,.3)"
+      <td>${r ? '' : `<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 10px;color:#00c896;border-color:rgba(0,200,150,.3)"
         onclick="manualAttendNo('${st.no}')">출석↑</button>`}</td>
     </tr>`;
   }).join('');
@@ -1531,7 +1531,7 @@ const AVA_COLORS = ['#e94560','#f5a623','#00c896','#5eb8ff','#a29bfe','#fd79a8',
 function renderStudentList() {
   const el = document.getElementById('s-list');
   if (!S.students.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">👤</div>등록된 학생이 없습니다.<br><small style="color:var(--muted)">직접 추가하거나 엑셀 파일을 업로드하세요.</small></div>';
+    el.innerHTML = '<div class="empty"><div class="empty-icon">👤</div>등록된 학생이 없습니다.<br><small style="color:#7a8499">직접 추가하거나 엑셀 파일을 업로드하세요.</small></div>';
     return;
   }
 
@@ -1547,8 +1547,8 @@ function renderStudentList() {
   });
 
   el.innerHTML = Object.entries(groups).map(([groupName, sts]) => `
-    <div style="padding:10px 14px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
-      <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)">
+    <div style="padding:10px 14px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.1)">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#7a8499">
         ${groupName} <span style="font-weight:400;margin-left:6px">${sts.length}명</span>
       </div>
       <button class="btn btn-ghost btn-sm btn-del"
@@ -1568,9 +1568,9 @@ function renderStudentList() {
         ${['월','화','수','목','금','토','일'].map(day => {
           const active = (st.days||[]).includes(day);
           return `<button onclick="toggleDay('${st.no}','${day}',this)"
-            style="width:26px;height:26px;border-radius:50%;border:1px solid ${active?'var(--ok)':'var(--border)'};
+            style="width:26px;height:26px;border-radius:50%;border:1px solid ${active?'#00c896':'rgba(255,255,255,0.1)'};
             background:${active?'rgba(0,200,150,.15)':'transparent'};
-            color:${active?'var(--ok)':'var(--muted)'};font-size:11px;font-weight:600;
+            color:${active?'#00c896':'#7a8499'};font-size:11px;font-weight:600;
             cursor:pointer;transition:all .15s">${day}</button>`;
         }).join('')}
       </div>
@@ -1604,9 +1604,9 @@ async function toggleDay(no, day, btn) {
 
   // 버튼 즉시 반영
   const active = st.days.includes(day);
-  btn.style.borderColor = active ? 'var(--ok)' : 'var(--border)';
+  btn.style.borderColor = active ? '#00c896' : 'rgba(255,255,255,0.1)';
   btn.style.background  = active ? 'rgba(0,200,150,.15)' : 'transparent';
-  btn.style.color       = active ? 'var(--ok)' : 'var(--muted)';
+  btn.style.color       = active ? '#00c896' : '#7a8499';
 
   // Sheets 저장
   await gasPost({action: "saveDays", no, days: st.days});
@@ -1650,14 +1650,14 @@ async function loadHistory() {
 
   el.innerHTML = list.map((s, i) => {
     const rate = s.total ? Math.round(s.attended.length / s.total * 100) : 0;
-    const rateColor = rate >= 80 ? 'var(--ok)' : rate >= 50 ? 'var(--accent2)' : 'var(--accent)';
+    const rateColor = rate >= 80 ? '#00c896' : rate >= 50 ? '#f5a623' : '#e94560';
     return `
-    <div style="border-bottom:1px solid var(--border)">
+    <div style="border-bottom:1px solid rgba(255,255,255,0.1)">
       <div class="hist-row" onclick="toggleHistDetail('hs-${i}')" style="cursor:pointer">
         <div>
           <div class="hist-subj">
             ${s.subject}
-            <span style="font-weight:400;color:var(--muted);font-size:12px;margin-left:6px">${s.cls}</span>
+            <span style="font-weight:400;color:#7a8499;font-size:12px;margin-left:6px">${s.cls}</span>
           </div>
           <div class="hist-info" style="margin-top:4px">
             📅 ${s.date} &nbsp;·&nbsp; ${s.teacher}
@@ -1667,34 +1667,34 @@ async function loadHistory() {
           <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:${rateColor}">
             ${s.attended.length}/${s.total}
           </div>
-          <div style="font-size:10px;color:var(--muted)">${rate}% 출석</div>
+          <div style="font-size:10px;color:#7a8499">${rate}% 출석</div>
         </div>
       </div>
       <div id="hs-${i}" style="display:none;padding:0 14px 14px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div>
-            <div style="font-size:11px;font-weight:700;color:var(--ok);letter-spacing:.5px;margin-bottom:6px">
+            <div style="font-size:11px;font-weight:700;color:#00c896;letter-spacing:.5px;margin-bottom:6px">
               ✓ 출석 ${s.attended.length}명
             </div>
             ${s.attended.length
               ? s.attended.map(r => `
                 <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)">
                   <span>${r.name}</span>
-                  <span style="color:var(--muted);font-family:'DM Mono',monospace;font-size:11px">${r.time || ''}</span>
+                  <span style="color:#7a8499;font-family:'DM Mono',monospace;font-size:11px">${r.time || ''}</span>
                 </div>`).join('')
-              : '<div style="font-size:12px;color:var(--muted)">없음</div>'
+              : '<div style="font-size:12px;color:#7a8499">없음</div>'
             }
           </div>
           <div>
-            <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:6px">
+            <div style="font-size:11px;font-weight:700;color:#e94560;letter-spacing:.5px;margin-bottom:6px">
               ✗ 결석 ${s.absent.length}명
             </div>
             ${s.absent.length
               ? s.absent.map(r => `
-                <div style="font-size:12px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);color:var(--muted)">
+                <div style="font-size:12px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);color:#7a8499">
                   ${r.name}
                 </div>`).join('')
-              : '<div style="font-size:12px;color:var(--muted)">없음</div>'
+              : '<div style="font-size:12px;color:#7a8499">없음</div>'
             }
           </div>
         </div>
@@ -1827,9 +1827,9 @@ function openMregModal(no) {
   // 요일 버튼 초기화
   document.querySelectorAll('.mreg-day-btn').forEach(btn => {
     btn.dataset.active = '';
-    btn.style.borderColor = 'var(--border)';
+    btn.style.borderColor = 'rgba(255,255,255,0.1)';
     btn.style.background  = 'transparent';
-    btn.style.color       = 'var(--muted)';
+    btn.style.color       = '#7a8499';
   });
   document.getElementById('modal-manual-reg').classList.add('on');
   setTimeout(() => document.getElementById('mreg-name').focus(), 100);
@@ -1842,9 +1842,9 @@ function closeMregModal() {
 function toggleMregDay(btn) {
   const active = btn.dataset.active === 'true';
   btn.dataset.active    = active ? '' : 'true';
-  btn.style.borderColor = active ? 'var(--border)'           : 'var(--ok)';
+  btn.style.borderColor = active ? 'rgba(255,255,255,0.1)'           : '#00c896';
   btn.style.background  = active ? 'transparent'             : 'rgba(0,200,150,.15)';
-  btn.style.color       = active ? 'var(--muted)'            : 'var(--ok)';
+  btn.style.color       = active ? '#7a8499'            : '#00c896';
 }
 
 async function confirmMregAttend() {
@@ -2101,11 +2101,11 @@ async function manualBuildAnalysis() {
   btn.disabled = false; btn.textContent = '📊 분석 시트 지금 업데이트';
   res.style.display = 'block';
   if (result.ok) {
-    res.style.color = 'var(--ok)';
+    res.style.color = '#00c896';
     res.textContent = '✅ ' + (result.msg || '분석 시트가 업데이트됐어요!');
     toast('Google Sheets 분석 시트 업데이트 완료!', 'ok');
   } else {
-    res.style.color = 'var(--accent)';
+    res.style.color = '#e94560';
     res.textContent = '❌ ' + (result.msg || '업데이트 실패');
   }
 }
@@ -2228,7 +2228,7 @@ function renderGroupDays() {
   // 학생 명단에서 유니크 그룹 추출
   const groups = [...new Set(S.students.map(s => `${s.program}||${s.cls}`))];
   if (!groups.length) {
-    el.innerHTML = '<div style="color:var(--muted);font-size:13px">명단에 학생을 먼저 등록해주세요.</div>';
+    el.innerHTML = '<div style="color:#7a8499;font-size:13px">명단에 학생을 먼저 등록해주세요.</div>';
     return;
   }
 
@@ -2237,18 +2237,18 @@ function renderGroupDays() {
     const [program, cls] = key.split('||');
     const days = S.groupDays[key] || [];
     return `
-      <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
-        <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text)">
-          ${program} <span style="color:var(--muted);font-weight:400">— ${cls}</span>
+      <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.1)">
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:#edf0f7">
+          ${program} <span style="color:#7a8499;font-weight:400">— ${cls}</span>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           ${DAYS_ALL.map(day => {
             const active = days.includes(day);
             return `<button onclick="toggleGroupDay('${key}','${day}',this)"
               style="width:36px;height:36px;border-radius:50%;
-              border:1px solid ${active?'var(--ok)':'var(--border)'};
+              border:1px solid ${active?'#00c896':'rgba(255,255,255,0.1)'};
               background:${active?'rgba(0,200,150,.15)':'transparent'};
-              color:${active?'var(--ok)':'var(--muted)'};
+              color:${active?'#00c896':'#7a8499'};
               font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">${day}</button>`;
           }).join('')}
         </div>
@@ -2268,9 +2268,9 @@ async function toggleGroupDay(key, day, btn) {
   else          days.push(day);
 
   const active = days.includes(day);
-  btn.style.borderColor = active ? 'var(--ok)' : 'var(--border)';
+  btn.style.borderColor = active ? '#00c896' : 'rgba(255,255,255,0.1)';
   btn.style.background  = active ? 'rgba(0,200,150,.15)' : 'transparent';
-  btn.style.color       = active ? 'var(--ok)' : 'var(--muted)';
+  btn.style.color       = active ? '#00c896' : '#7a8499';
 
   const [program, cls] = key.split('||');
   await gasPost({action:"saveGroupDays", program, cls, days});
@@ -2284,9 +2284,9 @@ const DAYS_ALL = ['월','화','수','목','금','토','일'];
 
 function setAnalysisView(view) {
   S.analysisView = view;
-  document.getElementById('view-week').style.background  = view === 'week'  ? 'var(--accent)' : '';
+  document.getElementById('view-week').style.background  = view === 'week'  ? '#e94560' : '';
   document.getElementById('view-week').style.color       = view === 'week'  ? '#fff' : '';
-  document.getElementById('view-month').style.background = view === 'month' ? 'var(--accent)' : '';
+  document.getElementById('view-month').style.background = view === 'month' ? '#e94560' : '';
   document.getElementById('view-month').style.color      = view === 'month' ? '#fff' : '';
   renderAnalysis();
 }
@@ -2404,8 +2404,8 @@ function renderWeekView(students, attendMap) {
   }
 
   const dayHeaders = dates.map(d =>
-    `<th style="text-align:center;padding:8px 6px;font-size:11px;font-weight:700;color:var(--muted);
-      ${d.getDay()===0?'color:#ff7096':d.getDay()===6?'color:var(--sky)':''}">
+    `<th style="text-align:center;padding:8px 6px;font-size:11px;font-weight:700;color:#7a8499;
+      ${d.getDay()===0?'color:#ff7096':d.getDay()===6?'color:#5eb8ff':''}">
       ${DAYS_KR[d.getDay()]}<br>
       <span style="font-family:'DM Mono',monospace;font-size:10px;font-weight:400">${d.getDate()}</span>
     </th>`
@@ -2423,19 +2423,19 @@ function renderWeekView(students, attendMap) {
 
       let cell = '';
       if (isFuture) {
-        cell = `<span style="color:var(--border)">-</span>`;
+        cell = `<span style="color:rgba(255,255,255,0.1)">-</span>`;
       } else if (attended && isTarget) {
         // 출석 대상 요일 + 출석 → 초록 ●
-        cell = `<span style="color:var(--ok);font-size:18px;line-height:1">●</span>`;
+        cell = `<span style="color:#00c896;font-size:18px;line-height:1">●</span>`;
       } else if (attended && !isTarget) {
         // 비대상 요일 + 출석 → 파란 ● (자율출석)
-        cell = `<span style="color:var(--sky);font-size:18px;line-height:1">●</span>`;
+        cell = `<span style="color:#5eb8ff;font-size:18px;line-height:1">●</span>`;
       } else if (!isTarget) {
         // 비대상 요일 + 미출석 → 점
         cell = `<span style="color:rgba(255,255,255,.12)">·</span>`;
       } else {
         // 대상 요일 + 미출석 → X
-        cell = `<span style="color:var(--accent);font-weight:700">X</span>`;
+        cell = `<span style="color:#e94560;font-weight:700">X</span>`;
       }
 
       return `<td style="text-align:center;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.04);
@@ -2450,19 +2450,19 @@ function renderWeekView(students, attendMap) {
     const selfAttend   = attendDates.length - targetAttend; // 자율출석 횟수
     const total  = targetDates.length;
     const rate   = total ? Math.round(targetAttend/total*100) : 0;
-    const rColor = rate>=80?'var(--ok)':rate>=50?'var(--accent2)':'var(--accent)';
+    const rColor = rate>=80?'#00c896':rate>=50?'#f5a623':'#e94560';
 
     return `<tr>
       <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap">
         <div style="font-weight:600;font-size:13px">${st.name}</div>
-        <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">
+        <div style="font-size:10px;color:#7a8499;font-family:'DM Mono',monospace">
           ${st.no} <span style="font-family:inherit;margin-left:4px">${getGradeClass(st.no)}</span>
         </div>
       </td>
       ${cells}
       <td style="text-align:center;padding:8px 8px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap">
         <span style="font-family:'DM Mono',monospace;font-size:12px;color:${rColor}">${rate}%</span>
-        ${selfAttend > 0 ? `<br><span style="font-size:10px;color:var(--sky)">자율 +${selfAttend}</span>` : ''}
+        ${selfAttend > 0 ? `<br><span style="font-size:10px;color:#5eb8ff">자율 +${selfAttend}</span>` : ''}
       </td>
     </tr>`;
   }).join('');
@@ -2472,18 +2472,18 @@ function renderWeekView(students, attendMap) {
       <table style="width:100%;border-collapse:collapse;min-width:500px">
         <thead>
           <tr>
-            <th style="text-align:left;padding:8px 12px;font-size:11px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">학생</th>
+            <th style="text-align:left;padding:8px 12px;font-size:11px;color:#7a8499;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.1)">학생</th>
             ${dayHeaders}
-            <th style="text-align:center;padding:8px;font-size:11px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border)">출석률</th>
+            <th style="text-align:center;padding:8px;font-size:11px;color:#7a8499;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.1)">출석률</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
-    <div style="margin-top:10px;font-size:11px;color:var(--muted);text-align:center">
-      <span style="color:var(--ok)">●</span> 출석 &nbsp;·&nbsp;
-      <span style="color:var(--sky)">●</span> 자율출석 &nbsp;·&nbsp;
-      <span style="color:var(--accent)">X</span> 결석 &nbsp;·&nbsp;
+    <div style="margin-top:10px;font-size:11px;color:#7a8499;text-align:center">
+      <span style="color:#00c896">●</span> 출석 &nbsp;·&nbsp;
+      <span style="color:#5eb8ff">●</span> 자율출석 &nbsp;·&nbsp;
+      <span style="color:#e94560">X</span> 결석 &nbsp;·&nbsp;
       · 비대상 요일 &nbsp;·&nbsp; - 미래
     </div>`;
 }
@@ -2511,7 +2511,7 @@ function renderMonthView(students, attendMap) {
     const targetDates = allDates.filter(d => studentDays.includes(d.dayKr) && d.date <= new Date());
     const attendedDates = targetDates.filter(d => attendMap[st.no]?.has(d.str));
     const rate = targetDates.length ? Math.round(attendedDates.length/targetDates.length*100) : 0;
-    const rColor = rate>=80?'var(--ok)':rate>=50?'var(--accent2)':'var(--accent)';
+    const rColor = rate>=80?'#00c896':rate>=50?'#f5a623':'#e94560';
 
     // 달력 미니 뷰 (주 단위)
     const weeks = [];
@@ -2537,18 +2537,18 @@ function renderMonthView(students, attendMap) {
         const attended  = attendMap[st.no]?.has(d.str);
         const isFuture  = d.date > new Date();
         const isToday   = d.str === fmtDate(new Date());
-        let bg = '', text = 'var(--muted)';
+        let bg = '', text = '#7a8499';
         const label = d.date.getDate();
         if (isToday) bg = 'rgba(79,142,247,.15)';
         if (!isFuture && attended && isTarget) {
           // 출석 대상 + 출석 → 초록
-          bg = 'rgba(0,200,150,.25)'; text = 'var(--ok)';
+          bg = 'rgba(0,200,150,.25)'; text = '#00c896';
         } else if (!isFuture && attended && !isTarget) {
           // 비대상 + 출석 → 파랑 (자율출석)
-          bg = 'rgba(94,184,255,.25)'; text = 'var(--sky)';
+          bg = 'rgba(94,184,255,.25)'; text = '#5eb8ff';
         } else if (!isFuture && isTarget) {
           // 대상 + 미출석 → 빨강
-          bg = 'rgba(233,69,96,.15)'; text = 'var(--accent)';
+          bg = 'rgba(233,69,96,.15)'; text = '#e94560';
         }
         return `<td style="padding:2px;text-align:center">
           <div style="width:24px;height:24px;border-radius:50%;background:${bg};
@@ -2565,28 +2565,28 @@ function renderMonthView(students, attendMap) {
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
           <div>
             <div style="font-weight:700;font-size:14px">${st.name}
-              <span style="font-weight:400;color:var(--muted);font-size:11px;margin-left:6px;font-family:'DM Mono',monospace">${st.no} ${getGradeClass(st.no)}</span>
+              <span style="font-weight:400;color:#7a8499;font-size:11px;margin-left:6px;font-family:'DM Mono',monospace">${st.no} ${getGradeClass(st.no)}</span>
             </div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px">
+            <div style="font-size:11px;color:#7a8499;margin-top:2px">
               출석 요일: ${studentDays.join(', ') || '미설정'}
             </div>
           </div>
           <div style="text-align:right">
             <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:${rColor}">${rate}%</div>
-            <div style="font-size:10px;color:var(--muted)">${attendedDates.length}/${targetDates.length}일</div>
-            ${selfCount > 0 ? `<div style="font-size:10px;color:var(--sky);margin-top:2px">자율출석 +${selfCount}일</div>` : ''}
+            <div style="font-size:10px;color:#7a8499">${attendedDates.length}/${targetDates.length}일</div>
+            ${selfCount > 0 ? `<div style="font-size:10px;color:#5eb8ff;margin-top:2px">자율출석 +${selfCount}일</div>` : ''}
           </div>
         </div>
         <table style="width:100%;border-collapse:collapse">
           <thead><tr>${['일','월','화','수','목','금','토'].map((d,i) =>
-            `<th style="text-align:center;font-size:10px;color:${i===0?'#ff7096':i===6?'var(--sky)':'var(--muted)'};padding:2px;font-weight:600">${d}</th>`
+            `<th style="text-align:center;font-size:10px;color:${i===0?'#ff7096':i===6?'#5eb8ff':'#7a8499'};padding:2px;font-weight:600">${d}</th>`
           ).join('')}</tr></thead>
           <tbody>${calRows}</tbody>
         </table>
-        <div style="margin-top:8px;font-size:10px;color:var(--muted);text-align:center">
-          <span style="color:var(--ok)">●</span> 출석 &nbsp;
-          <span style="color:var(--sky)">●</span> 자율출석 &nbsp;
-          <span style="color:var(--accent)">●</span> 결석
+        <div style="margin-top:8px;font-size:10px;color:#7a8499;text-align:center">
+          <span style="color:#00c896">●</span> 출석 &nbsp;
+          <span style="color:#5eb8ff">●</span> 자율출석 &nbsp;
+          <span style="color:#e94560">●</span> 결석
         </div>
       </div>`;
   }).join('');
