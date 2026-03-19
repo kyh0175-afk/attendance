@@ -392,6 +392,8 @@ tbody tr:last-child td{border-bottom:none}
             <option>심야 독서시간</option>
             <option>야간 독서시간</option>
             <option>방과후 독서시간</option>
+            <option>토요일 독서시간</option>
+            <option>일요일 독서시간</option>
           </select>
         </div>
         <div class="field"><label>담당 교사</label><input id="f-teacher" value="김선생" placeholder="이름"></div>
@@ -1012,8 +1014,32 @@ function confirmPw() {
   const errEl  = document.getElementById('pw-err');
   const target = _pwTarget; // 로컬에 저장
 
-  if (target === 'view'  && val !== '1234')     { errEl.textContent = '비밀번호가 틀렸어요.'; document.getElementById('pw-input').value=''; return; }
-  if (target === 'admin' && val !== 'yb18128!') { errEl.textContent = '비밀번호가 틀렸어요.'; document.getElementById('pw-input').value=''; return; }
+  const PW = {view: '1234', admin: 'yb18128!'};
+  if (val !== PW[target]) {
+    errEl.textContent = '❌ 비밀번호가 틀렸어요.';
+    const input = document.getElementById('pw-input');
+    input.value = '';
+    // 흔들리는 애니메이션
+    input.style.animation = 'none';
+    input.style.borderColor = '#e94560';
+    input.style.boxShadow = '0 0 0 2px rgba(233,69,96,.3)';
+    setTimeout(() => {
+      input.style.animation = '';
+      input.style.borderColor = '';
+      input.style.boxShadow = '';
+      input.focus();
+    }, 600);
+    // 흔들기 keyframe
+    input.animate([
+      {transform:'translateX(0)'},
+      {transform:'translateX(-8px)'},
+      {transform:'translateX(8px)'},
+      {transform:'translateX(-8px)'},
+      {transform:'translateX(8px)'},
+      {transform:'translateX(0)'}
+    ], {duration:400, easing:'ease-in-out'});
+    return;
+  }
 
   // 맞으면 모달 닫고 이동
   document.getElementById('modal-pw').classList.remove('on');
@@ -1174,10 +1200,27 @@ function classSts() {
 function updateClsByProgram() {
   // teacher 파라미터로 접속한 경우 장소는 고정 — 건드리지 않음
   if (S.teacherRoom) {
-    const clsSel    = document.getElementById('f-cls');
+    const clsSel     = document.getElementById('f-cls');
     const clsDisplay = document.getElementById('f-cls-display');
-    if (clsSel)    clsSel.innerHTML = `<option value="${S.teacherRoom}" selected>${S.teacherRoom}</option>`;
+    if (clsSel)     clsSel.innerHTML = `<option value="${S.teacherRoom}" selected>${S.teacherRoom}</option>`;
     if (clsDisplay) clsDisplay.textContent = S.teacherRoom;
+
+    // 리케이온이 아니면 토/일 프로그램 숨김
+    const subjSel = document.getElementById('f-subj');
+    if (subjSel) {
+      const normalize = s => s.replace(/\s/g, '');
+      const isRikei   = normalize(S.teacherRoom) === normalize('리케이온');
+      [...subjSel.options].forEach(o => {
+        if (o.value === '토요일 독서시간' || o.value === '일요일 독서시간') {
+          o.style.display = isRikei ? '' : 'none';
+          o.disabled      = !isRikei;
+        }
+      });
+      // 현재 선택값이 숨겨진 옵션이면 첫 번째로 변경
+      if (!isRikei && (subjSel.value === '토요일 독서시간' || subjSel.value === '일요일 독서시간')) {
+        subjSel.value = '심야 독서시간';
+      }
+    }
     return;
   }
 
