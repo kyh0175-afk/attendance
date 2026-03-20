@@ -426,7 +426,16 @@ tbody tr:last-child td{border-bottom:none}
 
   <div id="session-area" style="display:none">
     <div class="stats" id="stats-bar" style="grid-template-columns:306px 1fr 1fr 1fr">
-      <div class="stat"><div class="sn c-sky" id="s-total">0</div><div class="sl">전체</div></div>
+      <div class="stat" style="display:flex;align-items:center;justify-content:center;gap:20px">
+        <div style="text-align:center">
+          <div class="sn c-sky" id="s-total">0</div>
+          <div class="sl">전체</div>
+        </div>
+        <div style="width:1px;height:48px;background:rgba(255,255,255,0.12)"></div>
+        <div style="display:flex;flex-direction:column;gap:4px;text-align:left" id="s-grade-list">
+          <div style="font-size:12px;color:#7a8499">—</div>
+        </div>
+      </div>
       <div class="stat"><div class="sn c-ok" id="s-present">0</div><div class="sl">출석</div></div>
       <div class="stat"><div class="sn c-red" id="s-absent">0</div><div class="sl">미출석</div></div>
       <div class="stat"><div class="sn c-amber" id="s-rate">0%</div><div class="sl">출석률</div></div>
@@ -1675,7 +1684,8 @@ function refreshTable() {
   }).join('');
 }
 function refreshStats() {
-  const total = classSts().length;
+  const sts = classSts();
+  const total = sts.length;
   const present = S.attendance.length;
   const rate = total ? Math.round(present/total*100) : 0;
   document.getElementById('s-total').textContent = total;
@@ -1684,6 +1694,25 @@ function refreshStats() {
   document.getElementById('s-rate').textContent = rate + '%';
   document.getElementById('prog').style.width = rate + '%';
   document.getElementById('prog-lbl').textContent = `${present} / ${total}명 출석`;
+
+  // 학년별 인원 계산 (학번 첫 자리)
+  const gradeEl = document.getElementById('s-grade-list');
+  if (gradeEl && total > 0) {
+    const grades = {};
+    sts.forEach(s => {
+      const g = String(s.no).trim()[0];
+      if (g) grades[g] = (grades[g] || 0) + 1;
+    });
+    const sorted = Object.entries(grades).sort((a,b) => a[0].localeCompare(b[0]));
+    gradeEl.innerHTML = sorted.map(([g, cnt]) =>
+      `<div style="display:flex;align-items:center;gap:8px;white-space:nowrap">
+        <span style="font-size:12px;color:#7a8499">${g}학년</span>
+        <span style="font-size:15px;font-weight:700;color:#5eb8ff;font-family:'DM Mono',monospace">${cnt}</span>
+      </div>`
+    ).join('');
+  } else if (gradeEl) {
+    gradeEl.innerHTML = '<div style="font-size:12px;color:#7a8499">—</div>';
+  }
 }
 
 /* ══ 명단 관리 ══ */
