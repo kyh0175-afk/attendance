@@ -8,10 +8,10 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 html {
-  background: #0e1117 !important;
+  background: #111827 !important;
 }
 body {
-  background: #0e1117 !important;
+  background: #111827 !important;
   color: #edf0f7 !important;
 }
 /* 그라데이션 등 color 재정의가 필요한 요소는 인라인 스타일로 처리 */
@@ -20,7 +20,7 @@ a { color: inherit; }
 
 
 :root {
-  --ink: #0e1117;
+  --ink: #111827;
   --card: rgba(255,255,255,0.05);
   --card2: rgba(255,255,255,0.09);
   --border: rgba(255,255,255,0.1);
@@ -37,15 +37,15 @@ a { color: inherit; }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{
   font-family:'Noto Sans KR',sans-serif;
-  background:#0e1117;color:#edf0f7;
-  min-height:100vh;font-size:14px;line-height:1.5;
+  background:#111827;color:#edf0f7;
+  min-height:100vh;font-size:18px;line-height:1.7;
   -webkit-tap-highlight-color:transparent;
 }
 body::before{
   content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(ellipse 70% 50% at 15% 5%,rgba(233,69,96,.1) 0%,transparent 55%),
-    radial-gradient(ellipse 50% 60% at 85% 85%,rgba(94,184,255,.07) 0%,transparent 55%);
+    radial-gradient(ellipse 80% 60% at 20% 0%,rgba(99,102,241,.13) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 90%,rgba(20,184,166,.1) 0%,transparent 60%);
 }
 .wrap{position:relative;z-index:1}
 
@@ -59,11 +59,11 @@ body::before{
   position:sticky;top:0;z-index:200;
 }
 .logo{
-  font-size:16px;font-weight:900;letter-spacing:-.5px;white-space:nowrap;
-  color:#e94560;
+  font-size:22px;font-weight:900;letter-spacing:-.5px;white-space:nowrap;
+  color:#f59e0b;
 }
 .topbar-nav{display:flex;gap:2px;margin-left:auto}
-.nb{
+.nb{font-size:14px;
   display:flex;align-items:center;gap:6px;
   padding:7px 13px;border-radius:8px;border:none;
   background:transparent;color:#7a8499;
@@ -73,7 +73,7 @@ body::before{
 .nb:hover{background:rgba(255,255,255,0.09);color:#edf0f7}
 .nb.on{background:rgba(255,255,255,0.09);color:#edf0f7}
 .nb .lbl{display:none}
-@media(min-width:520px){.nb .lbl{display:inline}}
+@media(min-width:520px){.nb .lbl{display:inline;font-size:16px}}
 .live-dot{
   width:7px;height:7px;border-radius:50%;
   background:#e94560;display:none;flex-shrink:0;
@@ -91,7 +91,7 @@ body::before{
   background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
   border-radius:14px;padding:22px;margin-bottom:14px;
 }
-.card-head{font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:#7a8499;margin-bottom:16px}
+.card-head{font-size:14px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#7a8499;margin-bottom:16px}
 .row-btw{display:flex;align-items:center;justify-content:space-between;gap:12px}
 
 /* form */
@@ -137,8 +137,8 @@ body::before{
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
 @media(max-width:480px){.stats{grid-template-columns:repeat(2,1fr)}}
 .stat{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:20px 12px;text-align:center}
-.sn{font-family:'DM Mono',monospace;font-size:36px;font-weight:700;line-height:1}
-.sl{font-size:13px;color:#7a8499;margin-top:6px;letter-spacing:.4px}
+.sn{font-family:'DM Mono',monospace;font-size:42px;font-weight:700;line-height:1}
+.sl{font-size:17px;color:#7a8499;margin-top:6px;letter-spacing:.4px}
 .c-sky{color:#5eb8ff}.c-ok{color:#00c896}.c-red{color:#e94560}.c-amber{color:#f5a623}
 
 /* QR layout */
@@ -152,19 +152,19 @@ body::before{
 }
 @media(max-width:640px){.qr-panel{width:100%}}
 .qr-box{background:#fff;border-radius:10px;padding:10px;line-height:0}
-.timer-num{font-family:'DM Mono',monospace;font-size:48px;font-weight:700;letter-spacing:-1px;transition:color .4s;line-height:1}
-.timer-lbl{font-size:10px;color:#7a8499;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+.timer-num{font-family:'DM Mono',monospace;font-size:56px;font-weight:700;letter-spacing:-1px;transition:color .4s;line-height:1}
+.timer-lbl{font-size:15px;color:#7a8499;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
 .t-ok{color:#00c896}.t-warn{color:#f5a623}.t-end{color:#e94560}
 .live-pill{
   display:flex;align-items:center;gap:6px;
   background:rgba(233,69,96,.14);border:1px solid rgba(233,69,96,.28);
   color:#ff7096;padding:5px 12px;border-radius:20px;
-  font-size:11px;font-weight:700;
+  font-size:15px;font-weight:700;
 }
 .pill-dot{width:6px;height:6px;border-radius:50%;background:#e94560;animation:pulse 1.2s infinite}
-.qr-hint{font-size:10px;color:#7a8499;text-align:center}
+.qr-hint{font-size:15px;color:#7a8499;text-align:center}
 .qr-btns{display:flex;gap:8px;width:100%}
-.qr-btns .btn{flex:1;font-size:11px;padding:7px 4px}
+.qr-btns .btn{flex:1;font-size:15px;padding:8px 4px}
 
 /* att panel */
 .att-panel{flex:1;min-width:0}
@@ -173,12 +173,12 @@ body::before{
 .prog-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#e94560,#00c896);transition:width .4s}
 .prog-lbl{font-size:11px;color:#7a8499;text-align:right}
 table{width:100%;border-collapse:collapse;margin-top:12px}
-thead th{text-align:left;padding:9px 10px;font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:#7a8499;border-bottom:1px solid rgba(255,255,255,0.1)}
+thead th{text-align:left;padding:10px 12px;font-size:14px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#7a8499;border-bottom:1px solid rgba(255,255,255,0.1)}
 tbody tr{transition:background .12s}
 tbody tr:hover td{background:rgba(255,255,255,0.09)}
 tbody td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
 tbody tr:last-child td{border-bottom:none}
-.mono{font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:#7a8499}
+.mono{font-family:'DM Mono',monospace;font-size:14px;font-weight:600;color:#7a8499}
 .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700}
 .b-ok{background:rgba(0,200,150,.14);color:#00c896;border:1px solid rgba(0,200,150,.28)}
 .b-no{background:rgba(233,69,96,.1);color:#ff7096;border:1px solid rgba(233,69,96,.2)}
@@ -224,7 +224,7 @@ tbody tr:last-child td{border-bottom:none}
 .ok-meta{color:#7a8499;font-size:13px;line-height:2;text-align:center;white-space:pre-line}
 
 /* student fullscreen */
-#student-fullscreen{display:none;min-height:100vh;background:#0e1117}
+#student-fullscreen{display:none;min-height:100vh;background:#111827}
 .sf-page{
   min-height:100vh;display:flex;flex-direction:column;
   align-items:center;justify-content:center;
@@ -244,7 +244,7 @@ tbody tr:last-child td{border-bottom:none}
   font-weight:700;font-size:13px;color:#fff;
 }
 .sr-name{font-weight:600;flex:1;font-size:13px}
-.sr-no{font-family:'DM Mono',monospace;font-size:11px;color:#7a8499;min-width:84px}
+.sr-no{font-family:'DM Mono',monospace;font-size:14px;color:#7a8499;min-width:84px}
 .sr-cls{font-size:11px;color:#7a8499;min-width:78px}
 
 /* history */
@@ -260,7 +260,7 @@ tbody tr:last-child td{border-bottom:none}
 .hist-detail{display:none;font-size:12px;color:#7a8499;margin-top:8px;line-height:1.8}
 .hist-rate{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:#00c896;white-space:nowrap}
 
-.empty{text-align:center;padding:48px 20px;color:#7a8499}
+.empty{text-align:center;padding:48px 20px;color:#7a8499;font-size:17px}
 .empty-icon{font-size:32px;margin-bottom:10px}
 
 /* modal */
@@ -281,7 +281,7 @@ tbody tr:last-child td{border-bottom:none}
   transform:translateX(-50%) translateY(60px);
   background:#1e2435;border:1px solid rgba(255,255,255,0.1);
   border-radius:10px;padding:11px 18px;
-  font-size:13px;font-weight:500;
+  font-size:17px;font-weight:500;
   z-index:400;transition:transform .28s cubic-bezier(.34,1.56,.64,1);
   pointer-events:none;white-space:nowrap;
 }
@@ -307,7 +307,7 @@ tbody tr:last-child td{border-bottom:none}
     onmouseout="this.style.background='rgba(255,255,255,0.07)'"
     title="관리용 페이지">⚙️</button>
 
-  <div style="font-size:30px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px;color:#e94560">
+  <div style="font-size:30px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px;color:#f59e0b">
     코스모스 독서시간 출석
   </div>
   <div style="color:#7a8499;font-size:14px;margin-bottom:56px">용도를 선택해주세요</div>
@@ -370,7 +370,7 @@ tbody tr:last-child td{border-bottom:none}
 
 <!-- ══ 상단바 ══ -->
 <div class="topbar" id="topbar">
-  <div class="logo" onclick="location.href=location.pathname" style="cursor:pointer;color:#e94560 !important" title="처음 화면으로">코스모스 독서시간 출석</div>
+  <div class="logo" onclick="location.href=location.pathname" style="cursor:pointer;color:#f59e0b !important" title="처음 화면으로">코스모스 독서시간 출석</div>
   <div class="live-dot" id="live-dot"></div>
   <nav class="topbar-nav">
     <button class="nb on" id="nb-teacher" onclick="goTab('teacher')"><span>🎓</span><span class="lbl">교사</span></button>
