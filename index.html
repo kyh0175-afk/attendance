@@ -1322,7 +1322,7 @@ function buildQR() {
   const url = location.origin + location.pathname + '?mode=student&sid=' + S.session.id;
   new QRCode(box, {
     text: url,
-    width: 172, height: 172,
+    width: 260, height: 260,
     colorDark: '#000000', colorLight: '#ffffff',
     correctLevel: QRCode.CorrectLevel.M
   });
