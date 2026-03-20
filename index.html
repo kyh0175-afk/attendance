@@ -1087,37 +1087,39 @@ function enterRoom(encodedRoom) {
 }
 
 // ── Sheets에서 명단 불러오기 ──
+// 마지막 저장 완료 시각 (로드 시 이보다 오래된 데이터면 덮어쓰기 방지)
+let _lastSavedAt = 0;
+let _isSaving    = false;
+
 async function loadStudentsFromSheets() {
-  // 저장 중이면 로드하지 않음 (업로드 직후 덮어쓰기 방지)
-  if (_savingStudents) return;
+  // 최근 5초 이내에 저장했으면 로드 스킵 (업로드 직후 덮어쓰기 방지)
+  if (_isSaving || (Date.now() - _lastSavedAt < 5000)) return;
 
   const result = await gasPost({action: "getStudents"});
   if (result.ok && result.students.length > 0) {
     S.students = result.students.map((s, i) => ({...s, id: i + 1}));
     S.nextId   = S.students.length + 1;
   }
-  // 명단 로드 후 프로그램 목록 + 장소 목록 동적 업데이트
   updateProgramOptions();
   updateClsByProgram();
 }
 
-// 프로그램 목록은 항상 고정 3개 표시
-function updateProgramOptions() {
-  // 동적 변경 없이 HTML에 고정된 옵션 그대로 유지
-}
+// 프로그램 목록은 항상 고정 표시
+function updateProgramOptions() {}
 
-// ── 명단을 Sheets에 저장 (중복 요청 방지) ──
-let _savingStudents = false;
-let _pendingSave = false;
+// ── 명단을 Sheets에 저장 ──
+let _savingStudents = false; // 하위 호환용
+let _pendingSave    = false;
 async function saveStudentsToSheets() {
-  if (_savingStudents) { _pendingSave = true; return; }
-  _savingStudents = true;
+  if (_isSaving) { _pendingSave = true; return; }
+  _isSaving = true; _savingStudents = true;
   _pendingSave = false;
   try {
     await gasPost({action: "saveStudents", students: S.students});
+    _lastSavedAt = Date.now();
   } finally {
-    _savingStudents = false;
-    if (_pendingSave) saveStudentsToSheets(); // 대기 중인 저장 실행
+    _isSaving = false; _savingStudents = false;
+    if (_pendingSave) saveStudentsToSheets();
   }
 }
 
@@ -2269,7 +2271,7 @@ function handleExcelUpload(event) {
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = async function(e) {
     try {
       const wb   = XLSX.read(e.target.result, {type: 'array'});
       const ws   = wb.Sheets[wb.SheetNames[0]];
@@ -2314,17 +2316,22 @@ function handleExcelUpload(event) {
       });
 
       renderStudentList();
-      saveStudentsToSheets();  // days 포함해서 Sheets에 저장
 
+      // Sheets에 저장 (await로 완료 보장)
       const resultEl = document.getElementById('upload-result');
       const msgEl    = document.getElementById('upload-msg');
       resultEl.style.display = 'block';
+      msgEl.textContent = '⏳ 저장 중...';
+
+      await saveStudentsToSheets();
+
       let msg = '';
       if (added)   msg += `${added}명 추가`;
       if (updated) msg += `${updated ? (added?', ':'') : ''}${updated}명 업데이트`;
       if (skipped) msg += ` (${skipped}명 오류 건너뜀)`;
       msgEl.textContent = '✅ ' + msg;
       setTimeout(() => resultEl.style.display = 'none', 4000);
+      renderStudentList(); // 저장 완료 후 다시 렌더링 (필터 갱신)
       toast(`명단 업로드 완료!`, 'ok');
     } catch(err) {
       toast('파일 읽기 오류: ' + err.message, 'err');
