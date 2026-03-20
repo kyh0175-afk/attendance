@@ -1698,8 +1698,13 @@ function refreshStats() {
   // 학년별 인원 계산 — 현재 세션 장소의 전체 학생 기준
   const gradeEl = document.getElementById('s-grade-list');
   if (gradeEl) {
-    const cls = S.session ? S.session.cls.trim().replace(/\s+/g,'') : '';
-    const allCls = S.students.filter(s => s.cls.trim().replace(/\s+/g,'') === cls);
+    const subj = S.session ? S.session.subj.trim() : '';
+    const cls  = S.session ? S.session.cls.trim().replace(/\s+/g,'') : '';
+    // 현재 세션 프로그램+장소와 일치하는 학생만
+    const allCls = S.students.filter(s =>
+      s.program.trim() === subj &&
+      s.cls.trim().replace(/\s+/g,'') === cls
+    );
     if (allCls.length > 0) {
       const grades = {};
       allCls.forEach(s => {
