@@ -243,8 +243,8 @@ tbody tr:last-child td{border-bottom:none}
   display:flex;align-items:center;justify-content:center;
   font-weight:700;font-size:13px;color:#fff;
 }
-.sr-name{font-weight:600;flex:1;font-size:13px}
-.sr-no{font-family:'DM Mono',monospace;font-size:14px;color:#7a8499;min-width:84px}
+.sr-name{font-weight:700;font-size:18px}
+.sr-no{font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:#edf0f7}
 .sr-cls{font-size:11px;color:#7a8499;min-width:78px}
 
 /* history */
@@ -360,7 +360,7 @@ tbody tr:last-child td{border-bottom:none}
 <!-- ══ 장소 선택 화면 ══ -->
 <div id="room-select-screen" style="display:none;min-height:100vh;
   display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px">
-  <div style="font-size:28px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px;color:#e94560">
+  <div style="font-size:38px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px;color:#f59e0b">
     코스모스 독서시간 출석
   </div>
   <div style="color:#7a8499;font-size:18px;margin-bottom:48px">담당 장소를 선택해주세요</div>
@@ -1792,9 +1792,9 @@ function renderStudentList() {
     ${sts.map(st => `
     <div class="s-row" style="flex-wrap:wrap;gap:8px">
       <div class="ava" style="background:${AVA_COLORS[st._idx % AVA_COLORS.length]}">${st.name[0]}</div>
-      <div style="flex:1;min-width:80px">
-        <div class="sr-name">${st.name}</div>
+      <div style="flex:1;min-width:80px;display:flex;align-items:center;gap:12px">
         <div class="sr-no">${st.no}</div>
+        <div class="sr-name">${st.name}</div>
       </div>
       <div style="display:flex;gap:3px;flex-wrap:wrap">
         ${['월','화','수','목','금','토','일'].map(day => {
@@ -2000,9 +2000,32 @@ async function confirmLateAttend() {
   const alreadyAttended = sess.attended.find(r => String(r.no) === String(no));
   if (alreadyAttended) { errEl.textContent = '이미 출석 처리된 학생이에요.'; errEl.style.display = 'block'; return; }
 
-  // 학생 찾기 (없으면 학번만으로 처리)
-  const st = S.students.find(s => s.no === no);
-  const name = st ? st.name : `학번 ${no}`;
+  // 명단에서 이름 찾기 (프로그램+장소 일치 우선, 없으면 학번만으로 검색)
+  let st = S.students.find(s =>
+    s.no === no &&
+    s.program.trim() === sess.subject.trim() &&
+    s.cls.trim().replace(/\s+/g,'') === sess.cls.trim().replace(/\s+/g,'')
+  );
+  if (!st) st = S.students.find(s => s.no === no);
+
+  let name = st ? st.name : null;
+
+  // 명단에 없으면 이름 입력 받기
+  if (!name) {
+    const inputName = window.prompt(`학번 ${no}은(는) 명단에 없어요.
+이름을 입력해주세요 (취소하면 학번으로 등록):`);
+    if (inputName && inputName.trim()) {
+      name = inputName.trim();
+      // Sheets에 신규 등록
+      await gasPost({
+        action: 'registerStudent',
+        student: { no, name, program: sess.subject, cls: sess.cls }
+      });
+      S.students.push({ id: S.nextId++, name, no, program: sess.subject, cls: sess.cls, days: [] });
+    } else {
+      name = `학번 ${no}`;
+    }
+  }
 
   const btn = document.getElementById('late-confirm-btn');
   btn.disabled = true; btn.textContent = '처리 중...';
