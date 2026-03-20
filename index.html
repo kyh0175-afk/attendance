@@ -243,8 +243,8 @@ tbody tr:last-child td{border-bottom:none}
   display:flex;align-items:center;justify-content:center;
   font-weight:700;font-size:13px;color:#fff;
 }
-.sr-name{font-weight:700;font-size:18px}
-.sr-no{font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:#edf0f7}
+.sr-name{font-weight:700;font-size:16px}
+.sr-no{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:#edf0f7}
 .sr-cls{font-size:11px;color:#7a8499;min-width:78px}
 
 /* history */
@@ -334,6 +334,25 @@ tbody tr:last-child td{border-bottom:none}
       <div style="font-size:20px;font-weight:800;color:#5eb8ff;margin-bottom:6px">확인용</div>
       <div style="font-size:12px;color:#7a8499;line-height:1.6">기록 · 분석<br>출석 현황 조회</div>
     </button>
+  </div>
+</div>
+
+<!-- ══ 사후출석 이름 입력 모달 ══ -->
+<div class="modal-bg" id="modal-late-name">
+  <div class="modal" style="max-width:360px;text-align:center">
+    <div style="font-size:22px;margin-bottom:8px">👤</div>
+    <h3 style="margin-bottom:6px">학생 이름 입력</h3>
+    <p id="late-name-desc" style="margin-bottom:16px;font-size:14px;color:#7a8499"></p>
+    <input id="late-name-input" type="text" placeholder="이름 입력"
+      style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+      border-radius:10px;padding:12px 16px;color:#edf0f7;font-family:inherit;font-size:16px;
+      outline:none;text-align:center;box-sizing:border-box;margin-bottom:8px"
+      onkeydown="if(event.key==='Enter')confirmLateName()">
+    <div id="late-name-err" style="color:#e94560;font-size:12px;height:18px;margin-bottom:8px"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="skipLateName()">학번으로 등록</button>
+      <button class="btn btn-green btn-sm" style="flex:1" onclick="confirmLateName()">확인</button>
+    </div>
   </div>
 </div>
 
@@ -673,12 +692,34 @@ tbody tr:last-child td{border-bottom:none}
 
 <!-- ══ 기록 탭 ══ -->
 <div class="page" id="pg-history">
-  <div class="row-btw" style="margin-bottom:14px">
-    <div style="font-size:17px;font-weight:800">수업 출석 기록</div>
+  <div class="row-btw" style="margin-bottom:10px">
+    <div style="font-size:17px;font-weight:800">출석 기록</div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-ghost btn-sm" onclick="openLateModal()">✚ 사후 출석</button>
       <button class="btn btn-ghost btn-sm" onclick="loadHistory()">🔄 새로고침</button>
     </div>
+  </div>
+  <!-- 기록 필터 -->
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <select id="hist-prog-filter" onchange="applyHistFilter()"
+      style="background:#1a1f2e;border:1px solid rgba(255,255,255,0.1);border-radius:8px;
+      padding:7px 12px;color:#edf0f7;font-family:inherit;font-size:14px;outline:none;flex:1;max-width:220px">
+      <option value="">전체 프로그램</option>
+      <option>심야 독서시간</option>
+      <option>야간 독서시간</option>
+      <option>방과후 독서시간</option>
+      <option>토요일 독서시간</option>
+      <option>일요일 독서시간</option>
+    </select>
+    <select id="hist-cls-filter" onchange="applyHistFilter()"
+      style="background:#1a1f2e;border:1px solid rgba(255,255,255,0.1);border-radius:8px;
+      padding:7px 12px;color:#edf0f7;font-family:inherit;font-size:14px;outline:none;flex:1;max-width:180px">
+      <option value="">전체 장소</option>
+      <option>아우름</option>
+      <option>교과1실</option>
+      <option>해오름</option>
+      <option>리케이온</option>
+    </select>
   </div>
   <div class="card"><div id="hist-list"><div class="empty"><div class="empty-icon">📋</div>기록 탭을 열면 자동으로 불러와요.</div></div></div>
 </div>
@@ -1885,6 +1926,27 @@ async function loadHistory() {
 
   const list = Object.values(sessions).sort((a,b) => b.date.localeCompare(a.date));
   window._histSessions = list; // 사후 출석용
+  window._histAll = list;      // 필터용 전체 보존
+  renderHistList(list);
+}
+
+function applyHistFilter() {
+  const prog = (document.getElementById('hist-prog-filter')?.value || '').trim();
+  const cls  = (document.getElementById('hist-cls-filter')?.value  || '').trim();
+  const all  = window._histAll || [];
+  let filtered = all;
+  if (prog) filtered = filtered.filter(s => s.subject.trim() === prog);
+  if (cls)  filtered = filtered.filter(s => s.cls.trim() === cls);
+  renderHistList(filtered);
+}
+
+function renderHistList(list) {
+  const el = document.getElementById('hist-list');
+  window._histSessions = list; // 사후 출석 모달이 현재 필터 기준으로 동작
+  if (!list.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>해당 조건의 기록이 없어요.</div>';
+    return;
+  }
 
   el.innerHTML = list.map((s, i) => {
     const rate = s.total ? Math.round(s.attended.length / s.total * 100) : 0;
@@ -2008,29 +2070,46 @@ async function confirmLateAttend() {
   );
   if (!st) st = S.students.find(s => s.no === no);
 
-  let name = st ? st.name : null;
+  const name = st ? st.name : null;
 
-  // 명단에 없으면 이름 입력 받기
+  // 명단에 없으면 이름 입력 모달
   if (!name) {
-    const inputName = window.prompt(`학번 ${no}은(는) 명단에 없어요.
-이름을 입력해주세요 (취소하면 학번으로 등록):`);
-    if (inputName && inputName.trim()) {
-      name = inputName.trim();
-      // Sheets에 신규 등록
-      await gasPost({
-        action: 'registerStudent',
-        student: { no, name, program: sess.subject, cls: sess.cls }
-      });
-      S.students.push({ id: S.nextId++, name, no, program: sess.subject, cls: sess.cls, days: [] });
-    } else {
-      name = `학번 ${no}`;
-    }
+    document.getElementById('late-name-desc').textContent = `학번 ${no}은(는) 명단에 없어요. 이름을 입력하거나 학번으로 등록해주세요.`;
+    document.getElementById('late-name-input').value = '';
+    document.getElementById('late-name-err').textContent = '';
+    document.getElementById('modal-late-name').classList.add('on');
+    window._lateNameCtx = { no, sess };
+    return;
   }
 
-  const btn = document.getElementById('late-confirm-btn');
-  btn.disabled = true; btn.textContent = '처리 중...';
+  await _doLateAttend(no, name, sess);
+}
 
-  // Sheets에 사후 출석 기록
+// ── 사후출석 이름 모달 처리 ──
+async function confirmLateName() {
+  const name = document.getElementById('late-name-input').value.trim();
+  if (!name) {
+    document.getElementById('late-name-err').textContent = '이름을 입력해주세요.';
+    return;
+  }
+  document.getElementById('modal-late-name').classList.remove('on');
+  const { no, sess } = window._lateNameCtx;
+  // 신규 등록
+  await gasPost({ action: 'registerStudent', student: { no, name, program: sess.subject, cls: sess.cls } });
+  S.students.push({ id: S.nextId++, name, no, program: sess.subject, cls: sess.cls, days: [] });
+  await _doLateAttend(no, name, sess);
+}
+
+async function skipLateName() {
+  document.getElementById('modal-late-name').classList.remove('on');
+  const { no, sess } = window._lateNameCtx;
+  await _doLateAttend(no, `학번 ${no}`, sess);
+}
+
+async function _doLateAttend(no, name, sess) {
+  const btn = document.getElementById('late-confirm-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
+
   const result = await gasPost({
     action:    'lateAttend',
     sessionId: sess.sessionId,
@@ -2042,17 +2121,16 @@ async function confirmLateAttend() {
     name
   });
 
-  btn.disabled = false; btn.textContent = '출석 추가';
+  if (btn) { btn.disabled = false; btn.textContent = '출석 추가'; }
 
   if (!result.ok) {
-    errEl.textContent = result.msg || '처리 실패. 다시 시도해주세요.';
-    errEl.style.display = 'block';
+    const errEl = document.getElementById('late-err');
+    if (errEl) { errEl.textContent = result.msg || '처리 실패.'; errEl.style.display = 'block'; }
     return;
   }
-
   closeLateModal();
   toast(`${name} 사후 출석 완료 ✅`, 'ok');
-  loadHistory(); // 기록 새로고침
+  loadHistory();
 }
 
 function renderHistory() { loadHistory(); }
