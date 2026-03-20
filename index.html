@@ -8,10 +8,10 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 html {
-  background: #111827 !important;
+  background: #0e1117 !important;
 }
 body {
-  background: #111827 !important;
+  background: #0e1117 !important;
   color: #edf0f7 !important;
 }
 /* 그라데이션 등 color 재정의가 필요한 요소는 인라인 스타일로 처리 */
@@ -20,7 +20,7 @@ a { color: inherit; }
 
 
 :root {
-  --ink: #111827;
+  --ink: #0e1117;
   --card: rgba(255,255,255,0.05);
   --card2: rgba(255,255,255,0.09);
   --border: rgba(255,255,255,0.1);
@@ -37,7 +37,7 @@ a { color: inherit; }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{
   font-family:'Noto Sans KR',sans-serif;
-  background:#111827;color:#edf0f7;
+  background:#0e1117;color:#edf0f7;
   min-height:100vh;font-size:18px;line-height:1.7;
   -webkit-tap-highlight-color:transparent;
 }
@@ -153,7 +153,7 @@ body::before{
 @media(max-width:640px){.qr-panel{width:100%}}
 .qr-box{background:#fff;border-radius:10px;padding:10px;line-height:0}
 .timer-num{font-family:'DM Mono',monospace;font-size:56px;font-weight:700;letter-spacing:-1px;transition:color .4s;line-height:1}
-.timer-lbl{font-size:15px;color:#7a8499;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+.timer-lbl{font-size:17px;color:#7a8499;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
 .t-ok{color:#00c896}.t-warn{color:#f5a623}.t-end{color:#e94560}
 .live-pill{
   display:flex;align-items:center;gap:6px;
@@ -162,9 +162,9 @@ body::before{
   font-size:15px;font-weight:700;
 }
 .pill-dot{width:6px;height:6px;border-radius:50%;background:#e94560;animation:pulse 1.2s infinite}
-.qr-hint{font-size:15px;color:#7a8499;text-align:center}
+.qr-hint{font-size:17px;color:#7a8499;text-align:center}
 .qr-btns{display:flex;gap:8px;width:100%}
-.qr-btns .btn{flex:1;font-size:15px;padding:8px 4px}
+.qr-btns .btn{flex:1;font-size:17px;padding:10px 4px}
 
 /* att panel */
 .att-panel{flex:1;min-width:0}
@@ -224,7 +224,7 @@ tbody tr:last-child td{border-bottom:none}
 .ok-meta{color:#7a8499;font-size:13px;line-height:2;text-align:center;white-space:pre-line}
 
 /* student fullscreen */
-#student-fullscreen{display:none;min-height:100vh;background:#111827}
+#student-fullscreen{display:none;min-height:100vh;background:#0e1117}
 .sf-page{
   min-height:100vh;display:flex;flex-direction:column;
   align-items:center;justify-content:center;
@@ -307,7 +307,7 @@ tbody tr:last-child td{border-bottom:none}
     onmouseout="this.style.background='rgba(255,255,255,0.07)'"
     title="관리용 페이지">⚙️</button>
 
-  <div style="font-size:30px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px;color:#f59e0b">
+  <div style="font-size:38px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px;color:#f59e0b">
     코스모스 독서시간 출석
   </div>
   <div style="color:#7a8499;font-size:14px;margin-bottom:56px">용도를 선택해주세요</div>
@@ -363,7 +363,7 @@ tbody tr:last-child td{border-bottom:none}
   <div style="font-size:28px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px;color:#e94560">
     코스모스 독서시간 출석
   </div>
-  <div style="color:#7a8499;font-size:14px;margin-bottom:40px">담당 장소를 선택해주세요</div>
+  <div style="color:#7a8499;font-size:18px;margin-bottom:48px">담당 장소를 선택해주세요</div>
   <div id="room-btn-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;width:100%;max-width:480px"></div>
 
 </div>
@@ -1110,7 +1110,7 @@ function renderRoomSelectButtons() {
         padding:28px 20px;cursor:pointer;transition:all .2s;text-align:center"
         onmouseover="this.style.transform='translateY(-2px)';this.style.filter='brightness(1.15)'"
         onmouseout="this.style.transform='';this.style.filter=''">
-        <div style="font-size:22px;font-weight:800;color:${c.text}">${room}</div>
+        <div style="font-size:28px;font-weight:800;color:${c.text}">${room}</div>
       </button>`;
   }).join('');
 }
@@ -1713,9 +1713,9 @@ function refreshStats() {
       });
       const sorted = Object.entries(grades).sort((a,b) => a[0]-b[0]);
       gradeEl.innerHTML = sorted.map(([g, cnt]) =>
-        `<div style="display:flex;align-items:center;gap:8px;white-space:nowrap">
-          <span style="font-size:12px;color:#7a8499">${g}학년</span>
-          <span style="font-size:15px;font-weight:700;color:#5eb8ff;font-family:'DM Mono',monospace">${cnt}</span>
+        `<div style="display:flex;align-items:center;gap:10px;white-space:nowrap">
+          <span style="font-size:15px;color:#7a8499">${g}학년</span>
+          <span style="font-size:20px;font-weight:700;color:#5eb8ff;font-family:'DM Mono',monospace">${cnt}</span>
         </div>`
       ).join('');
     } else {
