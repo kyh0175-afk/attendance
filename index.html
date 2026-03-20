@@ -134,21 +134,21 @@ body::before{
 .btn-stop:hover{background:rgba(233,69,96,.1)}
 
 /* stats */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
 @media(max-width:480px){.stats{grid-template-columns:repeat(2,1fr)}}
-.stat{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:16px 12px;text-align:center}
-.sn{font-family:'DM Mono',monospace;font-size:28px;font-weight:700;line-height:1}
-.sl{font-size:10px;color:#7a8499;margin-top:5px;letter-spacing:.6px;text-transform:uppercase}
+.stat{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:20px 12px;text-align:center}
+.sn{font-family:'DM Mono',monospace;font-size:36px;font-weight:700;line-height:1}
+.sl{font-size:13px;color:#7a8499;margin-top:6px;letter-spacing:.4px}
 .c-sky{color:#5eb8ff}.c-ok{color:#00c896}.c-red{color:#e94560}.c-amber{color:#f5a623}
 
 /* QR layout */
-.qr-layout{display:flex;gap:24px;align-items:flex-start}
+.qr-layout{display:flex;gap:20px;align-items:flex-start}
 @media(max-width:640px){.qr-layout{flex-direction:column}}
 .qr-panel{
-  flex-shrink:0;width:320px;
+  flex-shrink:0;width:306px;
   background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
-  border-radius:14px;padding:20px;
-  display:flex;flex-direction:column;align-items:center;gap:13px;
+  border-radius:14px;padding:16px 20px;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
 }
 @media(max-width:640px){.qr-panel{width:100%}}
 .qr-box{background:#fff;border-radius:10px;padding:10px;line-height:0}
@@ -425,7 +425,7 @@ tbody tr:last-child td{border-bottom:none}
   </div>
 
   <div id="session-area" style="display:none">
-    <div class="stats">
+    <div class="stats" id="stats-bar" style="grid-template-columns:306px 1fr 1fr 1fr">
       <div class="stat"><div class="sn c-sky" id="s-total">0</div><div class="sl">전체</div></div>
       <div class="stat"><div class="sn c-ok" id="s-present">0</div><div class="sl">출석</div></div>
       <div class="stat"><div class="sn c-red" id="s-absent">0</div><div class="sl">미출석</div></div>
