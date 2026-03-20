@@ -481,7 +481,7 @@ tbody tr:last-child td{border-bottom:none}
       <div class="s-sub" id="s-sub">진행 중인 수업이 없습니다.&#10;선생님이 QR을 생성하면 입력창이 나타납니다.</div>
       <div id="s-input-wrap" style="display:none;flex-direction:column;align-items:center;width:100%">
         <input class="big-input" id="s-no" type="text" inputmode="numeric"
-          placeholder="학번 입력 (예: 10101)" maxlength="8"
+          placeholder="학번 5자리 입력 (예: 10101)" maxlength="5" minlength="5" pattern="[0-9]{5}"
           onkeydown="if(event.key==='Enter')doAttend()">
         <div class="err-box" id="s-err"></div>
         <button class="btn btn-green" style="padding:14px 44px;font-size:15px" onclick="doAttend()">✓ 출석하기</button>
@@ -505,7 +505,7 @@ tbody tr:last-child td{border-bottom:none}
       <div class="s-sub" id="sf-sub">잠시만 기다려주세요...</div>
       <div id="sf-input-wrap" style="display:none;flex-direction:column;align-items:center;width:100%">
         <input class="big-input" id="sf-no" type="text" inputmode="numeric"
-          placeholder="학번 입력 (예: 10101)" maxlength="8"
+          placeholder="학번 5자리 입력 (예: 10101)" maxlength="5" minlength="5" pattern="[0-9]{5}"
           onkeydown="if(event.key==='Enter')doAttendFull()">
         <div class="err-box" id="sf-err"></div>
         <button class="btn btn-green" id="sf-attend-btn" style="padding:15px 48px;font-size:16px" onclick="doAttendFull()">✓ 출석하기</button>
@@ -882,7 +882,9 @@ async function gasPost(payload) {
     document.getElementById('main-screen').style.display = 'none';
     window._viewMode = false;
     await loadStudentsFromSheets();
-    goTab('manage');
+    goTab('manage'); // renderStudentList 포함
+    // 필터 드롭다운이 렌더링된 후 다시 한 번 명시적으로 호출
+    setTimeout(() => renderStudentList(), 100);
     restoreTeacherSession();
 
   } else if (params.get('mode') === 'student') {
@@ -1574,6 +1576,9 @@ async function doRegisterAndAttend() {
   errEl.style.display = 'none';
 
   if (!name) { errEl.textContent = '이름을 입력해주세요.'; errEl.style.display = 'block'; return; }
+  if (!/^[0-9]{5}$/.test(no)) { errEl.textContent = '학번은 숫자 5자리여야 해요. (예: 10101)'; errEl.style.display = 'block'; return; }
+  const regDaysCheck = getSelectedRegDays();
+  if (!regDaysCheck.length) { errEl.textContent = '출석 요일을 하나 이상 선택해주세요.'; errEl.style.display = 'block'; return; }
 
   const btn = document.querySelector('#sf-register-wrap .btn-green');
   if (btn) { btn.disabled = true; btn.textContent = '등록 중...'; }
@@ -2049,15 +2054,17 @@ async function confirmMregAttend() {
   errEl.style.display = 'none';
 
   if (!name) { errEl.textContent = '이름을 입력해주세요.'; errEl.style.display = 'block'; return; }
+  if (!/^[0-9]{5}$/.test(no)) { errEl.textContent = '학번은 숫자 5자리여야 해요. (예: 10101)'; errEl.style.display = 'block'; return; }
+
+  const days = [...document.querySelectorAll('.mreg-day-btn')]
+    .filter(b => b.dataset.active === 'true').map(b => b.dataset.day);
+  if (!days.length) { errEl.textContent = '출석 요일을 하나 이상 선택해주세요.'; errEl.style.display = 'block'; return; }
 
   // 중복 클릭 방지
   const confirmBtn = document.querySelector('#modal-manual-reg .btn-green');
   if (confirmBtn.disabled) return;
   confirmBtn.disabled = true;
   confirmBtn.textContent = '처리 중...';
-
-  const days = [...document.querySelectorAll('.mreg-day-btn')]
-    .filter(b => b.dataset.active === 'true').map(b => b.dataset.day);
 
   const prog = S.session.subj.trim();
   const cls  = S.session.cls.trim();
