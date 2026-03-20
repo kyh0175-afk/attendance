@@ -585,8 +585,12 @@ tbody tr:last-child td{border-bottom:none}
 <!-- ══ 명단 탭 ══ -->
 <div class="page" id="pg-manage">
   <div class="row-btw" style="margin-bottom:10px">
-    <div style="font-size:17px;font-weight:800">학생 명단</div>
-    <div style="display:flex;gap:8px">
+    <div style="font-size:17px;font-weight:800">학생 명단
+      <span id="view-mode-badge" style="display:none;font-size:11px;font-weight:400;
+        color:#7a8499;margin-left:8px;background:rgba(255,255,255,.06);
+        border-radius:20px;padding:2px 10px">읽기 전용</span>
+    </div>
+    <div id="manage-edit-btns" style="display:flex;gap:8px">
       <label class="btn btn-ghost btn-sm" style="cursor:pointer">
         📂 엑셀 업로드
         <input type="file" id="excel-upload" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleExcelUpload(event)">
@@ -840,14 +844,16 @@ async function gasPost(payload) {
 (async function init() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('mode') === 'view') {
-    // 확인용 페이지 — 기록/분석 탭만
+    // 확인용 페이지 — 기록/분석/명단(읽기전용) 탭
     document.getElementById('room-select-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'none';
-    // 탭 버튼만 숨김 (pg 요소는 goTab이 관리)
-    ['nb-teacher','nb-student','nb-manage'].forEach(id => {
+    // 교사/학생 탭 버튼만 숨김
+    ['nb-teacher','nb-student'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
+    // 명단 탭 읽기전용 표시
+    window._viewMode = true;
     await loadStudentsFromSheets();
     goTab('history');
 
@@ -855,9 +861,9 @@ async function gasPost(payload) {
     // 관리용 페이지 — 모든 탭
     document.getElementById('room-select-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'none';
+    window._viewMode = false;
     await loadStudentsFromSheets();
-    renderStudentList();
-    goTab('teacher');
+    goTab('manage');
     restoreTeacherSession();
 
   } else if (params.get('mode') === 'student') {
@@ -1173,7 +1179,17 @@ function goTab(tab) {
     if (pg) pg.classList.toggle('on', t===tab);
     if (nb) nb.classList.toggle('on', t===tab);
   });
-  if (tab==='manage')   { renderStudentList(); loadGroupDays(); }
+  if (tab==='manage') {
+    // view 모드면 편집 버튼 숨기기
+    const editBtns = document.getElementById('manage-edit-btns');
+    const viewBadge = document.getElementById('view-mode-badge');
+    if (window._viewMode) {
+      if (editBtns) editBtns.style.display = 'none';
+      if (viewBadge) viewBadge.style.display = 'inline';
+    }
+    renderStudentList();
+    loadGroupDays();
+  }
   if (tab==='history')  loadHistory();
   if (tab==='student')  syncTabUI();
   if (tab==='analysis') loadAnalysis();
@@ -1699,11 +1715,11 @@ function renderStudentList() {
       <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#7a8499">
         ${groupName} <span style="font-weight:400;margin-left:6px">${sts.length}명</span>
       </div>
-      <button class="btn btn-ghost btn-sm btn-del"
+      ${window._viewMode ? '' : `<button class="btn btn-ghost btn-sm btn-del"
         style="font-size:11px;padding:4px 10px"
         onclick="removeGroup('${groupName.replace(/'/g, "\\'")}')">
         그룹 전체 삭제
-      </button>
+      </button>`}
     </div>
     ${sts.map(st => `
     <div class="s-row" style="flex-wrap:wrap;gap:8px">
@@ -1722,7 +1738,7 @@ function renderStudentList() {
             cursor:pointer;transition:all .15s">${day}</button>`;
         }).join('')}
       </div>
-      <button class="btn btn-ghost btn-sm btn-del" onclick="removeStudent(${st.id})">삭제</button>
+      ${window._viewMode ? '' : `<button class="btn btn-ghost btn-sm btn-del" onclick="removeStudent(${st.id})">삭제</button>`}
     </div>`).join('')}
   `).join('');
 }
