@@ -1695,23 +1695,27 @@ function refreshStats() {
   document.getElementById('prog').style.width = rate + '%';
   document.getElementById('prog-lbl').textContent = `${present} / ${total}명 출석`;
 
-  // 학년별 인원 계산 (학번 첫 자리)
+  // 학년별 인원 계산 — 현재 세션 장소의 전체 학생 기준
   const gradeEl = document.getElementById('s-grade-list');
-  if (gradeEl && total > 0) {
-    const grades = {};
-    sts.forEach(s => {
-      const g = String(s.no).trim()[0];
-      if (g) grades[g] = (grades[g] || 0) + 1;
-    });
-    const sorted = Object.entries(grades).sort((a,b) => a[0].localeCompare(b[0]));
-    gradeEl.innerHTML = sorted.map(([g, cnt]) =>
-      `<div style="display:flex;align-items:center;gap:8px;white-space:nowrap">
-        <span style="font-size:12px;color:#7a8499">${g}학년</span>
-        <span style="font-size:15px;font-weight:700;color:#5eb8ff;font-family:'DM Mono',monospace">${cnt}</span>
-      </div>`
-    ).join('');
-  } else if (gradeEl) {
-    gradeEl.innerHTML = '<div style="font-size:12px;color:#7a8499">—</div>';
+  if (gradeEl) {
+    const cls = S.session ? S.session.cls.trim().replace(/\s+/g,'') : '';
+    const allCls = S.students.filter(s => s.cls.trim().replace(/\s+/g,'') === cls);
+    if (allCls.length > 0) {
+      const grades = {};
+      allCls.forEach(s => {
+        const g = String(s.no).trim()[0];
+        if (g && !isNaN(g)) grades[g] = (grades[g] || 0) + 1;
+      });
+      const sorted = Object.entries(grades).sort((a,b) => a[0]-b[0]);
+      gradeEl.innerHTML = sorted.map(([g, cnt]) =>
+        `<div style="display:flex;align-items:center;gap:8px;white-space:nowrap">
+          <span style="font-size:12px;color:#7a8499">${g}학년</span>
+          <span style="font-size:15px;font-weight:700;color:#5eb8ff;font-family:'DM Mono',monospace">${cnt}</span>
+        </div>`
+      ).join('');
+    } else {
+      gradeEl.innerHTML = '<div style="font-size:12px;color:#7a8499">—</div>';
+    }
   }
 }
 
