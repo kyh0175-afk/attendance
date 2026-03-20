@@ -853,6 +853,9 @@ async function gasPost(payload) {
       if (el) el.style.display = 'none';
     });
     await loadStudentsFromSheets();
+    // 기록 탭 페이지 표시
+    document.getElementById('pg-history').style.display = '';
+    document.getElementById('pg-analysis').style.display = '';
     goTab('history');
 
   } else if (params.get('mode') === 'admin') {
@@ -861,6 +864,7 @@ async function gasPost(payload) {
     document.getElementById('main-screen').style.display = 'none';
     await loadStudentsFromSheets();
     renderStudentList();
+    goTab('manage');
     restoreTeacherSession();
 
   } else if (params.get('mode') === 'student') {
@@ -1092,11 +1096,13 @@ let _lastSavedAt = 0;
 let _isSaving    = false;
 
 async function loadStudentsFromSheets() {
-  // 최근 5초 이내에 저장했으면 로드 스킵 (업로드 직후 덮어쓰기 방지)
-  if (_isSaving || (Date.now() - _lastSavedAt < 5000)) return;
+  // 저장 진행 중이면 스킵 (업로드 직후 덮어쓰기 방지)
+  if (_isSaving) return;
 
   const result = await gasPost({action: "getStudents"});
   if (result.ok && result.students.length > 0) {
+    // 저장 중이면 로드 결과 무시
+    if (_isSaving) return;
     S.students = result.students.map((s, i) => ({...s, id: i + 1}));
     S.nextId   = S.students.length + 1;
   }
