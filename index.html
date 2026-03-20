@@ -600,14 +600,26 @@ tbody tr:last-child td{border-bottom:none}
     </div>
   </div>
 
-  <!-- 그룹 필터 -->
-  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-    <select id="manage-filter" onchange="renderStudentList()"
-      style="background:#1a1f2e;border:1px solid rgba(255,255,255,0.1);border-radius:8px;
-      padding:7px 12px;color:#edf0f7;font-family:inherit;font-size:13px;outline:none;flex:1;max-width:320px">
-      <option value="">전체 보기</option>
+  <!-- 그룹 필터 (2단계) -->
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+    <select id="manage-prog-filter" onchange="onManageProgChange()"
+      style="background:#1a1f2e;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 12px;color:#edf0f7;font-family:inherit;font-size:13px;outline:none;flex:1;max-width:220px">
+      <option value="">전체 프로그램</option>
+      <option>심야 독서시간</option>
+      <option>야간 독서시간</option>
+      <option>방과후 독서시간</option>
+      <option>토요일 독서시간</option>
+      <option>일요일 독서시간</option>
     </select>
-    <div style="font-size:12px;color:#7a8499;display:flex;align-items:center" id="manage-count"></div>
+    <select id="manage-cls-filter" onchange="renderStudentList()"
+      style="background:#1a1f2e;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 12px;color:#edf0f7;font-family:inherit;font-size:13px;outline:none;flex:1;max-width:180px">
+      <option value="">전체 장소</option>
+      <option>아우름</option>
+      <option>교과1실</option>
+      <option>해오름</option>
+      <option>리케이온</option>
+    </select>
+    <div style="font-size:12px;color:#7a8499" id="manage-count"></div>
   </div>
 
   <!-- 엑셀 업로드 안내 -->
@@ -860,12 +872,8 @@ async function gasPost(payload) {
     });
     // 명단 탭 읽기전용 표시
     window._viewMode = true;
+    document.body.classList.add('view-mode'); // CSS로 teacher/student 탭 완전 차단
     await loadStudentsFromSheets();
-    // pg-teacher, pg-student가 절대 안 보이도록
-    ['pg-teacher','pg-student'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) { el.classList.remove('on'); el.style.setProperty('display','none','important'); }
-    });
     goTab('history');
 
   } else if (params.get('mode') === 'admin') {
@@ -1708,8 +1716,16 @@ function renderStudentList() {
     return;
   }
 
-  // 학번 순 정렬
-  const sorted = [...S.students].sort((a, b) => String(a.no).localeCompare(String(b.no), undefined, {numeric:true}));
+  // 2단계 필터 적용
+  const progFilter = (document.getElementById('manage-prog-filter')?.value || '').trim();
+  const clsFilter  = (document.getElementById('manage-cls-filter')?.value  || '').trim();
+  const countEl    = document.getElementById('manage-count');
+
+  // 학번 순 정렬 + 필터
+  let sorted = [...S.students].sort((a,b) => String(a.no).localeCompare(String(b.no), undefined, {numeric:true}));
+  if (progFilter) sorted = sorted.filter(s => s.program.trim() === progFilter);
+  if (clsFilter)  sorted = sorted.filter(s => s.cls.trim() === clsFilter);
+  if (countEl) countEl.textContent = `총 ${sorted.length}명`;
 
   // 프로그램+장소 조합으로 그룹화
   const groups = {};
@@ -1765,6 +1781,11 @@ function removeGroup(groupName) {
 }
 
 /* ══ 기록 ══ */
+// ── 명단 프로그램 필터 변경 ──
+function onManageProgChange() {
+  renderStudentList();
+}
+
 // ── 출석 요일 토글 ──
 async function toggleDay(no, day, btn) {
   if (window._viewMode) return; // 확인용 모드면 수정 불가
