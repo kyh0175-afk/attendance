@@ -1084,21 +1084,18 @@ function enterRoom(encodedRoom) {
 }
 
 // ── Sheets에서 명단 불러오기 ──
-// 마지막 저장 완료 시각 (로드 시 이보다 오래된 데이터면 덮어쓰기 방지)
-let _lastSavedAt = 0;
-let _isSaving    = false;
+// 마지막 저장 완료 시각
+var _lastSavedAt = 0;
+var _isSaving    = false;
 
 async function loadStudentsFromSheets() {
-  if (_isSaving) { console.log('[load] skip: saving'); return; }
-  console.log('[load] fetching students...');
+  if (_isSaving) return;
   const result = await gasPost({action: "getStudents"});
-  console.log('[load] result:', result.ok, result.students?.length);
   if (!result.ok) return;
   if (_isSaving) return;
   if (result.students && result.students.length > 0) {
     S.students = result.students.map((s, i) => ({...s, id: i + 1}));
     S.nextId   = S.students.length + 1;
-    console.log('[load] loaded', S.students.length, 'students');
   }
   updateProgramOptions();
   updateClsByProgram();
@@ -1108,8 +1105,8 @@ async function loadStudentsFromSheets() {
 function updateProgramOptions() {}
 
 // ── 명단을 Sheets에 저장 ──
-let _savingStudents = false; // 하위 호환용
-let _pendingSave    = false;
+var _savingStudents = false; // 하위 호환용
+var _pendingSave    = false;
 async function saveStudentsToSheets() {
   if (_isSaving) { _pendingSave = true; return; }
   _isSaving = true; _savingStudents = true;
