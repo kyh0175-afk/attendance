@@ -810,6 +810,12 @@ tbody tr:last-child td{border-bottom:none}
 
 <script>
 /* ══ 데이터 ══ */
+// 저장/로드 상태 변수 (전역 최상단)
+var _lastSavedAt  = 0;
+var _isSaving     = false;
+var _savingStudents = false;
+var _pendingSave  = false;
+
 const S = {
   students: [],
   session: null,
@@ -1090,10 +1096,6 @@ function enterRoom(encodedRoom) {
 }
 
 // ── Sheets에서 명단 불러오기 ──
-// 마지막 저장 완료 시각
-var _lastSavedAt = 0;
-var _isSaving    = false;
-
 async function loadStudentsFromSheets() {
   if (_isSaving) return;
   const result = await gasPost({action: "getStudents"});
@@ -1111,8 +1113,6 @@ async function loadStudentsFromSheets() {
 function updateProgramOptions() {}
 
 // ── 명단을 Sheets에 저장 ──
-var _savingStudents = false; // 하위 호환용
-var _pendingSave    = false;
 async function saveStudentsToSheets() {
   if (_isSaving) { _pendingSave = true; return; }
   _isSaving = true; _savingStudents = true;
