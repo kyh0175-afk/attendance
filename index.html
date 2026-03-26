@@ -2896,9 +2896,11 @@ function renderWeekView(students, attendMapByProg, attendMapAll) {
         if (야간st) progsToRender.push({st: 야간st, prog: '야간 독서시간', label: '야간'});
         if (심야st) progsToRender.push({st: 심야st, prog: '심야 독서시간', label: '심야'});
       } else {
-        // 토/일만 있는 경우
-        if (토st) progsToRender.push({st: 토st, prog: '토요일 독서시간', label: '토요일'});
-        if (일st) progsToRender.push({st: 일st, prog: '일요일 독서시간', label: '일요일'});
+        // 토/일은 서로 다른 요일이라 1행으로 합침
+        // 토+일 둘 다 있으면 1행 (토열=토, 일열=일)
+        // 하나만 있으면 1행
+        const toIlLabel = [토st?'토요일':'', 일st?'일요일':''].filter(Boolean).join('+');
+        progsToRender.push({st: 토st || 일st, prog: '_tojil', label: toIlLabel, 토st, 일st});
       }
 
       progsToRender.forEach(({st, prog, label}, idx) => {
@@ -2928,9 +2930,11 @@ function renderWeekView(students, attendMapByProg, attendMapAll) {
             if (isSim) return `<td style="border-bottom:1px solid rgba(255,255,255,.04)"></td><td style="text-align:center;padding:4px 3px;border-bottom:1px solid rgba(255,255,255,.04);${isToday?'background:rgba(79,142,247,.08)':''}">${cell}</td>`;
             return `<td></td><td></td>`;
           } else if (dow === 6) {
-            // 토요일 열
-            if (토st && prog === '토요일 독서시간') {
-              const isTarget = stDays.includes('토');
+            // 토요일 열 — _tojil이거나 토요일 독서시간 단독
+            const curToSt = prog === '_tojil' ? 토st : (prog === '토요일 독서시간' ? {days: stDays, no} : null);
+            if (curToSt) {
+              const days토 = curToSt.days || [];
+              const isTarget = days토.includes('토');
               const attd = attendMapByProg[`${no}__토요일 독서시간`]?.has(dateStr);
               let cell;
               if (isFuture) cell = `<span style="color:rgba(255,255,255,0.3);font-size:12px">-</span>`;
@@ -2942,9 +2946,11 @@ function renderWeekView(students, attendMapByProg, attendMapAll) {
             }
             return `<td style="border-bottom:1px solid rgba(255,255,255,.04)"></td>`;
           } else {
-            // 일요일 열
-            if (일st && prog === '일요일 독서시간') {
-              const isTarget = stDays.includes('일');
+            // 일요일 열 — _tojil이거나 일요일 독서시간 단독
+            const curIlSt = prog === '_tojil' ? 일st : (prog === '일요일 독서시간' ? {days: stDays, no} : null);
+            if (curIlSt) {
+              const days일 = curIlSt.days || [];
+              const isTarget = days일.includes('일');
               const attd = attendMapByProg[`${no}__일요일 독서시간`]?.has(dateStr);
               let cell;
               if (isFuture) cell = `<span style="color:rgba(255,255,255,0.3);font-size:12px">-</span>`;
@@ -2958,7 +2964,16 @@ function renderWeekView(students, attendMapByProg, attendMapAll) {
           }
         }).join('');
 
-        const {rate, total} = calcRate(no, prog, stDays);
+        // _tojil인 경우 토+일 출석률 합산
+        let rate, total;
+        if (prog === '_tojil') {
+          let tot = 0, att = 0;
+          if (토st) { const r = calcRate(no, '토요일 독서시간', 토st.days||[]); tot += r.total; att += r.attended; }
+          if (일st) { const r = calcRate(no, '일요일 독서시간', 일st.days||[]); tot += r.total; att += r.attended; }
+          total = tot; rate = tot ? Math.round(att/tot*100) : 0;
+        } else {
+          ({rate, total} = calcRate(no, prog, stDays));
+        }
         const rColor = rate>=80?'#00c896':rate>=50?'#f5a623':'#e94560';
         const progLabel = `<span style="font-size:10px;color:#7a8499;background:rgba(255,255,255,.06);border-radius:4px;padding:1px 5px">${label}</span>`;
 
