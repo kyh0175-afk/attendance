@@ -1999,9 +1999,12 @@ function renderHistList(list) {
               ✓ 출석 ${s.attended.length}명
             </div>
             ${s.attended.length
-              ? s.attended.map(r => `
-                <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-                  <span>${r.name}</span>
+              ? [...s.attended].sort((a,b) => String(a.no||'').localeCompare(String(b.no||''), undefined, {numeric:true})).map(r => `
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+                  <span style="display:flex;align-items:center;gap:8px">
+                    <span style="font-family:'DM Mono',monospace;color:#7a8499">${r.no||''}</span>
+                    <span>${r.name}</span>
+                  </span>
                   <span style="color:#7a8499;font-family:'DM Mono',monospace;font-size:11px">${r.time || ''}</span>
                 </div>`).join('')
               : '<div style="font-size:12px;color:#7a8499">없음</div>'
@@ -2012,9 +2015,10 @@ function renderHistList(list) {
               ✗ 결석 ${s.absent.length}명
             </div>
             ${s.absent.length
-              ? s.absent.map(r => `
-                <div style="font-size:12px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);color:#7a8499">
-                  ${r.name}
+              ? [...s.absent].sort((a,b) => String(a.no||'').localeCompare(String(b.no||''), undefined, {numeric:true})).map(r => `
+                <div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);color:#7a8499">
+                  <span style="font-family:'DM Mono',monospace">${r.no||''}</span>
+                  <span>${r.name}</span>
                 </div>`).join('')
               : '<div style="font-size:12px;color:#7a8499">없음</div>'
             }
