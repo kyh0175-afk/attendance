@@ -2893,13 +2893,13 @@ function renderWeekView(students, attendMapByProg, attendMapAll) {
       const progRows = [];
       const progsToRender = [];
       if (야간st || 심야st) {
-        if (야간st) progsToRender.push({st: 야간st, prog: '야간 독서시간', label: '야간'});
-        if (심야st) progsToRender.push({st: 심야st, prog: '심야 독서시간', label: '심야'});
+        if (야간st) progsToRender.push({st: 야간st, prog: '야간 독서시간', label: '야'});
+        if (심야st) progsToRender.push({st: 심야st, prog: '심야 독서시간', label: '심'});
       } else {
         // 토/일은 서로 다른 요일이라 1행으로 합침
         // 토+일 둘 다 있으면 1행 (토열=토, 일열=일)
         // 하나만 있으면 1행
-        const toIlLabel = [토st?'토요일':'', 일st?'일요일':''].filter(Boolean).join('+');
+        const toIlLabel = [토st?'토':'', 일st?'일':''].filter(Boolean).join(' ');
         progsToRender.push({st: 토st || 일st, prog: '_tojil', label: toIlLabel, 토st, 일st});
       }
 
