@@ -2837,7 +2837,7 @@ function renderWeekView(students, attendMapByProg, attendMapAll) {
     const dayKr = dateStr ? WEEKDAY[new Date(dateStr+'T00:00:00').getDay()] : '';
     const isTarget = studentDays.includes(dayKr);
     let cell;
-    if (isFuture) cell = `<span style="color:rgba(255,255,255,0.3);font-size:13px">-</span>`;
+    if (isFuture) cell = `<span style="color:rgba(255,255,255,0.45);font-size:17px">-</span>`;
     else if (attByProg && isTarget) cell = `<span style="color:#00c896;font-size:16px;line-height:1">●</span>`;
     else if (attByProg && !isTarget) cell = `<span style="color:#5eb8ff;font-size:16px;line-height:1">●</span>`;
     else if (!isTarget) cell = `<span style="color:rgba(255,255,255,0.35);font-size:16px;line-height:1">·</span>`;
@@ -2920,10 +2920,10 @@ function renderWeekView(students, attendMapByProg, attendMapAll) {
             const attKey = `${no}__${prog}`;
             const attd = attendMapByProg[attKey]?.has(dateStr);
             let cell;
-            if (isFuture) cell = `<span style="color:rgba(255,255,255,0.3);font-size:12px">-</span>`;
+            if (isFuture) cell = `<span style="color:rgba(255,255,255,0.45);font-size:16px">-</span>`;
             else if (attd && isTarget) cell = `<span style="color:#00c896;font-size:16px;line-height:1">●</span>`;
             else if (attd && !isTarget) cell = `<span style="color:#5eb8ff;font-size:16px;line-height:1">●</span>`;
-            else if (!isTarget) cell = `<span style="color:rgba(255,255,255,0.3);font-size:14px">·</span>`;
+            else if (!isTarget) cell = `<span style="color:rgba(255,255,255,0.4);font-size:18px">·</span>`;
             else cell = `<span style="color:#e94560;font-weight:700">X</span>`;
             // 야간이면 야간열에 표시, 심야이면 심야열에 표시, 반대쪽은 빈칸
             if (isYa)  return `<td style="text-align:center;padding:4px 3px;border-bottom:1px solid rgba(255,255,255,.04);${isToday?'background:rgba(79,142,247,.08)':''}">${cell}</td><td style="border-bottom:1px solid rgba(255,255,255,.04)"></td>`;
@@ -2937,10 +2937,10 @@ function renderWeekView(students, attendMapByProg, attendMapAll) {
               const isTarget = days토.includes('토');
               const attd = attendMapByProg[`${no}__토요일 독서시간`]?.has(dateStr);
               let cell;
-              if (isFuture) cell = `<span style="color:rgba(255,255,255,0.3);font-size:12px">-</span>`;
+              if (isFuture) cell = `<span style="color:rgba(255,255,255,0.45);font-size:16px">-</span>`;
               else if (attd && isTarget) cell = `<span style="color:#00c896;font-size:16px;line-height:1">●</span>`;
               else if (attd) cell = `<span style="color:#5eb8ff;font-size:16px;line-height:1">●</span>`;
-              else if (!isTarget) cell = `<span style="color:rgba(255,255,255,0.3);font-size:14px">·</span>`;
+              else if (!isTarget) cell = `<span style="color:rgba(255,255,255,0.4);font-size:18px">·</span>`;
               else cell = `<span style="color:#e94560;font-weight:700">X</span>`;
               return `<td style="text-align:center;padding:4px 3px;border-bottom:1px solid rgba(255,255,255,.04);${isToday?'background:rgba(79,142,247,.08)':''}">${cell}</td>`;
             }
@@ -2953,10 +2953,10 @@ function renderWeekView(students, attendMapByProg, attendMapAll) {
               const isTarget = days일.includes('일');
               const attd = attendMapByProg[`${no}__일요일 독서시간`]?.has(dateStr);
               let cell;
-              if (isFuture) cell = `<span style="color:rgba(255,255,255,0.3);font-size:12px">-</span>`;
+              if (isFuture) cell = `<span style="color:rgba(255,255,255,0.45);font-size:16px">-</span>`;
               else if (attd && isTarget) cell = `<span style="color:#00c896;font-size:16px;line-height:1">●</span>`;
               else if (attd) cell = `<span style="color:#5eb8ff;font-size:16px;line-height:1">●</span>`;
-              else if (!isTarget) cell = `<span style="color:rgba(255,255,255,0.3);font-size:14px">·</span>`;
+              else if (!isTarget) cell = `<span style="color:rgba(255,255,255,0.4);font-size:18px">·</span>`;
               else cell = `<span style="color:#e94560;font-weight:700">X</span>`;
               return `<td style="text-align:center;padding:4px 3px;border-bottom:1px solid rgba(255,255,255,.04);${isToday?'background:rgba(79,142,247,.08)':''}">${cell}</td>`;
             }
@@ -3010,10 +3010,10 @@ function renderWeekView(students, attendMapByProg, attendMapAll) {
         const attd = attendMapByProg[`${st.no}__${prog}`]?.has(dateStr);
         let cell;
         if (!isColTarget) cell = `<span style="color:rgba(255,255,255,0.12);font-size:14px">·</span>`;
-        else if (isFuture) cell = `<span style="color:rgba(255,255,255,0.3);font-size:13px">-</span>`;
+        else if (isFuture) cell = `<span style="color:rgba(255,255,255,0.45);font-size:17px">-</span>`;
         else if (attd && isTarget) cell = `<span style="color:#00c896;font-size:18px;line-height:1">●</span>`;
         else if (attd && !isTarget) cell = `<span style="color:#5eb8ff;font-size:18px;line-height:1">●</span>`;
-        else if (!isTarget) cell = `<span style="color:rgba(255,255,255,0.35);font-size:18px;line-height:1">·</span>`;
+        else if (!isTarget) cell = `<span style="color:rgba(255,255,255,0.4);font-size:20px;line-height:1">·</span>`;
         else cell = `<span style="color:#e94560;font-weight:700">X</span>`;
         return `<td style="text-align:center;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.04);${isToday?'background:rgba(79,142,247,.08)':''}">${cell}</td>`;
       }).join('');
