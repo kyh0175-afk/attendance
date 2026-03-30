@@ -405,11 +405,22 @@ tbody tr:last-child td{border-bottom:none}
 <div class="page on" id="pg-teacher">
   <div id="form-area">
     <div class="card">
-      <div class="card-head">새 수업 시작</div>
+      <div class="card-head" style="display:flex;justify-content:space-between;align-items:center">
+        <span>새 자습 출석 시작</span>
+        <span id="today-date-label" style="font-size:12px;font-weight:400;color:#7a8499;letter-spacing:0"></span>
+      </div>
+      <script>
+        (function(){
+          const d = new Date();
+          const label = `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${['일','월','화','수','목','금','토'][d.getDay()]})`;
+          const el = document.getElementById('today-date-label');
+          if (el) el.textContent = label;
+        })();
+      </script>
       <div class="g2">
         <div class="field" id="f-subj-wrap"><label>프로그램</label>
           <select id="f-subj" onchange="updateClsByProgram()">
-            <option>심야 독서시간</option>
+            <option selected>심야 독서시간</option>
             <option>야간 독서시간</option>
             <option>방과후 독서시간</option>
             <option>토요일 독서시간</option>
@@ -440,7 +451,7 @@ tbody tr:last-child td{border-bottom:none}
           </select>
         </div>
       </div>
-      <button class="btn btn-red btn-full" onclick="startSession()">▶ QR 생성 및 수업 시작</button>
+      <button class="btn btn-red btn-full" onclick="startSession()">▶ QR 생성 및 출석 시작</button>
     </div>
   </div>
 
@@ -1063,7 +1074,11 @@ async function gasPost(payload) {
       badge.onclick = () => { location.href = location.pathname; };
       document.querySelector('.topbar').insertBefore(badge, document.querySelector('.topbar-nav'));
 
-      await loadStudentsFromSheets();
+      // 명단은 백그라운드에서 로드 (로딩 속도 개선)
+      loadStudentsFromSheets().then(() => {
+        renderStudentList();
+        updateClsByProgram(); // 감독 자동조회
+      });
 
       // 장소 텍스트 즉시 표시 (teacherParam 고정)
       const clsDisplay = document.getElementById('f-cls-display');
@@ -1393,6 +1408,10 @@ function updateClsByProgram() {
 }
 
 async function startSession() {
+  // 명단이 아직 없으면 로드 후 진행
+  if (!S.students.length && !_isSaving) {
+    await loadStudentsFromSheets();
+  }
   const subj    = document.getElementById('f-subj').value.trim() || '수업';
   const teacher = document.getElementById('f-teacher').value.trim() || '선생님';
   const cls     = S.teacherRoom || document.getElementById('f-cls').value; // teacherRoom 우선
@@ -1416,7 +1435,7 @@ async function startSession() {
     expiresAt: Date.now() + dur * 1000
   });
 
-  btn.disabled = false; btn.textContent = '▶ QR 생성 및 수업 시작';
+  btn.disabled = false; btn.textContent = '▶ QR 생성 및 출석 시작';
 
   document.getElementById('form-area').style.display = 'none';
   document.getElementById('session-area').style.display = 'block';
