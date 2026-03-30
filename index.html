@@ -1085,9 +1085,10 @@ async function gasPost(payload) {
       const loadingEl = document.getElementById('sf-loading');
       if (loadingEl) loadingEl.style.display = 'none';
       const remainSec = Math.floor((expUrl - now) / 1000);
+      const durSec = parseInt(params.get('dur') || remainSec);
       S.session = {
         id: sid, subj: subjUrl, cls: clsUrl,
-        teacher: '', dur: remainSec, remain: remainSec,
+        teacher: '', dur: durSec, remain: remainSec,
         startedAt: new Date()
       };
       S.attendance = [];
@@ -1215,6 +1216,8 @@ async function gasPost(payload) {
           startBtn.textContent = '▶ QR 생성 및 출석 시작';
           startBtn.style.opacity = '';
         }
+        // 세션이 복원된 상태라면 테이블도 갱신
+        if (S.session) { refreshTable(); refreshStats(); }
       });
     }
   }
@@ -1567,13 +1570,15 @@ async function startSession() {
 
 function buildQR() {
   const box = document.getElementById('qr-render');
+  // exp: 서버 기준 remain 사용 (클라이언트 시계 오차 최소화)
   const exp = Date.now() + S.session.remain * 1000;
   const url = location.origin + location.pathname
     + '?mode=student'
     + '&sid=' + encodeURIComponent(S.session.id)
     + '&subj=' + encodeURIComponent(S.session.subj)
     + '&cls=' + encodeURIComponent(S.session.cls)
-    + '&exp=' + exp;
+    + '&exp=' + exp
+    + '&dur=' + S.session.dur;  // 전체 시간도 포함 → 학생 폰에서 표시용
   // 임시 컨테이너에 먼저 생성 후 교체 (깜빡임 방지)
   const tmp = document.createElement('div');
   new QRCode(tmp, {
@@ -2438,12 +2443,16 @@ function npRefresh() {
 
 async function npConfirm() {
   if (_npVal.length !== 5) return;
+  const okBtn = document.getElementById('numpad-ok');
+  if (okBtn?.disabled) return;
+  if (okBtn) { okBtn.disabled = true; okBtn.textContent = '처리 중...'; }
   const no = _npVal;
   document.getElementById('numpad').style.display = 'none';
   document.getElementById('manual-no').value = no;
   _npVal = '';
   await manualAttendNo(no);
   document.getElementById('manual-no').value = '';
+  if (okBtn) { okBtn.disabled = false; okBtn.textContent = '✓ 출석 처리'; }
 }
 
 // ── 세션 기록 삭제 ──
