@@ -671,9 +671,11 @@ tbody tr:last-child td{border-bottom:none}
       <div class="field">
         <label>프로그램</label>
         <select id="n-program">
-          <option>방과후 독서시간</option>
-          <option>야간 독서시간</option>
           <option>심야 독서시간</option>
+          <option>야간 독서시간</option>
+          <option>방과후 독서시간</option>
+          <option>토요일 독서시간</option>
+          <option>일요일 독서시간</option>
         </select>
       </div>
       <div class="field">
@@ -1410,9 +1412,6 @@ async function startSession() {
 
 function buildQR() {
   const box = document.getElementById('qr-render');
-  box.innerHTML = '';
-  // QR에 sessionId 포함 → 학생 폰이 정확한 세션으로 접속
-  // URL에 세션 정보 포함 → 학생 폰에서 API 없이 즉시 화면 표시
   const exp = Date.now() + S.session.remain * 1000;
   const url = location.origin + location.pathname
     + '?mode=student'
@@ -1420,12 +1419,17 @@ function buildQR() {
     + '&subj=' + encodeURIComponent(S.session.subj)
     + '&cls=' + encodeURIComponent(S.session.cls)
     + '&exp=' + exp;
-  new QRCode(box, {
-    text: url,
-    width: 260, height: 260,
+  // 임시 컨테이너에 먼저 생성 후 교체 (깜빡임 방지)
+  const tmp = document.createElement('div');
+  new QRCode(tmp, {
+    text: url, width: 260, height: 260,
     colorDark: '#000000', colorLight: '#ffffff',
     correctLevel: QRCode.CorrectLevel.M
   });
+  setTimeout(() => {
+    box.innerHTML = '';
+    while (tmp.firstChild) box.appendChild(tmp.firstChild);
+  }, 50);
   document.getElementById('qr-hint').textContent = '스캔하면 학생 출석 화면으로 이동';
 }
 
@@ -1553,7 +1557,8 @@ async function endSession() {
   });
 
   _autoEnding = false;
-  toast('수업 종료됨. 출석 기록이 저장됐어요 ✅', 'ok');
+  const endRate = totalCount ? Math.round(presentCount/totalCount*100) : 0;
+  toast(`수업 종료 — ${totalCount}명 중 ${presentCount}명 출석 (${endRate}%) ✅`, 'ok');
 }
 
 /* ══ 출석 처리 공통 (Google Sheets 저장) ══ */
@@ -1801,6 +1806,8 @@ function refreshStats() {
   document.getElementById('s-present').textContent = present;
   document.getElementById('s-absent').textContent = total - present;
   document.getElementById('s-rate').textContent = rate + '%';
+  // 출석 시작 전(0명)이면 출석률 회색으로
+  document.getElementById('s-rate').style.color = (present === 0 && total > 0) ? '#7a8499' : '';
   document.getElementById('prog').style.width = rate + '%';
   document.getElementById('prog-lbl').textContent = `${present} / ${total}명 출석`;
 
@@ -2103,8 +2110,11 @@ function openLateModal() {
   if (!sessions.length) {
     toast('먼저 기록 탭을 새로고침해주세요.', 'err'); return;
   }
+  // 최신순 정렬
+  const sortedSess = [...sessions].sort((a,b) => b.date.localeCompare(a.date));
   sel.innerHTML = '<option value="">수업을 선택해주세요</option>' +
-    sessions.map((s,i) => `<option value="${i}">${s.date} — ${s.subject} ${s.cls}</option>`).join('');
+    sortedSess.map((s,i) => `<option value="${i}">${s.date} — ${s.subject} ${s.cls}</option>`).join('');
+  window._lateSortedSessions = sortedSess; // 선택값 매핑용
 
   document.getElementById('late-no').value = '';
   document.getElementById('late-student-info').style.display = 'none';
@@ -2141,7 +2151,7 @@ async function confirmLateAttend() {
   if (sessIdx === '') { errEl.textContent = '수업을 선택해주세요.'; errEl.style.display = 'block'; return; }
   if (!no) { errEl.textContent = '학번을 입력해주세요.'; errEl.style.display = 'block'; return; }
 
-  const sessions = window._histSessions || [];
+  const sessions = window._lateSortedSessions || window._histSessions || [];
   const sess = sessions[parseInt(sessIdx)];
   if (!sess) { errEl.textContent = '수업 정보를 찾을 수 없어요.'; errEl.style.display = 'block'; return; }
 
