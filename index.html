@@ -171,12 +171,15 @@ body::before{
 
 /* 넘버패드 */
 .numpad-wrap{
-  position:absolute;left:0;right:0;top:0;
-  background:rgba(14,17,23,.96);backdrop-filter:blur(8px);
-  border-radius:14px;z-index:50;
+  position:fixed;top:64px;right:20px;width:420px;
+  background:rgba(20,24,35,.97);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:16px;z-index:9000;
   display:flex;flex-direction:column;align-items:center;
-  gap:14px;padding:20px;
+  gap:10px;padding:16px 20px;
+  box-shadow:0 8px 40px rgba(0,0,0,.6);
 }
+@media(max-width:640px){.numpad-wrap{right:8px;left:8px;width:auto}}
 .numpad-display{
   font-family:'DM Mono',monospace;font-size:36px;font-weight:700;
   letter-spacing:6px;color:#edf0f7;
@@ -185,11 +188,11 @@ body::before{
   min-height:68px;
 }
 .numpad-display.full{color:#00c896;border-color:rgba(0,200,150,.35)}
-.numpad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px}
+.numpad-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;width:100%;max-width:420px}
 .npbtn{
-  padding:18px 0;font-size:22px;font-weight:700;
+  padding:14px 0;font-size:20px;font-weight:700;
   background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
-  border-radius:12px;color:#edf0f7;cursor:pointer;
+  border-radius:10px;color:#edf0f7;cursor:pointer;
   transition:all .1s;font-family:'DM Mono',monospace;
   -webkit-tap-highlight-color:transparent;user-select:none;
 }
@@ -577,15 +580,15 @@ tbody tr:last-child td{border-bottom:none}
               <button class="npbtn" onclick="npInput('3')">3</button>
               <button class="npbtn" onclick="npInput('4')">4</button>
               <button class="npbtn" onclick="npInput('5')">5</button>
+              <button class="npbtn npbtn-cancel" onclick="closeNumpad()">취소</button>
               <button class="npbtn" onclick="npInput('6')">6</button>
               <button class="npbtn" onclick="npInput('7')">7</button>
               <button class="npbtn" onclick="npInput('8')">8</button>
               <button class="npbtn" onclick="npInput('9')">9</button>
-              <button class="npbtn npbtn-cancel" onclick="closeNumpad()">취소</button>
               <button class="npbtn" onclick="npInput('0')">0</button>
               <button class="npbtn npbtn-del" onclick="npDelete()">⌫</button>
             </div>
-            <button class="npbtn npbtn-ok" id="numpad-ok" style="width:100%;max-width:280px" onclick="npConfirm()" disabled>
+            <button class="npbtn npbtn-ok" id="numpad-ok" style="width:100%" onclick="npConfirm()" disabled>
               ✓ 출석 처리
             </button>
           </div>
