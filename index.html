@@ -2847,15 +2847,20 @@ function renderWeekView(students, attendMapByProg, attendMapAll) {
 
   // 출석률 계산 (프로그램별 타깃 날짜 기준)
   function calcRate(stNo, prog, stDays) {
-    // 타깃 요일 결정
     let targetDows;
     if (prog === '토요일 독서시간') targetDows = [6];
     else if (prog === '일요일 독서시간') targetDows = [0];
-    else targetDows = [1,2,3,4,5]; // 평일
+    else targetDows = [1,2,3,4,5];
     const tDates = dates.filter(d => targetDows.includes(d.getDay()) && stDays.includes(WEEKDAY[d.getDay()]) && d <= today);
     const attended = tDates.filter(d => attendMapByProg[`${stNo}__${prog}`]?.has(fmtDate(d))).length;
+    // 자율출석: 타깃 요일 외에 출석한 날
+    const selfAttend = dates.filter(d =>
+      d <= today &&
+      attendMapByProg[`${stNo}__${prog}`]?.has(fmtDate(d)) &&
+      !stDays.includes(WEEKDAY[d.getDay()])
+    ).length;
     const rate = tDates.length ? Math.round(attended/tDates.length*100) : 0;
-    return {rate, total: tDates.length, attended};
+    return {rate, total: tDates.length, attended, selfAttend};
   }
 
   // 행 생성
@@ -2966,13 +2971,14 @@ function renderWeekView(students, attendMapByProg, attendMapAll) {
 
         // _tojil인 경우 토+일 출석률 합산
         let rate, total;
+        let selfAttend = 0;
         if (prog === '_tojil') {
           let tot = 0, att = 0;
-          if (토st) { const r = calcRate(no, '토요일 독서시간', 토st.days||[]); tot += r.total; att += r.attended; }
-          if (일st) { const r = calcRate(no, '일요일 독서시간', 일st.days||[]); tot += r.total; att += r.attended; }
+          if (토st) { const r = calcRate(no, '토요일 독서시간', 토st.days||[]); tot += r.total; att += r.attended; selfAttend += r.selfAttend||0; }
+          if (일st) { const r = calcRate(no, '일요일 독서시간', 일st.days||[]); tot += r.total; att += r.attended; selfAttend += r.selfAttend||0; }
           total = tot; rate = tot ? Math.round(att/tot*100) : 0;
         } else {
-          ({rate, total} = calcRate(no, prog, stDays));
+          ({rate, total, selfAttend} = calcRate(no, prog, stDays));
         }
         const rColor = rate>=80?'#00c896':rate>=50?'#f5a623':'#e94560';
         const progLabel = `<span style="font-size:10px;color:#7a8499;background:rgba(255,255,255,.06);border-radius:4px;padding:1px 5px">${label}</span>`;
@@ -2983,6 +2989,7 @@ function renderWeekView(students, attendMapByProg, attendMapAll) {
           ${dateCells}
           <td style="text-align:center;padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap">
             <span style="font-family:'DM Mono',monospace;font-size:12px;color:${rColor}">${rate}%</span>
+            ${selfAttend > 0 ? `<br><span style="font-size:10px;color:#5eb8ff">+${selfAttend}</span>` : ''}
           </td>
         </tr>`);
       });
@@ -3018,7 +3025,7 @@ function renderWeekView(students, attendMapByProg, attendMapAll) {
         return `<td style="text-align:center;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.04);${isToday?'background:rgba(79,142,247,.08)':''}">${cell}</td>`;
       }).join('');
 
-      const {rate} = calcRate(st.no, prog, stDays);
+      const {rate, selfAttend} = calcRate(st.no, prog, stDays);
       const rColor = rate>=80?'#00c896':rate>=50?'#f5a623':'#e94560';
       return `<tr>
         <td style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap">
@@ -3028,6 +3035,7 @@ function renderWeekView(students, attendMapByProg, attendMapAll) {
         ${cells}
         <td style="text-align:center;padding:8px 8px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap">
           <span style="font-family:'DM Mono',monospace;font-size:12px;color:${rColor}">${rate}%</span>
+          ${selfAttend > 0 ? `<br><span style="font-size:10px;color:#5eb8ff">+${selfAttend}</span>` : ''}
         </td>
       </tr>`;
     }).join('');
