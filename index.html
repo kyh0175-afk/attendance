@@ -258,6 +258,12 @@ tbody tr:last-child td{border-bottom:none}
 /* student fullscreen */
 #student-fullscreen{display:none;min-height:100vh;background:#0e1117}
 @keyframes spin{to{transform:rotate(360deg)}}
+/* 모드별 초기 깜빡임 방지 */
+html[data-mode="view"] #pg-teacher,
+html[data-mode="view"] #pg-student,
+html[data-mode="admin"] #pg-teacher,
+html[data-mode="admin"] #pg-student,
+html[data-mode="student"] #pg-teacher { display:none !important; }
 .sf-page{
   min-height:100vh;display:flex;flex-direction:column;
   align-items:center;justify-content:center;
@@ -322,6 +328,17 @@ tbody tr:last-child td{border-bottom:none}
 .toast.ok{border-color:rgba(0,200,150,.35);color:#00c896}
 .toast.err{border-color:rgba(233,69,96,.35);color:#ff7096}
 </style>
+<!-- 모드별 초기 화면 즉시 처리 (JS 로드 전 깜빡임 방지) -->
+<script>
+(function() {
+  const p = new URLSearchParams(location.search);
+  const mode = p.get('mode');
+  if (mode === 'view' || mode === 'admin' || mode === 'student') {
+    // body에 클래스 추가 → CSS로 pg-teacher 즉시 숨김
+    document.documentElement.setAttribute('data-mode', mode);
+  }
+})();
+</script>
 </head>
 <body>
 <div class="wrap" id="app">
