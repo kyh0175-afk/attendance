@@ -168,6 +168,36 @@ body::before{
 
 /* att panel */
 .att-panel{flex:1;min-width:0}
+
+/* 넘버패드 */
+.numpad-wrap{
+  position:absolute;left:0;right:0;top:0;
+  background:rgba(14,17,23,.96);backdrop-filter:blur(8px);
+  border-radius:14px;z-index:50;
+  display:flex;flex-direction:column;align-items:center;
+  gap:14px;padding:20px;
+}
+.numpad-display{
+  font-family:'DM Mono',monospace;font-size:36px;font-weight:700;
+  letter-spacing:6px;color:#edf0f7;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+  border-radius:12px;padding:14px 24px;min-width:220px;text-align:center;
+  min-height:68px;
+}
+.numpad-display.full{color:#00c896;border-color:rgba(0,200,150,.35)}
+.numpad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px}
+.npbtn{
+  padding:18px 0;font-size:22px;font-weight:700;
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
+  border-radius:12px;color:#edf0f7;cursor:pointer;
+  transition:all .1s;font-family:'DM Mono',monospace;
+  -webkit-tap-highlight-color:transparent;user-select:none;
+}
+.npbtn:active{background:rgba(255,255,255,0.18);transform:scale(.95)}
+.npbtn-del{background:rgba(233,69,96,.1);border-color:rgba(233,69,96,.25);color:#ff7096}
+.npbtn-ok{background:#00c896;border-color:#00c896;color:#003d2b;font-size:18px}
+.npbtn-ok:disabled{background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.1);color:#7a8499;cursor:default}
+.npbtn-cancel{background:rgba(255,255,255,0.04);font-size:14px;color:#7a8499}
 .att-panel .card{margin-bottom:0}
 .prog-bg{background:rgba(255,255,255,.08);border-radius:4px;height:4px;margin:8px 0 3px}
 .prog-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#e94560,#00c896);transition:width .4s}
@@ -475,7 +505,7 @@ tbody tr:last-child td{border-bottom:none}
 
       <!-- ── 오른쪽: 출석 패널 ── -->
       <div class="att-panel">
-        <div class="card" style="margin-bottom:0">
+        <div class="card" style="margin-bottom:0;position:relative">
 
           <!-- 상단: 출석현황 헤더 + 인원/출석률 한 줄 -->
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
@@ -517,13 +547,16 @@ tbody tr:last-child td{border-bottom:none}
             </div>
           </div>
 
-          <!-- 수동 출석 입력 -->
+          <!-- 수동 출석 입력 (넘버패드 트리거) -->
           <div style="display:flex;gap:8px;margin-bottom:10px">
             <input id="manual-no" type="text" inputmode="numeric" placeholder="학번 직접 입력 (인터넷 불가 학생)"
+              maxlength="5" pattern="[0-9]{5}"
               style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,0.1);
-              border-radius:8px;padding:8px 12px;color:#edf0f7;font-family:inherit;font-size:13px;outline:none"
+              border-radius:8px;padding:8px 12px;color:#edf0f7;font-family:'DM Mono',monospace;font-size:15px;outline:none;cursor:pointer"
               onkeydown="if(event.key==='Enter')manualAttend()"
-              onfocus="this.style.borderColor='#e94560'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+              onclick="openNumpad()"
+              onfocus="openNumpad();this.blur()"
+              readonly>
             <button class="btn btn-green btn-sm" onclick="manualAttend()">✓ 수동 출석</button>
           </div>
 
@@ -533,6 +566,29 @@ tbody tr:last-child td{border-bottom:none}
             <thead><tr><th>이름</th><th>학번</th><th>시각</th><th>상태</th><th></th></tr></thead>
             <tbody id="att-body"></tbody>
           </table>
+
+          <!-- 인앱 넘버패드 -->
+          <div class="numpad-wrap" id="numpad" style="display:none">
+            <div style="font-size:13px;color:#7a8499;font-weight:600;letter-spacing:.5px">학번 입력</div>
+            <div class="numpad-display" id="numpad-display">—</div>
+            <div class="numpad-grid">
+              <button class="npbtn" onclick="npInput('1')">1</button>
+              <button class="npbtn" onclick="npInput('2')">2</button>
+              <button class="npbtn" onclick="npInput('3')">3</button>
+              <button class="npbtn" onclick="npInput('4')">4</button>
+              <button class="npbtn" onclick="npInput('5')">5</button>
+              <button class="npbtn" onclick="npInput('6')">6</button>
+              <button class="npbtn" onclick="npInput('7')">7</button>
+              <button class="npbtn" onclick="npInput('8')">8</button>
+              <button class="npbtn" onclick="npInput('9')">9</button>
+              <button class="npbtn npbtn-cancel" onclick="closeNumpad()">취소</button>
+              <button class="npbtn" onclick="npInput('0')">0</button>
+              <button class="npbtn npbtn-del" onclick="npDelete()">⌫</button>
+            </div>
+            <button class="npbtn npbtn-ok" id="numpad-ok" style="width:100%;max-width:280px" onclick="npConfirm()" disabled>
+              ✓ 출석 처리
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -2297,6 +2353,51 @@ async function _doLateAttend(no, name, sess) {
   closeLateModal();
   toast(`${name} 사후 출석 완료 ✅`, 'ok');
   loadHistory();
+}
+
+// ── 인앱 넘버패드 ──
+let _npVal = '';
+
+function openNumpad() {
+  _npVal = '';
+  npRefresh();
+  document.getElementById('numpad').style.display = 'flex';
+}
+
+function closeNumpad() {
+  document.getElementById('numpad').style.display = 'none';
+  _npVal = '';
+  document.getElementById('manual-no').value = '';
+}
+
+function npInput(d) {
+  if (_npVal.length >= 5) return;
+  _npVal += d;
+  npRefresh();
+}
+
+function npDelete() {
+  _npVal = _npVal.slice(0, -1);
+  npRefresh();
+}
+
+function npRefresh() {
+  const disp = document.getElementById('numpad-display');
+  const ok   = document.getElementById('numpad-ok');
+  const full = _npVal.length === 5;
+  disp.textContent = _npVal || '—';
+  disp.classList.toggle('full', full);
+  ok.disabled = !full;
+}
+
+async function npConfirm() {
+  if (_npVal.length !== 5) return;
+  const no = _npVal;
+  document.getElementById('numpad').style.display = 'none';
+  document.getElementById('manual-no').value = no;
+  _npVal = '';
+  await manualAttendNo(no);
+  document.getElementById('manual-no').value = '';
 }
 
 function renderHistory() { loadHistory(); }
