@@ -145,15 +145,15 @@ body::before{
 .qr-layout{display:flex;gap:20px;align-items:flex-start}
 @media(max-width:640px){.qr-layout{flex-direction:column}}
 .qr-panel{
-  flex-shrink:0;width:306px;
+  flex-shrink:0;width:380px;
   background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
-  border-radius:14px;padding:16px 20px;
-  display:flex;flex-direction:column;align-items:center;gap:12px;
+  border-radius:14px;padding:18px 22px;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
 }
 @media(max-width:640px){.qr-panel{width:100%}}
 .qr-box{background:#fff;border-radius:10px;padding:10px;line-height:0}
-.timer-num{font-family:'DM Mono',monospace;font-size:56px;font-weight:700;letter-spacing:-1px;transition:color .4s;line-height:1}
-.timer-lbl{font-size:17px;color:#7a8499;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+.timer-num{font-family:'DM Mono',monospace;font-size:52px;font-weight:700;letter-spacing:-1px;transition:color .4s;line-height:1}
+.timer-lbl{font-size:15px;color:#7a8499;letter-spacing:1px;text-transform:uppercase;margin-top:2px}
 .t-ok{color:#00c896}.t-warn{color:#f5a623}.t-end{color:#e94560}
 .live-pill{
   display:flex;align-items:center;gap:6px;
@@ -456,22 +456,9 @@ tbody tr:last-child td{border-bottom:none}
   </div>
 
   <div id="session-area" style="display:none">
-    <div class="stats" id="stats-bar" style="grid-template-columns:306px 1fr 1fr 1fr">
-      <div class="stat" style="display:flex;align-items:center;justify-content:center;gap:20px">
-        <div style="text-align:center">
-          <div class="sn c-sky" id="s-total">0</div>
-          <div class="sl">전체</div>
-        </div>
-        <div style="width:1px;height:48px;background:rgba(255,255,255,0.12)"></div>
-        <div style="display:flex;flex-direction:column;gap:4px;text-align:left" id="s-grade-list">
-          <div style="font-size:12px;color:#7a8499">—</div>
-        </div>
-      </div>
-      <div class="stat"><div class="sn c-ok" id="s-present">0</div><div class="sl">출석</div></div>
-      <div class="stat"><div class="sn c-red" id="s-absent">0</div><div class="sl">미출석</div></div>
-      <div class="stat"><div class="sn c-amber" id="s-rate">0%</div><div class="sl">출석률</div></div>
-    </div>
     <div class="qr-layout">
+
+      <!-- ── 왼쪽: QR 패널 ── -->
       <div class="qr-panel">
         <div class="live-pill"><span class="pill-dot"></span><span id="sess-lbl">진행 중</span></div>
         <div class="qr-box" id="qr-render"></div>
@@ -485,12 +472,51 @@ tbody tr:last-child td{border-bottom:none}
           <button class="btn btn-ghost btn-stop" onclick="openEndModal()">⏹ 종료</button>
         </div>
       </div>
+
+      <!-- ── 오른쪽: 출석 패널 ── -->
       <div class="att-panel">
-        <div class="card">
-          <div class="row-btw" style="margin-bottom:10px">
+        <div class="card" style="margin-bottom:0">
+
+          <!-- 상단: 출석현황 헤더 + 인원/출석률 한 줄 -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
             <div style="font-weight:700;font-size:15px">출석 현황</div>
             <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📥 CSV 저장</button>
           </div>
+
+          <!-- 통계 한 줄 -->
+          <div id="stats-bar" style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+            <!-- 전체 + 학년별 -->
+            <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 14px;flex-shrink:0">
+              <div style="text-align:center">
+                <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;line-height:1;color:#5eb8ff" id="s-total">0</div>
+                <div style="font-size:13px;color:#7a8499;margin-top:2px">전체</div>
+              </div>
+              <div style="width:1px;height:36px;background:rgba(255,255,255,0.1)"></div>
+              <div style="display:flex;flex-direction:column;gap:3px" id="s-grade-list">
+                <div style="font-size:12px;color:#7a8499">—</div>
+              </div>
+            </div>
+            <!-- 출석 + 미출석 합침 -->
+            <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 16px;flex:1;justify-content:center">
+              <div style="text-align:center">
+                <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;line-height:1;color:#00c896" id="s-present">0</div>
+                <div style="font-size:13px;color:#7a8499;margin-top:2px">출석</div>
+              </div>
+              <div style="font-size:20px;color:rgba(255,255,255,0.2);font-weight:300">/</div>
+              <div style="text-align:center">
+                <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;line-height:1;color:#e94560" id="s-absent">0</div>
+                <div style="font-size:13px;color:#7a8499;margin-top:2px">미출석</div>
+              </div>
+            </div>
+            <!-- 출석률 -->
+            <div style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 16px">
+              <div style="text-align:center">
+                <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;line-height:1;color:#f5a623" id="s-rate">0%</div>
+                <div style="font-size:13px;color:#7a8499;margin-top:2px">출석률</div>
+              </div>
+            </div>
+          </div>
+
           <!-- 수동 출석 입력 -->
           <div style="display:flex;gap:8px;margin-bottom:10px">
             <input id="manual-no" type="text" inputmode="numeric" placeholder="학번 직접 입력 (인터넷 불가 학생)"
@@ -500,6 +526,7 @@ tbody tr:last-child td{border-bottom:none}
               onfocus="this.style.borderColor='#e94560'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
             <button class="btn btn-green btn-sm" onclick="manualAttend()">✓ 수동 출석</button>
           </div>
+
           <div class="prog-bg"><div class="prog-fill" id="prog" style="width:0%"></div></div>
           <div class="prog-lbl" id="prog-lbl">0 / 0명</div>
           <table>
@@ -1464,7 +1491,7 @@ function buildQR() {
   // 임시 컨테이너에 먼저 생성 후 교체 (깜빡임 방지)
   const tmp = document.createElement('div');
   new QRCode(tmp, {
-    text: url, width: 260, height: 260,
+    text: url, width: 336, height: 336,
     colorDark: '#000000', colorLight: '#ffffff',
     correctLevel: QRCode.CorrectLevel.M
   });
