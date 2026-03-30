@@ -1074,35 +1074,25 @@ async function gasPost(payload) {
       badge.onclick = () => { location.href = location.pathname; };
       document.querySelector('.topbar').insertBefore(badge, document.querySelector('.topbar-nav'));
 
-      // 명단은 백그라운드에서 로드 (로딩 속도 개선)
-      loadStudentsFromSheets().then(() => {
-        renderStudentList();
-        updateClsByProgram(); // 감독 자동조회
-      });
-
-      // 장소 텍스트 즉시 표시 (teacherParam 고정)
+      // 장소 텍스트 즉시 표시 (Sheets 로드 안 기다림)
       const clsDisplay = document.getElementById('f-cls-display');
       if (clsDisplay) clsDisplay.textContent = teacherParam;
 
-      // hidden select에도 값 세팅
       const clsSel = document.getElementById('f-cls');
       if (clsSel) {
         clsSel.innerHTML = `<option value="${teacherParam}" selected>${teacherParam}</option>`;
       }
 
-
-
-      // 해당 장소로 폼 자동 설정
-      const match = S.students.find(s => s.cls.trim() === teacherParam.trim());
-      if (match) {
-        const subjSel = document.getElementById('f-subj');
-        [...subjSel.options].forEach(o => { if (o.value === match.program) o.selected = true; });
-      }
-      // 초기 로드 시 교사 자동조회
+      // 심야 독서시간 감독 즉시 조회 (Sheets 불필요)
       updateClsByProgram();
 
-      renderStudentList();
+      // 세션 복원 즉시 실행
       restoreTeacherSession();
+
+      // 명단은 완전 백그라운드 (화면 표시와 무관)
+      loadStudentsFromSheets().then(() => {
+        renderStudentList();
+      });
     }
   }
 })();
