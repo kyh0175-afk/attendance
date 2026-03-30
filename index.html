@@ -1565,7 +1565,17 @@ async function tryAttend(no) {
   // 로컬 중복 체크 (빠른 응답)
   if (S.attendance.find(a=>a.no===no)) return {ok:false, msg:'이미 출석 처리됐습니다.'};
 
-  // Google Sheets에 저장
+  // 학생 이름 미리 찾기 (로컬 명단)
+  const localSt = S.students.find(s => String(s.no) === String(no));
+  const now = new Date();
+  const timeStr = now.toTimeString().slice(0,8);
+
+  // 낙관적 업데이트 — API 응답 전에 즉시 로컬 반영
+  const tempEntry = {id: String(no), no: String(no), name: localSt ? localSt.name : no, time: timeStr, _pending: true};
+  S.attendance.push(tempEntry);
+  refreshTable(); refreshStats();
+
+  // 백그라운드에서 Sheets에 저장
   const result = await gasPost({
     action: "attend",
     sessionId: S.session.id,
@@ -1575,10 +1585,18 @@ async function tryAttend(no) {
     studentNo: String(no).trim()
   });
 
-  if (!result.ok) return {ok:false, msg: result.msg};
+  if (!result.ok) {
+    // 실패 시 로컬에서 제거
+    const idx = S.attendance.indexOf(tempEntry);
+    if (idx !== -1) S.attendance.splice(idx, 1);
+    refreshTable(); refreshStats();
+    return {ok:false, msg: result.msg};
+  }
 
-  // 로컬 상태에도 반영
-  S.attendance.push({id: String(no), no: String(no), name: result.name, time: result.time});
+  // 성공 시 실제 이름/시각으로 업데이트
+  tempEntry.name = result.name;
+  tempEntry.time = result.time;
+  delete tempEntry._pending;
   refreshTable(); refreshStats();
   return {ok:true, st:{name: result.name, no}, time: result.time};
 }
@@ -2357,7 +2375,7 @@ function startPolling() {
       refreshTable();
       refreshStats();
     }
-  }, 5000);
+  }, 2000);
 }
 
 function stopPolling() {
