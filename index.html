@@ -931,6 +931,21 @@ tbody tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<!-- ══ 기록 삭제 확인 모달 ══ -->
+<div class="modal-bg" id="modal-del-session">
+  <div class="modal" style="max-width:380px">
+    <h3 style="color:#ff7096">🗑 출석 기록 삭제</h3>
+    <p id="del-session-desc" style="margin:12px 0 6px;color:#7a8499;font-size:13px;line-height:1.7"></p>
+    <p style="font-size:12px;color:#e94560;background:rgba(233,69,96,.08);border-radius:8px;padding:10px 14px;margin-bottom:20px">
+      이 세션의 모든 출석·결석 기록이 삭제됩니다. 되돌릴 수 없어요.
+    </p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('modal-del-session').classList.remove('on')">취소</button>
+      <button class="btn btn-red btn-sm" id="del-session-confirm-btn" onclick="executeDeleteSession()">삭제</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ 수동 등록 모달 ══ -->
 <div class="modal-bg" id="modal-manual-reg">
   <div class="modal" style="max-width:400px">
@@ -2183,11 +2198,19 @@ function renderHistList(list) {
             📅 ${s.date} &nbsp;·&nbsp; ${s.teacher}
           </div>
         </div>
-        <div style="text-align:right;padding-left:16px;flex-shrink:0">
-          <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:${rateColor}">
-            ${s.attended.length}/${s.total}
+        <div style="display:flex;align-items:center;gap:12px;padding-left:16px;flex-shrink:0">
+          <div style="text-align:right">
+            <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:${rateColor}">
+              ${s.attended.length}/${s.total}
+            </div>
+            <div style="font-size:10px;color:#7a8499">${rate}% 출석</div>
           </div>
-          <div style="font-size:10px;color:#7a8499">${rate}% 출석</div>
+          <button onclick="event.stopPropagation();confirmDeleteSession('${s.sessionId}','${s.subject}','${s.cls}','${s.date}')"
+            style="background:rgba(233,69,96,.1);border:1px solid rgba(233,69,96,.25);border-radius:8px;
+            padding:6px 10px;color:#ff7096;font-size:12px;cursor:pointer;white-space:nowrap;
+            transition:all .15s;font-family:inherit"
+            onmouseover="this.style.background='rgba(233,69,96,.2)'"
+            onmouseout="this.style.background='rgba(233,69,96,.1)'">🗑 삭제</button>
         </div>
       </div>
       <div id="hs-${i}" style="display:none;padding:0 14px 14px">
@@ -2411,6 +2434,32 @@ async function npConfirm() {
   _npVal = '';
   await manualAttendNo(no);
   document.getElementById('manual-no').value = '';
+}
+
+// ── 세션 기록 삭제 ──
+let _delSessionId = null;
+
+function confirmDeleteSession(sessionId, subject, cls, date) {
+  _delSessionId = sessionId;
+  document.getElementById('del-session-desc').textContent =
+    `${date} / ${subject} ${cls}`;
+  document.getElementById('modal-del-session').classList.add('on');
+}
+
+async function executeDeleteSession() {
+  if (!_delSessionId) return;
+  const btn = document.getElementById('del-session-confirm-btn');
+  btn.disabled = true; btn.textContent = '삭제 중...';
+  const result = await gasPost({action: 'deleteSession', sessionId: _delSessionId});
+  btn.disabled = false; btn.textContent = '삭제';
+  document.getElementById('modal-del-session').classList.remove('on');
+  if (result.ok) {
+    toast('기록이 삭제됐어요 🗑', 'ok');
+    loadHistory();
+  } else {
+    toast(result.msg || '삭제 실패', 'err');
+  }
+  _delSessionId = null;
 }
 
 function renderHistory() { loadHistory(); }
