@@ -171,17 +171,14 @@ body::before{
 
 /* 넘버패드 */
 .numpad-wrap{
-  position:fixed;top:64px;right:0;left:calc(50% + 20px);
+  position:fixed;top:64px;
   background:rgba(20,24,35,.97);backdrop-filter:blur(12px);
   border:1px solid rgba(255,255,255,0.12);
   border-radius:16px;z-index:9000;
   display:flex;flex-direction:column;align-items:center;
   gap:10px;padding:16px 20px;
   box-shadow:0 8px 40px rgba(0,0,0,.6);
-  max-width:440px;
 }
-@media(max-width:880px){.numpad-wrap{left:50%;right:8px;}}
-@media(max-width:640px){.numpad-wrap{left:8px;right:8px;}}
 .numpad-display{
   font-family:'DM Mono',monospace;font-size:36px;font-weight:700;
   letter-spacing:6px;color:#edf0f7;
@@ -2369,7 +2366,15 @@ let _npVal = '';
 function openNumpad() {
   _npVal = '';
   npRefresh();
-  document.getElementById('numpad').style.display = 'flex';
+  const np = document.getElementById('numpad');
+  np.style.display = 'flex';
+  // att-panel 왼쪽 끝에 맞추기
+  const panel = document.querySelector('.att-panel');
+  if (panel) {
+    const rect = panel.getBoundingClientRect();
+    np.style.left = rect.left + 'px';
+    np.style.width = rect.width + 'px';
+  }
 }
 
 function closeNumpad() {
