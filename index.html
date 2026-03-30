@@ -1051,8 +1051,8 @@ async function gasPost(payload) {
     // 명단 탭 읽기전용 표시
     window._viewMode = true;
     document.body.classList.add('view-mode'); // CSS로 teacher/student 탭 완전 차단
-    await loadStudentsFromSheets();
-    goTab('history');
+    goTab('analysis'); // 분석 탭 바로 열기
+    loadStudentsFromSheets(); // 명단은 백그라운드 로드
 
   } else if (params.get('mode') === 'admin') {
     // 관리용 페이지 — 모든 탭
