@@ -1059,6 +1059,7 @@ async function gasPost(payload) {
     document.getElementById('room-select-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'none';
     window._viewMode = false;
+    window._adminMode = true;
     await loadStudentsFromSheets();
     goTab('manage'); // renderStudentList 포함
     // 필터 드롭다운이 렌더링된 후 다시 한 번 명시적으로 호출
@@ -1202,9 +1203,18 @@ async function gasPost(payload) {
       // 세션 복원 즉시 실행
       restoreTeacherSession();
 
-      // 명단은 완전 백그라운드 (화면 표시와 무관)
+      // 명단 백그라운드 로드 — 완료 전엔 버튼에 힌트 표시
+      const startBtn = document.querySelector('#form-area .btn-red');
+      if (startBtn) {
+        startBtn.textContent = '▶ QR 생성 및 출석 시작 (명단 로드 중...)';
+        startBtn.style.opacity = '0.7';
+      }
       loadStudentsFromSheets().then(() => {
         renderStudentList();
+        if (startBtn) {
+          startBtn.textContent = '▶ QR 생성 및 출석 시작';
+          startBtn.style.opacity = '';
+        }
       });
     }
   }
@@ -1327,10 +1337,9 @@ function enterRoom(encodedRoom) {
 
 // ── Sheets에서 명단 불러오기 ──
 async function loadStudentsFromSheets() {
-  if (_isSaving) return;
+  // _isSaving 중에도 로드는 허용 (저장/로드는 독립 동작)
   const result = await gasPost({action: "getStudents"});
   if (!result.ok) return;
-  if (_isSaving) return;
   if (result.students && result.students.length > 0) {
     S.students = result.students.map((s, i) => ({...s, id: i + 1}));
     S.nextId   = S.students.length + 1;
@@ -1511,8 +1520,10 @@ function updateClsByProgram() {
 }
 
 async function startSession() {
-  // 명단이 아직 없으면 로드 후 진행
-  if (!S.students.length && !_isSaving) {
+  const btn = document.querySelector('#form-area .btn-red');
+  // 명단이 아직 없으면 먼저 로드 (느린 네트워크 대응)
+  if (!S.students.length) {
+    btn.disabled = true; btn.textContent = '명단 불러오는 중...';
     await loadStudentsFromSheets();
   }
   const subj    = document.getElementById('f-subj').value.trim() || '수업';
@@ -1520,7 +1531,6 @@ async function startSession() {
   const cls     = S.teacherRoom || document.getElementById('f-cls').value; // teacherRoom 우선
   const dur     = parseInt(document.getElementById('f-dur').value);
 
-  const btn = document.querySelector('#form-area .btn-red');
   btn.disabled = true; btn.textContent = '생성 중...';
 
   S.session = {
@@ -2205,12 +2215,12 @@ function renderHistList(list) {
             </div>
             <div style="font-size:10px;color:#7a8499">${rate}% 출석</div>
           </div>
-          <button onclick="event.stopPropagation();confirmDeleteSession('${s.sessionId}','${s.subject}','${s.cls}','${s.date}')"
+          ${window._adminMode ? `<button onclick="event.stopPropagation();confirmDeleteSession('${s.sessionId}','${s.subject}','${s.cls}','${s.date}')"
             style="background:rgba(233,69,96,.1);border:1px solid rgba(233,69,96,.25);border-radius:8px;
             padding:6px 10px;color:#ff7096;font-size:12px;cursor:pointer;white-space:nowrap;
             transition:all .15s;font-family:inherit"
             onmouseover="this.style.background='rgba(233,69,96,.2)'"
-            onmouseout="this.style.background='rgba(233,69,96,.1)'">🗑 삭제</button>
+            onmouseout="this.style.background='rgba(233,69,96,.1)'">🗑 삭제</button>` : ''}
         </div>
       </div>
       <div id="hs-${i}" style="display:none;padding:0 14px 14px">
@@ -2448,6 +2458,7 @@ function confirmDeleteSession(sessionId, subject, cls, date) {
 
 async function executeDeleteSession() {
   if (!_delSessionId) return;
+  if (!window._adminMode) { toast("관리자 모드에서만 삭제할 수 있어요.", "err"); return; }
   const btn = document.getElementById('del-session-confirm-btn');
   btn.disabled = true; btn.textContent = '삭제 중...';
   const result = await gasPost({action: 'deleteSession', sessionId: _delSessionId});
