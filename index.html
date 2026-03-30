@@ -225,6 +225,7 @@ tbody tr:last-child td{border-bottom:none}
 
 /* student fullscreen */
 #student-fullscreen{display:none;min-height:100vh;background:#0e1117}
+@keyframes spin{to{transform:rotate(360deg)}}
 .sf-page{
   min-height:100vh;display:flex;flex-direction:column;
   align-items:center;justify-content:center;
@@ -531,6 +532,10 @@ tbody tr:last-child td{border-bottom:none}
       <div class="s-icon">🏫</div>
       <div class="s-title" id="sf-title">출석 체크</div>
       <div class="s-sub" id="sf-sub">잠시만 기다려주세요...</div>
+      <div id="sf-loading" style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:20px">
+        <div style="width:36px;height:36px;border:3px solid rgba(255,255,255,0.1);border-top-color:#00c896;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+        <div style="font-size:13px;color:#7a8499">수업 정보를 확인하는 중...</div>
+      </div>
       <div id="sf-input-wrap" style="display:none;flex-direction:column;align-items:center;width:100%">
         <input class="big-input" id="sf-no" type="text" inputmode="numeric"
           placeholder="학번 5자리 입력 (예: 10101)" maxlength="5" minlength="5" pattern="[0-9]{5}"
@@ -952,38 +957,69 @@ async function gasPost(payload) {
       if (el) el.style.display = 'none';
     });
     document.getElementById('student-fullscreen').style.display = 'block';
-    document.getElementById('sf-sub').textContent = '수업 정보를 불러오는 중...';
-    const sid = params.get('sid') || '';
-    let result = {ok: false, msg: '서버 연결 실패'};
-    try {
-      result = await gasPost({action: "getSession", sessionId: sid});
-    } catch(e) {
-      result = {ok: false, msg: '네트워크 오류: ' + e.message};
-    }
+    const sid    = params.get('sid')  || '';
+    const subjUrl = params.get('subj') || '';
+    const clsUrl  = params.get('cls')  || '';
+    const expUrl  = parseInt(params.get('exp') || '0');
+    const now     = Date.now();
 
-    if (result.ok) {
+    // URL에 세션 정보가 있으면 즉시 화면 표시 (스피너 숨기기)
+    if (subjUrl && clsUrl && expUrl > now) {
+      const loadingEl = document.getElementById('sf-loading');
+      if (loadingEl) loadingEl.style.display = 'none';
+      const remainSec = Math.floor((expUrl - now) / 1000);
       S.session = {
-        id: result.sessionId, subj: result.subject,
-        cls: result.cls, teacher: result.teacher,
-        dur: result.remainSec, remain: result.remainSec,
+        id: sid, subj: subjUrl, cls: clsUrl,
+        teacher: '', dur: remainSec, remain: remainSec,
         startedAt: new Date()
       };
       S.attendance = [];
       startTimer();
       syncFullUI();
+
+      // 백그라운드에서 API 검증 (만료 확인)
+      gasPost({action: "getSession", sessionId: sid}).then(result => {
+        if (!result.ok) {
+          // 서버에서 만료 확인 → 타이머 즉시 종료
+          S.session.remain = 0;
+          syncTabUI(false);
+        } else {
+          // 선생님 이름 업데이트
+          S.session.teacher = result.teacher || '';
+        }
+      }).catch(() => {});
     } else {
-      // 세션 조회 실패 시 오류 메시지 표시
-      document.getElementById('sf-title').textContent = '출석 체크';
-      document.getElementById('sf-sub').textContent =
-        (result.msg || '수업 정보를 불러올 수 없어요.') +
-        '\n\n선생님께 QR을 다시 생성해 달라고 요청하거나\n페이지를 새로고침 해보세요.';
-      // 재시도 버튼 표시
-      const retryBtn = document.createElement('button');
-      retryBtn.className = 'btn btn-ghost';
-      retryBtn.textContent = '🔄 다시 시도';
-      retryBtn.style.marginTop = '20px';
-      retryBtn.onclick = () => location.reload();
-      document.getElementById('sf-form').appendChild(retryBtn);
+      // URL에 정보 없으면 기존 방식 (API 호출)
+      document.getElementById('sf-sub').textContent = '';
+      let result = {ok: false, msg: '서버 연결 실패'};
+      try {
+        result = await gasPost({action: "getSession", sessionId: sid});
+      } catch(e) {
+        result = {ok: false, msg: '네트워크 오류: ' + e.message};
+      }
+
+      if (result.ok) {
+        S.session = {
+          id: result.sessionId, subj: result.subject,
+          cls: result.cls, teacher: result.teacher,
+          dur: result.remainSec, remain: result.remainSec,
+          startedAt: new Date()
+        };
+        S.attendance = [];
+        startTimer();
+        syncFullUI();
+      } else {
+        document.getElementById('sf-title').textContent = '출석 체크';
+        document.getElementById('sf-sub').textContent =
+          (result.msg || '수업 정보를 불러올 수 없어요.') +
+          '\n\n선생님께 QR을 다시 생성해 달라고 요청하거나\n페이지를 새로고침 해보세요.';
+        const retryBtn = document.createElement('button');
+        retryBtn.className = 'btn btn-ghost';
+        retryBtn.textContent = '🔄 다시 시도';
+        retryBtn.style.marginTop = '20px';
+        retryBtn.onclick = () => location.reload();
+        document.getElementById('sf-form').appendChild(retryBtn);
+      }
     }
   } else {
     // 교사 화면 — teacher 파라미터 감지
@@ -1376,7 +1412,14 @@ function buildQR() {
   const box = document.getElementById('qr-render');
   box.innerHTML = '';
   // QR에 sessionId 포함 → 학생 폰이 정확한 세션으로 접속
-  const url = location.origin + location.pathname + '?mode=student&sid=' + S.session.id;
+  // URL에 세션 정보 포함 → 학생 폰에서 API 없이 즉시 화면 표시
+  const exp = Date.now() + S.session.remain * 1000;
+  const url = location.origin + location.pathname
+    + '?mode=student'
+    + '&sid=' + encodeURIComponent(S.session.id)
+    + '&subj=' + encodeURIComponent(S.session.subj)
+    + '&cls=' + encodeURIComponent(S.session.cls)
+    + '&exp=' + exp;
   new QRCode(box, {
     text: url,
     width: 260, height: 260,
