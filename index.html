@@ -416,7 +416,7 @@ tbody tr:last-child td{border-bottom:none}
             <option>일요일 독서시간</option>
           </select>
         </div>
-        <div class="field"><label>담당 교사</label><input id="f-teacher" value="김선생" placeholder="이름"></div>
+        <div class="field"><label>담당 교사</label><input id="f-teacher" value="" placeholder="이름 입력 (심야: 자동입력)"></div>
       </div>
       <div class="g2">
         <div class="field" id="f-cls-wrap">
@@ -1083,6 +1083,8 @@ async function gasPost(payload) {
         const subjSel = document.getElementById('f-subj');
         [...subjSel.options].forEach(o => { if (o.value === match.program) o.selected = true; });
       }
+      // 초기 로드 시 교사 자동조회
+      updateClsByProgram();
 
       renderStudentList();
       restoreTeacherSession();
@@ -1326,6 +1328,27 @@ function classSts() {
 
 // 프로그램 선택 시 해당 장소만 필터링
 function updateClsByProgram() {
+  // 심야 독서시간 선택 시 감독 자동 조회
+  const progVal = document.getElementById('f-subj')?.value || '';
+  const teacherInput = document.getElementById('f-teacher');
+  if (progVal === '심야 독서시간' && teacherInput) {
+    if (!teacherInput.value || teacherInput.dataset.autoFilled === 'true') {
+      gasPost({action: 'getSupervisor'}).then(r => {
+        if (r.ok && r.name) {
+          teacherInput.value = r.name;
+          teacherInput.dataset.autoFilled = 'true';
+        } else if (teacherInput.dataset.autoFilled === 'true') {
+          teacherInput.value = '';
+          teacherInput.dataset.autoFilled = 'true';
+        }
+      });
+    }
+  } else if (teacherInput && teacherInput.dataset.autoFilled === 'true') {
+    // 다른 프로그램으로 전환 시 자동입력값 지우기
+    teacherInput.value = '';
+    teacherInput.dataset.autoFilled = '';
+  }
+
   // teacher 파라미터로 접속한 경우 장소는 고정 — 건드리지 않음
   if (S.teacherRoom) {
     const clsSel     = document.getElementById('f-cls');
