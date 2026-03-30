@@ -1041,15 +1041,32 @@ const S = {
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzrh2K5mEf1_FUJye_2R5WTgs9MVtQrFFM1QyyJc4jZIE-pWDOIRo6Bp-MvgnnW3vsh/exec";
 
 /* ══ Google Sheets API 호출 ══ */
-async function gasPost(payload) {
-  try {
-    const res = await fetch(GAS_URL, {
-      method: "POST",
-      body: JSON.stringify(payload)
-    });
-    return await res.json();
-  } catch(e) {
-    return {ok: false, msg: "서버 연결 실패: " + e.message};
+async function gasPost(payload, retry = 2) {
+  for (let attempt = 0; attempt <= retry; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000); // 15초 타임아웃
+      const res = await fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+      clearTimeout(timeout);
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch(e) {
+        // JSON 파싱 실패 — 응답이 HTML 오류 페이지일 가능성
+        console.warn('gasPost JSON parse error:', text.slice(0, 200));
+        if (attempt < retry) continue; // 재시도
+        return {ok: false, msg: '서버 응답 오류. 잠시 후 다시 시도해주세요.'};
+      }
+    } catch(e) {
+      const isTimeout = e.name === 'AbortError';
+      const msg = isTimeout ? '응답 시간이 초과됐어요. 네트워크를 확인해주세요.' : '서버 연결 실패: ' + e.message;
+      if (attempt < retry && !isTimeout) continue; // 타임아웃 외엔 재시도
+      return {ok: false, msg};
+    }
   }
 }
 
@@ -1113,11 +1130,13 @@ async function gasPost(payload) {
       syncFullUI();
 
       // 백그라운드에서 API 검증 (만료 확인)
-      gasPost({action: "getSession", sessionId: sid}).then(result => {
+      gasPost({action: "getSession", sessionId: sid}, 0).then(result => {
         if (!result.ok) {
-          // 서버에서 만료 확인 → 타이머 즉시 종료
-          S.session.remain = 0;
-          syncTabUI(false);
+          // 서버 연결 실패는 무시 (네트워크 불안정), 명시적 만료만 처리
+          if (result.msg && (result.msg.includes('만료') || result.msg.includes('종료'))) {
+            S.session.remain = 0;
+            syncTabUI(false);
+          }
         } else {
           // 선생님 이름 업데이트
           S.session.teacher = result.teacher || '';
@@ -1772,7 +1791,10 @@ async function tryAttend(no) {
     const idx = S.attendance.indexOf(tempEntry);
     if (idx !== -1) S.attendance.splice(idx, 1);
     refreshTable(); refreshStats();
-    return {ok:false, msg: result.msg};
+    // 네트워크 오류면 재시도 안내 추가
+    const isNetErr = !result.msg || result.msg.includes('연결') || result.msg.includes('시간 초과') || result.msg.includes('응답');
+    const msg = isNetErr ? (result.msg + ' 잠시 후 다시 시도해주세요.') : result.msg;
+    return {ok:false, msg};
   }
 
   // 성공 시 실제 이름/시각으로 업데이트
