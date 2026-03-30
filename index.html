@@ -432,8 +432,8 @@ tbody tr:last-child td{border-bottom:none}
       <div class="g2">
         <div class="field" id="f-cls-wrap">
           <label>장소</label>
-          <div id="f-cls-display" style="background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.1);
-            border-radius:10px;padding:12px 16px;font-size:15px;font-weight:600;color:#edf0f7">
+          <div id="f-cls-display" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+            border-radius:10px;padding:10px 13px;font-size:14px;font-weight:600;color:#edf0f7">
             —
           </div>
           <!-- 실제 값 전달용 hidden select -->
@@ -1083,7 +1083,17 @@ async function gasPost(payload) {
         clsSel.innerHTML = `<option value="${teacherParam}" selected>${teacherParam}</option>`;
       }
 
-      // 심야 독서시간 감독 즉시 조회 (Sheets 불필요)
+      // 심야 독서시간 감독 즉시 조회 — 페이지 로드와 동시에 API 요청
+      const subjVal = document.getElementById('f-subj')?.value || '';
+      if (subjVal === '심야 독서시간') {
+        gasPost({action: 'getSupervisor'}).then(r => {
+          const inp = document.getElementById('f-teacher');
+          if (inp && r.ok && r.name) {
+            inp.value = r.name;
+            inp.dataset.autoFilled = 'true';
+          }
+        });
+      }
       updateClsByProgram();
 
       // 세션 복원 즉시 실행
