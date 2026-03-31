@@ -447,6 +447,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
     <button class="nb" id="nb-manage" onclick="goTab('manage')"><span>👥</span><span class="lbl">명단</span></button>
     <button class="nb" id="nb-history" onclick="goTab('history')"><span>📊</span><span class="lbl">기록</span></button>
     <button class="nb" id="nb-analysis" onclick="goTab('analysis')"><span>📈</span><span class="lbl">분석</span></button>
+    <button class="nb" id="nb-requests" onclick="goTab('requests')"><span>📬</span><span class="lbl">요청</span></button>
   </nav>
 </div>
 
@@ -908,6 +909,46 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
   </div>
 </div>
 
+<!-- ══ 요청 관리 탭 ══ -->
+<div class="page" id="pg-requests">
+  <div class="row-btw" style="margin-bottom:16px">
+    <div style="font-size:17px;font-weight:800">요청 관리</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <select id="req-type-filter" style="background:#fff;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 12px;color:#111;font-family:inherit;font-size:13px;outline:none" onchange="renderRequestsList()">
+        <option value="">전체</option>
+        <option value="attendance">출석 수정</option>
+        <option value="dayChange">요일 변경</option>
+      </select>
+      <select id="req-status-filter" style="background:#fff;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 12px;color:#111;font-family:inherit;font-size:13px;outline:none" onchange="renderRequestsList()">
+        <option value="대기">대기 중</option>
+        <option value="">전체</option>
+        <option value="승인">승인됨</option>
+        <option value="반려">반려됨</option>
+      </select>
+      <button class="btn btn-green btn-sm" onclick="loadAllRequests()" style="white-space:nowrap">🔄 새로고침</button>
+    </div>
+  </div>
+
+  <div id="req-summary" style="display:flex;gap:10px;margin-bottom:14px">
+    <div style="flex:1;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px;text-align:center">
+      <div id="req-cnt-wait" style="font-size:1.5rem;font-weight:800;color:#fbbf24">0</div>
+      <div style="font-size:.72rem;color:#64748b">대기</div>
+    </div>
+    <div style="flex:1;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px;text-align:center">
+      <div id="req-cnt-approved" style="font-size:1.5rem;font-weight:800;color:#34d399">0</div>
+      <div style="font-size:.72rem;color:#64748b">승인</div>
+    </div>
+    <div style="flex:1;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px;text-align:center">
+      <div id="req-cnt-rejected" style="font-size:1.5rem;font-weight:800;color:#f87171">0</div>
+      <div style="font-size:.72rem;color:#64748b">반려</div>
+    </div>
+  </div>
+
+  <div id="req-list">
+    <div class="empty"><div style="font-size:24px;margin-bottom:8px">📬</div>요청 탭을 열면 자동으로 불러와요.</div>
+  </div>
+</div>
+
 <!-- ══ 종료 모달 ══ -->
 <div class="modal-bg" id="modal-end">
   <div class="modal">
@@ -1077,8 +1118,8 @@ async function gasPost(payload, retry = 2) {
     // 확인용 페이지 — 기록/분석/명단(읽기전용) 탭
     document.getElementById('room-select-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'none';
-    // 교사/학생 탭 버튼만 숨김
-    ['nb-teacher','nb-student'].forEach(id => {
+    // 교사/학생/요청 탭 버튼 숨김
+    ['nb-teacher','nb-student','nb-requests'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -1103,7 +1144,7 @@ async function gasPost(payload, retry = 2) {
   } else if (params.get('mode') === 'student') {
     document.getElementById('topbar').style.display = 'none';
     document.getElementById('room-select-screen').style.display = 'none'; // 장소 선택 화면 숨김
-    ['pg-teacher','pg-student','pg-manage','pg-history','pg-analysis'].forEach(id => {
+    ['pg-teacher','pg-student','pg-manage','pg-history','pg-analysis','pg-requests'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -1185,7 +1226,7 @@ async function gasPost(payload, retry = 2) {
       // teacher 파라미터 없음 → 메인 화면 표시
       document.getElementById('topbar').style.display = 'none';
       document.getElementById('main-screen').style.display = 'flex';
-      ['pg-teacher','pg-student','pg-manage','pg-history','pg-analysis'].forEach(id => {
+      ['pg-teacher','pg-student','pg-manage','pg-history','pg-analysis','pg-requests'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
@@ -1197,11 +1238,11 @@ async function gasPost(payload, retry = 2) {
       // 출석용(from=attendance)이면 명단/분석 탭 숨김
       const fromAttendance = params.get('from') === 'attendance';
       if (fromAttendance) {
-        ['nb-manage','nb-analysis'].forEach(id => {
+        ['nb-manage','nb-analysis','nb-requests'].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.style.display = 'none';
         });
-        ['pg-manage','pg-analysis'].forEach(id => {
+        ['pg-manage','pg-analysis','pg-requests'].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.style.display = 'none';
         });
@@ -1455,7 +1496,7 @@ async function restoreTeacherSession() {
 
 /* ══ 탭 ══ */
 function goTab(tab) {
-  ['teacher','student','manage','history','analysis'].forEach(t => {
+  ['teacher','student','manage','history','analysis','requests'].forEach(t => {
     const pg = document.getElementById('pg-'+t);
     const nb = document.getElementById('nb-'+t);
     if (pg) pg.classList.toggle('on', t===tab);
@@ -1475,6 +1516,7 @@ function goTab(tab) {
   if (tab==='history')  loadHistory();
   if (tab==='student')  syncTabUI();
   if (tab==='analysis') loadAnalysis();
+  if (tab==='requests') loadAllRequests();
 }
 
 /* ══ 세션 ══ */
@@ -3559,6 +3601,163 @@ function toast(msg, type='ok') {
   el.className = `toast show ${type}`;
   clearTimeout(_tt);
   _tt = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+/* ══ 요청 관리 탭 ══ */
+let _allRequests = { attendance: [], dayChange: [] };
+
+async function loadAllRequests() {
+  const listEl = document.getElementById('req-list');
+  listEl.innerHTML = '<div class="empty"><div class="spinner" style="width:24px;height:24px;border:3px solid #334155;border-top-color:#f59e0b;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px"></div>불러오는 중...</div>';
+
+  try {
+    const result = await gasPost({ action: 'getAllRequests' });
+    if (!result.ok) {
+      listEl.innerHTML = `<div class="empty"><div style="font-size:24px;margin-bottom:8px">⚠️</div>${result.msg || '불러오기 실패'}</div>`;
+      return;
+    }
+    _allRequests.attendance = result.corrections || [];
+    _allRequests.dayChange = result.dayChanges || [];
+    renderRequestsList();
+  } catch(e) {
+    listEl.innerHTML = `<div class="empty"><div style="font-size:24px;margin-bottom:8px">⚠️</div>서버 연결 실패</div>`;
+  }
+}
+
+function renderRequestsList() {
+  const typeFilter = document.getElementById('req-type-filter').value;
+  const statusFilter = document.getElementById('req-status-filter').value;
+
+  // 통합 리스트
+  let items = [];
+
+  if (!typeFilter || typeFilter === 'attendance') {
+    _allRequests.attendance.forEach((r, i) => {
+      items.push({ ...r, type: 'attendance', idx: i });
+    });
+  }
+  if (!typeFilter || typeFilter === 'dayChange') {
+    _allRequests.dayChange.forEach((r, i) => {
+      items.push({ ...r, type: 'dayChange', idx: i });
+    });
+  }
+
+  // 상태 필터
+  if (statusFilter) {
+    items = items.filter(r => r.status === statusFilter);
+  }
+
+  // 카운트 업데이트
+  const allItems = [..._allRequests.attendance, ..._allRequests.dayChange];
+  document.getElementById('req-cnt-wait').textContent = allItems.filter(r => r.status === '대기').length;
+  document.getElementById('req-cnt-approved').textContent = allItems.filter(r => r.status === '승인').length;
+  document.getElementById('req-cnt-rejected').textContent = allItems.filter(r => r.status === '반려').length;
+
+  // 최신순 정렬
+  items.sort((a, b) => (b.requestedAt || '') > (a.requestedAt || '') ? 1 : -1);
+
+  const listEl = document.getElementById('req-list');
+
+  if (items.length === 0) {
+    listEl.innerHTML = `<div class="empty"><div style="font-size:24px;margin-bottom:8px">✨</div>해당 조건의 요청이 없어요.</div>`;
+    return;
+  }
+
+  let html = '';
+  items.forEach(req => {
+    const isWaiting = req.status === '대기';
+    const statusColor = req.status === '대기' ? '#fbbf24' : req.status === '승인' ? '#34d399' : '#f87171';
+    const statusBg = req.status === '대기' ? 'rgba(251,191,36,.1)' : req.status === '승인' ? 'rgba(52,211,153,.1)' : 'rgba(248,113,113,.1)';
+    const statusLabel = req.status === '대기' ? '대기 중' : req.status === '승인' ? '승인됨' : '반려됨';
+    const typeIcon = req.type === 'dayChange' ? '📅' : '📋';
+    const typeLabel = req.type === 'dayChange' ? '요일 변경' : '출석 수정';
+
+    let detailHtml = '';
+    if (req.type === 'attendance') {
+      detailHtml = `
+        <span style="color:#94a3b8">${req.date || ''}</span>
+        &nbsp;·&nbsp;${req.program || ''}${req.location ? ' · ' + req.location : ''}
+        <br><span style="color:#94a3b8">사유:</span> ${req.reason || '-'}${req.detail ? ' — ' + req.detail : ''}
+      `;
+    } else {
+      detailHtml = `
+        <span style="color:#94a3b8">${req.program || ''}${req.location ? ' · ' + req.location : ''}</span>
+        <br><span style="color:#94a3b8">현재:</span> ${req.currentDays || '없음'} &nbsp;→&nbsp; <span style="color:#34d399;font-weight:600">${req.requestedDays || '없음'}</span>
+        <br><span style="color:#94a3b8">사유:</span> ${req.reason || '-'}
+      `;
+    }
+
+    html += `
+      <div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:14px 16px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:.85rem">${typeIcon}</span>
+            <span style="font-weight:700;font-size:.88rem">${req.no || ''} ${req.name || ''}</span>
+            <span style="font-size:.72rem;color:#64748b">${typeLabel}</span>
+          </div>
+          <span style="font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:12px;background:${statusBg};color:${statusColor}">${statusLabel}</span>
+        </div>
+        <div style="font-size:.8rem;color:#cbd5e1;line-height:1.6;margin-bottom:8px">
+          ${detailHtml}
+        </div>
+        <div style="font-size:.7rem;color:#475569;margin-bottom:${isWaiting ? '10px' : '0'}">
+          ${req.requestedAt || ''}${req.teacherNote ? ' · 메모: ' + req.teacherNote : ''}
+        </div>
+        ${isWaiting ? `
+          <div style="display:flex;gap:8px;align-items:center">
+            <button onclick="processRequest('${req.type}',${req.idx},'승인')" style="flex:1;padding:8px;border:none;border-radius:8px;background:rgba(52,211,153,.15);color:#34d399;font-weight:700;font-size:.82rem;cursor:pointer;font-family:inherit">✓ 승인</button>
+            <button onclick="processRequest('${req.type}',${req.idx},'반려')" style="flex:1;padding:8px;border:none;border-radius:8px;background:rgba(248,113,113,.1);color:#f87171;font-weight:700;font-size:.82rem;cursor:pointer;font-family:inherit">✕ 반려</button>
+            <input type="text" id="req-note-${req.type}-${req.idx}" placeholder="메모 (선택)" style="flex:1.5;padding:8px 10px;border:1.5px solid #334155;border-radius:8px;background:#111827;color:#f1f5f9;font-size:.8rem;font-family:inherit;outline:none">
+          </div>
+        ` : ''}
+      </div>
+    `;
+  });
+
+  listEl.innerHTML = html;
+}
+
+async function processRequest(type, idx, newStatus) {
+  const noteEl = document.getElementById(`req-note-${type}-${idx}`);
+  const note = noteEl ? noteEl.value.trim() : '';
+
+  const req = type === 'dayChange' ? _allRequests.dayChange[idx] : _allRequests.attendance[idx];
+  if (!req) return;
+
+  // 버튼 비활성화
+  const card = noteEl?.closest('div[style*="background:#1e293b"]');
+  if (card) {
+    card.querySelectorAll('button').forEach(b => { b.disabled = true; b.style.opacity = '.5'; });
+  }
+
+  try {
+    const result = await gasPost({
+      action: 'processRequest',
+      type: type,
+      no: req.no,
+      program: req.program,
+      location: req.location || '',
+      date: req.date || '',
+      currentDays: req.currentDays || '',
+      requestedDays: req.requestedDays || '',
+      requestedAt: req.requestedAt || '',
+      newStatus: newStatus,
+      teacherNote: note
+    });
+
+    if (result.ok) {
+      req.status = newStatus;
+      req.teacherNote = note;
+      renderRequestsList();
+      toast(newStatus === '승인' ? '승인 처리 완료!' : '반려 처리 완료!');
+    } else {
+      toast(result.msg || '처리 실패', 'err');
+      if (card) card.querySelectorAll('button').forEach(b => { b.disabled = false; b.style.opacity = '1'; });
+    }
+  } catch(e) {
+    toast('서버 연결 실패', 'err');
+    if (card) card.querySelectorAll('button').forEach(b => { b.disabled = false; b.style.opacity = '1'; });
+  }
 }
 </script>
 </body>
