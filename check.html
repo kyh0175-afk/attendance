@@ -688,6 +688,162 @@ input {
   color: var(--text);
 }
 
+/* ══════ 출석 요일 탭 ══════ */
+.schedule-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.schedule-header {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.schedule-name {
+  font-size: .92rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.schedule-change-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--bg3);
+  border: 1.5px solid var(--border);
+  color: var(--text2);
+  font-size: .78rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.schedule-change-btn:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+.schedule-days {
+  display: flex;
+  padding: 14px 12px;
+  gap: 6px;
+  justify-content: center;
+}
+.sched-day {
+  width: 46px;
+  height: 56px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: var(--bg3);
+  border: 1.5px solid var(--border);
+  cursor: default;
+  transition: all .15s;
+}
+.sched-day .sday-label {
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--text3);
+}
+.sched-day .sday-icon {
+  font-size: 1rem;
+}
+.sched-day.active {
+  background: var(--green-bg);
+  border-color: rgba(52,211,153,.35);
+}
+.sched-day.active .sday-label {
+  color: var(--green);
+}
+.sched-day.active .sday-icon {
+  color: var(--green);
+}
+.sched-day.inactive .sday-icon {
+  color: var(--text3);
+  opacity: .4;
+}
+.schedule-note {
+  padding: 0 16px 12px;
+  font-size: .78rem;
+  color: var(--text3);
+  line-height: 1.5;
+}
+
+/* 요일 변경 모달 내 토글 버튼 */
+.day-toggle-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.day-toggle {
+  width: 46px;
+  height: 56px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: var(--bg3);
+  border: 2px solid var(--border);
+  cursor: pointer;
+  transition: all .2s;
+}
+.day-toggle .dtg-label {
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--text3);
+}
+.day-toggle .dtg-icon {
+  font-size: 1.1rem;
+  color: var(--text3);
+  opacity: .4;
+}
+.day-toggle.on {
+  background: var(--green-bg);
+  border-color: var(--green);
+}
+.day-toggle.on .dtg-label {
+  color: var(--green);
+  font-weight: 700;
+}
+.day-toggle.on .dtg-icon {
+  color: var(--green);
+  opacity: 1;
+}
+.day-toggle:active { transform: scale(.93); }
+
+.day-change-summary {
+  background: var(--card);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: .82rem;
+  color: var(--text2);
+  line-height: 1.6;
+}
+.day-change-arrow {
+  color: var(--amber);
+  font-weight: 700;
+  margin: 0 6px;
+}
+.day-added {
+  color: var(--green);
+  font-weight: 700;
+}
+.day-removed {
+  color: var(--red);
+  font-weight: 700;
+  text-decoration: line-through;
+}
+
 /* ══════ 반응형 ══════ */
 @media (max-width: 380px) {
   html { font-size: 13.5px; }
@@ -743,7 +899,8 @@ input {
     <!-- 뷰 전환 -->
     <div class="view-tabs">
       <button class="view-tab active" data-view="weekly" onclick="switchView('weekly')">주간 보기</button>
-      <button class="view-tab" data-view="requests" onclick="switchView('requests')">수정요청 내역</button>
+      <button class="view-tab" data-view="schedule" onclick="switchView('schedule')">출석 요일</button>
+      <button class="view-tab" data-view="requests" onclick="switchView('requests')">수정요청</button>
     </div>
 
     <!-- 범례 -->
@@ -773,12 +930,15 @@ input {
     <!-- 주간 보기 -->
     <div id="weekly-view"></div>
 
+    <!-- 출석 요일 보기 -->
+    <div id="schedule-view" class="hidden"></div>
+
     <!-- 수정요청 내역 -->
     <div id="requests-view" class="hidden"></div>
   </div>
 </div>
 
-<!-- ══════ 수정요청 모달 ══════ -->
+<!-- ══════ 수정요청 모달 (출석) ══════ -->
 <div id="modal-overlay" class="modal-overlay hidden" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <div class="modal-bar"></div>
@@ -799,6 +959,30 @@ input {
   </div>
 </div>
 
+<!-- ══════ 요일 변경 요청 모달 ══════ -->
+<div id="day-modal-overlay" class="modal-overlay hidden" onclick="if(event.target===this)closeDayModal()">
+  <div class="modal">
+    <div class="modal-bar"></div>
+    <div class="modal-title">출석 요일 변경 요청</div>
+    <div class="modal-sub" id="day-modal-sub">변경할 요일을 선택해주세요. 교사 확인 후 반영됩니다.</div>
+
+    <div class="modal-info" id="day-modal-info"></div>
+
+    <div class="modal-select-label">출석 요일 선택</div>
+    <div class="day-toggle-row" id="day-toggle-row"></div>
+
+    <div class="day-change-summary" id="day-change-summary" style="display:none"></div>
+
+    <div class="modal-select-label">변경 사유</div>
+    <textarea class="modal-textarea" id="day-modal-reason" placeholder="변경 사유를 적어주세요 (필수)"></textarea>
+
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeDayModal()">취소</button>
+      <button class="modal-submit" id="day-modal-submit" onclick="submitDayChange()" disabled>변경 요청</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════ 토스트 ══════ -->
 <div class="toast" id="toast"></div>
 
@@ -812,9 +996,10 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbzrh2K5mEf1_FUJye_2R5WT
 let STATE = {
   studentNo: '',
   studentName: '',
-  programs: [],     // 학생이 속한 프로그램 목록
+  programs: [],     // 학생이 속한 프로그램 목록 [{program, location, days}]
   records: [],      // 출석 기록 [{date, program, location, status}]
   requests: [],     // 수정요청 내역
+  dayRequests: [],  // 요일변경 요청 내역
   weekOffset: 0,    // 0 = 이번 주, -1 = 지난 주 ...
   currentView: 'weekly',
 };
@@ -922,6 +1107,7 @@ async function doLogin() {
     STATE.programs = result.programs || [];
     STATE.records = result.records || [];
     STATE.requests = result.requests || [];
+    STATE.dayRequests = result.dayRequests || [];
     STATE.weekOffset = 0;
 
     showDashboard();
@@ -933,7 +1119,7 @@ async function doLogin() {
 }
 
 function doLogout() {
-  STATE = { studentNo:'', studentName:'', programs:[], records:[], requests:[], weekOffset:0, currentView:'weekly' };
+  STATE = { studentNo:'', studentName:'', programs:[], records:[], requests:[], dayRequests:[], weekOffset:0, currentView:'weekly' };
   document.getElementById('dashboard').classList.add('hidden');
   document.getElementById('login-screen').classList.remove('hidden');
   loginInput.value = '';
@@ -954,6 +1140,7 @@ function showDashboard() {
 
   renderStats();
   renderWeekly();
+  renderSchedule();
   renderRequests();
 }
 
@@ -986,6 +1173,7 @@ function switchView(view) {
   STATE.currentView = view;
   document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
   document.getElementById('weekly-view').classList.toggle('hidden', view !== 'weekly');
+  document.getElementById('schedule-view').classList.toggle('hidden', view !== 'schedule');
   document.getElementById('requests-view').classList.toggle('hidden', view !== 'requests');
   document.getElementById('legend-area').classList.toggle('hidden', view !== 'weekly');
 }
@@ -1268,7 +1456,12 @@ async function submitRequest() {
 function renderRequests() {
   const container = document.getElementById('requests-view');
 
-  if (STATE.requests.length === 0) {
+  const allRequests = [
+    ...STATE.requests.map(r => ({ ...r, type: 'attendance' })),
+    ...STATE.dayRequests.map(r => ({ ...r, type: 'dayChange' }))
+  ];
+
+  if (allRequests.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         <div class="empty-icon">✨</div>
@@ -1279,34 +1472,316 @@ function renderRequests() {
   }
 
   // 최신순 정렬
-  const sorted = [...STATE.requests].sort((a, b) => {
-    return (b.requestedAt || b.date) > (a.requestedAt || a.date) ? 1 : -1;
+  const sorted = allRequests.sort((a, b) => {
+    const aKey = a.requestedAt || a.date || '';
+    const bKey = b.requestedAt || b.date || '';
+    return bKey > aKey ? 1 : -1;
   });
 
-  let html = `<div class="section-title">📝 수정요청 내역 (${sorted.length}건)</div>`;
+  let html = `<div class="section-title">📝 요청 내역 (${sorted.length}건)</div>`;
 
   sorted.forEach(req => {
-    const d = new Date(req.date + 'T00:00:00');
-    const dayName = DAY_NAMES[d.getDay()];
     const statusClass = req.status === '대기' ? 'waiting' : req.status === '승인' ? 'approved' : 'rejected';
     const statusLabel = req.status === '대기' ? '대기 중' : req.status === '승인' ? '승인됨' : '반려됨';
 
-    html += `
-      <div class="request-card">
-        <div class="request-top">
-          <div class="request-program">${req.program}</div>
-          <div class="request-status ${statusClass}">${statusLabel}</div>
+    if (req.type === 'dayChange') {
+      html += `
+        <div class="request-card">
+          <div class="request-top">
+            <div class="request-program">📅 요일 변경 · ${req.program}</div>
+            <div class="request-status ${statusClass}">${statusLabel}</div>
+          </div>
+          <div class="request-detail">
+            ${req.location ? req.location + ' · ' : ''}${req.currentDays || '?'} → ${req.requestedDays || '?'}<br>
+            사유: ${req.reason || '-'}
+            ${req.teacherNote ? '<br>교사 메모: ' + req.teacherNote : ''}
+          </div>
         </div>
-        <div class="request-detail">
-          ${req.date} (${dayName})${req.location ? ' · ' + req.location : ''}<br>
-          사유: ${req.reason || '-'}${req.detail ? ' — ' + req.detail : ''}
-          ${req.teacherNote ? '<br>교사 메모: ' + req.teacherNote : ''}
+      `;
+    } else {
+      const d = new Date(req.date + 'T00:00:00');
+      const dayName = DAY_NAMES[d.getDay()];
+      html += `
+        <div class="request-card">
+          <div class="request-top">
+            <div class="request-program">📋 출석 수정 · ${req.program}</div>
+            <div class="request-status ${statusClass}">${statusLabel}</div>
+          </div>
+          <div class="request-detail">
+            ${req.date} (${dayName})${req.location ? ' · ' + req.location : ''}<br>
+            사유: ${req.reason || '-'}${req.detail ? ' — ' + req.detail : ''}
+            ${req.teacherNote ? '<br>교사 메모: ' + req.teacherNote : ''}
+          </div>
         </div>
-      </div>
-    `;
+      `;
+    }
   });
 
   container.innerHTML = html;
+}
+
+// ══════ 출석 요일 보기 ══════
+function renderSchedule() {
+  const container = document.getElementById('schedule-view');
+
+  if (STATE.programs.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <div class="empty-msg">등록된 프로그램이 없어요.</div>
+      </div>
+    `;
+    return;
+  }
+
+  const ALL_DAYS = [
+    { idx: 1, label: '월' },
+    { idx: 2, label: '화' },
+    { idx: 3, label: '수' },
+    { idx: 4, label: '목' },
+    { idx: 5, label: '금' },
+    { idx: 6, label: '토' },
+    { idx: 0, label: '일' },
+  ];
+
+  let html = '';
+
+  STATE.programs.forEach((prog, pi) => {
+    // 프로그램별 색상
+    const colors = {
+      '야간 독서시간': 'var(--green)',
+      '심야 독서시간': 'var(--purple)',
+      '방과후 독서시간': 'var(--blue)',
+      '토요일 독서시간': 'var(--amber)',
+      '일요일 독서시간': '#f472b6',
+    };
+    const dotColor = colors[prog.program] || 'var(--text3)';
+
+    // 학생의 현재 출석 요일 (API에서 받은 days: "월,화,수,목,금" 형태)
+    const currentDays = prog.days ? prog.days.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+    // 해당 프로그램이 대기 중인 요일변경 요청이 있는지
+    const pendingDayReq = STATE.dayRequests.find(r =>
+      r.program === prog.program &&
+      (!prog.location || r.location === prog.location) &&
+      r.status === '대기'
+    );
+
+    html += `
+      <div class="schedule-card">
+        <div class="schedule-header">
+          <div class="schedule-name">
+            <span class="program-dot" style="background:${dotColor}"></span>
+            ${prog.program}${prog.location ? ' · ' + prog.location : ''}
+          </div>
+          ${pendingDayReq
+            ? '<span style="font-size:.75rem;color:var(--amber2);font-weight:600">변경 요청 대기 중</span>'
+            : `<button class="schedule-change-btn" onclick="openDayModal(${pi})">✏️ 변경 요청</button>`
+          }
+        </div>
+        <div class="schedule-days">
+    `;
+
+    ALL_DAYS.forEach(day => {
+      const isActive = currentDays.includes(day.label);
+      html += `
+        <div class="sched-day ${isActive ? 'active' : 'inactive'}">
+          <span class="sday-label">${day.label}</span>
+          <span class="sday-icon">${isActive ? '✓' : '─'}</span>
+        </div>
+      `;
+    });
+
+    html += `</div>`;
+
+    // 대기 중인 요청 표시
+    if (pendingDayReq) {
+      html += `
+        <div class="schedule-note" style="color:var(--amber2)">
+          📌 변경 요청: ${pendingDayReq.requestedDays || '(정보 없음)'}<br>
+          사유: ${pendingDayReq.reason || '-'}
+        </div>
+      `;
+    }
+
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+// ══════ 요일 변경 요청 모달 ══════
+let dayModalData = {};
+
+function openDayModal(programIdx) {
+  const prog = STATE.programs[programIdx];
+  if (!prog) return;
+
+  const currentDays = prog.days ? prog.days.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+  dayModalData = {
+    programIdx,
+    program: prog.program,
+    location: prog.location || '',
+    originalDays: [...currentDays],
+    selectedDays: [...currentDays],
+  };
+
+  // 모달 정보
+  document.getElementById('day-modal-info').innerHTML = `
+    <div class="modal-info-row">
+      <span class="modal-info-label">프로그램</span>
+      <span class="modal-info-value">${prog.program}</span>
+    </div>
+    ${prog.location ? `<div class="modal-info-row">
+      <span class="modal-info-label">장소</span>
+      <span class="modal-info-value">${prog.location}</span>
+    </div>` : ''}
+    <div class="modal-info-row">
+      <span class="modal-info-label">현재 요일</span>
+      <span class="modal-info-value">${currentDays.length > 0 ? currentDays.join(', ') : '없음'}</span>
+    </div>
+  `;
+
+  // 요일 토글 버튼 렌더링
+  const ALL_DAYS = [
+    { idx: 1, label: '월' },
+    { idx: 2, label: '화' },
+    { idx: 3, label: '수' },
+    { idx: 4, label: '목' },
+    { idx: 5, label: '금' },
+    { idx: 6, label: '토' },
+    { idx: 0, label: '일' },
+  ];
+
+  let toggleHtml = '';
+  ALL_DAYS.forEach(day => {
+    const isOn = dayModalData.selectedDays.includes(day.label);
+    toggleHtml += `
+      <div class="day-toggle ${isOn ? 'on' : ''}" data-day="${day.label}" onclick="toggleDayInModal(this, '${day.label}')">
+        <span class="dtg-label">${day.label}</span>
+        <span class="dtg-icon">${isOn ? '✓' : '─'}</span>
+      </div>
+    `;
+  });
+  document.getElementById('day-toggle-row').innerHTML = toggleHtml;
+
+  document.getElementById('day-modal-reason').value = '';
+  document.getElementById('day-change-summary').style.display = 'none';
+  document.getElementById('day-modal-submit').disabled = true;
+  updateDayChangeSummary();
+
+  document.getElementById('day-modal-overlay').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDayModal() {
+  document.getElementById('day-modal-overlay').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function toggleDayInModal(el, dayLabel) {
+  const idx = dayModalData.selectedDays.indexOf(dayLabel);
+  if (idx >= 0) {
+    dayModalData.selectedDays.splice(idx, 1);
+    el.classList.remove('on');
+    el.querySelector('.dtg-icon').textContent = '─';
+  } else {
+    dayModalData.selectedDays.push(dayLabel);
+    el.classList.add('on');
+    el.querySelector('.dtg-icon').textContent = '✓';
+  }
+  updateDayChangeSummary();
+}
+
+function updateDayChangeSummary() {
+  const orig = dayModalData.originalDays;
+  const sel = dayModalData.selectedDays;
+
+  const added = sel.filter(d => !orig.includes(d));
+  const removed = orig.filter(d => !sel.includes(d));
+  const unchanged = orig.filter(d => sel.includes(d));
+
+  const summaryEl = document.getElementById('day-change-summary');
+  const submitBtn = document.getElementById('day-modal-submit');
+  const reasonEl = document.getElementById('day-modal-reason');
+
+  const hasChange = added.length > 0 || removed.length > 0;
+
+  if (!hasChange) {
+    summaryEl.style.display = 'none';
+    submitBtn.disabled = true;
+    return;
+  }
+
+  let summaryHtml = '';
+  if (removed.length > 0) {
+    summaryHtml += `<span class="day-removed">${removed.join(', ')}</span> 제외`;
+  }
+  if (added.length > 0) {
+    if (summaryHtml) summaryHtml += '&nbsp;&nbsp;/&nbsp;&nbsp;';
+    summaryHtml += `<span class="day-added">${added.join(', ')}</span> 추가`;
+  }
+  summaryHtml += `<br>변경 후: <strong>${sel.length > 0 ? sel.join(', ') : '없음'}</strong>`;
+
+  summaryEl.innerHTML = summaryHtml;
+  summaryEl.style.display = 'block';
+
+  // 사유가 있어야 제출 가능
+  submitBtn.disabled = reasonEl.value.trim().length === 0;
+}
+
+// 사유 입력 시 버튼 활성화 체크
+document.getElementById('day-modal-reason').addEventListener('input', () => {
+  updateDayChangeSummary();
+});
+
+async function submitDayChange() {
+  const submitBtn = document.getElementById('day-modal-submit');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner"></span>';
+
+  const reason = document.getElementById('day-modal-reason').value.trim();
+  const dayOrder = ['월','화','수','목','금','토','일'];
+  const sortedDays = dayModalData.selectedDays.sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
+
+  try {
+    const result = await gasPost({
+      action: 'submitDayChange',
+      no: STATE.studentNo,
+      name: STATE.studentName,
+      program: dayModalData.program,
+      location: dayModalData.location,
+      currentDays: dayModalData.originalDays.join(','),
+      requestedDays: sortedDays.join(','),
+      reason: reason
+    });
+
+    if (result.ok) {
+      STATE.dayRequests.push({
+        program: dayModalData.program,
+        location: dayModalData.location,
+        currentDays: dayModalData.originalDays.join(','),
+        requestedDays: sortedDays.join(','),
+        reason: reason,
+        status: '대기',
+        requestedAt: new Date().toISOString()
+      });
+
+      closeDayModal();
+      renderSchedule();
+      renderRequests();
+      toast('요일 변경 요청을 보냈어요!', 'ok');
+    } else {
+      toast(result.msg || '요청에 실패했어요.', 'err');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '변경 요청';
+    }
+  } catch (e) {
+    toast('서버 연결에 실패했어요.', 'err');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '변경 요청';
+  }
 }
 
 // ══════ 토스트 ══════
