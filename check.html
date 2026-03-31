@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>코스모스 독서시간 출석 확인</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ══════ 기본 리셋 & 테마 ══════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #111827;
+  --bg2: #1a2236;
+  --bg3: #222d44;
+  --card: #1e293b;
+  --card2: #263044;
+  --border: #334155;
+  --border2: #475569;
+  --text: #f1f5f9;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --amber: #f59e0b;
+  --amber2: #fbbf24;
+  --green: #34d399;
+  --green-bg: rgba(52,211,153,.12);
+  --red: #f87171;
+  --red-bg: rgba(248,113,113,.10);
+  --blue: #60a5fa;
+  --blue-bg: rgba(96,165,250,.10);
+  --purple: #a78bfa;
+  --purple-bg: rgba(167,139,250,.10);
+  --yellow-bg: rgba(251,191,36,.10);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,.25);
+}
+
+html { font-size: 15px; }
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ══════ 공통 유틸 ══════ */
+.container { max-width: 520px; margin: 0 auto; padding: 0 16px; }
+.hidden { display: none !important; }
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all .2s;
+}
+button:active { transform: scale(.97); }
+
+input {
+  font-family: inherit;
+  outline: none;
+  border: none;
+}
+
+/* ══════ 헤더 ══════ */
+.header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-inner {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--amber);
+  letter-spacing: -.02em;
+}
+.header-sub {
+  font-size: .78rem;
+  color: var(--text3);
+}
+
+/* ══════ 로그인 화면 ══════ */
+.login-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100dvh - 60px);
+  padding: 24px 16px;
+}
+.login-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--amber), #f97316);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(245,158,11,.25);
+}
+.login-heading {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+  letter-spacing: -.03em;
+}
+.login-desc {
+  font-size: .88rem;
+  color: var(--text2);
+  margin-bottom: 28px;
+  text-align: center;
+  line-height: 1.5;
+}
+.login-input-wrap {
+  width: 100%;
+  max-width: 320px;
+  position: relative;
+  margin-bottom: 14px;
+}
+.login-input {
+  width: 100%;
+  height: 54px;
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 18px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  letter-spacing: .15em;
+  transition: border-color .2s;
+}
+.login-input::placeholder {
+  color: var(--text3);
+  letter-spacing: .05em;
+  font-weight: 400;
+}
+.login-input:focus {
+  border-color: var(--amber);
+}
+.login-btn {
+  width: 100%;
+  max-width: 320px;
+  height: 50px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--amber), #f97316);
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  box-shadow: 0 4px 16px rgba(245,158,11,.3);
+}
+.login-btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+.login-error {
+  margin-top: 12px;
+  font-size: .85rem;
+  color: var(--red);
+  text-align: center;
+  min-height: 1.2em;
+}
+
+/* ══════ 메인 대시보드 ══════ */
+.dash-header {
+  padding: 20px 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.student-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.student-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--card2);
+  border: 2px solid var(--amber);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--amber);
+}
+.student-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.student-no {
+  font-size: .8rem;
+  color: var(--text3);
+  margin-top: 1px;
+}
+.logout-btn {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--text2);
+  font-size: .8rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+}
+
+/* ══════ 주간 네비게이션 ══════ */
+.week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  margin-bottom: 8px;
+}
+.week-nav-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  border: 1px solid var(--border);
+}
+.week-nav-btn:disabled { opacity: .3; }
+.week-label {
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.week-dates {
+  font-size: .75rem;
+  color: var(--text3);
+  text-align: center;
+  margin-top: 2px;
+}
+
+/* ══════ 프로그램별 출석 카드 ══════ */
+.program-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.program-header {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.program-name {
+  font-size: .92rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.program-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.program-rate {
+  font-size: .82rem;
+  font-weight: 600;
+}
+
+/* 요일 그리드 */
+.day-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0;
+}
+.day-col {
+  text-align: center;
+  padding: 8px 2px 10px;
+  border-right: 1px solid var(--border);
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.day-col:last-child { border-right: none; }
+.day-col.today { background: rgba(245,158,11,.06); }
+.day-col.inactive { opacity: .35; }
+
+.day-label {
+  font-size: .7rem;
+  font-weight: 600;
+  color: var(--text3);
+}
+.day-date {
+  font-size: .65rem;
+  color: var(--text3);
+}
+
+.status-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .85rem;
+  font-weight: 700;
+  cursor: default;
+  transition: all .15s;
+  position: relative;
+}
+.status-badge.present {
+  background: var(--green-bg);
+  color: var(--green);
+  border: 1.5px solid rgba(52,211,153,.25);
+}
+.status-badge.absent {
+  background: var(--red-bg);
+  color: var(--red);
+  border: 1.5px solid rgba(248,113,113,.2);
+  cursor: pointer;
+}
+.status-badge.absent:hover {
+  border-color: var(--red);
+  box-shadow: 0 0 8px rgba(248,113,113,.25);
+}
+.status-badge.no-class {
+  background: transparent;
+  color: var(--text3);
+  font-size: .75rem;
+}
+.status-badge.future {
+  background: var(--bg3);
+  color: var(--text3);
+  border: 1.5px dashed var(--border);
+  font-size: .7rem;
+}
+.status-badge.pending {
+  background: var(--yellow-bg);
+  color: var(--amber2);
+  border: 1.5px solid rgba(251,191,36,.3);
+  cursor: default;
+}
+.status-badge.self {
+  background: var(--blue-bg);
+  color: var(--blue);
+  border: 1.5px solid rgba(96,165,250,.25);
+}
+
+/* ══════ 범례 ══════ */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 0 8px;
+  margin-bottom: 8px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .75rem;
+  color: var(--text2);
+}
+.legend-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .65rem;
+  font-weight: 700;
+}
+
+/* ══════ 수정요청 모달 ══════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn .2s;
+}
+@keyframes fadeIn { from { opacity: 0; } }
+@keyframes slideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal {
+  width: 100%;
+  max-width: 440px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px 20px 16px 16px;
+  padding: 24px 20px 20px;
+  animation: slideUp .25s ease-out;
+}
+.modal-bar {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border2);
+  margin: -8px auto 16px;
+}
+.modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.modal-sub {
+  font-size: .83rem;
+  color: var(--text2);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+.modal-info {
+  background: var(--card);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.modal-info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: .83rem;
+}
+.modal-info-label { color: var(--text3); }
+.modal-info-value { font-weight: 600; }
+
+.modal-select-label {
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 8px;
+}
+.modal-reason-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.reason-btn {
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  color: var(--text2);
+  font-size: .82rem;
+  font-weight: 500;
+}
+.reason-btn.active {
+  border-color: var(--amber);
+  background: rgba(245,158,11,.1);
+  color: var(--amber);
+}
+
+.modal-textarea {
+  width: 100%;
+  height: 72px;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: .88rem;
+  color: var(--text);
+  resize: none;
+  margin-bottom: 16px;
+  transition: border-color .2s;
+  font-family: inherit;
+}
+.modal-textarea:focus { border-color: var(--amber); }
+.modal-textarea::placeholder { color: var(--text3); }
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+}
+.modal-cancel {
+  flex: 1;
+  height: 46px;
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--text2);
+  font-size: .92rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+}
+.modal-submit {
+  flex: 1.5;
+  height: 46px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--amber), #f97316);
+  color: #fff;
+  font-size: .92rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(245,158,11,.25);
+}
+.modal-submit:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ══════ 수정요청 내역 ══════ */
+.requests-section {
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+.section-title {
+  font-size: .95rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.request-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+.request-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.request-program {
+  font-size: .82rem;
+  font-weight: 600;
+}
+.request-status {
+  font-size: .72rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+.request-status.waiting {
+  background: var(--yellow-bg);
+  color: var(--amber2);
+}
+.request-status.approved {
+  background: var(--green-bg);
+  color: var(--green);
+}
+.request-status.rejected {
+  background: var(--red-bg);
+  color: var(--red);
+}
+.request-detail {
+  font-size: .78rem;
+  color: var(--text3);
+  line-height: 1.5;
+}
+
+/* ══════ 토스트 ══════ */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--card2);
+  border: 1px solid var(--border);
+  padding: 12px 24px;
+  border-radius: 28px;
+  font-size: .88rem;
+  font-weight: 500;
+  z-index: 300;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transition: all .3s;
+  white-space: nowrap;
+}
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+.toast.ok { border-color: rgba(52,211,153,.3); color: var(--green); }
+.toast.err { border-color: rgba(248,113,113,.3); color: var(--red); }
+
+/* ══════ 로딩 스피너 ══════ */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--amber);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-full {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  gap: 12px;
+}
+.loading-full .spinner { width: 32px; height: 32px; }
+.loading-text { font-size: .85rem; color: var(--text3); }
+
+/* ══════ 빈 상태 ══════ */
+.empty-state {
+  text-align: center;
+  padding: 48px 0;
+  color: var(--text3);
+}
+.empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+.empty-msg { font-size: .9rem; line-height: 1.6; }
+
+/* ══════ 통계 요약 ══════ */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 10px;
+  text-align: center;
+}
+.stat-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -.03em;
+}
+.stat-label {
+  font-size: .7rem;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+/* ══════ 뷰 전환 탭 ══════ */
+.view-tabs {
+  display: flex;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  margin-bottom: 14px;
+}
+.view-tab {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text3);
+  font-size: .82rem;
+  font-weight: 600;
+  text-align: center;
+}
+.view-tab.active {
+  background: var(--bg3);
+  color: var(--text);
+}
+
+/* ══════ 반응형 ══════ */
+@media (max-width: 380px) {
+  html { font-size: 13.5px; }
+  .day-col { padding: 6px 1px 8px; }
+  .status-badge { width: 28px; height: 28px; font-size: .75rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════ 헤더 ══════ -->
+<div class="header">
+  <div class="header-inner">
+    <div>
+      <div class="header-title">코스모스 독서시간</div>
+      <div class="header-sub">출석 확인</div>
+    </div>
+    <div class="header-sub" id="today-display"></div>
+  </div>
+</div>
+
+<!-- ══════ 로그인 화면 ══════ -->
+<div id="login-screen" class="login-screen">
+  <div class="login-icon">📋</div>
+  <div class="login-heading">출석 확인</div>
+  <div class="login-desc">학번을 입력하면 프로그램별 출석 현황을<br>확인하고 수정을 요청할 수 있어요.</div>
+  <div class="login-input-wrap">
+    <input type="tel" id="login-no" class="login-input" placeholder="학번 5자리" maxlength="5" inputmode="numeric" autocomplete="off">
+  </div>
+  <button class="login-btn" id="login-btn" onclick="doLogin()" disabled>조회하기</button>
+  <div class="login-error" id="login-error"></div>
+</div>
+
+<!-- ══════ 대시보드 ══════ -->
+<div id="dashboard" class="hidden">
+  <div class="container">
+
+    <!-- 학생 정보 -->
+    <div class="dash-header">
+      <div class="student-info">
+        <div class="student-avatar" id="student-avatar"></div>
+        <div>
+          <div class="student-name" id="student-name"></div>
+          <div class="student-no" id="student-no-display"></div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+    </div>
+
+    <!-- 통계 요약 -->
+    <div class="stats-row" id="stats-row"></div>
+
+    <!-- 뷰 전환 -->
+    <div class="view-tabs">
+      <button class="view-tab active" data-view="weekly" onclick="switchView('weekly')">주간 보기</button>
+      <button class="view-tab" data-view="requests" onclick="switchView('requests')">수정요청 내역</button>
+    </div>
+
+    <!-- 범례 -->
+    <div class="legend" id="legend-area">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--green-bg);color:var(--green);border:1.5px solid rgba(52,211,153,.25)">O</div>
+        <span>출석</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--red-bg);color:var(--red);border:1.5px solid rgba(248,113,113,.2)">X</div>
+        <span>결석 (탭하여 수정요청)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--blue-bg);color:var(--blue);border:1.5px solid rgba(96,165,250,.25)">자</div>
+        <span>자율출석</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--yellow-bg);color:var(--amber2);border:1.5px solid rgba(251,191,36,.3)">?</div>
+        <span>수정요청 중</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--bg3);color:var(--text3);border:1.5px dashed var(--border)">─</div>
+        <span>미래 / 비대상</span>
+      </div>
+    </div>
+
+    <!-- 주간 보기 -->
+    <div id="weekly-view"></div>
+
+    <!-- 수정요청 내역 -->
+    <div id="requests-view" class="hidden"></div>
+  </div>
+</div>
+
+<!-- ══════ 수정요청 모달 ══════ -->
+<div id="modal-overlay" class="modal-overlay hidden" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-bar"></div>
+    <div class="modal-title">출석 수정 요청</div>
+    <div class="modal-sub">아래 내용을 확인하고 수정 사유를 선택해주세요.<br>교사 확인 후 반영됩니다.</div>
+
+    <div class="modal-info" id="modal-info"></div>
+
+    <div class="modal-select-label">수정 사유 선택</div>
+    <div class="modal-reason-btns" id="reason-btns"></div>
+
+    <textarea class="modal-textarea" id="modal-detail" placeholder="추가 설명이 있으면 적어주세요 (선택)"></textarea>
+
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">취소</button>
+      <button class="modal-submit" id="modal-submit-btn" onclick="submitRequest()" disabled>요청 보내기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ 토스트 ══════ -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+//  설정 — Apps Script URL을 여기에 입력하세요
+// ══════════════════════════════════════════
+const GAS_URL = '{{GAS_URL}}';
+
+// ══════ 상태 ══════
+let STATE = {
+  studentNo: '',
+  studentName: '',
+  programs: [],     // 학생이 속한 프로그램 목록
+  records: [],      // 출석 기록 [{date, program, location, status}]
+  requests: [],     // 수정요청 내역
+  weekOffset: 0,    // 0 = 이번 주, -1 = 지난 주 ...
+  currentView: 'weekly',
+};
+
+// 사유 목록
+const REASONS = [
+  '출석했으나 미기록',
+  'QR 인식 오류',
+  '지각 후 출석 처리 누락',
+  '사유 결석 (병결 등)',
+  '기타'
+];
+
+// ══════ 요일 관련 ══════
+const DAY_NAMES = ['일','월','화','수','목','금','토'];
+const DAY_SHORT = ['일','월','화','수','목','금','토'];
+
+function getMonday(d) {
+  const dt = new Date(d);
+  const day = dt.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  dt.setDate(dt.getDate() + diff);
+  dt.setHours(0,0,0,0);
+  return dt;
+}
+
+function getWeekDates(offset) {
+  const today = new Date();
+  const monday = getMonday(today);
+  monday.setDate(monday.getDate() + offset * 7);
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(d.getDate() + i);
+    dates.push(d);
+  }
+  return dates;
+}
+
+function fmtDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+
+function fmtShort(d) {
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+
+function isToday(d) {
+  const t = new Date();
+  return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
+}
+
+function isFuture(d) {
+  const t = new Date();
+  t.setHours(0,0,0,0);
+  return d > t;
+}
+
+// ══════ API 호출 ══════
+async function gasPost(data) {
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(data)
+  });
+  return await res.json();
+}
+
+// ══════ 로그인 ══════
+const loginInput = document.getElementById('login-no');
+const loginBtn = document.getElementById('login-btn');
+
+loginInput.addEventListener('input', () => {
+  loginInput.value = loginInput.value.replace(/\D/g, '');
+  loginBtn.disabled = loginInput.value.length < 5;
+});
+
+loginInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !loginBtn.disabled) doLogin();
+});
+
+async function doLogin() {
+  const no = loginInput.value.trim();
+  if (no.length < 5) return;
+
+  loginBtn.disabled = true;
+  loginBtn.innerHTML = '<span class="spinner"></span>';
+  document.getElementById('login-error').textContent = '';
+
+  try {
+    const result = await gasPost({ action: 'getStudentAttendance', no });
+
+    if (!result.ok) {
+      document.getElementById('login-error').textContent = result.msg || '조회에 실패했어요.';
+      loginBtn.innerHTML = '조회하기';
+      loginBtn.disabled = false;
+      return;
+    }
+
+    STATE.studentNo = no;
+    STATE.studentName = result.name;
+    STATE.programs = result.programs || [];
+    STATE.records = result.records || [];
+    STATE.requests = result.requests || [];
+    STATE.weekOffset = 0;
+
+    showDashboard();
+  } catch (e) {
+    document.getElementById('login-error').textContent = '서버 연결에 실패했어요. 다시 시도해주세요.';
+    loginBtn.innerHTML = '조회하기';
+    loginBtn.disabled = false;
+  }
+}
+
+function doLogout() {
+  STATE = { studentNo:'', studentName:'', programs:[], records:[], requests:[], weekOffset:0, currentView:'weekly' };
+  document.getElementById('dashboard').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+  loginInput.value = '';
+  loginBtn.disabled = true;
+  loginBtn.innerHTML = '조회하기';
+  document.getElementById('login-error').textContent = '';
+}
+
+// ══════ 대시보드 표시 ══════
+function showDashboard() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('dashboard').classList.remove('hidden');
+
+  // 학생 정보
+  document.getElementById('student-avatar').textContent = STATE.studentName.charAt(0);
+  document.getElementById('student-name').textContent = STATE.studentName;
+  document.getElementById('student-no-display').textContent = STATE.studentNo;
+
+  renderStats();
+  renderWeekly();
+  renderRequests();
+}
+
+// ══════ 통계 요약 ══════
+function renderStats() {
+  const records = STATE.records;
+  const total = records.filter(r => r.status === '출석' || r.status === '결석').length;
+  const present = records.filter(r => r.status === '출석' || r.status === '자율출석').length;
+  const absent = records.filter(r => r.status === '결석').length;
+  const rate = total > 0 ? Math.round(present / total * 100) : 0;
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-value" style="color:var(--green)">${rate}<span style="font-size:.85rem">%</span></div>
+      <div class="stat-label">출석률</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:var(--blue)">${present}</div>
+      <div class="stat-label">출석</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:var(--red)">${absent}</div>
+      <div class="stat-label">결석</div>
+    </div>
+  `;
+}
+
+// ══════ 뷰 전환 ══════
+function switchView(view) {
+  STATE.currentView = view;
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+  document.getElementById('weekly-view').classList.toggle('hidden', view !== 'weekly');
+  document.getElementById('requests-view').classList.toggle('hidden', view !== 'requests');
+  document.getElementById('legend-area').classList.toggle('hidden', view !== 'weekly');
+}
+
+// ══════ 주간 보기 ══════
+function renderWeekly() {
+  const dates = getWeekDates(STATE.weekOffset);
+  const container = document.getElementById('weekly-view');
+
+  // 주간 네비게이션
+  const mondayStr = fmtShort(dates[0]);
+  const sundayStr = fmtShort(dates[6]);
+  const isThisWeek = STATE.weekOffset === 0;
+
+  let html = `
+    <div class="week-nav">
+      <button class="week-nav-btn" onclick="changeWeek(-1)">‹</button>
+      <div style="text-align:center">
+        <div class="week-label">${isThisWeek ? '이번 주' : STATE.weekOffset === -1 ? '지난 주' : (STATE.weekOffset > 0 ? '다음 주' : Math.abs(STATE.weekOffset) + '주 전')}</div>
+        <div class="week-dates">${mondayStr} ~ ${sundayStr}</div>
+      </div>
+      <button class="week-nav-btn" onclick="changeWeek(1)" ${STATE.weekOffset >= 0 ? 'disabled' : ''}>›</button>
+    </div>
+  `;
+
+  // 프로그램별 카드
+  if (STATE.programs.length === 0) {
+    html += `
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <div class="empty-msg">등록된 프로그램이 없어요.<br>담당 선생님께 문의해주세요.</div>
+      </div>
+    `;
+  } else {
+    STATE.programs.forEach(prog => {
+      html += renderProgramCard(prog, dates);
+    });
+  }
+
+  container.innerHTML = html;
+}
+
+function renderProgramCard(prog, dates) {
+  // 프로그램별 색상
+  const colors = {
+    '야간 독서시간': { dot: 'var(--green)', bg: 'var(--green-bg)' },
+    '심야 독서시간': { dot: 'var(--purple)', bg: 'var(--purple-bg)' },
+    '방과후 독서시간': { dot: 'var(--blue)', bg: 'var(--blue-bg)' },
+    '토요일 독서시간': { dot: 'var(--amber)', bg: 'var(--yellow-bg)' },
+    '일요일 독서시간': { dot: '#f472b6', bg: 'rgba(244,114,182,.1)' },
+  };
+  const c = colors[prog.program] || { dot: 'var(--text3)', bg: 'var(--bg3)' };
+
+  // 해당 프로그램의 대상 요일 (0=일, 1=월, ..., 6=토)
+  const targetDays = getTargetDays(prog.program);
+
+  // 이 주의 출석률 계산
+  let weekPresent = 0, weekTotal = 0;
+  dates.forEach(d => {
+    const dayOfWeek = d.getDay();
+    if (!targetDays.includes(dayOfWeek)) return;
+    if (isFuture(d)) return;
+    const rec = findRecord(d, prog.program, prog.location);
+    if (rec) {
+      weekTotal++;
+      if (rec.status === '출석' || rec.status === '자율출석') weekPresent++;
+    } else {
+      weekTotal++;
+    }
+  });
+  const weekRate = weekTotal > 0 ? Math.round(weekPresent / weekTotal * 100) : null;
+
+  let html = `
+    <div class="program-card">
+      <div class="program-header">
+        <div class="program-name">
+          <span class="program-dot" style="background:${c.dot}"></span>
+          ${prog.program}${prog.location ? ' · ' + prog.location : ''}
+        </div>
+        ${weekRate !== null ? `<div class="program-rate" style="color:${weekRate >= 80 ? 'var(--green)' : weekRate >= 50 ? 'var(--amber)' : 'var(--red)'}">${weekRate}%</div>` : ''}
+      </div>
+      <div class="day-grid">
+  `;
+
+  // 월~일 순서: [1,2,3,4,5,6,0]
+  const dayOrder = [1,2,3,4,5,6,0];
+  dayOrder.forEach(dayIdx => {
+    // dates는 월~일 순서이므로 인덱스 맞추기
+    const dateIdx = dayIdx === 0 ? 6 : dayIdx - 1;
+    const d = dates[dateIdx];
+    const dayOfWeek = d.getDay();
+    const isTarget = targetDays.includes(dayOfWeek);
+    const isTodayFlag = isToday(d);
+    const isFutureFlag = isFuture(d);
+
+    let statusClass = '', statusText = '', clickable = false;
+
+    if (!isTarget) {
+      statusClass = 'no-class';
+      statusText = '·';
+    } else if (isFutureFlag) {
+      statusClass = 'future';
+      statusText = '─';
+    } else {
+      const rec = findRecord(d, prog.program, prog.location);
+      const pendingReq = findPendingRequest(d, prog.program, prog.location);
+
+      if (pendingReq) {
+        statusClass = 'pending';
+        statusText = '?';
+      } else if (!rec || rec.status === '결석') {
+        statusClass = 'absent';
+        statusText = 'X';
+        clickable = true;
+      } else if (rec.status === '자율출석') {
+        statusClass = 'self';
+        statusText = '자';
+      } else {
+        statusClass = 'present';
+        statusText = 'O';
+      }
+    }
+
+    const todayClass = isTodayFlag ? ' today' : '';
+    const inactiveClass = (!isTarget && !isTodayFlag) ? ' inactive' : '';
+
+    html += `
+      <div class="day-col${todayClass}${inactiveClass}">
+        <div class="day-label">${DAY_SHORT[dayOfWeek]}</div>
+        <div class="day-date">${d.getDate()}</div>
+        <div class="status-badge ${statusClass}" ${clickable ? `onclick="openModal('${fmtDate(d)}','${prog.program}','${prog.location || ''}')"` : ''}>
+          ${statusText}
+        </div>
+      </div>
+    `;
+  });
+
+  html += `</div></div>`;
+  return html;
+}
+
+function getTargetDays(program) {
+  // 0=일, 1=월, ..., 6=토
+  if (program === '토요일 독서시간') return [6];
+  if (program === '일요일 독서시간') return [0];
+  // 심야, 야간, 방과후 = 평일
+  return [1,2,3,4,5];
+}
+
+function findRecord(date, program, location) {
+  const dateStr = fmtDate(date);
+  return STATE.records.find(r =>
+    r.date === dateStr &&
+    r.program === program &&
+    (!location || !r.location || r.location === location)
+  );
+}
+
+function findPendingRequest(date, program, location) {
+  const dateStr = fmtDate(date);
+  return STATE.requests.find(r =>
+    r.date === dateStr &&
+    r.program === program &&
+    (!location || !r.location || r.location === location) &&
+    r.status === '대기'
+  );
+}
+
+function changeWeek(delta) {
+  const newOffset = STATE.weekOffset + delta;
+  if (newOffset > 0) return;
+  STATE.weekOffset = newOffset;
+  renderWeekly();
+}
+
+// ══════ 수정요청 모달 ══════
+let modalData = {};
+
+function openModal(dateStr, program, location) {
+  modalData = { date: dateStr, program, location };
+
+  const d = new Date(dateStr + 'T00:00:00');
+  const dayName = DAY_NAMES[d.getDay()];
+
+  document.getElementById('modal-info').innerHTML = `
+    <div class="modal-info-row">
+      <span class="modal-info-label">날짜</span>
+      <span class="modal-info-value">${dateStr} (${dayName})</span>
+    </div>
+    <div class="modal-info-row">
+      <span class="modal-info-label">프로그램</span>
+      <span class="modal-info-value">${program}</span>
+    </div>
+    ${location ? `<div class="modal-info-row">
+      <span class="modal-info-label">장소</span>
+      <span class="modal-info-value">${location}</span>
+    </div>` : ''}
+    <div class="modal-info-row">
+      <span class="modal-info-label">현재 상태</span>
+      <span class="modal-info-value" style="color:var(--red)">결석</span>
+    </div>
+  `;
+
+  // 사유 버튼 렌더링
+  let reasonHtml = '';
+  REASONS.forEach((r, i) => {
+    reasonHtml += `<button class="reason-btn" data-idx="${i}" onclick="selectReason(this)">${r}</button>`;
+  });
+  document.getElementById('reason-btns').innerHTML = reasonHtml;
+  document.getElementById('modal-detail').value = '';
+  document.getElementById('modal-submit-btn').disabled = true;
+  modalData.reason = null;
+
+  document.getElementById('modal-overlay').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function selectReason(btn) {
+  document.querySelectorAll('.reason-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  modalData.reason = btn.textContent;
+  document.getElementById('modal-submit-btn').disabled = false;
+}
+
+async function submitRequest() {
+  const submitBtn = document.getElementById('modal-submit-btn');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner"></span>';
+
+  const detail = document.getElementById('modal-detail').value.trim();
+
+  try {
+    const result = await gasPost({
+      action: 'submitCorrection',
+      no: STATE.studentNo,
+      name: STATE.studentName,
+      date: modalData.date,
+      program: modalData.program,
+      location: modalData.location || '',
+      currentStatus: '결석',
+      requestedStatus: '출석',
+      reason: modalData.reason,
+      detail: detail
+    });
+
+    if (result.ok) {
+      // 로컬 상태에 수정요청 추가
+      STATE.requests.push({
+        date: modalData.date,
+        program: modalData.program,
+        location: modalData.location || '',
+        reason: modalData.reason,
+        detail: detail,
+        status: '대기',
+        requestedAt: new Date().toISOString()
+      });
+
+      closeModal();
+      renderWeekly();
+      renderRequests();
+      toast('수정 요청을 보냈어요!', 'ok');
+    } else {
+      toast(result.msg || '요청에 실패했어요.', 'err');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '요청 보내기';
+    }
+  } catch (e) {
+    toast('서버 연결에 실패했어요.', 'err');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '요청 보내기';
+  }
+}
+
+// ══════ 수정요청 내역 ══════
+function renderRequests() {
+  const container = document.getElementById('requests-view');
+
+  if (STATE.requests.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">✨</div>
+        <div class="empty-msg">수정 요청 내역이 없어요.</div>
+      </div>
+    `;
+    return;
+  }
+
+  // 최신순 정렬
+  const sorted = [...STATE.requests].sort((a, b) => {
+    return (b.requestedAt || b.date) > (a.requestedAt || a.date) ? 1 : -1;
+  });
+
+  let html = `<div class="section-title">📝 수정요청 내역 (${sorted.length}건)</div>`;
+
+  sorted.forEach(req => {
+    const d = new Date(req.date + 'T00:00:00');
+    const dayName = DAY_NAMES[d.getDay()];
+    const statusClass = req.status === '대기' ? 'waiting' : req.status === '승인' ? 'approved' : 'rejected';
+    const statusLabel = req.status === '대기' ? '대기 중' : req.status === '승인' ? '승인됨' : '반려됨';
+
+    html += `
+      <div class="request-card">
+        <div class="request-top">
+          <div class="request-program">${req.program}</div>
+          <div class="request-status ${statusClass}">${statusLabel}</div>
+        </div>
+        <div class="request-detail">
+          ${req.date} (${dayName})${req.location ? ' · ' + req.location : ''}<br>
+          사유: ${req.reason || '-'}${req.detail ? ' — ' + req.detail : ''}
+          ${req.teacherNote ? '<br>교사 메모: ' + req.teacherNote : ''}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+// ══════ 토스트 ══════
+let toastTimer;
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + (type || '');
+  clearTimeout(toastTimer);
+  requestAnimationFrame(() => {
+    el.classList.add('show');
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+  });
+}
+
+// ══════ 초기화 ══════
+function init() {
+  const now = new Date();
+  const dayName = DAY_NAMES[now.getDay()];
+  document.getElementById('today-display').textContent =
+    `${now.getMonth()+1}월 ${now.getDate()}일 (${dayName})`;
+
+  loginInput.focus();
+}
+
+init();
+</script>
+</body>
+</html>
