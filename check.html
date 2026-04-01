@@ -688,6 +688,71 @@ input {
   color: var(--text);
 }
 
+/* ══════ 월간 보기 ══════ */
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  margin-bottom: 8px;
+}
+.month-label {
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.cal-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 2px;
+}
+.cal-header-cell {
+  text-align: center;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--text3);
+  padding: 6px 0;
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  margin-bottom: 12px;
+}
+.cal-cell {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: .72rem;
+  position: relative;
+  min-height: 40px;
+}
+.cal-cell .cal-day {
+  font-size: .68rem;
+  color: var(--text3);
+  font-weight: 500;
+}
+.cal-cell.cal-today {
+  outline: 2px solid var(--amber);
+  outline-offset: -2px;
+}
+.cal-cell.cal-empty { background: transparent; }
+.cal-cell.cal-present { background: var(--green-bg); }
+.cal-cell.cal-absent { background: var(--red-bg); cursor: pointer; }
+.cal-cell.cal-absent:hover { background: rgba(248,113,113,.18); }
+.cal-cell.cal-no-class { background: transparent; }
+.cal-cell.cal-future { background: var(--bg3); }
+.cal-cell.cal-pending { background: var(--yellow-bg); }
+.cal-cell.cal-self { background: var(--blue-bg); }
+.cal-status-icon {
+  font-size: .75rem;
+  font-weight: 700;
+}
+
 /* ══════ 출석 요일 탭 ══════ */
 .schedule-card {
   background: var(--card);
@@ -899,6 +964,7 @@ input {
     <!-- 뷰 전환 -->
     <div class="view-tabs">
       <button class="view-tab active" data-view="weekly" onclick="switchView('weekly')">주간 보기</button>
+      <button class="view-tab" data-view="monthly" onclick="switchView('monthly')">월간 보기</button>
       <button class="view-tab" data-view="schedule" onclick="switchView('schedule')">출석 요일</button>
       <button class="view-tab" data-view="requests" onclick="switchView('requests')">수정요청</button>
     </div>
@@ -929,6 +995,9 @@ input {
 
     <!-- 주간 보기 -->
     <div id="weekly-view"></div>
+
+    <!-- 월간 보기 -->
+    <div id="monthly-view" class="hidden"></div>
 
     <!-- 출석 요일 보기 -->
     <div id="schedule-view" class="hidden"></div>
@@ -1001,6 +1070,7 @@ let STATE = {
   requests: [],     // 수정요청 내역
   dayRequests: [],  // 요일변경 요청 내역
   weekOffset: 0,    // 0 = 이번 주, -1 = 지난 주 ...
+  monthOffset: 0,   // 0 = 이번 달, -1 = 지난 달 ...
   currentView: 'weekly',
 };
 
@@ -1119,7 +1189,7 @@ async function doLogin() {
 }
 
 function doLogout() {
-  STATE = { studentNo:'', studentName:'', programs:[], records:[], requests:[], dayRequests:[], weekOffset:0, currentView:'weekly' };
+  STATE = { studentNo:'', studentName:'', programs:[], records:[], requests:[], dayRequests:[], weekOffset:0, monthOffset:0, currentView:'weekly' };
   document.getElementById('dashboard').classList.add('hidden');
   document.getElementById('login-screen').classList.remove('hidden');
   loginInput.value = '';
@@ -1140,22 +1210,61 @@ function showDashboard() {
 
   renderStats();
   renderWeekly();
+  renderMonthly();
   renderSchedule();
   renderRequests();
 }
 
 // ══════ 통계 요약 ══════
 function renderStats() {
-  const records = STATE.records;
-  const total = records.filter(r => r.status === '출석' || r.status === '결석').length;
-  const present = records.filter(r => r.status === '출석' || r.status === '자율출석').length;
-  const absent = records.filter(r => r.status === '결석').length;
-  const rate = total > 0 ? Math.round(present / total * 100) : 0;
+  const view = STATE.currentView;
+  let periodDates = [];
+  let periodLabel = '';
+
+  if (view === 'monthly') {
+    // 월간: 해당 월의 모든 날짜
+    const now = new Date();
+    const targetMonth = new Date(now.getFullYear(), now.getMonth() + STATE.monthOffset, 1);
+    const year = targetMonth.getFullYear();
+    const month = targetMonth.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      periodDates.push(new Date(year, month, d));
+    }
+    periodLabel = `${month + 1}월`;
+  } else {
+    // 주간 (기본): 해당 주의 7일
+    periodDates = getWeekDates(STATE.weekOffset);
+    periodLabel = '이번 주';
+  }
+
+  let totalExpected = 0, present = 0, absent = 0;
+
+  STATE.programs.forEach(prog => {
+    const targetDays = getStudentTargetDays(prog);
+    periodDates.forEach(d => {
+      if (isFuture(d)) return;
+      if (!targetDays.includes(d.getDay())) return;
+      totalExpected++;
+      const rec = findRecord(d, prog.program, prog.location);
+      const pending = findPendingRequest(d, prog.program, prog.location);
+      if (rec && (rec.status === '출석' || rec.status === '자율출석')) {
+        present++;
+      } else if (pending) {
+        // 수정요청 중은 결석으로 카운트하되 별도 표시 안함
+        absent++;
+      } else if (!rec || rec.status === '결석') {
+        absent++;
+      }
+    });
+  });
+
+  const rate = totalExpected > 0 ? Math.round(present / totalExpected * 100) : 0;
 
   document.getElementById('stats-row').innerHTML = `
     <div class="stat-card">
-      <div class="stat-value" style="color:var(--green)">${rate}<span style="font-size:.85rem">%</span></div>
-      <div class="stat-label">출석률</div>
+      <div class="stat-value" style="color:${rate >= 80 ? 'var(--green)' : rate >= 50 ? 'var(--amber)' : 'var(--red)'}">${rate}<span style="font-size:.85rem">%</span></div>
+      <div class="stat-label">${view === 'monthly' ? periodLabel + ' ' : ''}출석률</div>
     </div>
     <div class="stat-card">
       <div class="stat-value" style="color:var(--blue)">${present}</div>
@@ -1173,9 +1282,11 @@ function switchView(view) {
   STATE.currentView = view;
   document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
   document.getElementById('weekly-view').classList.toggle('hidden', view !== 'weekly');
+  document.getElementById('monthly-view').classList.toggle('hidden', view !== 'monthly');
   document.getElementById('schedule-view').classList.toggle('hidden', view !== 'schedule');
   document.getElementById('requests-view').classList.toggle('hidden', view !== 'requests');
-  document.getElementById('legend-area').classList.toggle('hidden', view !== 'weekly');
+  document.getElementById('legend-area').classList.toggle('hidden', view !== 'weekly' && view !== 'monthly');
+  renderStats();
 }
 
 // ══════ 주간 보기 ══════
@@ -1228,7 +1339,7 @@ function renderProgramCard(prog, dates) {
   const c = colors[prog.program] || { dot: 'var(--text3)', bg: 'var(--bg3)' };
 
   // 해당 프로그램의 대상 요일 (0=일, 1=월, ..., 6=토)
-  const targetDays = getTargetDays(prog.program);
+  const targetDays = getStudentTargetDays(prog);
 
   // 이 주의 출석률 계산
   let weekPresent = 0, weekTotal = 0;
@@ -1316,11 +1427,21 @@ function renderProgramCard(prog, dates) {
 }
 
 function getTargetDays(program) {
+  // 프로그램 기본 요일 (fallback)
   // 0=일, 1=월, ..., 6=토
   if (program === '토요일 독서시간') return [6];
   if (program === '일요일 독서시간') return [0];
   // 심야, 야간, 방과후 = 평일
   return [1,2,3,4,5];
+}
+
+// 학생별 출석 요일 (prog.days가 있으면 그것 사용, 없으면 프로그램 기본값)
+function getStudentTargetDays(prog) {
+  if (prog.days && prog.days.trim()) {
+    const dayMap = {'일':0,'월':1,'화':2,'수':3,'목':4,'금':5,'토':6};
+    return prog.days.split(',').map(s => dayMap[s.trim()]).filter(v => v !== undefined);
+  }
+  return getTargetDays(prog.program);
 }
 
 function findRecord(date, program, location) {
@@ -1347,6 +1468,153 @@ function changeWeek(delta) {
   if (newOffset > 0) return;
   STATE.weekOffset = newOffset;
   renderWeekly();
+  renderStats();
+}
+
+// ══════ 월간 보기 ══════
+function renderMonthly() {
+  const container = document.getElementById('monthly-view');
+  const now = new Date();
+  const targetMonth = new Date(now.getFullYear(), now.getMonth() + STATE.monthOffset, 1);
+  const year = targetMonth.getFullYear();
+  const month = targetMonth.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0=일
+
+  const isThisMonth = STATE.monthOffset === 0;
+
+  // 월 네비게이션
+  let html = `
+    <div class="month-nav">
+      <button class="week-nav-btn" onclick="changeMonth(-1)">‹</button>
+      <div style="text-align:center">
+        <div class="month-label">${year}년 ${month + 1}월</div>
+      </div>
+      <button class="week-nav-btn" onclick="changeMonth(1)" ${STATE.monthOffset >= 0 ? 'disabled' : ''}>›</button>
+    </div>
+  `;
+
+  if (STATE.programs.length === 0) {
+    html += `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-msg">등록된 프로그램이 없어요.</div></div>`;
+    container.innerHTML = html;
+    return;
+  }
+
+  // 프로그램별 달력 카드
+  STATE.programs.forEach(prog => {
+    const colors = {
+      '야간 독서시간': { dot: 'var(--green)', bg: 'var(--green-bg)' },
+      '심야 독서시간': { dot: 'var(--purple)', bg: 'var(--purple-bg)' },
+      '방과후 독서시간': { dot: 'var(--blue)', bg: 'var(--blue-bg)' },
+      '토요일 독서시간': { dot: 'var(--amber)', bg: 'var(--yellow-bg)' },
+      '일요일 독서시간': { dot: '#f472b6', bg: 'rgba(244,114,182,.1)' },
+    };
+    const c = colors[prog.program] || { dot: 'var(--text3)', bg: 'var(--bg3)' };
+    const targetDays = getStudentTargetDays(prog);
+
+    // 월간 출석률
+    let mPresent = 0, mTotal = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dt = new Date(year, month, d);
+      if (isFuture(dt)) break;
+      if (!targetDays.includes(dt.getDay())) continue;
+      mTotal++;
+      const rec = findRecord(dt, prog.program, prog.location);
+      if (rec && (rec.status === '출석' || rec.status === '자율출석')) mPresent++;
+    }
+    const mRate = mTotal > 0 ? Math.round(mPresent / mTotal * 100) : null;
+
+    html += `
+      <div class="program-card">
+        <div class="program-header">
+          <div class="program-name">
+            <span class="program-dot" style="background:${c.dot}"></span>
+            ${prog.program}${prog.location ? ' · ' + prog.location : ''}
+          </div>
+          ${mRate !== null ? `<div class="program-rate" style="color:${mRate >= 80 ? 'var(--green)' : mRate >= 50 ? 'var(--amber)' : 'var(--red)'}">${mRate}%</div>` : ''}
+        </div>
+
+        <div style="padding:8px 8px 10px">
+          <div class="cal-header">
+            <div class="cal-header-cell">월</div>
+            <div class="cal-header-cell">화</div>
+            <div class="cal-header-cell">수</div>
+            <div class="cal-header-cell">목</div>
+            <div class="cal-header-cell">금</div>
+            <div class="cal-header-cell" style="color:var(--blue)">토</div>
+            <div class="cal-header-cell" style="color:var(--red)">일</div>
+          </div>
+          <div class="cal-grid">
+    `;
+
+    // 월~일 순서: firstDayOfWeek를 월요일 기준으로 변환
+    const startOffset = (firstDayOfWeek === 0) ? 6 : firstDayOfWeek - 1;
+
+    // 빈 셀
+    for (let i = 0; i < startOffset; i++) {
+      html += `<div class="cal-cell cal-empty"></div>`;
+    }
+
+    // 날짜 셀
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dt = new Date(year, month, d);
+      const dayOfWeek = dt.getDay();
+      const isTarget = targetDays.includes(dayOfWeek);
+      const isTodayFlag = isToday(dt);
+      const isFutureFlag = isFuture(dt);
+
+      let cellClass = '';
+      let icon = '';
+      let clickAttr = '';
+
+      if (!isTarget) {
+        cellClass = 'cal-no-class';
+        icon = `<span class="cal-status-icon" style="color:var(--text3);opacity:.3">·</span>`;
+      } else if (isFutureFlag) {
+        cellClass = 'cal-future';
+        icon = `<span class="cal-status-icon" style="color:var(--text3)">─</span>`;
+      } else {
+        const rec = findRecord(dt, prog.program, prog.location);
+        const pendingReq = findPendingRequest(dt, prog.program, prog.location);
+
+        if (pendingReq) {
+          cellClass = 'cal-pending';
+          icon = `<span class="cal-status-icon" style="color:var(--amber2)">?</span>`;
+        } else if (!rec || rec.status === '결석') {
+          cellClass = 'cal-absent';
+          icon = `<span class="cal-status-icon" style="color:var(--red)">X</span>`;
+          clickAttr = `onclick="openModal('${fmtDate(dt)}','${prog.program}','${prog.location || ''}')"`;
+        } else if (rec.status === '자율출석') {
+          cellClass = 'cal-self';
+          icon = `<span class="cal-status-icon" style="color:var(--blue)">자</span>`;
+        } else {
+          cellClass = 'cal-present';
+          icon = `<span class="cal-status-icon" style="color:var(--green)">O</span>`;
+        }
+      }
+
+      const todayClass = isTodayFlag ? ' cal-today' : '';
+
+      html += `
+        <div class="cal-cell ${cellClass}${todayClass}" ${clickAttr}>
+          <span class="cal-day">${d}</span>
+          ${icon}
+        </div>
+      `;
+    }
+
+    html += `</div></div></div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function changeMonth(delta) {
+  const newOffset = STATE.monthOffset + delta;
+  if (newOffset > 0) return;
+  STATE.monthOffset = newOffset;
+  renderMonthly();
+  renderStats();
 }
 
 // ══════ 수정요청 모달 ══════
