@@ -920,8 +920,8 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
         <option value="dayChange">요일 변경</option>
       </select>
       <select id="req-status-filter" style="background:#fff;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 12px;color:#111;font-family:inherit;font-size:13px;outline:none" onchange="renderRequestsList()">
-        <option value="대기">대기 중</option>
         <option value="">전체</option>
+        <option value="대기">대기 중</option>
         <option value="승인">승인됨</option>
         <option value="반려">반려됨</option>
       </select>
@@ -930,15 +930,15 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
   </div>
 
   <div id="req-summary" style="display:flex;gap:10px;margin-bottom:14px">
-    <div style="flex:1;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px;text-align:center">
+    <div onclick="filterReqByStatus('대기')" style="flex:1;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#fbbf24'" onmouseout="this.style.borderColor='#334155'">
       <div id="req-cnt-wait" style="font-size:1.5rem;font-weight:800;color:#fbbf24">0</div>
       <div style="font-size:.72rem;color:#64748b">대기</div>
     </div>
-    <div style="flex:1;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px;text-align:center">
+    <div onclick="filterReqByStatus('승인')" style="flex:1;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#34d399'" onmouseout="this.style.borderColor='#334155'">
       <div id="req-cnt-approved" style="font-size:1.5rem;font-weight:800;color:#34d399">0</div>
       <div style="font-size:.72rem;color:#64748b">승인</div>
     </div>
-    <div style="flex:1;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px;text-align:center">
+    <div onclick="filterReqByStatus('반려')" style="flex:1;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#f87171'" onmouseout="this.style.borderColor='#334155'">
       <div id="req-cnt-rejected" style="font-size:1.5rem;font-weight:800;color:#f87171">0</div>
       <div style="font-size:.72rem;color:#64748b">반려</div>
     </div>
@@ -3624,9 +3624,31 @@ async function loadAllRequests() {
   }
 }
 
+function filterReqByStatus(status) {
+  const sel = document.getElementById('req-status-filter');
+  // 같은 카드 다시 클릭 → 전체로 토글
+  sel.value = (sel.value === status) ? '' : status;
+  renderRequestsList();
+}
+
 function renderRequestsList() {
   const typeFilter = document.getElementById('req-type-filter').value;
   const statusFilter = document.getElementById('req-status-filter').value;
+
+  // 선택된 카드 하이라이트
+  document.querySelectorAll('#req-summary > div').forEach(el => {
+    el.style.borderColor = '#334155';
+    el.style.background = '#1e293b';
+  });
+  if (statusFilter) {
+    const idx = statusFilter === '대기' ? 0 : statusFilter === '승인' ? 1 : 2;
+    const card = document.querySelectorAll('#req-summary > div')[idx];
+    if (card) {
+      const c = statusFilter === '대기' ? '#fbbf24' : statusFilter === '승인' ? '#34d399' : '#f87171';
+      card.style.borderColor = c;
+      card.style.background = 'rgba(255,255,255,0.04)';
+    }
+  }
 
   // 통합 리스트
   let items = [];
