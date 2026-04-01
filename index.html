@@ -740,12 +740,13 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
         color:#7a8499;margin-left:8px;background:rgba(255,255,255,.06);
         border-radius:20px;padding:2px 10px">읽기 전용</span>
     </div>
-    <div id="manage-edit-btns" style="display:flex;gap:8px">
+    <div id="manage-edit-btns" style="display:flex;gap:8px;flex-wrap:wrap">
       <label class="btn btn-ghost btn-sm" style="cursor:pointer">
         📂 엑셀 업로드
         <input type="file" id="excel-upload" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleExcelUpload(event)">
       </label>
       <button class="btn btn-ghost btn-sm" onclick="downloadTemplate()">📥 양식 다운로드</button>
+      <button class="btn btn-ghost btn-sm" onclick="generateAttendanceSheet()" id="btn-gen-attend" title="학생명단 기반 출석부 엑셀 생성">📋 출석부 생성</button>
       <button class="btn btn-red btn-sm" onclick="toggleAddForm()">+ 추가</button>
     </div>
   </div>
@@ -2982,6 +2983,43 @@ function downloadTemplate() {
   XLSX.utils.book_append_sheet(wb, ws, '명단');
   XLSX.writeFile(wb, '학생명단_양식.xlsx');
   toast('양식 파일이 다운로드됐어요 📥', 'ok');
+}
+
+/* ══ 출석부 엑셀 생성 ══ */
+
+async function generateAttendanceSheet() {
+  const btn = document.getElementById('btn-gen-attend');
+  if (!btn) return;
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ 생성 중...';
+  btn.style.opacity = '.6';
+
+  try {
+    const result = await gasPost({ action: 'generateAttendanceSheet' });
+    if (!result.ok) {
+      toast(result.msg || '출석부 생성 실패', 'err');
+      return;
+    }
+
+    // 다운로드 URL로 이동
+    if (result.url) {
+      const a = document.createElement('a');
+      a.href = result.url;
+      a.download = result.fileName || '코스모스_출석부.xlsx';
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      toast('출석부 엑셀이 생성됐어요! 📋', 'ok');
+    }
+  } catch(e) {
+    toast('서버 연결 실패: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
+    btn.style.opacity = '1';
+  }
 }
 
 /* ══ 그룹 출석 요일 ══ */
