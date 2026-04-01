@@ -1083,11 +1083,11 @@ const S = {
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzrh2K5mEf1_FUJye_2R5WTgs9MVtQrFFM1QyyJc4jZIE-pWDOIRo6Bp-MvgnnW3vsh/exec";
 
 /* ══ Google Sheets API 호출 ══ */
-async function gasPost(payload, retry = 2) {
+async function gasPost(payload, retry = 2, timeoutMs = 15000) {
   for (let attempt = 0; attempt <= retry; attempt++) {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000); // 15초 타임아웃
+      const timeout = setTimeout(() => controller.abort(), timeoutMs);
       const res = await fetch(GAS_URL, {
         method: "POST",
         body: JSON.stringify(payload),
@@ -2996,7 +2996,7 @@ async function generateAttendanceSheet() {
   btn.style.opacity = '.6';
 
   try {
-    const result = await gasPost({ action: 'generateAttendanceSheet' });
+    const result = await gasPost({ action: 'generateAttendanceSheet' }, 1, 120000); // 2분 타임아웃, 1회 재시도
     if (!result.ok) {
       toast(result.msg || '출석부 생성 실패', 'err');
       return;
