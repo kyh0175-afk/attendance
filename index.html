@@ -1140,7 +1140,7 @@ async function gasPost(payload, retry = 2, timeoutMs = 15000) {
     loadStudentsFromSheets(); // 명단은 백그라운드 로드
 
   } else if (params.get('mode') === 'admin') {
-    // 관리용 페이지 — 교사/학생 탭 제외
+    // 관리용 페이지 — 교사/학생 탭 제외, 분석 탭 먼저
     document.getElementById('room-select-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'none';
     window._viewMode = false;
@@ -1149,8 +1149,8 @@ async function gasPost(payload, retry = 2, timeoutMs = 15000) {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
-    await loadStudentsFromSheets();
-    goTab('analysis'); // 분석 탭 먼저 열기
+    goTab('analysis'); // 분석 탭 즉시 열기 (명단 로드 기다리지 않음)
+    loadStudentsFromSheets(); // 백그라운드 로드 (명단/요청 탭 전환 시 사용)
     restoreTeacherSession();
 
   } else if (params.get('mode') === 'student') {
@@ -3133,10 +3133,10 @@ async function loadAnalysis() {
   const el = document.getElementById('analysis-content');
   el.innerHTML = '<div class="empty"><div style="font-size:24px;margin-bottom:8px">⏳</div>데이터를 불러오는 중...</div>';
 
-  // 출석기록 + 학생명단 동시 로드
+  // 출석기록(최근 30일) + 학생명단 동시 로드
   const [histResult, stuResult] = await Promise.all([
-    gasPost({action: "getHistory"}, 2, 30000),
-    gasPost({action: "getStudents"}, 2, 30000)
+    gasPost({action: "getHistory", days: 30}, 2, 30000),
+    S.students.length ? Promise.resolve({ok:true, students:[]}) : gasPost({action: "getStudents"}, 2, 30000)
   ]);
 
   if (!histResult.ok) { el.innerHTML = '<div class="empty">데이터 로드 실패<br><button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="loadAnalysis()">🔄 다시 시도</button></div>'; return; }
