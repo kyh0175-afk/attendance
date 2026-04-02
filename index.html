@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -18,66 +19,65 @@ body {
 a { color: inherit; }
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
 
-
 :root {
-  --ink: #0e1117;
-  --card: rgba(255,255,255,0.05);
-  --card2: rgba(255,255,255,0.09);
-  --border: rgba(255,255,255,0.1);
-  --border2: rgba(255,255,255,0.18);
-  --accent: #e94560;
-  --accent2: #f5a623;
-  --ok: #00c896;
-  --sky: #5eb8ff;
-  --text: #edf0f7;
-  --muted: #7a8499;
-  --r: 14px;
-  --r-sm: 10px;
+–ink: #0e1117;
+–card: rgba(255,255,255,0.05);
+–card2: rgba(255,255,255,0.09);
+–border: rgba(255,255,255,0.1);
+–border2: rgba(255,255,255,0.18);
+–accent: #e94560;
+–accent2: #f5a623;
+–ok: #00c896;
+–sky: #5eb8ff;
+–text: #edf0f7;
+–muted: #7a8499;
+–r: 14px;
+–r-sm: 10px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{
-  font-family:'Noto Sans KR',sans-serif;
-  background:#0e1117;color:#edf0f7;
-  min-height:100vh;font-size:18px;line-height:1.7;
-  -webkit-tap-highlight-color:transparent;
+font-family:‘Noto Sans KR’,sans-serif;
+background:#0e1117;color:#edf0f7;
+min-height:100vh;font-size:18px;line-height:1.7;
+-webkit-tap-highlight-color:transparent;
 }
 body::before{
-  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:
-    radial-gradient(ellipse 80% 60% at 20% 0%,rgba(99,102,241,.13) 0%,transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 90%,rgba(20,184,166,.1) 0%,transparent 60%);
+content:’’;position:fixed;inset:0;z-index:0;pointer-events:none;
+background:
+radial-gradient(ellipse 80% 60% at 20% 0%,rgba(99,102,241,.13) 0%,transparent 60%),
+radial-gradient(ellipse 60% 50% at 80% 90%,rgba(20,184,166,.1) 0%,transparent 60%);
 }
 .wrap{position:relative;z-index:1}
 
 /* topbar */
 .topbar{
-  display:flex;align-items:center;gap:12px;
-  padding:0 20px;height:56px;
-  background:rgba(14,17,23,.88);
-  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  border-bottom:1px solid rgba(255,255,255,0.1);
-  position:sticky;top:0;z-index:200;
+display:flex;align-items:center;gap:12px;
+padding:0 20px;height:56px;
+background:rgba(14,17,23,.88);
+backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+border-bottom:1px solid rgba(255,255,255,0.1);
+position:sticky;top:0;z-index:200;
 }
 .logo{
-  font-size:22px;font-weight:900;letter-spacing:-.5px;white-space:nowrap;
-  color:#f59e0b;
+font-size:22px;font-weight:900;letter-spacing:-.5px;white-space:nowrap;
+color:#f59e0b;
 }
 .topbar-nav{display:flex;gap:2px;margin-left:auto}
 .nb{font-size:14px;
-  display:flex;align-items:center;gap:6px;
-  padding:7px 13px;border-radius:8px;border:none;
-  background:transparent;color:#7a8499;
-  font-family:inherit;font-size:13px;font-weight:500;
-  cursor:pointer;transition:all .18s;
+display:flex;align-items:center;gap:6px;
+padding:7px 13px;border-radius:8px;border:none;
+background:transparent;color:#7a8499;
+font-family:inherit;font-size:13px;font-weight:500;
+cursor:pointer;transition:all .18s;
 }
 .nb:hover{background:rgba(255,255,255,0.09);color:#edf0f7}
 .nb.on{background:rgba(255,255,255,0.09);color:#edf0f7}
 .nb .lbl{display:none}
 @media(min-width:520px){.nb .lbl{display:inline;font-size:16px}}
 .live-dot{
-  width:7px;height:7px;border-radius:50%;
-  background:#e94560;display:none;flex-shrink:0;
-  animation:pulse 1.4s ease-in-out infinite;
+width:7px;height:7px;border-radius:50%;
+background:#e94560;display:none;flex-shrink:0;
+animation:pulse 1.4s ease-in-out infinite;
 }
 .live-dot.on{display:block}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.75)}}
@@ -88,8 +88,8 @@ body::before{
 
 /* card */
 .card{
-  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
-  border-radius:14px;padding:22px;margin-bottom:14px;
+background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+border-radius:14px;padding:22px;margin-bottom:14px;
 }
 .card-head{font-size:14px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#7a8499;margin-bottom:16px}
 .row-btw{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -98,16 +98,16 @@ body::before{
 .field{margin-bottom:14px}
 .field label{display:block;font-size:11px;font-weight:600;color:#7a8499;margin-bottom:5px;letter-spacing:.4px}
 .field input,.field select{
-  width:100%;background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,0.1);border-radius:10px;
-  padding:10px 13px;color:#edf0f7;font-family:inherit;font-size:14px;
-  outline:none;transition:border-color .2s,background .2s;
-  -webkit-appearance:none;appearance:none;
+width:100%;background:rgba(255,255,255,.05);
+border:1px solid rgba(255,255,255,0.1);border-radius:10px;
+padding:10px 13px;color:#edf0f7;font-family:inherit;font-size:14px;
+outline:none;transition:border-color .2s,background .2s;
+-webkit-appearance:none;appearance:none;
 }
 .field input:focus,.field select:focus{border-color:#e94560;background:rgba(233,69,96,.06)}
 .field select{
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a8499' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
+background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘8’ viewBox=‘0 0 12 8’%3E%3Cpath d=‘M1 1l5 5 5-5’ stroke=’%237a8499’ stroke-width=‘1.5’ fill=‘none’ stroke-linecap=‘round’/%3E%3C/svg%3E”);
+background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
 }
 .field select option{background:#1a1f2e;color:#edf0f7}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -115,10 +115,10 @@ body::before{
 
 /* buttons */
 .btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:7px;
-  padding:10px 20px;border:none;border-radius:10px;
-  font-family:inherit;font-size:13px;font-weight:600;
-  cursor:pointer;transition:all .15s;white-space:nowrap;
+display:inline-flex;align-items:center;justify-content:center;gap:7px;
+padding:10px 20px;border:none;border-radius:10px;
+font-family:inherit;font-size:13px;font-weight:600;
+cursor:pointer;transition:all .15s;white-space:nowrap;
 }
 .btn-red{background:#e94560;color:#fff}
 .btn-red:hover{filter:brightness(1.12);transform:translateY(-1px)}
@@ -137,7 +137,7 @@ body::before{
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
 @media(max-width:480px){.stats{grid-template-columns:repeat(2,1fr)}}
 .stat{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:20px 12px;text-align:center}
-.sn{font-family:'DM Mono',monospace;font-size:42px;font-weight:700;line-height:1}
+.sn{font-family:‘DM Mono’,monospace;font-size:42px;font-weight:700;line-height:1}
 .sl{font-size:17px;color:#7a8499;margin-top:6px;letter-spacing:.4px}
 .c-sky{color:#5eb8ff}.c-ok{color:#00c896}.c-red{color:#e94560}.c-amber{color:#f5a623}
 
@@ -145,21 +145,21 @@ body::before{
 .qr-layout{display:flex;gap:20px;align-items:flex-start}
 @media(max-width:640px){.qr-layout{flex-direction:column}}
 .qr-panel{
-  flex-shrink:0;width:380px;
-  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
-  border-radius:14px;padding:18px 22px;
-  display:flex;flex-direction:column;align-items:center;gap:10px;
+flex-shrink:0;width:380px;
+background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+border-radius:14px;padding:18px 22px;
+display:flex;flex-direction:column;align-items:center;gap:10px;
 }
 @media(max-width:640px){.qr-panel{width:100%}}
 .qr-box{background:#fff;border-radius:10px;padding:10px;line-height:0}
-.timer-num{font-family:'DM Mono',monospace;font-size:52px;font-weight:700;letter-spacing:-1px;transition:color .4s;line-height:1}
+.timer-num{font-family:‘DM Mono’,monospace;font-size:52px;font-weight:700;letter-spacing:-1px;transition:color .4s;line-height:1}
 .timer-lbl{font-size:15px;color:#7a8499;letter-spacing:1px;text-transform:uppercase;margin-top:2px}
 .t-ok{color:#00c896}.t-warn{color:#f5a623}.t-end{color:#e94560}
 .live-pill{
-  display:flex;align-items:center;gap:6px;
-  background:rgba(233,69,96,.14);border:1px solid rgba(233,69,96,.28);
-  color:#ff7096;padding:5px 12px;border-radius:20px;
-  font-size:15px;font-weight:700;
+display:flex;align-items:center;gap:6px;
+background:rgba(233,69,96,.14);border:1px solid rgba(233,69,96,.28);
+color:#ff7096;padding:5px 12px;border-radius:20px;
+font-size:15px;font-weight:700;
 }
 .pill-dot{width:6px;height:6px;border-radius:50%;background:#e94560;animation:pulse 1.2s infinite}
 .qr-hint{font-size:17px;color:#7a8499;text-align:center}
@@ -171,29 +171,29 @@ body::before{
 
 /* 넘버패드 */
 .numpad-wrap{
-  position:fixed;top:64px;
-  background:rgba(20,24,35,.97);backdrop-filter:blur(12px);
-  border:1px solid rgba(255,255,255,0.12);
-  border-radius:16px;z-index:9000;
-  display:flex;flex-direction:column;align-items:center;
-  gap:10px;padding:16px 20px;
-  box-shadow:0 8px 40px rgba(0,0,0,.6);
+position:fixed;top:64px;
+background:rgba(20,24,35,.97);backdrop-filter:blur(12px);
+border:1px solid rgba(255,255,255,0.12);
+border-radius:16px;z-index:9000;
+display:flex;flex-direction:column;align-items:center;
+gap:10px;padding:16px 20px;
+box-shadow:0 8px 40px rgba(0,0,0,.6);
 }
 .numpad-display{
-  font-family:'DM Mono',monospace;font-size:36px;font-weight:700;
-  letter-spacing:6px;color:#edf0f7;
-  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
-  border-radius:12px;padding:14px 24px;min-width:220px;text-align:center;
-  min-height:68px;
+font-family:‘DM Mono’,monospace;font-size:36px;font-weight:700;
+letter-spacing:6px;color:#edf0f7;
+background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+border-radius:12px;padding:14px 24px;min-width:220px;text-align:center;
+min-height:68px;
 }
 .numpad-display.full{color:#00c896;border-color:rgba(0,200,150,.35)}
 .numpad-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;width:100%;max-width:420px}
 .npbtn{
-  padding:14px 0;font-size:20px;font-weight:700;
-  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
-  border-radius:10px;color:#edf0f7;cursor:pointer;
-  transition:all .1s;font-family:'DM Mono',monospace;
-  -webkit-tap-highlight-color:transparent;user-select:none;
+padding:14px 0;font-size:20px;font-weight:700;
+background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
+border-radius:10px;color:#edf0f7;cursor:pointer;
+transition:all .1s;font-family:‘DM Mono’,monospace;
+-webkit-tap-highlight-color:transparent;user-select:none;
 }
 .npbtn:active{background:rgba(255,255,255,0.18);transform:scale(.95)}
 .npbtn-del{background:rgba(233,69,96,.1);border-color:rgba(233,69,96,.25);color:#ff7096}
@@ -210,45 +210,45 @@ tbody tr{transition:background .12s}
 tbody tr:hover td{background:rgba(255,255,255,0.09)}
 tbody td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
 tbody tr:last-child td{border-bottom:none}
-.mono{font-family:'DM Mono',monospace;font-size:14px;font-weight:600;color:#7a8499}
+.mono{font-family:‘DM Mono’,monospace;font-size:14px;font-weight:600;color:#7a8499}
 .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700}
 .b-ok{background:rgba(0,200,150,.14);color:#00c896;border:1px solid rgba(0,200,150,.28)}
 .b-no{background:rgba(233,69,96,.1);color:#ff7096;border:1px solid rgba(233,69,96,.2)}
 
 /* student page (탭 내) */
 .s-hero{
-  min-height:72vh;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  padding:32px 20px;text-align:center;
+min-height:72vh;display:flex;flex-direction:column;
+align-items:center;justify-content:center;
+padding:32px 20px;text-align:center;
 }
 .s-icon{
-  width:72px;height:72px;border-radius:20px;margin-bottom:22px;
-  background:linear-gradient(135deg,#e94560,#ff6b35);
-  display:flex;align-items:center;justify-content:center;font-size:32px;
-  box-shadow:0 14px 44px rgba(233,69,96,.3);
+width:72px;height:72px;border-radius:20px;margin-bottom:22px;
+background:linear-gradient(135deg,#e94560,#ff6b35);
+display:flex;align-items:center;justify-content:center;font-size:32px;
+box-shadow:0 14px 44px rgba(233,69,96,.3);
 }
 .s-title{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
 .s-sub{color:#7a8499;font-size:14px;line-height:1.75;margin-bottom:30px;white-space:pre-line}
 .big-input{
-  width:100%;max-width:320px;
-  background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,0.1);border-radius:14px;
-  padding:17px 20px;color:#edf0f7;
-  font-family:'DM Mono',monospace;font-size:20px;text-align:center;outline:none;
-  transition:border-color .2s,background .2s;margin-bottom:12px;
-  -webkit-appearance:none;
+width:100%;max-width:320px;
+background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,0.1);border-radius:14px;
+padding:17px 20px;color:#edf0f7;
+font-family:‘DM Mono’,monospace;font-size:20px;text-align:center;outline:none;
+transition:border-color .2s,background .2s;margin-bottom:12px;
+-webkit-appearance:none;
 }
 .big-input:focus{border-color:#e94560;background:rgba(233,69,96,.07)}
-.big-input::placeholder{font-family:'Noto Sans KR',sans-serif;font-size:14px;color:#7a8499}
+.big-input::placeholder{font-family:‘Noto Sans KR’,sans-serif;font-size:14px;color:#7a8499}
 .err-box{
-  background:rgba(233,69,96,.1);border:1px solid rgba(233,69,96,.28);
-  border-radius:8px;padding:10px 16px;color:#ff7096;font-size:13px;
-  max-width:320px;margin-bottom:12px;display:none;
+background:rgba(233,69,96,.1);border:1px solid rgba(233,69,96,.28);
+border-radius:8px;padding:10px 16px;color:#ff7096;font-size:13px;
+max-width:320px;margin-bottom:12px;display:none;
 }
 .ok-card{
-  background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.24);
-  border-radius:18px;padding:32px 28px;max-width:340px;
-  display:none;flex-direction:column;align-items:center;gap:6px;
-  animation:fadeUp .35s ease-out;
+background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.24);
+border-radius:18px;padding:32px 28px;max-width:340px;
+display:none;flex-direction:column;align-items:center;gap:6px;
+animation:fadeUp .35s ease-out;
 }
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .ok-icon{font-size:48px;margin-bottom:10px}
@@ -259,54 +259,54 @@ tbody tr:last-child td{border-bottom:none}
 #student-fullscreen{display:none;min-height:100vh;background:#0e1117}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* 모드별 초기 깜빡임 방지 */
-html[data-mode="view"] #pg-teacher,
-html[data-mode="view"] #pg-student,
-html[data-mode="admin"] #pg-teacher,
-html[data-mode="admin"] #pg-student,
-html[data-mode="student"] #pg-teacher { display:none !important; }
+html[data-mode=“view”] #pg-teacher,
+html[data-mode=“view”] #pg-student,
+html[data-mode=“admin”] #pg-teacher,
+html[data-mode=“admin”] #pg-student,
+html[data-mode=“student”] #pg-teacher { display:none !important; }
 .sf-page{
-  min-height:100vh;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  padding:40px 24px;text-align:center;
+min-height:100vh;display:flex;flex-direction:column;
+align-items:center;justify-content:center;
+padding:40px 24px;text-align:center;
 }
 
 /* manage */
 .s-row{
-  display:flex;align-items:center;gap:12px;
-  padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .12s;
+display:flex;align-items:center;gap:12px;
+padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .12s;
 }
 .s-row:hover{background:rgba(255,255,255,0.09)}
 .s-row:last-child{border-bottom:none}
 .ava{
-  width:34px;height:34px;border-radius:50%;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:700;font-size:13px;color:#fff;
+width:34px;height:34px;border-radius:50%;flex-shrink:0;
+display:flex;align-items:center;justify-content:center;
+font-weight:700;font-size:13px;color:#fff;
 }
 .sr-name{font-weight:700;font-size:16px}
-.sr-no{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:#edf0f7}
+.sr-no{font-family:‘DM Mono’,monospace;font-size:16px;font-weight:700;color:#edf0f7}
 .sr-cls{font-size:11px;color:#7a8499;min-width:78px}
 
 /* history */
 .hist-row{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px;border-bottom:1px solid rgba(255,255,255,.04);
-  cursor:pointer;transition:background .12s;
+display:flex;align-items:center;justify-content:space-between;
+padding:14px;border-bottom:1px solid rgba(255,255,255,.04);
+cursor:pointer;transition:background .12s;
 }
 .hist-row:hover{background:rgba(255,255,255,0.09)}
 .hist-row:last-child{border-bottom:none}
 .hist-subj{font-weight:700;font-size:14px}
 .hist-info{font-size:11px;color:#7a8499;margin-top:3px}
 .hist-detail{display:none;font-size:12px;color:#7a8499;margin-top:8px;line-height:1.8}
-.hist-rate{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:#00c896;white-space:nowrap}
+.hist-rate{font-family:‘DM Mono’,monospace;font-size:16px;font-weight:700;color:#00c896;white-space:nowrap}
 
 .empty{text-align:center;padding:48px 20px;color:#7a8499;font-size:17px}
 .empty-icon{font-size:32px;margin-bottom:10px}
 
 /* modal */
 .modal-bg{
-  display:none;position:fixed;inset:0;z-index:9999;
-  background:rgba(0,0,0,.75);backdrop-filter:blur(8px);
-  align-items:center;justify-content:center;padding:20px;
+display:none;position:fixed;inset:0;z-index:9999;
+background:rgba(0,0,0,.75);backdrop-filter:blur(8px);
+align-items:center;justify-content:center;padding:20px;
 }
 .modal-bg.on{display:flex}
 .modal{background:#1a1f2e;border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:26px;width:100%;max-width:380px}
@@ -316,19 +316,21 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
 
 /* toast */
 .toast{
-  position:fixed;bottom:24px;left:50%;
-  transform:translateX(-50%) translateY(60px);
-  background:#1e2435;border:1px solid rgba(255,255,255,0.1);
-  border-radius:10px;padding:11px 18px;
-  font-size:17px;font-weight:500;
-  z-index:400;transition:transform .28s cubic-bezier(.34,1.56,.64,1);
-  pointer-events:none;white-space:nowrap;
+position:fixed;bottom:24px;left:50%;
+transform:translateX(-50%) translateY(60px);
+background:#1e2435;border:1px solid rgba(255,255,255,0.1);
+border-radius:10px;padding:11px 18px;
+font-size:17px;font-weight:500;
+z-index:400;transition:transform .28s cubic-bezier(.34,1.56,.64,1);
+pointer-events:none;white-space:nowrap;
 }
 .toast.show{transform:translateX(-50%) translateY(0)}
 .toast.ok{border-color:rgba(0,200,150,.35);color:#00c896}
 .toast.err{border-color:rgba(233,69,96,.35);color:#ff7096}
 </style>
+
 <!-- 모드별 초기 화면 즉시 처리 (JS 로드 전 깜빡임 방지) -->
+
 <script>
 (function() {
   const p = new URLSearchParams(location.search);
@@ -339,23 +341,26 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
   }
 })();
 </script>
+
 </head>
 <body>
 <div class="wrap" id="app">
 
 <!-- ══ 메인 화면 ══ -->
+
 <div id="main-screen" style="display:none;min-height:100vh;
   flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;position:relative">
 
   <!-- 관리용 버튼 (우측 상단) -->
-  <button onclick="goAdmin()"
-    style="position:absolute;top:24px;right:24px;
-    background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);
-    border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;transition:all .2s"
-    onmouseover="this.style.background='rgba(255,255,255,0.12)'"
-    onmouseout="this.style.background='rgba(255,255,255,0.07)'"
-    title="관리용 페이지">⚙️</button>
+
+<button onclick="goAdmin()"
+style="position:absolute;top:24px;right:24px;
+background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);
+border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;
+display:flex;align-items:center;justify-content:center;transition:all .2s"
+onmouseover="this.style.background='rgba(255,255,255,0.12)'"
+onmouseout="this.style.background='rgba(255,255,255,0.07)'"
+title="관리용 페이지">⚙️</button>
 
   <div style="font-size:38px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px;color:#f59e0b">
     코스모스 독서시간 출석
@@ -374,20 +379,24 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
       <div style="font-size:12px;color:#7a8499;line-height:1.6">QR 출석 처리<br>장소별 접속</div>
     </button>
 
-    <!-- 확인용 -->
-    <button onclick="goView()"
-      style="flex:1;background:rgba(94,184,255,.15);border:1px solid rgba(94,184,255,.4);
-      border-radius:20px;padding:36px 20px;cursor:pointer;transition:all .2s;text-align:center"
-      onmouseover="this.style.transform='translateY(-3px)';this.style.filter='brightness(1.15)'"
-      onmouseout="this.style.transform='';this.style.filter=''">
-      <div style="font-size:36px;margin-bottom:12px">📊</div>
-      <div style="font-size:20px;font-weight:800;color:#5eb8ff;margin-bottom:6px">확인용</div>
-      <div style="font-size:12px;color:#7a8499;line-height:1.6">기록 · 분석<br>출석 현황 조회</div>
-    </button>
+```
+<!-- 확인용 -->
+<button onclick="goView()"
+  style="flex:1;background:rgba(94,184,255,.15);border:1px solid rgba(94,184,255,.4);
+  border-radius:20px;padding:36px 20px;cursor:pointer;transition:all .2s;text-align:center"
+  onmouseover="this.style.transform='translateY(-3px)';this.style.filter='brightness(1.15)'"
+  onmouseout="this.style.transform='';this.style.filter=''">
+  <div style="font-size:36px;margin-bottom:12px">📊</div>
+  <div style="font-size:20px;font-weight:800;color:#5eb8ff;margin-bottom:6px">확인용</div>
+  <div style="font-size:12px;color:#7a8499;line-height:1.6">기록 · 분석<br>출석 현황 조회</div>
+</button>
+```
+
   </div>
 </div>
 
 <!-- ══ 사후출석 이름 입력 모달 ══ -->
+
 <div class="modal-bg" id="modal-late-name">
   <div class="modal" style="max-width:360px;text-align:center">
     <div style="font-size:22px;margin-bottom:8px">👤</div>
@@ -407,6 +416,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
 </div>
 
 <!-- ══ 비밀번호 모달 ══ -->
+
 <div class="modal-bg" id="modal-pw">
   <div class="modal" style="max-width:340px;text-align:center">
     <div style="font-size:24px;margin-bottom:8px" id="pw-icon">🔒</div>
@@ -427,6 +437,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
 </div>
 
 <!-- ══ 장소 선택 화면 ══ -->
+
 <div id="room-select-screen" style="display:none;min-height:100vh;
   display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px">
   <div style="font-size:38px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px;color:#f59e0b">
@@ -438,6 +449,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
 </div>
 
 <!-- ══ 상단바 ══ -->
+
 <div class="topbar" id="topbar">
   <div class="logo" onclick="location.href=location.pathname" style="cursor:pointer;color:#f59e0b !important" title="처음 화면으로">코스모스 독서시간 출석</div>
   <div class="live-dot" id="live-dot"></div>
@@ -452,6 +464,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
 </div>
 
 <!-- ══ 교사 탭 ══ -->
+
 <div class="page on" id="pg-teacher">
   <div id="form-area">
     <div class="card">
@@ -508,117 +521,121 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
   <div id="session-area" style="display:none">
     <div class="qr-layout">
 
-      <!-- ── 왼쪽: QR 패널 ── -->
-      <div class="qr-panel">
-        <div class="live-pill"><span class="pill-dot"></span><span id="sess-lbl">진행 중</span></div>
-        <div class="qr-box" id="qr-render"></div>
-        <div style="text-align:center">
-          <div class="timer-num t-ok" id="timer-disp">10:00</div>
-          <div class="timer-lbl">남은 시간</div>
+```
+  <!-- ── 왼쪽: QR 패널 ── -->
+  <div class="qr-panel">
+    <div class="live-pill"><span class="pill-dot"></span><span id="sess-lbl">진행 중</span></div>
+    <div class="qr-box" id="qr-render"></div>
+    <div style="text-align:center">
+      <div class="timer-num t-ok" id="timer-disp">10:00</div>
+      <div class="timer-lbl">남은 시간</div>
+    </div>
+    <div class="qr-hint" id="qr-hint">스캔하면 학생 출석 화면으로 이동</div>
+    <div class="qr-btns">
+      <button class="btn btn-ghost" onclick="refreshQR()">🔄 갱신</button>
+      <button class="btn btn-ghost btn-stop" onclick="openEndModal()">⏹ 종료</button>
+    </div>
+  </div>
+
+  <!-- ── 오른쪽: 출석 패널 ── -->
+  <div class="att-panel">
+    <div class="card" style="margin-bottom:0;position:relative">
+
+      <!-- 상단: 출석현황 헤더 + 인원/출석률 한 줄 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div style="font-weight:700;font-size:15px">출석 현황</div>
+        <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📥 CSV 저장</button>
+      </div>
+
+      <!-- 통계 한 줄 -->
+      <div id="stats-bar" style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+        <!-- 전체 + 학년별 -->
+        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 14px;flex-shrink:0">
+          <div style="text-align:center">
+            <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;line-height:1;color:#5eb8ff" id="s-total">0</div>
+            <div style="font-size:13px;color:#7a8499;margin-top:2px">전체</div>
+          </div>
+          <div style="width:1px;height:36px;background:rgba(255,255,255,0.1)"></div>
+          <div style="display:flex;flex-direction:column;gap:3px" id="s-grade-list">
+            <div style="font-size:12px;color:#7a8499">—</div>
+          </div>
         </div>
-        <div class="qr-hint" id="qr-hint">스캔하면 학생 출석 화면으로 이동</div>
-        <div class="qr-btns">
-          <button class="btn btn-ghost" onclick="refreshQR()">🔄 갱신</button>
-          <button class="btn btn-ghost btn-stop" onclick="openEndModal()">⏹ 종료</button>
+        <!-- 출석 + 미출석 합침 -->
+        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 16px;flex:1;justify-content:center">
+          <div style="text-align:center">
+            <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;line-height:1;color:#00c896" id="s-present">0</div>
+            <div style="font-size:13px;color:#7a8499;margin-top:2px">출석</div>
+          </div>
+          <div style="font-size:20px;color:rgba(255,255,255,0.2);font-weight:300">/</div>
+          <div style="text-align:center">
+            <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;line-height:1;color:#e94560" id="s-absent">0</div>
+            <div style="font-size:13px;color:#7a8499;margin-top:2px">미출석</div>
+          </div>
+        </div>
+        <!-- 출석률 -->
+        <div style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 16px">
+          <div style="text-align:center">
+            <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;line-height:1;color:#f5a623" id="s-rate">0%</div>
+            <div style="font-size:13px;color:#7a8499;margin-top:2px">출석률</div>
+          </div>
         </div>
       </div>
 
-      <!-- ── 오른쪽: 출석 패널 ── -->
-      <div class="att-panel">
-        <div class="card" style="margin-bottom:0;position:relative">
+      <!-- 수동 출석 입력 (넘버패드 트리거) -->
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input id="manual-no" type="text" inputmode="numeric" placeholder="학번 직접 입력 (인터넷 불가 학생)"
+          maxlength="5" pattern="[0-9]{5}"
+          style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,0.1);
+          border-radius:8px;padding:8px 12px;color:#edf0f7;font-family:'DM Mono',monospace;font-size:15px;outline:none;cursor:pointer"
+          onkeydown="if(event.key==='Enter')manualAttend()"
+          onclick="openNumpad()"
+          onfocus="openNumpad();this.blur()"
+          readonly>
+        <button class="btn btn-green btn-sm" onclick="manualAttend()">✓ 수동 출석</button>
+      </div>
 
-          <!-- 상단: 출석현황 헤더 + 인원/출석률 한 줄 -->
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-            <div style="font-weight:700;font-size:15px">출석 현황</div>
-            <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📥 CSV 저장</button>
-          </div>
+      <div class="prog-bg"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+      <div class="prog-lbl" id="prog-lbl">0 / 0명</div>
+      <table>
+        <thead><tr><th>이름</th><th>학번</th><th>시각</th><th>상태</th><th></th></tr></thead>
+        <tbody id="att-body"></tbody>
+      </table>
 
-          <!-- 통계 한 줄 -->
-          <div id="stats-bar" style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-            <!-- 전체 + 학년별 -->
-            <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 14px;flex-shrink:0">
-              <div style="text-align:center">
-                <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;line-height:1;color:#5eb8ff" id="s-total">0</div>
-                <div style="font-size:13px;color:#7a8499;margin-top:2px">전체</div>
-              </div>
-              <div style="width:1px;height:36px;background:rgba(255,255,255,0.1)"></div>
-              <div style="display:flex;flex-direction:column;gap:3px" id="s-grade-list">
-                <div style="font-size:12px;color:#7a8499">—</div>
-              </div>
-            </div>
-            <!-- 출석 + 미출석 합침 -->
-            <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 16px;flex:1;justify-content:center">
-              <div style="text-align:center">
-                <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;line-height:1;color:#00c896" id="s-present">0</div>
-                <div style="font-size:13px;color:#7a8499;margin-top:2px">출석</div>
-              </div>
-              <div style="font-size:20px;color:rgba(255,255,255,0.2);font-weight:300">/</div>
-              <div style="text-align:center">
-                <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;line-height:1;color:#e94560" id="s-absent">0</div>
-                <div style="font-size:13px;color:#7a8499;margin-top:2px">미출석</div>
-              </div>
-            </div>
-            <!-- 출석률 -->
-            <div style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 16px">
-              <div style="text-align:center">
-                <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;line-height:1;color:#f5a623" id="s-rate">0%</div>
-                <div style="font-size:13px;color:#7a8499;margin-top:2px">출석률</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 수동 출석 입력 (넘버패드 트리거) -->
-          <div style="display:flex;gap:8px;margin-bottom:10px">
-            <input id="manual-no" type="text" inputmode="numeric" placeholder="학번 직접 입력 (인터넷 불가 학생)"
-              maxlength="5" pattern="[0-9]{5}"
-              style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,0.1);
-              border-radius:8px;padding:8px 12px;color:#edf0f7;font-family:'DM Mono',monospace;font-size:15px;outline:none;cursor:pointer"
-              onkeydown="if(event.key==='Enter')manualAttend()"
-              onclick="openNumpad()"
-              onfocus="openNumpad();this.blur()"
-              readonly>
-            <button class="btn btn-green btn-sm" onclick="manualAttend()">✓ 수동 출석</button>
-          </div>
-
-          <div class="prog-bg"><div class="prog-fill" id="prog" style="width:0%"></div></div>
-          <div class="prog-lbl" id="prog-lbl">0 / 0명</div>
-          <table>
-            <thead><tr><th>이름</th><th>학번</th><th>시각</th><th>상태</th><th></th></tr></thead>
-            <tbody id="att-body"></tbody>
-          </table>
-
-          <!-- 인앱 넘버패드 -->
-          <div class="numpad-wrap" id="numpad" style="display:none">
-            <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
-              <div style="font-size:13px;color:#7a8499;font-weight:600;letter-spacing:.5px">학번 입력</div>
-              <button onclick="closeNumpad()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:50%;width:28px;height:28px;color:#7a8499;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:all .15s" onmouseover="this.style.background='rgba(255,255,255,0.15)';this.style.color='#edf0f7'" onmouseout="this.style.background='rgba(255,255,255,0.07)';this.style.color='#7a8499'">×</button>
-            </div>
-            <div class="numpad-display" id="numpad-display" style="width:100%;box-sizing:border-box">—</div>
-            <div class="numpad-grid">
-              <button class="npbtn" onclick="npInput('1')">1</button>
-              <button class="npbtn" onclick="npInput('2')">2</button>
-              <button class="npbtn" onclick="npInput('3')">3</button>
-              <button class="npbtn" onclick="npInput('4')">4</button>
-              <button class="npbtn" onclick="npInput('5')">5</button>
-              <button class="npbtn npbtn-cancel" onclick="closeNumpad()">취소</button>
-              <button class="npbtn" onclick="npInput('6')">6</button>
-              <button class="npbtn" onclick="npInput('7')">7</button>
-              <button class="npbtn" onclick="npInput('8')">8</button>
-              <button class="npbtn" onclick="npInput('9')">9</button>
-              <button class="npbtn" onclick="npInput('0')">0</button>
-              <button class="npbtn npbtn-del" onclick="npDelete()">⌫</button>
-            </div>
-            <button class="npbtn npbtn-ok" id="numpad-ok" style="width:100%" onclick="npConfirm()" disabled>
-              ✓ 출석 처리
-            </button>
-          </div>
+      <!-- 인앱 넘버패드 -->
+      <div class="numpad-wrap" id="numpad" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+          <div style="font-size:13px;color:#7a8499;font-weight:600;letter-spacing:.5px">학번 입력</div>
+          <button onclick="closeNumpad()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:50%;width:28px;height:28px;color:#7a8499;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:all .15s" onmouseover="this.style.background='rgba(255,255,255,0.15)';this.style.color='#edf0f7'" onmouseout="this.style.background='rgba(255,255,255,0.07)';this.style.color='#7a8499'">×</button>
         </div>
+        <div class="numpad-display" id="numpad-display" style="width:100%;box-sizing:border-box">—</div>
+        <div class="numpad-grid">
+          <button class="npbtn" onclick="npInput('1')">1</button>
+          <button class="npbtn" onclick="npInput('2')">2</button>
+          <button class="npbtn" onclick="npInput('3')">3</button>
+          <button class="npbtn" onclick="npInput('4')">4</button>
+          <button class="npbtn" onclick="npInput('5')">5</button>
+          <button class="npbtn npbtn-cancel" onclick="closeNumpad()">취소</button>
+          <button class="npbtn" onclick="npInput('6')">6</button>
+          <button class="npbtn" onclick="npInput('7')">7</button>
+          <button class="npbtn" onclick="npInput('8')">8</button>
+          <button class="npbtn" onclick="npInput('9')">9</button>
+          <button class="npbtn" onclick="npInput('0')">0</button>
+          <button class="npbtn npbtn-del" onclick="npDelete()">⌫</button>
+        </div>
+        <button class="npbtn npbtn-ok" id="numpad-ok" style="width:100%" onclick="npConfirm()" disabled>
+          ✓ 출석 처리
+        </button>
       </div>
     </div>
   </div>
 </div>
+```
+
+  </div>
+</div>
 
 <!-- ══ 학생 탭 (일반 탭 접속용) ══ -->
+
 <div class="page" id="pg-student">
   <div class="s-hero">
     <div id="s-form-wrap" style="display:flex;flex-direction:column;align-items:center;text-align:center;width:100%">
@@ -643,6 +660,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
 </div>
 
 <!-- ══ 학생 전용 전체화면 (QR 스캔 진입) ══ -->
+
 <div id="student-fullscreen">
   <div class="sf-page">
     <div id="sf-form" style="display:flex;flex-direction:column;align-items:center;text-align:center;width:100%">
@@ -661,78 +679,82 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
         <button class="btn btn-green" id="sf-attend-btn" style="padding:15px 48px;font-size:16px" onclick="doAttendFull()">✓ 출석하기</button>
       </div>
 
-      <!-- 미등록 학생 자가 등록 폼 -->
-      <div id="sf-register-wrap" style="display:none;flex-direction:column;align-items:center;width:100%;margin-top:8px">
-        <div style="font-size:13px;color:#7a8499;margin-bottom:16px;line-height:1.7;text-align:center">
-          명단에 없는 학번이에요.<br>이름을 입력하면 바로 출석할 수 있어요.
-        </div>
-        <div style="width:100%;max-width:320px;margin-bottom:10px">
-          <div style="font-size:11px;color:#7a8499;margin-bottom:6px;text-align:left">학번</div>
-          <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:#edf0f7;
-            background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;
-            padding:12px 16px;text-align:center" id="sf-reg-no-display"></div>
-        </div>
-        <div style="width:100%;max-width:320px;margin-bottom:14px">
-          <div style="font-size:11px;color:#7a8499;margin-bottom:6px;text-align:left">이름</div>
-          <input class="big-input" id="sf-reg-name" type="text" placeholder="이름 입력"
-            style="margin-bottom:0;font-family:inherit;font-size:18px"
-            onkeydown="if(event.key==='Enter')doRegisterAndAttend()">
-        </div>
-        <!-- 출석 요일 선택 -->
-        <div style="width:100%;max-width:320px;margin-bottom:16px">
-          <div style="font-size:11px;color:#7a8499;margin-bottom:8px;text-align:left">
-            출석 요일 <span style="font-weight:400;opacity:.7">(해당 요일 모두 선택)</span>
-          </div>
-          <div style="display:flex;gap:6px;justify-content:center">
-            <button class="sf-day-btn" data-day="월" onclick="toggleRegDay(this)"
-              style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
-              background:transparent;color:#7a8499;font-size:13px;font-weight:600;
-              cursor:pointer;transition:all .15s">월</button>
-            <button class="sf-day-btn" data-day="화" onclick="toggleRegDay(this)"
-              style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
-              background:transparent;color:#7a8499;font-size:13px;font-weight:600;
-              cursor:pointer;transition:all .15s">화</button>
-            <button class="sf-day-btn" data-day="수" onclick="toggleRegDay(this)"
-              style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
-              background:transparent;color:#7a8499;font-size:13px;font-weight:600;
-              cursor:pointer;transition:all .15s">수</button>
-            <button class="sf-day-btn" data-day="목" onclick="toggleRegDay(this)"
-              style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
-              background:transparent;color:#7a8499;font-size:13px;font-weight:600;
-              cursor:pointer;transition:all .15s">목</button>
-            <button class="sf-day-btn" data-day="금" onclick="toggleRegDay(this)"
-              style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
-              background:transparent;color:#7a8499;font-size:13px;font-weight:600;
-              cursor:pointer;transition:all .15s">금</button>
-            <button class="sf-day-btn" data-day="토" onclick="toggleRegDay(this)"
-              style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
-              background:transparent;color:#7a8499;font-size:13px;font-weight:600;
-              cursor:pointer;transition:all .15s">토</button>
-            <button class="sf-day-btn" data-day="일" onclick="toggleRegDay(this)"
-              style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
-              background:transparent;color:#7a8499;font-size:13px;font-weight:600;
-              cursor:pointer;transition:all .15s">일</button>
-          </div>
-        </div>
-        <div class="err-box" id="sf-reg-err"></div>
-        <div style="display:flex;gap:10px">
-          <button class="btn btn-ghost" onclick="cancelRegister()">← 취소</button>
-          <button class="btn btn-green" style="padding:14px 36px;font-size:15px" onclick="doRegisterAndAttend()">
-            등록 후 출석하기
-          </button>
-        </div>
+```
+  <!-- 미등록 학생 자가 등록 폼 -->
+  <div id="sf-register-wrap" style="display:none;flex-direction:column;align-items:center;width:100%;margin-top:8px">
+    <div style="font-size:13px;color:#7a8499;margin-bottom:16px;line-height:1.7;text-align:center">
+      명단에 없는 학번이에요.<br>이름을 입력하면 바로 출석할 수 있어요.
+    </div>
+    <div style="width:100%;max-width:320px;margin-bottom:10px">
+      <div style="font-size:11px;color:#7a8499;margin-bottom:6px;text-align:left">학번</div>
+      <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:600;color:#edf0f7;
+        background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;
+        padding:12px 16px;text-align:center" id="sf-reg-no-display"></div>
+    </div>
+    <div style="width:100%;max-width:320px;margin-bottom:14px">
+      <div style="font-size:11px;color:#7a8499;margin-bottom:6px;text-align:left">이름</div>
+      <input class="big-input" id="sf-reg-name" type="text" placeholder="이름 입력"
+        style="margin-bottom:0;font-family:inherit;font-size:18px"
+        onkeydown="if(event.key==='Enter')doRegisterAndAttend()">
+    </div>
+    <!-- 출석 요일 선택 -->
+    <div style="width:100%;max-width:320px;margin-bottom:16px">
+      <div style="font-size:11px;color:#7a8499;margin-bottom:8px;text-align:left">
+        출석 요일 <span style="font-weight:400;opacity:.7">(해당 요일 모두 선택)</span>
+      </div>
+      <div style="display:flex;gap:6px;justify-content:center">
+        <button class="sf-day-btn" data-day="월" onclick="toggleRegDay(this)"
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
+          cursor:pointer;transition:all .15s">월</button>
+        <button class="sf-day-btn" data-day="화" onclick="toggleRegDay(this)"
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
+          cursor:pointer;transition:all .15s">화</button>
+        <button class="sf-day-btn" data-day="수" onclick="toggleRegDay(this)"
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
+          cursor:pointer;transition:all .15s">수</button>
+        <button class="sf-day-btn" data-day="목" onclick="toggleRegDay(this)"
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
+          cursor:pointer;transition:all .15s">목</button>
+        <button class="sf-day-btn" data-day="금" onclick="toggleRegDay(this)"
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
+          cursor:pointer;transition:all .15s">금</button>
+        <button class="sf-day-btn" data-day="토" onclick="toggleRegDay(this)"
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
+          cursor:pointer;transition:all .15s">토</button>
+        <button class="sf-day-btn" data-day="일" onclick="toggleRegDay(this)"
+          style="width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);
+          background:transparent;color:#7a8499;font-size:13px;font-weight:600;
+          cursor:pointer;transition:all .15s">일</button>
       </div>
     </div>
-    <div class="ok-card" id="sf-ok">
-      <div class="ok-icon">✅</div>
-      <div class="ok-name" id="sfok-name"></div>
-      <div class="ok-meta" id="sfok-meta"></div>
-      <div style="margin-top:20px;font-size:12px;color:#7a8499">이 창을 닫아도 됩니다</div>
+    <div class="err-box" id="sf-reg-err"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost" onclick="cancelRegister()">← 취소</button>
+      <button class="btn btn-green" style="padding:14px 36px;font-size:15px" onclick="doRegisterAndAttend()">
+        등록 후 출석하기
+      </button>
     </div>
+  </div>
+</div>
+<div class="ok-card" id="sf-ok">
+  <div class="ok-icon">✅</div>
+  <div class="ok-name" id="sfok-name"></div>
+  <div class="ok-meta" id="sfok-meta"></div>
+  <div style="margin-top:20px;font-size:12px;color:#7a8499">이 창을 닫아도 됩니다</div>
+</div>
+```
+
   </div>
 </div>
 
 <!-- ══ 명단 탭 ══ -->
+
 <div class="page" id="pg-manage">
   <div class="row-btw" style="margin-bottom:10px">
     <div style="font-size:17px;font-weight:800">학생 명단
@@ -752,6 +774,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
   </div>
 
   <!-- 그룹 필터 (2단계) -->
+
   <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
     <select id="manage-prog-filter" onchange="onManageProgChange()"
       style="background:#1a1f2e;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 12px;color:#edf0f7;font-family:inherit;font-size:13px;outline:none;flex:1;max-width:220px">
@@ -774,11 +797,13 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
   </div>
 
   <!-- 엑셀 업로드 안내 -->
+
   <div id="upload-result" class="card" style="display:none;margin-bottom:14px;border-color:rgba(0,200,150,.3)">
     <div id="upload-msg" style="font-size:13px;color:#00c896"></div>
   </div>
 
   <!-- 학생 추가 폼 -->
+
   <div class="card" id="add-form" style="display:none;margin-bottom:14px">
     <div class="card-head">새 학생 등록</div>
     <div class="g2">
@@ -816,6 +841,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
 </div>
 
 <!-- ══ 기록 탭 ══ -->
+
 <div class="page" id="pg-history">
   <div class="row-btw" style="margin-bottom:10px">
     <div style="font-size:17px;font-weight:800">출석 기록</div>
@@ -857,6 +883,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
 </div>
 
 <!-- ══ 분석 탭 ══ -->
+
 <div class="page" id="pg-analysis">
   <div class="row-btw" style="margin-bottom:16px">
     <div style="font-size:17px;font-weight:800">출석 분석</div>
@@ -886,6 +913,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
   </div>
 
   <!-- 날짜 네비게이션 -->
+
   <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px">
     <button onclick="navigateAnalysis(-1)" style="padding:7px 16px;border:1px solid rgba(255,255,255,0.1);
       border-radius:8px;background:rgba(255,255,255,0.05);color:#edf0f7;font-family:inherit;font-size:13px;cursor:pointer">← 이전</button>
@@ -895,6 +923,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
   </div>
 
   <!-- Sheets 업데이트 + 엑셀 다운로드 버튼 -->
+
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
     <button class="btn btn-ghost btn-sm" onclick="manualBuildAnalysis()" id="build-btn">
       📊 Sheets 분석 시트 업데이트
@@ -911,6 +940,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
 </div>
 
 <!-- ══ 요청 관리 탭 ══ -->
+
 <div class="page" id="pg-requests">
   <div class="row-btw" style="margin-bottom:16px">
     <div style="font-size:17px;font-weight:800">요청 관리</div>
@@ -951,6 +981,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
 </div>
 
 <!-- ══ 종료 모달 ══ -->
+
 <div class="modal-bg" id="modal-end">
   <div class="modal">
     <h3>수업을 종료할까요?</h3>
@@ -963,6 +994,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
 </div>
 
 <!-- ══ 사후 출석 모달 ══ -->
+
 <div class="modal-bg" id="modal-late">
   <div class="modal" style="max-width:440px">
     <h3>사후 출석 처리</h3>
@@ -991,6 +1023,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
 </div>
 
 <!-- ══ 기록 삭제 확인 모달 ══ -->
+
 <div class="modal-bg" id="modal-del-session">
   <div class="modal" style="max-width:380px">
     <h3 style="color:#ff7096">🗑 출석 기록 삭제</h3>
@@ -1006,6 +1039,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
 </div>
 
 <!-- ══ 수동 등록 모달 ══ -->
+
 <div class="modal-bg" id="modal-manual-reg">
   <div class="modal" style="max-width:400px">
     <h3>미등록 학생 출석 처리</h3>
@@ -1055,6 +1089,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
 </div>
 
 <!-- ══ 토스트 ══ -->
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1153,37 +1188,40 @@ async function gasPost(payload, retry = 2, timeoutMs = 15000) {
     const sid    = params.get('sid')  || '';
     const subjUrl = params.get('subj') || '';
     const clsUrl  = params.get('cls')  || '';
-    const expUrl  = parseInt(params.get('exp') || '0');
-    const now     = Date.now();
+    const durSec  = parseInt(params.get('dur') || '900');
 
-    // URL에 세션 정보가 있으면 즉시 화면 표시 (스피너 숨기기)
-    if (subjUrl && clsUrl && expUrl > now) {
+    // URL에 세션 정보가 있으면 즉시 화면 표시
+    if (subjUrl && clsUrl) {
       const loadingEl = document.getElementById('sf-loading');
       if (loadingEl) loadingEl.style.display = 'none';
-      const remainSec = Math.floor((expUrl - now) / 1000);
-      const durSec = parseInt(params.get('dur') || remainSec);
       S.session = {
         id: sid, subj: subjUrl, cls: clsUrl,
-        teacher: '', dur: durSec, remain: remainSec,
+        teacher: '', dur: durSec, remain: durSec,
         startedAt: new Date()
       };
       S.attendance = [];
-      startTimer();
       syncFullUI();
 
-      // 백그라운드에서 API 검증 (만료 확인)
+      // 서버에서 실제 세션 상태 확인 → 남은 시간 동기화
       gasPost({action: "getSession", sessionId: sid}, 0).then(result => {
         if (!result.ok) {
-          // 서버 연결 실패는 무시 (네트워크 불안정), 명시적 만료만 처리
           if (result.msg && (result.msg.includes('만료') || result.msg.includes('종료'))) {
             S.session.remain = 0;
+            clearInterval(S.timerInt);
             syncTabUI(false);
+            document.getElementById('sf-sub').textContent = '이 수업은 종료됐어요.';
           }
         } else {
-          // 선생님 이름 업데이트
           S.session.teacher = result.teacher || '';
+          S.session.remain = result.remainSec || durSec;
+          S.session.dur = result.remainSec || durSec;
+          startTimer();
+          syncFullUI();
         }
-      }).catch(() => {});
+      }).catch(() => {
+        // 네트워크 실패 시 타이머 없이 출석 시도 허용
+        startTimer();
+      });
     } else {
       // URL에 정보 없으면 기존 방식 (API 호출)
       document.getElementById('sf-sub').textContent = '';
@@ -3820,5 +3858,6 @@ async function processRequest(type, idx, newStatus) {
   }
 }
 </script>
+
 </body>
 </html>
