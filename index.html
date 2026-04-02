@@ -1142,7 +1142,7 @@ async function gasPost(payload, retry = 2, timeoutMs = 15000) {
     } catch(e) {
       const isTimeout = e.name === 'AbortError';
       const msg = isTimeout ? '응답 시간이 초과됐어요. 네트워크를 확인해주세요.' : '서버 연결 실패: ' + e.message;
-      if (attempt < retry && !isTimeout) continue; // 타임아웃 외엔 재시도
+      if (attempt < retry) continue; // 타임아웃 포함 모든 오류 재시도
       return {ok: false, msg};
     }
   }
@@ -2239,9 +2239,10 @@ async function loadHistory() {
   const el = document.getElementById('hist-list');
   el.innerHTML = '<div class="empty"><div style="font-size:24px;margin-bottom:8px">⏳</div>기록을 불러오는 중...</div>';
 
-  const result = await gasPost({action: "getHistory"});
-  if (!result.ok || !result.records.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div>완료된 수업이 아직 없어요.</div>';
+  const result = await gasPost({action: "getHistory"}, 2, 30000); // 30초 타임아웃
+  if (!result.ok || !result.records || !result.records.length) {
+    const msg = result.msg || '완료된 수업이 아직 없어요.';
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📋</div>${msg}<br><button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="loadHistory()">🔄 다시 시도</button></div>`;
     return;
   }
 
@@ -2577,16 +2578,17 @@ async function executeDeleteSession() {
   if (!window._adminMode) { toast("관리자 모드에서만 삭제할 수 있어요.", "err"); return; }
   const btn = document.getElementById('del-session-confirm-btn');
   btn.disabled = true; btn.textContent = '삭제 중...';
-  const result = await gasPost({action: 'deleteSession', sessionId: _delSessionId});
+  const result = await gasPost({action: 'deleteSession', sessionId: _delSessionId}, 3, 60000); // 60초, 3회 재시도
   btn.disabled = false; btn.textContent = '삭제';
-  document.getElementById('modal-del-session').classList.remove('on');
   if (result.ok) {
+    document.getElementById('modal-del-session').classList.remove('on');
     toast('기록이 삭제됐어요 🗑', 'ok');
     loadHistory();
+    _delSessionId = null;
   } else {
-    toast(result.msg || '삭제 실패', 'err');
+    toast((result.msg || '삭제 실패') + ' — 다시 시도해주세요.', 'err');
+    // 모달 닫지 않고 재시도 가능하게 유지
   }
-  _delSessionId = null;
 }
 
 function renderHistory() { loadHistory(); }
