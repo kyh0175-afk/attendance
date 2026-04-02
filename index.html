@@ -1890,21 +1890,80 @@ async function doAttendFull() {
   const errEl = document.getElementById('sf-err');
   errEl.style.display = 'none';
   const btn = document.getElementById('sf-attend-btn');
+  const no = document.getElementById('sf-no').value.trim();
+
+  if (!no) { errEl.textContent = '학번을 입력해주세요.'; errEl.style.display = 'block'; return; }
+  if (!S.session) { errEl.textContent = '진행 중인 수업이 없습니다.'; errEl.style.display = 'block'; return; }
+
+  // 로컬 중복 체크
+  if (S.attendance.find(a => a.no === no)) {
+    errEl.textContent = '이미 출석 처리됐습니다.'; errEl.style.display = 'block'; return;
+  }
+
+  // 미등록 학번 체크
+  const localSt = S.students.find(s => String(s.no) === String(no));
+
   if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
 
-  const r = await tryAttend(document.getElementById('sf-no').value.trim());
+  // 즉시 성공 화면 표시 (낙관적 업데이트)
+  const now = new Date();
+  const timeStr = now.toTimeString().slice(0, 8);
+  const tempName = localSt ? localSt.name : no;
+
+  // 로컬 출석 배열에 추가
+  const tempEntry = { id: no, no: no, name: tempName, time: timeStr, _pending: true };
+  S.attendance.push(tempEntry);
+
+  // 학생 화면에 즉시 성공 표시
+  showFullSuccess(tempName, timeStr);
+
+  // 백그라운드에서 서버 저장 (keepalive: 페이지 닫혀도 요청 완료)
+  const attendPayload = {
+    action: "attend",
+    sessionId: S.session.id,
+    subject: S.session.subj.trim(),
+    cls: S.session.cls.trim().replace(/\s+/g, ''),
+    teacher: S.session.teacher,
+    studentNo: no
+  };
+
+  // keepalive fetch 먼저 발사 (페이지 종료에도 안전)
+  try {
+    fetch(GAS_URL, {
+      method: "POST",
+      body: JSON.stringify(attendPayload),
+      keepalive: true
+    });
+  } catch(e) {}
+
+  // 일반 gasPost로도 호출하여 결과 확인 (이미 중복 출석은 서버에서 처리)
+  const result = await gasPost(attendPayload);
 
   if (btn) { btn.disabled = false; btn.textContent = '✓ 출석하기'; }
 
-  if (!r.ok) {
-    // 미등록 학번이면 자가 등록 화면으로
-    if (r.msg === '등록되지 않은 학번입니다.') {
-      showRegisterForm(document.getElementById('sf-no').value.trim());
-      return;
+  if (!result.ok) {
+    // 서버 실패 → 로컬에서 제거하고 에러 표시
+    const idx = S.attendance.indexOf(tempEntry);
+    if (idx !== -1) S.attendance.splice(idx, 1);
+
+    if (result.msg === '등록되지 않은 학번입니다.') {
+      // 성공 화면 숨기고 등록 폼 표시
+      document.getElementById('sf-result').style.display = 'none';
+      document.getElementById('sf-input-wrap').style.display = 'flex';
+      showRegisterForm(no);
+    } else {
+      // 성공 화면 숨기고 에러 표시
+      document.getElementById('sf-result').style.display = 'none';
+      document.getElementById('sf-input-wrap').style.display = 'flex';
+      errEl.textContent = result.msg; errEl.style.display = 'block';
     }
-    errEl.textContent = r.msg; errEl.style.display = 'block'; return;
+    return;
   }
-  showFullSuccess(r.st.name, r.time);
+
+  // 서버 성공 → 실제 이름으로 업데이트
+  tempEntry.name = result.name || tempName;
+  tempEntry.time = result.time || timeStr;
+  delete tempEntry._pending;
 }
 
 function showRegisterForm(no) {
