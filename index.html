@@ -1616,9 +1616,16 @@ async function startSession() {
     await loadStudentsFromSheets();
   }
   const subj    = document.getElementById('f-subj').value.trim() || '수업';
-  const teacher = document.getElementById('f-teacher').value.trim() || '선생님';
-  const cls     = S.teacherRoom || document.getElementById('f-cls').value; // teacherRoom 우선
+  const teacher = document.getElementById('f-teacher').value.trim();
+  const cls     = S.teacherRoom || document.getElementById('f-cls').value;
   const dur     = parseInt(document.getElementById('f-dur').value);
+
+  // 교사명 필수 체크
+  if (!teacher) {
+    toast('담당 교사 이름을 입력해주세요.', 'err');
+    document.getElementById('f-teacher').focus();
+    return;
+  }
 
   btn.disabled = true; btn.textContent = '생성 중...';
 
@@ -1662,7 +1669,7 @@ function buildQR() {
     + '&subj=' + encodeURIComponent(S.session.subj)
     + '&cls=' + encodeURIComponent(S.session.cls)
     + '&teacher=' + encodeURIComponent(S.session.teacher)
-    + '&dur=' + S.session.dur;
+    + '&dur=' + S.session.remain;  // 현재 남은 시간 기준 (원래 dur 아닌 remain)
   // 임시 컨테이너에 먼저 생성 후 교체 (깜빡임 방지)
   const tmp = document.createElement('div');
   new QRCode(tmp, {
@@ -1895,75 +1902,46 @@ async function doAttendFull() {
   if (!no) { errEl.textContent = '학번을 입력해주세요.'; errEl.style.display = 'block'; return; }
   if (!S.session) { errEl.textContent = '진행 중인 수업이 없습니다.'; errEl.style.display = 'block'; return; }
 
+  // [fix #2] 타이머 만료 체크
+  if (S.session.remain <= 0) {
+    errEl.textContent = 'QR 시간이 만료됐습니다. 선생님께 갱신을 요청하세요.';
+    errEl.style.display = 'block'; return;
+  }
+
   // 로컬 중복 체크
   if (S.attendance.find(a => a.no === no)) {
     errEl.textContent = '이미 출석 처리됐습니다.'; errEl.style.display = 'block'; return;
   }
 
-  // 미등록 학번 체크
-  const localSt = S.students.find(s => String(s.no) === String(no));
-
   if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
 
-  // 즉시 성공 화면 표시 (낙관적 업데이트)
-  const now = new Date();
-  const timeStr = now.toTimeString().slice(0, 8);
-  const tempName = localSt ? localSt.name : no;
-
-  // 로컬 출석 배열에 추가
-  const tempEntry = { id: no, no: no, name: tempName, time: timeStr, _pending: true };
-  S.attendance.push(tempEntry);
-
-  // 학생 화면에 즉시 성공 표시
-  showFullSuccess(tempName, timeStr);
-
-  // 백그라운드에서 서버 저장 (keepalive: 페이지 닫혀도 요청 완료)
-  const attendPayload = {
+  // [fix #1,#4] keepalive 제거, 단일 gasPost만 사용 — 서버 응답 후 확정
+  const result = await gasPost({
     action: "attend",
     sessionId: S.session.id,
     subject: S.session.subj.trim(),
     cls: S.session.cls.trim().replace(/\s+/g, ''),
     teacher: S.session.teacher,
     studentNo: no
-  };
-
-  // keepalive fetch 먼저 발사 (페이지 종료에도 안전)
-  try {
-    fetch(GAS_URL, {
-      method: "POST",
-      body: JSON.stringify(attendPayload),
-      keepalive: true
-    });
-  } catch(e) {}
-
-  // 일반 gasPost로도 호출하여 결과 확인 (이미 중복 출석은 서버에서 처리)
-  const result = await gasPost(attendPayload);
+  });
 
   if (btn) { btn.disabled = false; btn.textContent = '✓ 출석하기'; }
 
   if (!result.ok) {
-    // 서버 실패 → 로컬에서 제거하고 에러 표시
-    const idx = S.attendance.indexOf(tempEntry);
-    if (idx !== -1) S.attendance.splice(idx, 1);
-
     if (result.msg === '등록되지 않은 학번입니다.') {
-      // 성공 화면 숨기고 등록 폼 표시
-      document.getElementById('sf-result').style.display = 'none';
-      document.getElementById('sf-input-wrap').style.display = 'flex';
       showRegisterForm(no);
     } else {
-      // 성공 화면 숨기고 에러 표시
-      document.getElementById('sf-result').style.display = 'none';
-      document.getElementById('sf-input-wrap').style.display = 'flex';
       errEl.textContent = result.msg; errEl.style.display = 'block';
     }
     return;
   }
 
-  // 서버 성공 → 실제 이름으로 업데이트
-  tempEntry.name = result.name || tempName;
-  tempEntry.time = result.time || timeStr;
-  delete tempEntry._pending;
+  // 서버 성공 → 로컬 반영 + 성공 화면
+  // [fix #3] 서버에서 받은 실제 이름 사용
+  const confirmedName = result.name || no;
+  const confirmedTime = result.time || new Date().toTimeString().slice(0, 8);
+  S.attendance.push({ id: no, no: no, name: confirmedName, time: confirmedTime });
+  showFullSuccess(confirmedName, confirmedTime);
 }
 
 function showRegisterForm(no) {
