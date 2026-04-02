@@ -1086,6 +1086,7 @@ const S = {
   analysisDate: new Date(),
   groupDays: {},  // 'program||cls' → ['월','수','금']
   teacherRoom: '', // URL 파라미터로 지정된 장소
+  isStudentMode: false, // 학생 폰 모드
 };
 
 let _supervisorRequestId = 0; // 심야 감독 조회 요청 ID (취소용)
@@ -1156,6 +1157,7 @@ async function gasPost(payload, retry = 2, timeoutMs = 15000) {
     restoreTeacherSession();
 
   } else if (params.get('mode') === 'student') {
+    S.isStudentMode = true;
     document.getElementById('topbar').style.display = 'none';
     document.getElementById('room-select-screen').style.display = 'none'; // 장소 선택 화면 숨김
     ['pg-teacher','pg-student','pg-manage','pg-history','pg-analysis','pg-requests'].forEach(id => {
@@ -1536,6 +1538,18 @@ function classSts() {
   );
 }
 
+// 오늘 요일에 출석 대상인 학생만 반환
+function classStsToday() {
+  const all = classSts();
+  const DAYS_KR = ['일','월','화','수','목','금','토'];
+  const todayDay = DAYS_KR[new Date().getDay()];
+  return all.filter(s => {
+    const days = Array.isArray(s.days) ? s.days : [];
+    // 출석요일이 비어있으면 매일 대상으로 간주
+    return days.length === 0 || days.includes(todayDay);
+  });
+}
+
 // 프로그램 선택 시 해당 장소만 필터링
 function updateClsByProgram() {
   const progVal = document.getElementById('f-subj')?.value || '';
@@ -1663,6 +1677,7 @@ async function startSession() {
 
 function buildQR() {
   const box = document.getElementById('qr-render');
+  if (!box) return; // 학생 모드에서는 qr-render가 없음
   const url = location.origin + location.pathname
     + '?mode=student'
     + '&sid=' + encodeURIComponent(S.session.id)
@@ -1697,30 +1712,38 @@ function refreshQR() {
 function startTimer() {
   clearInterval(S.timerInt);
   clearInterval(S.qrRefreshInt);
-  renderTimer();
+  if (!S.isStudentMode) renderTimer();
   S.timerInt = setInterval(() => {
     S.session.remain--;
     if (S.session.remain <= 0) {
       S.session.remain = 0;
       clearInterval(S.timerInt);
       clearInterval(S.qrRefreshInt);
+      if (S.isStudentMode) {
+        // 학생 폰: 입력창만 숨기고 세션 종료 API는 호출하지 않음
+        syncFullUI();
+        return;
+      }
       renderTimer();
       toast('QR 시간이 만료됐어요. 미출석 학생을 자동 저장하고 종료해요.', 'err');
       setTimeout(() => autoEndSession(), 3000);
       return;
     }
-    renderTimer();
+    if (!S.isStudentMode) renderTimer();
   }, 1000);
 
-  // QR 60초마다 자동 갱신 (exp 값을 최신 remain 기준으로 유지)
-  S.qrRefreshInt = setInterval(() => {
-    if (S.session && S.session.remain > 0) buildQR();
-  }, 60000);
+  // QR 자동 갱신 — 교사 모드에서만
+  if (!S.isStudentMode) {
+    S.qrRefreshInt = setInterval(() => {
+      if (S.session && S.session.remain > 0) buildQR();
+    }, 60000);
+  }
 }
 
 function renderTimer() {
   const s = S.session.remain;
   const el = document.getElementById('timer-disp');
+  if (!el) return; // 학생 모드에서는 timer-disp가 없음
   el.textContent = `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
   el.className = 'timer-num ' + (s<=60?'t-end':s<=180?'t-warn':'t-ok');
 }
@@ -1776,7 +1799,7 @@ async function endSession() {
     teacher: S.session.teacher,
     startedAt: S.session.startedAt
   };
-  const clsStudents  = classSts();
+  const clsStudents  = classStsToday(); // 오늘 요일 대상만
   const presentCount = S.attendance.length;
   const totalCount   = clsStudents.length;
   const histRecords  = [...S.attendance];
@@ -2089,7 +2112,7 @@ function refreshTable() {
   }).join('');
 }
 function refreshStats() {
-  const sts = classSts();
+  const sts = classStsToday(); // 오늘 요일 대상 학생만
   const total = sts.length;
   const present = S.attendance.length;
   const rate = total ? Math.round(present/total*100) : 0;
@@ -2107,11 +2130,16 @@ function refreshStats() {
   if (gradeEl) {
     const subj = S.session ? S.session.subj.trim() : '';
     const cls  = S.session ? S.session.cls.trim().replace(/\s+/g,'') : '';
-    // 현재 세션 프로그램+장소와 일치하는 학생만
+    // 현재 세션 프로그램+장소와 일치하는 학생 중 오늘 요일 대상만
+    const DAYS_KR2 = ['일','월','화','수','목','금','토'];
+    const todayDay2 = DAYS_KR2[new Date().getDay()];
     const allCls = S.students.filter(s =>
       s.program.trim() === subj &&
       s.cls.trim().replace(/\s+/g,'') === cls
-    );
+    ).filter(s => {
+      const days = Array.isArray(s.days) ? s.days : [];
+      return days.length === 0 || days.includes(todayDay2);
+    });
     if (allCls.length > 0) {
       const grades = {};
       allCls.forEach(s => {
@@ -2273,6 +2301,7 @@ async function loadHistory() {
   }
 
   // 세션ID + 날짜별로 그룹화
+  const DAYS_KR_HIST = ['일','월','화','수','목','금','토'];
   const sessions = {};
   result.records.forEach(r => {
     const key = r.sessionId;
@@ -2290,7 +2319,24 @@ async function loadHistory() {
     }
     if (r.status === '출석') sessions[key].attended.push(r);
     else                    sessions[key].absent.push(r);
-    sessions[key].total++;
+  });
+
+  // total을 해당 날짜 요일에 출석 대상인 학생 수로 계산
+  Object.values(sessions).forEach(s => {
+    const sessDate = new Date(s.date + 'T00:00:00');
+    const dayKr = DAYS_KR_HIST[sessDate.getDay()];
+    const subjNorm = s.subject.trim();
+    const clsNorm = s.cls.trim().replace(/\s+/g, '');
+
+    // 해당 프로그램+장소의 학생 중 해당 요일 대상만
+    const targetStudents = S.students.filter(st => {
+      if (st.program.trim() !== subjNorm) return false;
+      if (st.cls.trim().replace(/\s+/g, '') !== clsNorm) return false;
+      const days = Array.isArray(st.days) ? st.days : [];
+      return days.length === 0 || days.includes(dayKr);
+    });
+
+    s.total = targetStudents.length > 0 ? targetStudents.length : (s.attended.length + s.absent.length);
   });
 
   const list = Object.values(sessions).sort((a,b) => b.date.localeCompare(a.date));
