@@ -1289,7 +1289,10 @@ async function gasPost(payload, retry = 2, timeoutMs = 15000) {
       // 심야 독서시간 감독 즉시 조회 — 페이지 로드와 동시에 API 요청
       const subjVal = document.getElementById('f-subj')?.value || '';
       if (subjVal === '심야 독서시간') {
+        const reqId = ++_supervisorRequestId;
         gasPost({action: 'getSupervisor'}).then(r => {
+          if (reqId !== _supervisorRequestId) return;
+          if (document.getElementById('f-subj')?.value !== '심야 독서시간') return;
           const inp = document.getElementById('f-teacher');
           if (inp && r.ok && r.name) {
             inp.value = r.name;
@@ -1556,13 +1559,20 @@ function classSts() {
 }
 
 // 프로그램 선택 시 해당 장소만 필터링
+let _supervisorRequestId = 0; // 심야 감독 조회 요청 ID (취소용)
+
 function updateClsByProgram() {
-  // 심야 독서시간 선택 시 감독 자동 조회
   const progVal = document.getElementById('f-subj')?.value || '';
   const teacherInput = document.getElementById('f-teacher');
+
+  // 심야 독서시간일 때만 감독 자동 조회
   if (progVal === '심야 독서시간' && teacherInput) {
     if (!teacherInput.value || teacherInput.dataset.autoFilled === 'true') {
+      const reqId = ++_supervisorRequestId;
       gasPost({action: 'getSupervisor'}).then(r => {
+        // 요청 사이에 프로그램이 바뀌었으면 무시
+        if (reqId !== _supervisorRequestId) return;
+        if (document.getElementById('f-subj')?.value !== '심야 독서시간') return;
         if (r.ok && r.name) {
           teacherInput.value = r.name;
           teacherInput.dataset.autoFilled = 'true';
@@ -1574,6 +1584,7 @@ function updateClsByProgram() {
     }
   } else if (teacherInput && teacherInput.dataset.autoFilled === 'true') {
     // 다른 프로그램으로 전환 시 자동입력값 지우기
+    ++_supervisorRequestId; // 진행 중인 심야 조회 무효화
     teacherInput.value = '';
     teacherInput.dataset.autoFilled = '';
   }
@@ -1747,7 +1758,7 @@ async function autoEndSession() {
     subject:   S.session.subj,
     cls:       S.session.cls,
     teacher:   S.session.teacher
-  });
+  }, 3, 45000); // 45초, 3회 재시도
 
   // 기록 저장
   S.history.unshift({
@@ -2895,7 +2906,7 @@ async function manualBuildAnalysis() {
   btn.disabled = true; btn.textContent = '업데이트 중...';
   res.style.display = 'none';
 
-  const result = await gasPost({action: "buildAnalysis"});
+  const result = await gasPost({action: "buildAnalysis"}, 1, 120000); // 2분 타임아웃
 
   btn.disabled = false; btn.textContent = '📊 분석 시트 지금 업데이트';
   res.style.display = 'block';
@@ -3147,11 +3158,11 @@ async function loadAnalysis() {
 
   // 출석기록 + 학생명단 동시 로드
   const [histResult, stuResult] = await Promise.all([
-    gasPost({action: "getHistory"}),
-    gasPost({action: "getStudents"})
+    gasPost({action: "getHistory"}, 2, 30000),
+    gasPost({action: "getStudents"}, 2, 30000)
   ]);
 
-  if (!histResult.ok) { el.innerHTML = '<div class="empty">데이터 로드 실패</div>'; return; }
+  if (!histResult.ok) { el.innerHTML = '<div class="empty">데이터 로드 실패<br><button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="loadAnalysis()">🔄 다시 시도</button></div>'; return; }
 
   // 학생 명단 갱신 (days 포함)
   if (stuResult.ok && stuResult.students.length) {
