@@ -1062,6 +1062,9 @@ input {
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzrh2K5mEf1_FUJye_2R5WTgs9MVtQrFFM1QyyJc4jZIE-pWDOIRo6Bp-MvgnnW3vsh/exec';
 
 // ══════ 상태 ══════
+const START_DATE = new Date(2026, 2, 26); // 2026-03-26 (month는 0-indexed)
+START_DATE.setHours(0, 0, 0, 0);
+
 let STATE = {
   studentNo: '',
   studentName: '',
@@ -1129,6 +1132,10 @@ function isFuture(d) {
   const t = new Date();
   t.setHours(0,0,0,0);
   return d > t;
+}
+
+function isBeforeStart(d) {
+  return d < START_DATE;
 }
 
 // ══════ API 호출 ══════
@@ -1243,7 +1250,7 @@ function renderStats() {
   STATE.programs.forEach(prog => {
     const targetDays = getStudentTargetDays(prog);
     periodDates.forEach(d => {
-      if (isFuture(d)) return;
+      if (isFuture(d) || isBeforeStart(d)) return;
       if (!targetDays.includes(d.getDay())) return;
       totalExpected++;
       const rec = findRecord(d, prog.program, prog.location);
@@ -1346,7 +1353,7 @@ function renderProgramCard(prog, dates) {
   dates.forEach(d => {
     const dayOfWeek = d.getDay();
     if (!targetDays.includes(dayOfWeek)) return;
-    if (isFuture(d)) return;
+    if (isFuture(d) || isBeforeStart(d)) return;
     const rec = findRecord(d, prog.program, prog.location);
     if (rec) {
       weekTotal++;
@@ -1379,10 +1386,11 @@ function renderProgramCard(prog, dates) {
     const isTarget = targetDays.includes(dayOfWeek);
     const isTodayFlag = isToday(d);
     const isFutureFlag = isFuture(d);
+    const isBeforeStartFlag = isBeforeStart(d);
 
     let statusClass = '', statusText = '', clickable = false;
 
-    if (!isTarget) {
+    if (isBeforeStartFlag || !isTarget) {
       statusClass = 'no-class';
       statusText = '·';
     } else if (isFutureFlag) {
@@ -1409,7 +1417,7 @@ function renderProgramCard(prog, dates) {
     }
 
     const todayClass = isTodayFlag ? ' today' : '';
-    const inactiveClass = (!isTarget && !isTodayFlag) ? ' inactive' : '';
+    const inactiveClass = ((isBeforeStartFlag || !isTarget) && !isTodayFlag) ? ' inactive' : '';
 
     html += `
       <div class="day-col${todayClass}${inactiveClass}">
@@ -1446,21 +1454,23 @@ function getStudentTargetDays(prog) {
 
 function findRecord(date, program, location) {
   const dateStr = fmtDate(date);
-  return STATE.records.find(r =>
-    r.date === dateStr &&
-    r.program === program &&
-    (!location || !r.location || r.location === location)
-  );
+  const locNorm = (location || '').replace(/\s+/g, '');
+  return STATE.records.find(r => {
+    if (r.date !== dateStr || r.program !== program) return false;
+    if (!locNorm || !r.location) return true;
+    return r.location.replace(/\s+/g, '') === locNorm;
+  });
 }
 
 function findPendingRequest(date, program, location) {
   const dateStr = fmtDate(date);
-  return STATE.requests.find(r =>
-    r.date === dateStr &&
-    r.program === program &&
-    (!location || !r.location || r.location === location) &&
-    r.status === '대기'
-  );
+  const locNorm = (location || '').replace(/\s+/g, '');
+  return STATE.requests.find(r => {
+    if (r.date !== dateStr || r.program !== program) return false;
+    if (!locNorm || !r.location) return true;
+    if (r.location.replace(/\s+/g, '') !== locNorm) return false;
+    return r.status === '대기';
+  });
 }
 
 function changeWeek(delta) {
@@ -1517,7 +1527,7 @@ function renderMonthly() {
     for (let d = 1; d <= daysInMonth; d++) {
       const dt = new Date(year, month, d);
       if (isFuture(dt)) break;
-      if (!targetDays.includes(dt.getDay())) continue;
+      if (isBeforeStart(dt) || !targetDays.includes(dt.getDay())) continue;
       mTotal++;
       const rec = findRecord(dt, prog.program, prog.location);
       if (rec && (rec.status === '출석' || rec.status === '자율출석')) mPresent++;
@@ -1562,12 +1572,13 @@ function renderMonthly() {
       const isTarget = targetDays.includes(dayOfWeek);
       const isTodayFlag = isToday(dt);
       const isFutureFlag = isFuture(dt);
+      const isBeforeStartFlag = isBeforeStart(dt);
 
       let cellClass = '';
       let icon = '';
       let clickAttr = '';
 
-      if (!isTarget) {
+      if (isBeforeStartFlag || !isTarget) {
         cellClass = 'cal-no-class';
         icon = `<span class="cal-status-icon" style="color:var(--text3);opacity:.3">·</span>`;
       } else if (isFutureFlag) {
