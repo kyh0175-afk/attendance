@@ -1088,6 +1088,8 @@ const S = {
   teacherRoom: '', // URL 파라미터로 지정된 장소
 };
 
+let _supervisorRequestId = 0; // 심야 감독 조회 요청 ID (취소용)
+
 /* ══ Google Apps Script 연결 URL ══ */
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzrh2K5mEf1_FUJye_2R5WTgs9MVtQrFFM1QyyJc4jZIE-pWDOIRo6Bp-MvgnnW3vsh/exec";
 
@@ -1535,8 +1537,6 @@ function classSts() {
 }
 
 // 프로그램 선택 시 해당 장소만 필터링
-let _supervisorRequestId = 0; // 심야 감독 조회 요청 ID (취소용)
-
 function updateClsByProgram() {
   const progVal = document.getElementById('f-subj')?.value || '';
   const teacherInput = document.getElementById('f-teacher');
