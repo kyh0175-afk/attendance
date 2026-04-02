@@ -259,8 +259,6 @@ tbody tr:last-child td{border-bottom:none}
 #student-fullscreen{display:none;min-height:100vh;background:#0e1117}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* 모드별 초기 깜빡임 방지 */
-html[data-mode="view"] #pg-teacher,
-html[data-mode="view"] #pg-student,
 html[data-mode="admin"] #pg-teacher,
 html[data-mode="admin"] #pg-student,
 html[data-mode="student"] #pg-teacher { display:none !important; }
@@ -333,7 +331,7 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
 (function() {
   const p = new URLSearchParams(location.search);
   const mode = p.get('mode');
-  if (mode === 'view' || mode === 'admin' || mode === 'student') {
+  if (mode === 'admin' || mode === 'student') {
     // body에 클래스 추가 → CSS로 pg-teacher 즉시 숨김
     document.documentElement.setAttribute('data-mode', mode);
   }
@@ -347,42 +345,32 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
 <div id="main-screen" style="display:none;min-height:100vh;
   flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;position:relative">
 
-  <!-- 관리용 버튼 (우측 상단) -->
-  <button onclick="goAdmin()"
-    style="position:absolute;top:24px;right:24px;
-    background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);
-    border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;transition:all .2s"
-    onmouseover="this.style.background='rgba(255,255,255,0.12)'"
-    onmouseout="this.style.background='rgba(255,255,255,0.07)'"
-    title="관리용 페이지">&#x2699;</button>
-
   <div style="font-size:38px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px;color:#f59e0b">
     코스모스 독서시간 출석
   </div>
   <div style="color:#7a8499;font-size:14px;margin-bottom:56px">용도를 선택해주세요</div>
 
   <div style="display:flex;gap:20px;width:100%;max-width:480px">
-    <!-- 출석용 -->
+    <!-- 출석 -->
     <button onclick="goAttendance()"
       style="flex:1;background:rgba(233,69,96,.2);border:1px solid rgba(233,69,96,.45);
       border-radius:20px;padding:36px 20px;cursor:pointer;transition:all .2s;text-align:center"
       onmouseover="this.style.transform='translateY(-3px)';this.style.filter='brightness(1.15)'"
       onmouseout="this.style.transform='';this.style.filter=''">
       <div style="font-size:32px;margin-bottom:12px;line-height:1">&#x2714;&#xFE0F;</div>
-      <div style="font-size:20px;font-weight:800;color:#e94560;margin-bottom:6px">출석용</div>
+      <div style="font-size:20px;font-weight:800;color:#e94560;margin-bottom:6px">출석</div>
       <div style="font-size:12px;color:#7a8499;line-height:1.6">QR 출석 처리<br>장소별 접속</div>
     </button>
 
-    <!-- 확인용 -->
-    <button onclick="goView()"
+    <!-- 관리자 -->
+    <button onclick="goAdmin()"
       style="flex:1;background:rgba(94,184,255,.15);border:1px solid rgba(94,184,255,.4);
       border-radius:20px;padding:36px 20px;cursor:pointer;transition:all .2s;text-align:center"
       onmouseover="this.style.transform='translateY(-3px)';this.style.filter='brightness(1.15)'"
       onmouseout="this.style.transform='';this.style.filter=''">
-      <div style="font-size:32px;margin-bottom:12px;line-height:1">&#x1F50D;</div>
-      <div style="font-size:20px;font-weight:800;color:#5eb8ff;margin-bottom:6px">확인용</div>
-      <div style="font-size:12px;color:#7a8499;line-height:1.6">기록 · 분석<br>출석 현황 조회</div>
+      <div style="font-size:32px;margin-bottom:12px;line-height:1">&#x2699;</div>
+      <div style="font-size:20px;font-weight:800;color:#5eb8ff;margin-bottom:6px">관리자</div>
+      <div style="font-size:12px;color:#7a8499;line-height:1.6">명단 · 기록 · 분석<br>출석부 관리</div>
     </button>
   </div>
 </div>
@@ -1127,22 +1115,7 @@ async function gasPost(payload, retry = 2, timeoutMs = 15000) {
 /* ══ 진입 모드 감지 ══ */
 (async function init() {
   const params = new URLSearchParams(window.location.search);
-  if (params.get('mode') === 'view') {
-    // 확인용 페이지 — 기록/분석/명단(읽기전용) 탭
-    document.getElementById('room-select-screen').style.display = 'none';
-    document.getElementById('main-screen').style.display = 'none';
-    // 교사/학생/요청 탭 버튼 숨김
-    ['nb-teacher','nb-student','nb-requests'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = 'none';
-    });
-    // 명단 탭 읽기전용 표시
-    window._viewMode = true;
-    document.body.classList.add('view-mode'); // CSS로 teacher/student 탭 완전 차단
-    goTab('analysis'); // 분석 탭 바로 열기
-    loadStudentsFromSheets(); // 명단은 백그라운드 로드
-
-  } else if (params.get('mode') === 'admin') {
+  if (params.get('mode') === 'admin') {
     // 관리용 페이지 — 교사/학생 탭 제외, 분석 탭 먼저
     document.getElementById('room-select-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'none';
@@ -1306,19 +1279,14 @@ async function gasPost(payload, retry = 2, timeoutMs = 15000) {
 
 /* ══ 메인 화면 네비게이션 ══ */
 function goAttendance() {
-  // 비번 없이 바로 장소 선택 화면으로
   document.getElementById('main-screen').style.display = 'none';
   document.getElementById('room-select-screen').style.display = 'flex';
   document.getElementById('topbar').style.display = 'none';
   renderRoomSelectButtons();
 }
 
-function goView() {
-  openPwModal('확인용 페이지', '명단·기록·분석을 확인할 수 있어요', '📊', 'view');
-}
-
 function goAdmin() {
-  openPwModal('관리용 페이지', '명단 관리 및 전체 설정에 접근해요', '⚙️', 'admin');
+  openPwModal('관리자 페이지', '명단 · 기록 · 분석 · 출석부 관리', '⚙', 'admin');
 }
 
 // 비밀번호 모달
@@ -1344,7 +1312,7 @@ function confirmPw() {
   const errEl  = document.getElementById('pw-err');
   const target = _pwTarget; // 로컬에 저장
 
-  const PW = {view: '1234', admin: 'yb18128!'};
+  const PW = {admin: 'yb18128!'};
   if (val !== PW[target]) {
     errEl.textContent = '❌ 비밀번호가 틀렸어요.';
     const input = document.getElementById('pw-input');
