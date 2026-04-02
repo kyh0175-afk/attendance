@@ -1140,15 +1140,17 @@ async function gasPost(payload, retry = 2, timeoutMs = 15000) {
     loadStudentsFromSheets(); // 명단은 백그라운드 로드
 
   } else if (params.get('mode') === 'admin') {
-    // 관리용 페이지 — 모든 탭
+    // 관리용 페이지 — 교사/학생 탭 제외
     document.getElementById('room-select-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'none';
     window._viewMode = false;
     window._adminMode = true;
+    ['nb-teacher','nb-student'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
     await loadStudentsFromSheets();
-    goTab('manage'); // renderStudentList 포함
-    // 필터 드롭다운이 렌더링된 후 다시 한 번 명시적으로 호출
-    setTimeout(() => renderStudentList(), 100);
+    goTab('analysis'); // 분석 탭 먼저 열기
     restoreTeacherSession();
 
   } else if (params.get('mode') === 'student') {
