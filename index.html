@@ -826,6 +826,14 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
   </div>
   <!-- 기록 필터 -->
   <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+    <select id="hist-days-filter" onchange="loadHistory()"
+      style="background:#1a1f2e;border:1px solid rgba(255,255,255,0.1);border-radius:8px;
+      padding:7px 12px;color:#edf0f7;font-family:inherit;font-size:14px;outline:none;flex:1;max-width:140px">
+      <option value="7" selected>최근 1주</option>
+      <option value="14">최근 2주</option>
+      <option value="30">최근 1개월</option>
+      <option value="0">전체 기간</option>
+    </select>
     <select id="hist-prog-filter" onchange="applyHistFilter()"
       style="background:#1a1f2e;border:1px solid rgba(255,255,255,0.1);border-radius:8px;
       padding:7px 12px;color:#edf0f7;font-family:inherit;font-size:14px;outline:none;flex:1;max-width:220px">
@@ -2213,11 +2221,13 @@ async function toggleDay(no, day, btn) {
 // ── 기록 Sheets에서 불러오기 ──
 async function loadHistory() {
   const el = document.getElementById('hist-list');
-  el.innerHTML = '<div class="empty"><div style="font-size:24px;margin-bottom:8px">⏳</div>기록을 불러오는 중...</div>';
+  const days = parseInt(document.getElementById('hist-days-filter')?.value || '7');
+  const label = days === 0 ? '전체' : `최근 ${days}일`;
+  el.innerHTML = `<div class="empty"><div style="font-size:24px;margin-bottom:8px">⏳</div>${label} 기록을 불러오는 중...</div>`;
 
-  const result = await gasPost({action: "getHistory"}, 2, 30000); // 30초 타임아웃
+  const result = await gasPost({action: "getHistory", days: days}, 2, days === 0 ? 60000 : 30000);
   if (!result.ok || !result.records || !result.records.length) {
-    const msg = result.msg || '완료된 수업이 아직 없어요.';
+    const msg = result.msg || '해당 기간에 완료된 수업이 없어요.';
     el.innerHTML = `<div class="empty"><div class="empty-icon">📋</div>${msg}<br><button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="loadHistory()">🔄 다시 시도</button></div>`;
     return;
   }
