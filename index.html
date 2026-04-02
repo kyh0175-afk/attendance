@@ -1108,6 +1108,7 @@ const S = {
   nextId: 1,
   timerInt: null,
   pollInt: null,
+  qrRefreshInt: null,
   analysisView: 'week',
   analysisDate: new Date(),
   groupDays: {},  // 'program||cls' → ['월','수','금']
@@ -1208,18 +1209,20 @@ async function gasPost(payload, retry = 2, timeoutMs = 15000) {
           if (result.msg && (result.msg.includes('만료') || result.msg.includes('종료'))) {
             S.session.remain = 0;
             clearInterval(S.timerInt);
-            syncTabUI(false);
+            renderTimer();
             document.getElementById('sf-sub').textContent = '이 수업은 종료됐어요.';
           }
         } else {
           S.session.teacher = result.teacher || '';
-          S.session.remain = result.remainSec || durSec;
-          S.session.dur = result.remainSec || durSec;
+          if (result.remainSec && result.remainSec > 0) {
+            S.session.remain = result.remainSec;
+            S.session.dur = result.remainSec;
+          }
           startTimer();
           syncFullUI();
         }
       }).catch(() => {
-        // 네트워크 실패 시 타이머 없이 출석 시도 허용
+        // 네트워크 실패 시 타이머 시작 (출석 시도 허용)
         startTimer();
       });
     } else {
@@ -1722,20 +1725,26 @@ function refreshQR() {
 
 function startTimer() {
   clearInterval(S.timerInt);
+  clearInterval(S.qrRefreshInt);
   renderTimer();
   S.timerInt = setInterval(() => {
     S.session.remain--;
     if (S.session.remain <= 0) {
       S.session.remain = 0;
       clearInterval(S.timerInt);
+      clearInterval(S.qrRefreshInt);
       renderTimer();
       toast('QR 시간이 만료됐어요. 미출석 학생을 자동 저장하고 종료해요.', 'err');
-      // 3초 후 자동 종료 (사용자가 화면 확인할 시간)
       setTimeout(() => autoEndSession(), 3000);
       return;
     }
     renderTimer();
   }, 1000);
+
+  // QR 60초마다 자동 갱신 (exp 값을 최신 remain 기준으로 유지)
+  S.qrRefreshInt = setInterval(() => {
+    if (S.session && S.session.remain > 0) buildQR();
+  }, 60000);
 }
 
 function renderTimer() {
@@ -1803,6 +1812,7 @@ async function endSession() {
 
   // 화면 먼저 전환 (UX 개선)
   clearInterval(S.timerInt);
+  clearInterval(S.qrRefreshInt);
   stopPolling();
   S.session = null; S.attendance = [];
   document.getElementById('session-area').style.display = 'none';
