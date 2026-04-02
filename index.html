@@ -2735,7 +2735,14 @@ async function confirmMregAttend() {
 
 async function manualAttendNo(no) {
   const result = await tryAttend(no);
-  if (!result.ok) { toast(result.msg, 'err'); return; }
+  if (!result.ok) {
+    if (result.msg === '등록되지 않은 학번입니다.') {
+      openMregModal(no);
+    } else {
+      toast(result.msg, 'err');
+    }
+    return;
+  }
   toast(`${result.st.name} 수동 출석 완료 ✅`, 'ok');
   refreshTable();
   refreshStats();
