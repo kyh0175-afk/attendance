@@ -2846,13 +2846,15 @@ function downloadAnalysisExcel() {
         const isTarget = studentDays.includes(dayKr);
         const attended = attendMap[st.no]?.has(dateStr);
         const isFuture = d > today;
+        const isBeforeStart = d < ANALYSIS_MIN_DATE;
+        if (isBeforeStart)          return '';
         if (isFuture)               return '-';
         if (attended && isTarget)   return 'O';
         if (attended && !isTarget)  return '자율';
         if (!isTarget)              return '';
         return 'X';
       });
-      const targetDates  = dates.filter(d => studentDays.includes(DAYS_KR[d.getDay()]) && d <= today);
+      const targetDates  = dates.filter(d => d >= ANALYSIS_MIN_DATE && studentDays.includes(DAYS_KR[d.getDay()]) && d <= today);
       const attendDates  = dates.filter(d => attendMap[st.no]?.has(fmtDate(d)) && d <= today);
       const targetAttend = attendDates.filter(d => studentDays.includes(DAYS_KR[d.getDay()])).length;
       const selfAttend   = attendDates.length - targetAttend;
@@ -2877,8 +2879,9 @@ function downloadAnalysisExcel() {
     const y = S.analysisDate.getFullYear();
     const m = S.analysisDate.getMonth();
     const daysInMonth = new Date(y, m+1, 0).getDate();
-    const allDates = Array.from({length:daysInMonth}, (_, i) => {
-      const d = new Date(y, m, i+1);
+    const startDay = (y === 2026 && m === 2) ? 26 : 1; // 2026년 3월은 26일부터
+    const allDates = Array.from({length:daysInMonth - startDay + 1}, (_, i) => {
+      const d = new Date(y, m, startDay + i);
       return {date:d, str:fmtDate(d), dayKr:DAYS_KR[d.getDay()]};
     });
     const label = `${y}년${m+1}월`;
@@ -3180,10 +3183,18 @@ function setAnalysisView(view) {
   renderAnalysis();
 }
 
+const ANALYSIS_MIN_DATE = new Date(2026, 2, 26); // 2026-03-26 (month is 0-indexed)
+
 function navigateAnalysis(dir) {
   const d = new Date(S.analysisDate);
   if (S.analysisView === 'week') d.setDate(d.getDate() + dir * 7);
   else                           d.setMonth(d.getMonth() + dir);
+  // 하한: 2026-03-26 이전으로 못 가게
+  if (S.analysisView === 'month' && d.getFullYear() === 2026 && d.getMonth() < 2) return; // 2월 이전 차단
+  if (S.analysisView === 'week') {
+    const weekEnd = new Date(d); weekEnd.setDate(d.getDate() + 6);
+    if (weekEnd < ANALYSIS_MIN_DATE) return; // 주의 마지막 날이 3/26 이전이면 차단
+  }
   S.analysisDate = d;
   renderAnalysis();
 }
@@ -3345,15 +3356,17 @@ function renderWeekView(students, attendMapByProg, attendMapAll) {
 
   // 셀 렌더러
   function mkCell(dateStr, prog, studentDays, isToday, isFuture) {
+    // 2026-03-26 이전은 표시 안 함
+    const isBeforeStart = dateStr && dateStr < '2026-03-26';
     const attended = attendMapByProg[`${studentDays._no}__${prog}`]?.has(dateStr)
       || (prog === '_any' && attendMapAll[studentDays._no]?.has(dateStr));
-    // 실제 출석 여부 — prog별 attendMap 사용
     const attByProg = prog ? attendMapByProg[`${studentDays._no}__${prog}`]?.has(dateStr) : false;
     const attAny = attendMapAll[studentDays._no]?.has(dateStr);
     const dayKr = dateStr ? WEEKDAY[new Date(dateStr+'T00:00:00').getDay()] : '';
     const isTarget = studentDays.includes(dayKr);
     let cell;
-    if (isFuture) cell = `<span style="color:rgba(255,255,255,0.45);font-size:17px">-</span>`;
+    if (isBeforeStart) cell = '';
+    else if (isFuture) cell = `<span style="color:rgba(255,255,255,0.45);font-size:17px">-</span>`;
     else if (attByProg && isTarget) cell = `<span style="color:#00c896;font-size:16px;line-height:1">●</span>`;
     else if (attByProg && !isTarget) cell = `<span style="color:#5eb8ff;font-size:16px;line-height:1">●</span>`;
     else if (!isTarget) cell = `<span style="color:rgba(255,255,255,0.35);font-size:16px;line-height:1">·</span>`;
@@ -3591,8 +3604,9 @@ function renderMonthView(students, attendMapByProg, attendMapAll) {
     `${y}년 ${m+1}월`;
 
   const daysInMonth = new Date(y, m+1, 0).getDate();
-  const allDates = Array.from({length:daysInMonth}, (_, i) => {
-    const d = new Date(y, m, i+1);
+  const startDay = (y === 2026 && m === 2) ? 26 : 1; // 2026년 3월은 26일부터
+  const allDates = Array.from({length:daysInMonth - startDay + 1}, (_, i) => {
+    const d = new Date(y, m, startDay + i);
     return {date: d, str: fmtDate(d), dayKr: DAYS_KR[d.getDay()]};
   });
 
