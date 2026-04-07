@@ -325,6 +325,72 @@ html[data-mode="student"] #pg-teacher { display:none !important; }
 .toast.show{transform:translateX(-50%) translateY(0)}
 .toast.ok{border-color:rgba(0,200,150,.35);color:#00c896}
 .toast.err{border-color:rgba(233,69,96,.35);color:#ff7096}
+
+/* ══ 출석 대기 오버레이 ══ */
+#attend-waiting {
+  position: fixed;
+  inset: 0;
+  background: rgba(14,17,23,0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+#attend-waiting.show { display: flex; }
+.aw-spinner {
+  width: 72px; height: 72px;
+  border: 6px solid rgba(245,158,11,0.18);
+  border-top-color: #f5a623;
+  border-radius: 50%;
+  animation: aw-spin 0.9s linear infinite;
+  margin-bottom: 28px;
+}
+@keyframes aw-spin { to { transform: rotate(360deg); } }
+.aw-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #f5a623;
+  margin-bottom: 10px;
+  letter-spacing: -.02em;
+}
+.aw-sub {
+  font-size: 14px;
+  color: #94a3b8;
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  max-width: 320px;
+}
+.aw-elapsed {
+  font-family: 'DM Mono', monospace;
+  font-size: 32px;
+  font-weight: 700;
+  color: #edf0f7;
+  letter-spacing: -.02em;
+}
+.aw-elapsed-label {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 6px;
+}
+.aw-warning {
+  margin-top: 24px;
+  font-size: 13px;
+  color: #fbbf24;
+  background: rgba(251,191,36,0.08);
+  border: 1px solid rgba(251,191,36,0.2);
+  padding: 10px 16px;
+  border-radius: 10px;
+  text-align: center;
+  display: none;
+  max-width: 320px;
+}
+.aw-warning.show { display: block; }
+
 </style>
 <!-- 모드별 초기 화면 즉시 처리 (JS 로드 전 깜빡임 방지) -->
 <script>
@@ -1900,6 +1966,78 @@ function resetTab() {
   document.getElementById('s-err').style.display = 'none';
 }
 
+
+// 출석 처리 중 진행 화면 (오버레이)
+function showAttendProgress(studentNo) {
+  let overlay = document.getElementById('attend-progress-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'attend-progress-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(14,17,23,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:24px;animation:fadeIn .2s';
+    overlay.innerHTML = `
+      <style>
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pulse-ring {
+          0%   { box-shadow: 0 0 0 0 rgba(245,158,11,.6); }
+          70%  { box-shadow: 0 0 0 24px rgba(245,158,11,0); }
+          100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+        }
+        @keyframes spin-slow { to { transform: rotate(360deg); } }
+        .ap-spinner {
+          width: 88px; height: 88px;
+          border: 5px solid rgba(245,158,11,.15);
+          border-top-color: #f59e0b;
+          border-radius: 50%;
+          animation: spin-slow .9s linear infinite, pulse-ring 1.6s ease-out infinite;
+          margin-bottom: 28px;
+        }
+        .ap-title { font-size: 22px; font-weight: 800; color: #f59e0b; margin-bottom: 10px; letter-spacing: -.5px; }
+        .ap-no { font-size: 16px; color: #edf0f7; margin-bottom: 24px; font-family: 'DM Mono', monospace; }
+        .ap-bar-wrap { width: 240px; height: 8px; background: rgba(255,255,255,.08); border-radius: 6px; overflow: hidden; margin-bottom: 14px; }
+        .ap-bar { height: 100%; background: linear-gradient(90deg, #f59e0b, #fbbf24); border-radius: 6px; width: 0%; transition: width .3s ease-out; }
+        .ap-elapsed { font-size: 14px; color: #7a8499; font-family: 'DM Mono', monospace; margin-bottom: 6px; }
+        .ap-hint { font-size: 13px; color: #7a8499; text-align: center; line-height: 1.6; max-width: 280px; }
+      </style>
+      <div class="ap-spinner"></div>
+      <div class="ap-title">출석 처리 중</div>
+      <div class="ap-no" id="ap-no"></div>
+      <div class="ap-bar-wrap"><div class="ap-bar" id="ap-bar"></div></div>
+      <div class="ap-elapsed" id="ap-elapsed">0.0초</div>
+      <div class="ap-hint">잠시만 기다려주세요.<br>다른 학생들과 동시에 처리되고 있어요.</div>
+    `;
+    document.body.appendChild(overlay);
+  } else {
+    overlay.style.display = 'flex';
+  }
+  document.getElementById('ap-no').textContent = '학번 ' + studentNo;
+  document.getElementById('ap-bar').style.width = '0%';
+  document.getElementById('ap-elapsed').textContent = '0.0초';
+
+  // 경과 시간 + 진행률 업데이트 (예상 최대 15초 기준)
+  const startTime = Date.now();
+  const EXPECTED_MAX = 15000; // 15초
+  if (window._apTimer) clearInterval(window._apTimer);
+  window._apTimer = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    const sec = (elapsed / 1000).toFixed(1);
+    const pct = Math.min(95, (elapsed / EXPECTED_MAX) * 100);
+    const elEl = document.getElementById('ap-elapsed');
+    const barEl = document.getElementById('ap-bar');
+    if (elEl) elEl.textContent = sec + '초';
+    if (barEl) barEl.style.width = pct + '%';
+  }, 100);
+}
+
+function hideAttendProgress() {
+  if (window._apTimer) { clearInterval(window._apTimer); window._apTimer = null; }
+  const barEl = document.getElementById('ap-bar');
+  if (barEl) barEl.style.width = '100%';
+  setTimeout(() => {
+    const overlay = document.getElementById('attend-progress-overlay');
+    if (overlay) overlay.style.display = 'none';
+  }, 200);
+}
+
 /* ── 전체화면 출석 (QR 스캔) ── */
 async function doAttendFull() {
   const errEl = document.getElementById('sf-err');
@@ -1923,6 +2061,10 @@ async function doAttendFull() {
 
   if (window._sfAttendInFlight) return; // 중복 호출 차단
   window._sfAttendInFlight = true;
+
+  // 처리 중 진행 화면 표시
+  showAttendProgress(no);
+
   if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
 
   // [fix #1,#4] keepalive 제거, 단일 gasPost만 사용 — 서버 응답 후 확정
@@ -1935,6 +2077,9 @@ async function doAttendFull() {
     studentNo: no
   });
 
+  hideAttendProgress();
+
+  hideAttendWaiting();
   if (btn) { btn.disabled = false; btn.textContent = '✓ 출석하기'; }
   window._sfAttendInFlight = false;
 
@@ -3928,5 +4073,43 @@ async function processRequest(type, idx, newStatus) {
   }
 }
 </script>
+
+<!-- ══ 출석 대기 오버레이 ══ -->
+<div id="attend-waiting">
+  <div class="aw-spinner"></div>
+  <div class="aw-title">출석 처리 중...</div>
+  <div class="aw-sub">서버에 출석 정보를 저장하고 있어요.<br>화면을 닫거나 새로고침하지 마세요.</div>
+  <div class="aw-elapsed" id="aw-elapsed">0.0초</div>
+  <div class="aw-elapsed-label">경과 시간</div>
+  <div class="aw-warning" id="aw-warning">⏱ 평소보다 오래 걸리고 있어요.<br>잠시만 더 기다려주세요.</div>
+</div>
+
+<script>
+let _awTimer = null;
+let _awStartTime = 0;
+function showAttendWaiting() {
+  const overlay = document.getElementById('attend-waiting');
+  const elapsed = document.getElementById('aw-elapsed');
+  const warning = document.getElementById('aw-warning');
+  if (!overlay) return;
+  warning.classList.remove('show');
+  elapsed.textContent = '0.0초';
+  _awStartTime = Date.now();
+  overlay.classList.add('show');
+  clearInterval(_awTimer);
+  _awTimer = setInterval(() => {
+    const sec = (Date.now() - _awStartTime) / 1000;
+    elapsed.textContent = sec.toFixed(1) + '초';
+    if (sec > 8) warning.classList.add('show');
+  }, 100);
+}
+function hideAttendWaiting() {
+  const overlay = document.getElementById('attend-waiting');
+  if (overlay) overlay.classList.remove('show');
+  clearInterval(_awTimer);
+  _awTimer = null;
+}
+</script>
+
 </body>
 </html>
