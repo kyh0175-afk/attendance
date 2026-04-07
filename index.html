@@ -1967,6 +1967,57 @@ function resetTab() {
 }
 
 
+
+// ══════════════════════════════════════════
+//  sendBeacon 백업 전송 — 페이지 unload 시 출석 보장
+//  학생이 응답 받기 전에 화면을 끄거나 탭을 닫아도
+//  pagehide/visibilitychange 이벤트에서 자동 발사됨
+// ══════════════════════════════════════════
+window._pendingBeaconPayload = null;
+
+function registerAttendBeacon(payload) {
+  window._pendingBeaconPayload = payload;
+}
+
+function unregisterAttendBeacon() {
+  window._pendingBeaconPayload = null;
+}
+
+function fireAttendBeacon() {
+  const payload = window._pendingBeaconPayload;
+  if (!payload) return;
+  // 한 번 발사하면 다시 안 쏨 (visibilitychange가 여러 번 발생해도 중복 방지)
+  window._pendingBeaconPayload = null;
+  try {
+    if (navigator.sendBeacon) {
+      // sendBeacon은 Blob으로 보내야 Content-Type 지정 가능
+      const blob = new Blob([JSON.stringify(payload)], { type: 'text/plain;charset=utf-8' });
+      navigator.sendBeacon(GAS_URL, blob);
+    } else {
+      // sendBeacon 미지원 브라우저: keepalive fetch로 폴백
+      fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload),
+        keepalive: true
+      }).catch(() => {});
+    }
+  } catch (e) {
+    // 백업 전송 실패는 조용히 무시 (이미 fetch가 진행 중일 수 있음)
+  }
+}
+
+// 페이지를 떠날 때 백업 발사
+window.addEventListener('pagehide', fireAttendBeacon);
+
+// 화면이 숨겨질 때(잠금/탭 전환/앱 백그라운드)도 발사
+// 모바일에서 pagehide가 안 오는 경우가 있어 visibilitychange도 같이 처리
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    fireAttendBeacon();
+  }
+});
+
 // 출석 처리 중 진행 화면 (오버레이)
 function showAttendProgress(studentNo) {
   let overlay = document.getElementById('attend-progress-overlay');
@@ -2067,20 +2118,30 @@ async function doAttendFull() {
 
   if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
 
-  // [fix #1,#4] keepalive 제거, 단일 gasPost만 사용 — 서버 응답 후 확정
+  // attend 페이로드 (fetch와 sendBeacon 백업이 동일하게 사용)
+  const attendPayload = {
+    action: "attend",
+    sessionId: S.session.id,
+    subject: S.session.subj.trim(),
+    cls: S.session.cls.trim().replace(/\s+/g, ''),
+    teacher: S.session.teacher,
+    studentNo: no
+  };
+
+  // 백업 전송 등록 — 학생이 응답 받기 전에 화면을 끄거나 앱을 종료해도
+  // sendBeacon이 페이지 unload 시점에 자동으로 발사돼서 출석을 보장
+  registerAttendBeacon(attendPayload);
+
+  // 단일 gasPost — 서버 응답 후 확정
   let result;
   try {
-    result = await gasPost({
-      action: "attend",
-      sessionId: S.session.id,
-      subject: S.session.subj.trim(),
-      cls: S.session.cls.trim().replace(/\s+/g, ''),
-      teacher: S.session.teacher,
-      studentNo: no
-    });
+    result = await gasPost(attendPayload);
   } catch (e) {
     result = { ok: false, msg: '서버 연결에 실패했어요. 잠시 후 다시 시도해주세요.' };
   }
+
+  // 응답 받음 → 백업 전송 해제 (정상 응답이면 더 이상 필요 없음)
+  unregisterAttendBeacon();
 
   // 어떤 경로로든 정리 (성공/실패/예외 모두)
   hideAttendProgress();
