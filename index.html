@@ -1149,7 +1149,7 @@ let _supervisorRequestId = 0; // 심야 감독 조회 요청 ID (취소용)
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzrh2K5mEf1_FUJye_2R5WTgs9MVtQrFFM1QyyJc4jZIE-pWDOIRo6Bp-MvgnnW3vsh/exec";
 
 /* ══ Google Sheets API 호출 ══ */
-async function gasPost(payload, retry = 3, timeoutMs = 25000) {
+async function gasPost(payload, retry = 3, timeoutMs = 70000) {
   // 오프라인 감지
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     return {ok: false, msg: '인터넷에 연결되어 있지 않아요. 연결 상태를 확인해주세요.'};
@@ -2003,7 +2003,7 @@ function showAttendProgress(studentNo) {
       <div class="ap-no" id="ap-no"></div>
       <div class="ap-bar-wrap"><div class="ap-bar" id="ap-bar"></div></div>
       <div class="ap-elapsed" id="ap-elapsed">0.0초</div>
-      <div class="ap-hint">잠시만 기다려주세요.<br>다른 학생들과 동시에 처리되고 있어요.</div>
+      <div class="ap-hint">잠시만 기다려주세요.<br>최대 30초까지 걸릴 수 있어요.<br>화면을 닫거나 새로고침하지 마세요.</div>
     `;
     document.body.appendChild(overlay);
   } else {
@@ -2015,7 +2015,7 @@ function showAttendProgress(studentNo) {
 
   // 경과 시간 + 진행률 업데이트 (예상 최대 15초 기준)
   const startTime = Date.now();
-  const EXPECTED_MAX = 15000; // 15초
+  const EXPECTED_MAX = 30000; // 30초 (동시 출석 최악 시나리오)
   if (window._apTimer) clearInterval(window._apTimer);
   window._apTimer = setInterval(() => {
     const elapsed = Date.now() - startTime;
@@ -2068,18 +2068,22 @@ async function doAttendFull() {
   if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
 
   // [fix #1,#4] keepalive 제거, 단일 gasPost만 사용 — 서버 응답 후 확정
-  const result = await gasPost({
-    action: "attend",
-    sessionId: S.session.id,
-    subject: S.session.subj.trim(),
-    cls: S.session.cls.trim().replace(/\s+/g, ''),
-    teacher: S.session.teacher,
-    studentNo: no
-  });
+  let result;
+  try {
+    result = await gasPost({
+      action: "attend",
+      sessionId: S.session.id,
+      subject: S.session.subj.trim(),
+      cls: S.session.cls.trim().replace(/\s+/g, ''),
+      teacher: S.session.teacher,
+      studentNo: no
+    });
+  } catch (e) {
+    result = { ok: false, msg: '서버 연결에 실패했어요. 잠시 후 다시 시도해주세요.' };
+  }
 
+  // 어떤 경로로든 정리 (성공/실패/예외 모두)
   hideAttendProgress();
-
-  hideAttendWaiting();
   if (btn) { btn.disabled = false; btn.textContent = '✓ 출석하기'; }
   window._sfAttendInFlight = false;
 
