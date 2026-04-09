@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>코스모스 독서시간 출석 v2</title>
+
+<!-- ══ 외부 라이브러리 ══ -->
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+/* ══════════════════════════════════════════ */
+/*  디자인 토큰 (v1과 100% 동일 — 절대 변경 금지)  */
+/* ══════════════════════════════════════════ */
+html { background: #0e1117 !important; }
+body {
+  background: #0e1117 !important;
+  color: #edf0f7 !important;
+}
+a { color: inherit; }
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --ink: #0e1117;
+  --card: rgba(255,255,255,0.05);
+  --card2: rgba(255,255,255,0.09);
+  --border: rgba(255,255,255,0.1);
+  --border2: rgba(255,255,255,0.18);
+  --accent: #e94560;
+  --accent2: #f5a623;
+  --ok: #00c896;
+  --sky: #5eb8ff;
+  --text: #edf0f7;
+  --muted: #7a8499;
+  --r: 14px;
+  --r-sm: 10px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: #0e1117;
+  color: #edf0f7;
+  min-height: 100vh;
+  font-size: 18px;
+  line-height: 1.7;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(99,102,241,.13) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 90%, rgba(20,184,166,.1) 0%, transparent 60%);
+}
+
+.wrap { position: relative; z-index: 1; }
+
+/* ══════════════════════════════════════════ */
+/*  Phase 1 임시 스타일 (연결 테스트용)            */
+/* ══════════════════════════════════════════ */
+.phase1-status {
+  max-width: 720px;
+  margin: 60px auto;
+  padding: 0 24px;
+}
+
+.phase1-title {
+  font-size: 32px;
+  font-weight: 900;
+  color: #f59e0b;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+.phase1-sub {
+  color: #7a8499;
+  font-size: 15px;
+  margin-bottom: 32px;
+}
+
+.phase1-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.phase1-card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #edf0f7;
+}
+
+.phase1-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 14px;
+}
+
+.phase1-row:last-child { border-bottom: none; }
+.phase1-label { color: #7a8499; }
+.phase1-value {
+  font-family: 'DM Mono', monospace;
+  color: #edf0f7;
+}
+
+.status-ok { color: #00c896; }
+.status-err { color: #e94560; }
+.status-pending { color: #f5a623; }
+
+.phase1-btn {
+  display: inline-block;
+  padding: 12px 24px;
+  background: rgba(0, 200, 150, 0.15);
+  border: 1px solid rgba(0, 200, 150, 0.4);
+  border-radius: 10px;
+  color: #00c896;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.18s;
+}
+
+.phase1-btn:hover {
+  background: rgba(0, 200, 150, 0.25);
+}
+
+.phase1-log {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: #7a8499;
+  max-height: 280px;
+  overflow-y: auto;
+  margin-top: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.phase1-log .log-ok { color: #00c896; }
+.phase1-log .log-err { color: #e94560; }
+.phase1-log .log-info { color: #5eb8ff; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ══════════════════════════════════════════ -->
+<!--  Phase 1: 연결 진단 페이지                     -->
+<!--  (Phase 2부터 실제 출석 화면이 추가됨)          -->
+<!-- ══════════════════════════════════════════ -->
+<div class="phase1-status">
+  <div class="phase1-title">코스모스 독서시간 출석 v2</div>
+  <div class="phase1-sub">Phase 1 — 환경 진단 페이지</div>
+
+  <div class="phase1-card">
+    <h3>🔗 Supabase 연결 상태</h3>
+    <div class="phase1-row">
+      <span class="phase1-label">Project URL</span>
+      <span class="phase1-value" id="diag-url">—</span>
+    </div>
+    <div class="phase1-row">
+      <span class="phase1-label">SDK 로드</span>
+      <span class="phase1-value" id="diag-sdk">확인 중...</span>
+    </div>
+    <div class="phase1-row">
+      <span class="phase1-label">클라이언트 생성</span>
+      <span class="phase1-value" id="diag-client">확인 중...</span>
+    </div>
+  </div>
+
+  <div class="phase1-card">
+    <h3>📊 데이터 확인</h3>
+    <div class="phase1-row">
+      <span class="phase1-label">학생 명단</span>
+      <span class="phase1-value" id="diag-students">—</span>
+    </div>
+    <div class="phase1-row">
+      <span class="phase1-label">출석 기록</span>
+      <span class="phase1-value" id="diag-attendance">—</span>
+    </div>
+    <div class="phase1-row">
+      <span class="phase1-label">좌석 배치</span>
+      <span class="phase1-value" id="diag-seats">—</span>
+    </div>
+    <div class="phase1-row">
+      <span class="phase1-label">심야 감독표</span>
+      <span class="phase1-value" id="diag-supervisors">—</span>
+    </div>
+    <div class="phase1-row">
+      <span class="phase1-label">시스템 설정</span>
+      <span class="phase1-value" id="diag-settings">—</span>
+    </div>
+  </div>
+
+  <div class="phase1-card">
+    <h3>⚡ 실시간 구독 테스트</h3>
+    <div class="phase1-row">
+      <span class="phase1-label">Realtime 채널</span>
+      <span class="phase1-value" id="diag-realtime">—</span>
+    </div>
+    <button class="phase1-btn" onclick="runDiagnostics()">🔄 진단 다시 실행</button>
+  </div>
+
+  <div class="phase1-card">
+    <h3>📋 진단 로그</h3>
+    <div class="phase1-log" id="diag-log"></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  Supabase 설정
+// ══════════════════════════════════════════
+
+const SUPABASE_URL = 'https://rxsmmwqekrtbstcjbagj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_h7o2vnvgu7Akrg87cAYSkg__DA-K_Q';
+//  ⚠️ Phase 1: 사용자분이 본인의 publishable key로 교체해야 합니다.
+//     (지금 박혀있는 건 캡처에서 본 일부분이라 동작 안 함)
+
+// ══════════════════════════════════════════
+//  Supabase 클라이언트 + 헬퍼 (sb)
+// ══════════════════════════════════════════
+//  Phase 2부터 sb.학생조회(), sb.출석등록() 같은
+//  도메인 함수들이 여기에 추가됩니다.
+// ══════════════════════════════════════════
+
+let supabase = null;
+const sb = {
+  // Phase 2부터 채워질 예정
+  // 예: students: { list, byNo, upsert, ... }
+  //     attendance: { add, byStudent, ... }
+};
+
+// ══════════════════════════════════════════
+//  진단 로직 (Phase 1 전용)
+// ══════════════════════════════════════════
+
+function log(msg, type = 'info') {
+  const el = document.getElementById('diag-log');
+  const time = new Date().toLocaleTimeString('ko-KR', { hour12: false });
+  const cls = type === 'ok' ? 'log-ok' : type === 'err' ? 'log-err' : 'log-info';
+  el.innerHTML += `<span class="${cls}">[${time}] ${msg}</span>\n`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function setStatus(id, text, status) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'phase1-value ' + (
+    status === 'ok'  ? 'status-ok' :
+    status === 'err' ? 'status-err' :
+    status === 'pending' ? 'status-pending' : ''
+  );
+}
+
+async function runDiagnostics() {
+  // 로그 초기화
+  document.getElementById('diag-log').innerHTML = '';
+  log('진단 시작', 'info');
+
+  // ── 1. SDK 로드 확인 ──
+  setStatus('diag-url', SUPABASE_URL, 'ok');
+
+  if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
+    setStatus('diag-sdk', '❌ 로드 실패', 'err');
+    log('Supabase JS SDK 로드 실패. CDN 차단 가능성', 'err');
+    return;
+  }
+  setStatus('diag-sdk', '✅ 정상', 'ok');
+  log('Supabase JS SDK 로드 OK', 'ok');
+
+  // ── 2. 클라이언트 생성 ──
+  try {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    setStatus('diag-client', '✅ 정상', 'ok');
+    log('클라이언트 생성 OK', 'ok');
+  } catch (e) {
+    setStatus('diag-client', '❌ ' + e.message, 'err');
+    log('클라이언트 생성 실패: ' + e.message, 'err');
+    return;
+  }
+
+  // ── 3. 각 테이블 SELECT count ──
+  const tables = [
+    { name: 'students',        labelId: 'diag-students',    expected: 514 },
+    { name: 'attendance',      labelId: 'diag-attendance',  expected: 817 },
+    { name: 'seats',           labelId: 'diag-seats',       expected: 292 },
+    { name: 'supervisors',     labelId: 'diag-supervisors', expected: 22  },
+    { name: 'system_settings', labelId: 'diag-settings',    expected: 7   }
+  ];
+
+  for (const t of tables) {
+    setStatus(t.labelId, '조회 중...', 'pending');
+    try {
+      const { count, error } = await supabase
+        .from(t.name)
+        .select('*', { count: 'exact', head: true });
+
+      if (error) throw error;
+
+      const ok = count === t.expected;
+      setStatus(
+        t.labelId,
+        `${count}행${ok ? ' ✓' : ` (예상: ${t.expected})`}`,
+        ok ? 'ok' : 'err'
+      );
+      log(`${t.name}: ${count}행 ${ok ? 'OK' : '⚠ 예상값과 다름'}`, ok ? 'ok' : 'err');
+    } catch (e) {
+      setStatus(t.labelId, '❌ ' + (e.message || '오류'), 'err');
+      log(`${t.name} 조회 실패: ${e.message}`, 'err');
+    }
+  }
+
+  // ── 4. Realtime 구독 테스트 ──
+  setStatus('diag-realtime', '연결 중...', 'pending');
+  try {
+    const channel = supabase
+      .channel('phase1-test')
+      .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'attendance' },
+          (payload) => {
+            log('Realtime 이벤트 수신: ' + payload.eventType, 'ok');
+          })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setStatus('diag-realtime', '✅ 구독 성공', 'ok');
+          log('Realtime 채널 구독 OK', 'ok');
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          setStatus('diag-realtime', '❌ ' + status, 'err');
+          log('Realtime 구독 실패: ' + status, 'err');
+        }
+      });
+  } catch (e) {
+    setStatus('diag-realtime', '❌ ' + e.message, 'err');
+    log('Realtime 초기화 실패: ' + e.message, 'err');
+  }
+
+  log('진단 완료', 'info');
+}
+
+// 페이지 로드 시 자동 실행
+window.addEventListener('DOMContentLoaded', () => {
+  log('Phase 1 환경 진단 페이지 로드됨', 'info');
+  log('Supabase URL: ' + SUPABASE_URL, 'info');
+  log('SDK 버전: ' + (window.supabase?.version || '확인 불가'), 'info');
+  setTimeout(runDiagnostics, 300);
+});
+</script>
+
+</body>
+</html>
