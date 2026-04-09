@@ -4298,11 +4298,11 @@ function renderGradeSummary() {
   const el = document.getElementById('t-grade-summary');
   if (!el) return;
 
-  // 학번 첫 글자로 학년 추출
+  // 학번 첫 글자로 학년 추출 (1~3학년만, 9학년 등 테스트 학번 제외)
   const grades = {};
   T.rosterStudents.forEach(s => {
     const g = String(s.학번).trim()[0];
-    if (g && !isNaN(g)) {
+    if (g === '1' || g === '2' || g === '3') {
       grades[g] = (grades[g] || 0) + 1;
     }
   });
