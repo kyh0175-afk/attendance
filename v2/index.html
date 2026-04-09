@@ -1276,6 +1276,382 @@ input { font-family: inherit; }
   display: block;
 }
 
+/* ══════════════════════════════════════════ */
+/*  학생 화면 (Phase 2D)                         */
+/* ══════════════════════════════════════════ */
+.student-wrap {
+  width: 100%;
+  max-width: 460px;
+}
+
+/* 세션 정보 카드 (상단) */
+.student-sess {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 24px;
+  text-align: center;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.4);
+}
+.student-sess-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 6px;
+}
+.student-sess-program {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--cream);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.student-sess-meta {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--ink-dim);
+}
+
+/* 학번 입력 카드 */
+.student-card {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 36px 28px 28px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 30px 60px -20px rgba(0, 0, 0, 0.5);
+  animation: cardIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.student-card::before,
+.student-card::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--amber);
+  opacity: 0.4;
+}
+.student-card::before {
+  top: 12px;
+  left: 12px;
+  border-right: none;
+  border-bottom: none;
+}
+.student-card::after {
+  bottom: 12px;
+  right: 12px;
+  border-left: none;
+  border-top: none;
+}
+
+.student-prompt {
+  text-align: center;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--ink-dim);
+  margin-bottom: 18px;
+  letter-spacing: 0.05em;
+}
+
+/* 학번 5자리 디스플레이 */
+.no-display {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.no-cell {
+  width: 48px;
+  height: 60px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--cream);
+  transition: all 0.2s;
+}
+.no-cell.filled {
+  border-color: var(--amber);
+  background: rgba(214, 178, 124, 0.06);
+}
+.no-cell.active {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px rgba(214, 178, 124, 0.12);
+  animation: cellPulse 1.5s ease-in-out infinite;
+}
+@keyframes cellPulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(214, 178, 124, 0.12); }
+  50%      { box-shadow: 0 0 0 5px rgba(214, 178, 124, 0.2); }
+}
+
+/* 인앱 넘버패드 */
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.np-key {
+  background: var(--paper2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--cream);
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.np-key:hover {
+  background: var(--paper3);
+  border-color: var(--border2);
+}
+.np-key:active {
+  background: rgba(214, 178, 124, 0.15);
+  transform: scale(0.96);
+}
+.np-key.np-special {
+  background: rgba(184, 84, 63, 0.08);
+  border-color: rgba(184, 84, 63, 0.3);
+  color: var(--copper);
+  font-size: 18px;
+}
+.np-key.np-special:hover {
+  background: rgba(184, 84, 63, 0.15);
+}
+.np-key.np-confirm {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: var(--bg);
+  font-weight: 700;
+  font-size: 16px;
+}
+.np-key.np-confirm:hover {
+  background: var(--cream);
+}
+.np-key.np-confirm:disabled {
+  background: rgba(214, 178, 124, 0.2);
+  color: var(--ink-faint);
+  cursor: not-allowed;
+}
+
+.student-err {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  color: var(--terra);
+  text-align: center;
+  min-height: 22px;
+  margin-bottom: 6px;
+  font-weight: 400;
+}
+
+/* ── 처리 중 오버레이 ── */
+.attend-progress {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 8, 5, 0.92);
+  backdrop-filter: blur(10px);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 24px;
+}
+.attend-progress.on { display: flex; }
+.progress-spinner {
+  width: 64px;
+  height: 64px;
+  border: 3px solid rgba(214, 178, 124, 0.15);
+  border-top-color: var(--amber);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.progress-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-style: italic;
+  color: var(--cream);
+  margin-bottom: 6px;
+}
+.progress-no {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  letter-spacing: 0.15em;
+  color: var(--amber);
+}
+
+/* ── 성공 화면 ── */
+.student-success {
+  text-align: center;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 48px 32px;
+  position: relative;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.5);
+  animation: successIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes successIn {
+  0%   { opacity: 0; transform: scale(0.92); }
+  60%  { opacity: 1; transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+.student-success::before,
+.student-success::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--sage);
+  opacity: 0.6;
+}
+.student-success::before {
+  top: 12px;
+  left: 12px;
+  border-right: none;
+  border-bottom: none;
+}
+.student-success::after {
+  bottom: 12px;
+  right: 12px;
+  border-left: none;
+  border-top: none;
+}
+
+.success-check {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(123, 160, 135, 0.12);
+  border: 1px solid rgba(123, 160, 135, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 44px;
+  color: var(--sage);
+  animation: checkPop 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes checkPop {
+  0%   { opacity: 0; transform: scale(0.5); }
+  60%  { opacity: 1; transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.success-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--cream);
+  margin-bottom: 4px;
+  line-height: 1;
+}
+.success-name {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--amber);
+  margin-bottom: 24px;
+}
+.success-meta {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--ink-dim);
+  line-height: 1.9;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.success-meta strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+.success-time {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  color: var(--amber);
+  letter-spacing: 0.05em;
+}
+
+/* ── 에러 화면 (세션 만료 등) ── */
+.student-error {
+  text-align: center;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 48px 32px;
+  position: relative;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.5);
+}
+.student-error::before,
+.student-error::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--terra);
+  opacity: 0.5;
+}
+.student-error::before {
+  top: 12px;
+  left: 12px;
+  border-right: none;
+  border-bottom: none;
+}
+.student-error::after {
+  bottom: 12px;
+  right: 12px;
+  border-left: none;
+  border-top: none;
+}
+.error-icon {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 64px;
+  font-style: italic;
+  color: var(--terra);
+  margin-bottom: 16px;
+  line-height: 1;
+}
+.error-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--cream);
+  margin-bottom: 6px;
+}
+.error-msg {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--ink-dim);
+  line-height: 1.8;
+  margin-bottom: 24px;
+}
+
 /* ══ 진단 페이지 (?diag) ══ */
 .diag-wrap {
   max-width: 720px;
@@ -1555,6 +1931,85 @@ input { font-family: inherit; }
       <button class="btn btn-primary" onclick="confirmEndSession()">마감</button>
     </div>
   </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  학생 화면 (Phase 2D)                          -->
+<!-- ══════════════════════════════════════════ -->
+<div class="screen" id="screen-student" style="display:none">
+
+  <div class="student-wrap">
+
+    <!-- 상태 1: 로딩 -->
+    <div id="st-loading" style="text-align:center">
+      <div class="progress-spinner" style="margin: 40px auto 16px"></div>
+      <div class="progress-text">세션 확인 중...</div>
+    </div>
+
+    <!-- 상태 2: 에러 (세션 만료 / 종료 / 잘못된 QR) -->
+    <div id="st-error" class="student-error" style="display:none">
+      <div class="error-icon">!</div>
+      <div class="error-title">Session Closed</div>
+      <div class="error-msg" id="st-error-msg">QR 코드를 확인할 수 없어요.</div>
+    </div>
+
+    <!-- 상태 3: 학번 입력 -->
+    <div id="st-input" style="display:none">
+      <div class="student-sess">
+        <div class="student-sess-label">NOW READING</div>
+        <div class="student-sess-program" id="st-program">—</div>
+        <div class="student-sess-meta" id="st-meta">—</div>
+      </div>
+
+      <div class="student-card">
+        <div class="student-prompt">학번 5자리를 입력해주세요</div>
+
+        <div class="no-display" id="st-no-display">
+          <div class="no-cell" data-idx="0"></div>
+          <div class="no-cell" data-idx="1"></div>
+          <div class="no-cell" data-idx="2"></div>
+          <div class="no-cell" data-idx="3"></div>
+          <div class="no-cell" data-idx="4"></div>
+        </div>
+
+        <div class="numpad">
+          <button class="np-key" data-key="1">1</button>
+          <button class="np-key" data-key="2">2</button>
+          <button class="np-key" data-key="3">3</button>
+          <button class="np-key" data-key="4">4</button>
+          <button class="np-key" data-key="5">5</button>
+          <button class="np-key" data-key="6">6</button>
+          <button class="np-key" data-key="7">7</button>
+          <button class="np-key" data-key="8">8</button>
+          <button class="np-key" data-key="9">9</button>
+          <button class="np-key np-special" data-key="del">⌫</button>
+          <button class="np-key" data-key="0">0</button>
+          <button class="np-key np-confirm" id="st-confirm" data-key="ok" disabled>출석</button>
+        </div>
+
+        <div class="student-err" id="st-err"></div>
+      </div>
+    </div>
+
+    <!-- 상태 4: 성공 -->
+    <div id="st-success" class="student-success" style="display:none">
+      <div class="success-check">✓</div>
+      <div class="success-title">Welcome</div>
+      <div class="success-name" id="st-success-name">—</div>
+      <div class="success-meta">
+        <strong id="st-success-program">—</strong> · <span id="st-success-room">—</span><br>
+        출석 시각 <span class="success-time" id="st-success-time">—</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 처리 중 오버레이 (전체 화면) -->
+<div class="attend-progress" id="attend-progress">
+  <div class="progress-spinner"></div>
+  <div class="progress-text">출석 처리 중</div>
+  <div class="progress-no" id="progress-no">—</div>
 </div>
 
 <!-- ══════════════════════════════════════════ -->
@@ -2298,6 +2753,12 @@ function route() {
     return;
   }
 
+  if (params.get('mode') === 'student') {
+    const sessionId = params.get('s');
+    enterStudentScreen(sessionId);
+    return;
+  }
+
   if (params.get('mode') === 'admin') {
     document.getElementById('construction-ko').textContent =
       '관리자 페이지 준비중';
@@ -2720,6 +3181,323 @@ document.getElementById('modal-end').addEventListener('click', (e) => {
 window.addEventListener('beforeunload', () => {
   stopClock();
   stopTeacherTimer();
+});
+
+// ══════════════════════════════════════════════════════════════
+//  학생 화면 (Phase 2D)
+// ══════════════════════════════════════════════════════════════
+
+// 학생 화면 상태
+const ST = {
+  sessionId: null,
+  session: null,         // {sessionId, program, room, teacher, expireMs}
+  inputDigits: [],       // 학번 5자리 [1, 2, 3, 4, 5]
+  inFlight: false,       // 중복 호출 차단
+  beaconPayload: null,   // sendBeacon 백업용
+};
+
+async function enterStudentScreen(sessionId) {
+  showScreen('screen-student');
+
+  // 모든 하위 상태 숨김 + 로딩 표시
+  document.getElementById('st-loading').style.display = 'block';
+  document.getElementById('st-error').style.display = 'none';
+  document.getElementById('st-input').style.display = 'none';
+  document.getElementById('st-success').style.display = 'none';
+
+  if (!sessionId) {
+    showStudentError('잘못된 QR 코드예요. 선생님께 문의해주세요.');
+    return;
+  }
+
+  // 세션 조회
+  let session;
+  try {
+    session = await sb.sessions.byKey(sessionId);
+  } catch (e) {
+    console.error('세션 조회 실패:', e);
+    showStudentError('세션 정보를 불러올 수 없어요. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+
+  if (!session) {
+    showStudentError('이 QR 코드는 더 이상 유효하지 않아요. 선생님께 새 QR을 요청해주세요.');
+    return;
+  }
+
+  // 활성 + 만료 체크
+  if (!session.활성) {
+    showStudentError('출석이 마감됐어요. 선생님께 문의해주세요.');
+    return;
+  }
+
+  const expireMs = new Date(session.만료시각).getTime();
+  if (expireMs < Date.now()) {
+    showStudentError('QR 코드가 만료됐어요. 선생님께 새 QR을 요청해주세요.');
+    return;
+  }
+
+  // 정상 → 입력 화면
+  ST.sessionId = sessionId;
+  ST.session = {
+    sessionId,
+    program: session.프로그램,
+    room: session.장소,
+    teacher: session.교사,
+    expireMs,
+  };
+  ST.inputDigits = [];
+
+  document.getElementById('st-program').textContent = session.프로그램;
+  document.getElementById('st-meta').textContent = `${session.장소} · ${session.교사} 선생님`;
+
+  document.getElementById('st-loading').style.display = 'none';
+  document.getElementById('st-input').style.display = 'block';
+
+  // 넘버패드 이벤트 바인딩
+  initNumpad();
+  updateNoDisplay();
+}
+
+function showStudentError(msg) {
+  document.getElementById('st-loading').style.display = 'none';
+  document.getElementById('st-input').style.display = 'none';
+  document.getElementById('st-success').style.display = 'none';
+  document.getElementById('st-error').style.display = 'block';
+  document.getElementById('st-error-msg').textContent = msg;
+}
+
+// ── 넘버패드 ──
+let _numpadInitialized = false;
+function initNumpad() {
+  if (_numpadInitialized) return;
+  _numpadInitialized = true;
+
+  document.querySelectorAll('.np-key').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.key;
+      handleNumpadKey(key);
+    });
+  });
+
+  // 키보드 입력도 받기 (PC 테스트용)
+  document.addEventListener('keydown', (e) => {
+    // 학생 화면일 때만
+    if (document.getElementById('screen-student').style.display === 'none') return;
+    if (document.getElementById('st-input').style.display === 'none') return;
+
+    if (e.key >= '0' && e.key <= '9') handleNumpadKey(e.key);
+    else if (e.key === 'Backspace') handleNumpadKey('del');
+    else if (e.key === 'Enter') handleNumpadKey('ok');
+  });
+}
+
+function handleNumpadKey(key) {
+  if (key === 'del') {
+    ST.inputDigits.pop();
+  } else if (key === 'ok') {
+    if (ST.inputDigits.length === 5) doStudentAttend();
+    return;
+  } else if (/^[0-9]$/.test(key)) {
+    if (ST.inputDigits.length < 5) {
+      ST.inputDigits.push(key);
+    }
+  }
+  updateNoDisplay();
+}
+
+function updateNoDisplay() {
+  const cells = document.querySelectorAll('#st-no-display .no-cell');
+  cells.forEach((cell, idx) => {
+    const val = ST.inputDigits[idx];
+    cell.textContent = val || '';
+    cell.classList.toggle('filled', !!val);
+    cell.classList.toggle('active', idx === ST.inputDigits.length && idx < 5);
+  });
+
+  // 확인 버튼 활성화
+  const confirmBtn = document.getElementById('st-confirm');
+  confirmBtn.disabled = ST.inputDigits.length !== 5;
+
+  // 에러 메시지 숨김
+  document.getElementById('st-err').textContent = '';
+}
+
+// ── 출석 처리 ──
+async function doStudentAttend() {
+  if (ST.inFlight) return;
+  if (!ST.session) return;
+
+  const no = ST.inputDigits.join('');
+  const errEl = document.getElementById('st-err');
+
+  // 만료 재확인
+  if (Date.now() > ST.session.expireMs) {
+    errEl.textContent = 'QR 시간이 만료됐어요. 선생님께 새 QR을 요청해주세요.';
+    return;
+  }
+
+  ST.inFlight = true;
+  showAttendProgress(no);
+
+  // 학생 정보 조회 (이름 미리 가져오기)
+  let studentInfo = null;
+  try {
+    const matches = await sb.students.byNo(no);
+    if (matches && matches.length > 0) {
+      // 1차: (학번 + 프로그램 + 장소) 정확 매칭
+      studentInfo = matches.find(s =>
+        s.프로그램 === ST.session.program && s.장소 === ST.session.room
+      );
+      // 2차 폴백: (학번 + 장소)만 매칭
+      if (!studentInfo) {
+        studentInfo = matches.find(s => s.장소 === ST.session.room);
+      }
+      // 3차 폴백: 학번만
+      if (!studentInfo) studentInfo = matches[0];
+    }
+  } catch (e) {
+    console.warn('학생 조회 실패 (출석은 진행):', e);
+  }
+
+  // 명단에 없으면 → 즉석 등록 (Phase 2F에서 본격 구현)
+  if (!studentInfo) {
+    hideAttendProgress();
+    ST.inFlight = false;
+    errEl.textContent = '명단에 없는 학번이에요. 선생님께 등록을 요청해주세요.';
+    return;
+  }
+
+  // 출석 페이로드
+  const now = new Date();
+  const timeStr = now.toTimeString().slice(0, 8);
+  const payload = {
+    sessionId: ST.session.sessionId,
+    no: no,
+    name: studentInfo.이름,
+    date: now.toISOString().slice(0, 10),
+    time: timeStr,
+    program: ST.session.program,
+    room: ST.session.room,
+    teacher: ST.session.teacher,
+  };
+
+  // sendBeacon 백업 등록 (페이지가 갑자기 닫히면 자동 발사)
+  registerAttendBeacon(payload);
+
+  // 정상 출석 처리
+  let result;
+  try {
+    result = await sb.attendance.add(payload);
+  } catch (e) {
+    console.error('출석 처리 실패:', e);
+    result = { ok: false, msg: e.message || '서버 연결 실패' };
+  }
+
+  // 응답 받음 → 백업 해제
+  unregisterAttendBeacon();
+  hideAttendProgress();
+  ST.inFlight = false;
+
+  if (!result.ok) {
+    errEl.textContent = '출석 처리 실패: ' + (result.msg || '알 수 없는 오류');
+    return;
+  }
+
+  // 성공 (이미 출석한 경우도 성공으로 처리)
+  showStudentSuccess(studentInfo.이름, timeStr);
+}
+
+function showStudentSuccess(name, time) {
+  document.getElementById('st-input').style.display = 'none';
+  document.getElementById('st-success').style.display = 'block';
+  document.getElementById('st-success-name').textContent = name + ' 학생';
+  document.getElementById('st-success-program').textContent = ST.session.program;
+  document.getElementById('st-success-room').textContent = ST.session.room;
+  document.getElementById('st-success-time').textContent = time;
+}
+
+// ── 처리 중 오버레이 ──
+function showAttendProgress(no) {
+  document.getElementById('progress-no').textContent = no;
+  document.getElementById('attend-progress').classList.add('on');
+}
+function hideAttendProgress() {
+  document.getElementById('attend-progress').classList.remove('on');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  sendBeacon 백업 메커니즘 ⭐
+//  학생이 출석 처리 도중 화면을 끄거나 앱을 백그라운드로 보내도
+//  pagehide / visibilitychange 이벤트에서 자동 발사되어 출석 보장
+// ══════════════════════════════════════════════════════════════
+
+function registerAttendBeacon(payload) {
+  ST.beaconPayload = payload;
+}
+
+function unregisterAttendBeacon() {
+  ST.beaconPayload = null;
+}
+
+function fireAttendBeacon() {
+  const payload = ST.beaconPayload;
+  if (!payload) return;
+  // 한 번 발사 후 즉시 비움 (중복 방지)
+  ST.beaconPayload = null;
+
+  try {
+    // Supabase REST API 직접 호출 (sendBeacon은 fetch처럼 SDK 못 씀)
+    const url = `${SUPABASE_URL}/rest/v1/attendance`;
+    const body = JSON.stringify({
+      세션id: payload.sessionId,
+      학번: payload.no,
+      이름: payload.name,
+      날짜: payload.date,
+      원래시각: payload.time,
+      처리시각: null,
+      사후여부: false,
+      프로그램: payload.program,
+      장소: payload.room,
+      교사: payload.teacher,
+      상태: '출석',
+    });
+
+    if (navigator.sendBeacon) {
+      // sendBeacon은 헤더를 직접 못 설정하므로 Blob의 type으로 처리
+      const blob = new Blob([body], { type: 'application/json' });
+      // ⚠️ sendBeacon은 Authorization 헤더를 지원 안 해서 RLS가 anon으로 동작
+      //    publishable key를 URL 쿼리로 전달
+      const beaconUrl = url + '?apikey=' + encodeURIComponent(SUPABASE_KEY);
+      navigator.sendBeacon(beaconUrl, blob);
+    } else {
+      // sendBeacon 미지원 폴백: keepalive fetch
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Prefer': 'return=minimal',
+        },
+        body,
+        keepalive: true,
+      }).catch(() => {});
+    }
+  } catch (e) {
+    // 백업 전송 실패는 조용히 무시 (이미 정상 호출이 진행 중일 수 있음)
+    console.warn('sendBeacon 발사 실패:', e);
+  }
+}
+
+// 페이지 떠날 때 백업 발사
+window.addEventListener('pagehide', fireAttendBeacon);
+
+// 화면이 숨겨질 때(잠금/탭 전환/앱 백그라운드)도 발사
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    fireAttendBeacon();
+  }
 });
 
 // ══════════════════════════════════════════════════════════════
