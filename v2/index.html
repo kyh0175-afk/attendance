@@ -65,7 +65,16 @@ html, body {
 }
 body { overflow-x: hidden; }
 a { color: inherit; text-decoration: none; }
-button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  touch-action: manipulation; /* iOS 더블탭 줌 방지 */
+  -webkit-user-select: none;
+  user-select: none;
+}
 input { font-family: inherit; }
 
 /* ══ 배경 텍스처 ══ */
@@ -1253,6 +1262,235 @@ input { font-family: inherit; }
   border-color: var(--terra);
 }
 
+/* ══ 출석 명단 (Phase 2E) ══ */
+.attendance-area {
+  margin-top: 24px;
+}
+
+/* 통계 카드 */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.stat-card {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 16px 16px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.stat-card.attended {
+  border-color: rgba(123, 160, 135, 0.25);
+}
+.stat-card.absent {
+  border-color: rgba(184, 84, 63, 0.2);
+}
+.stat-card.rate {
+  border-color: rgba(214, 178, 124, 0.25);
+}
+
+.stat-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 36px;
+  font-weight: 500;
+  font-style: italic;
+  line-height: 1;
+  margin-bottom: 4px;
+  color: var(--cream);
+  font-variant-numeric: tabular-nums;
+}
+.stat-card.attended .stat-num { color: var(--sage); }
+.stat-card.absent .stat-num   { color: var(--copper); }
+.stat-card.rate .stat-num     { color: var(--amber); }
+
+.stat-num .unit {
+  font-size: 16px;
+  font-weight: 400;
+  margin-left: 2px;
+  opacity: 0.7;
+}
+
+.stat-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* 명단 헤더 */
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r) var(--r) 0 0;
+  border-bottom: none;
+}
+.list-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--cream);
+}
+.list-title-ko {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ink-faint);
+  margin-left: 8px;
+  letter-spacing: 0.05em;
+}
+.list-tabs {
+  display: flex;
+  gap: 4px;
+}
+.list-tab {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.list-tab:hover {
+  border-color: var(--border2);
+  color: var(--ink);
+}
+.list-tab.on {
+  background: rgba(214, 178, 124, 0.12);
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+/* 명단 본문 */
+.list-body {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--r) var(--r);
+  max-height: 480px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+.list-body::-webkit-scrollbar {
+  width: 6px;
+}
+.list-body::-webkit-scrollbar-thumb {
+  background: var(--border2);
+  border-radius: 3px;
+}
+
+.list-empty {
+  padding: 40px 24px;
+  text-align: center;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--ink-faint);
+}
+.list-empty .icon {
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  font-style: italic;
+  color: var(--amber);
+  opacity: 0.4;
+  margin-bottom: 8px;
+}
+
+/* 학생 행 */
+.student-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  border-bottom: 1px solid rgba(214, 178, 124, 0.06);
+  transition: background 0.3s;
+}
+.student-row:last-child { border-bottom: none; }
+.student-row.absent { opacity: 0.5; }
+.student-row.self { /* 자율출석 */ }
+
+.row-status {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  font-style: italic;
+  flex-shrink: 0;
+}
+.student-row.attended .row-status {
+  background: rgba(123, 160, 135, 0.15);
+  color: var(--sage);
+  border: 1px solid rgba(123, 160, 135, 0.3);
+}
+.student-row.self .row-status {
+  background: rgba(214, 178, 124, 0.12);
+  color: var(--amber);
+  border: 1px solid rgba(214, 178, 124, 0.3);
+}
+.student-row.absent .row-status {
+  background: transparent;
+  color: var(--ink-faint);
+  border: 1px dashed var(--border);
+}
+
+.row-no {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-faint);
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+  width: 50px;
+}
+.row-name {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink);
+  flex: 1;
+}
+.student-row.attended .row-name { color: var(--cream); font-weight: 500; }
+
+.row-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-dim);
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+.student-row.attended .row-time { color: var(--sage); }
+.student-row.self .row-time     { color: var(--amber); }
+
+/* 새로 들어온 학생 강조 */
+.student-row.fresh {
+  animation: freshHighlight 2.5s ease-out;
+}
+@keyframes freshHighlight {
+  0%   { background: rgba(123, 160, 135, 0.25); }
+  100% { background: transparent; }
+}
+
 /* 출석 명단 placeholder (Phase 2E에서 채움) */
 .attendance-placeholder {
   margin-top: 24px;
@@ -1417,6 +1655,10 @@ input { font-family: inherit; }
   cursor: pointer;
   transition: all 0.15s;
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
 }
 .np-key:hover {
   background: var(--paper3);
@@ -1651,6 +1893,149 @@ input { font-family: inherit; }
   line-height: 1.8;
   margin-bottom: 24px;
 }
+
+/* ── 즉석 등록 (Phase 2F) ── */
+.student-register {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 36px 28px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 30px 60px -20px rgba(0, 0, 0, 0.5);
+  animation: cardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.student-register::before,
+.student-register::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--amber);
+  opacity: 0.4;
+}
+.student-register::before {
+  top: 12px;
+  left: 12px;
+  border-right: none;
+  border-bottom: none;
+}
+.student-register::after {
+  bottom: 12px;
+  right: 12px;
+  border-left: none;
+  border-top: none;
+}
+
+.reg-icon {
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 48px;
+  font-style: italic;
+  color: var(--amber);
+  line-height: 1;
+  margin-bottom: 12px;
+}
+.reg-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--cream);
+  text-align: center;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.reg-subtitle {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--ink-dim);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.reg-no-display {
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--amber);
+  letter-spacing: 0.15em;
+  padding: 14px;
+  background: rgba(214, 178, 124, 0.06);
+  border: 1px solid rgba(214, 178, 124, 0.2);
+  border-radius: var(--r);
+  margin-bottom: 22px;
+}
+
+.reg-input-wrap { margin-bottom: 22px; }
+.reg-input-label {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 10px;
+}
+.reg-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 18px;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 17px;
+  color: var(--cream);
+  text-align: center;
+  outline: none;
+  transition: all 0.3s;
+}
+.reg-input:focus {
+  border-color: var(--amber);
+  background: rgba(214, 178, 124, 0.05);
+  box-shadow: 0 0 0 3px rgba(214, 178, 124, 0.1);
+}
+.reg-input::placeholder { color: var(--ink-faint); }
+
+.reg-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 22px;
+}
+.reg-day-btn {
+  padding: 12px 0;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.reg-day-btn:hover {
+  border-color: var(--border2);
+  color: var(--ink);
+}
+.reg-day-btn.on {
+  background: rgba(214, 178, 124, 0.15);
+  border-color: var(--amber);
+  color: var(--amber);
+  font-weight: 600;
+}
+.reg-day-btn.on.weekend {
+  background: rgba(184, 84, 63, 0.12);
+  border-color: var(--copper);
+  color: var(--copper);
+}
+
+.reg-actions { display: flex; gap: 10px; }
+.reg-actions .btn { padding: 14px 20px; font-size: 12px; }
 
 /* ══ 진단 페이지 (?diag) ══ */
 .diag-wrap {
@@ -1907,9 +2292,43 @@ input { font-family: inherit; }
         <button class="btn-end" onclick="openEndModal()">출석 마감</button>
       </div>
 
-      <div class="attendance-placeholder">
-        <span class="icon">✦</span>
-        실시간 출석 명단은 다음 단계(Phase 2E)에서 표시됩니다
+      <div class="attendance-area">
+        <!-- 통계 카드 -->
+        <div class="stats-row">
+          <div class="stat-card attended">
+            <div class="stat-num"><span id="t-stat-att">0</span><span class="unit">명</span></div>
+            <div class="stat-label">ATTENDED · 출석</div>
+          </div>
+          <div class="stat-card absent">
+            <div class="stat-num"><span id="t-stat-abs">0</span><span class="unit">명</span></div>
+            <div class="stat-label">ABSENT · 미출석</div>
+          </div>
+          <div class="stat-card rate">
+            <div class="stat-num"><span id="t-stat-rate">0</span><span class="unit">%</span></div>
+            <div class="stat-label">RATE · 출석률</div>
+          </div>
+        </div>
+
+        <!-- 명단 헤더 -->
+        <div class="list-header">
+          <div>
+            <span class="list-title">Roster</span>
+            <span class="list-title-ko">출석 명단</span>
+          </div>
+          <div class="list-tabs">
+            <button class="list-tab on" data-tab="all" onclick="switchListTab('all')">전체</button>
+            <button class="list-tab" data-tab="attended" onclick="switchListTab('attended')">출석</button>
+            <button class="list-tab" data-tab="absent" onclick="switchListTab('absent')">미출석</button>
+          </div>
+        </div>
+
+        <!-- 명단 본문 -->
+        <div class="list-body" id="t-roster-body">
+          <div class="list-empty">
+            <span class="icon">✦</span>
+            아직 출석한 학생이 없어요
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1999,6 +2418,40 @@ input { font-family: inherit; }
       <div class="success-meta">
         <strong id="st-success-program">—</strong> · <span id="st-success-room">—</span><br>
         출석 시각 <span class="success-time" id="st-success-time">—</span>
+      </div>
+    </div>
+
+    <!-- 상태 5: 즉석 등록 (Phase 2F) -->
+    <div id="st-register" class="student-register" style="display:none">
+      <div class="reg-icon">+</div>
+      <div class="reg-title">New Student</div>
+      <div class="reg-subtitle">명단에 없는 학번이에요 · 직접 등록할 수 있어요</div>
+
+      <div class="reg-no-display" id="st-reg-no">—</div>
+
+      <div class="reg-input-wrap">
+        <label class="reg-input-label">NAME · 이름</label>
+        <input type="text" class="reg-input" id="st-reg-name" placeholder="이름을 입력해주세요" autocomplete="off">
+      </div>
+
+      <div class="reg-input-wrap">
+        <label class="reg-input-label">ATTENDANCE DAYS · 출석 요일</label>
+        <div class="reg-days">
+          <button type="button" class="reg-day-btn" data-day="월">월</button>
+          <button type="button" class="reg-day-btn" data-day="화">화</button>
+          <button type="button" class="reg-day-btn" data-day="수">수</button>
+          <button type="button" class="reg-day-btn" data-day="목">목</button>
+          <button type="button" class="reg-day-btn" data-day="금">금</button>
+          <button type="button" class="reg-day-btn weekend" data-day="토">토</button>
+          <button type="button" class="reg-day-btn weekend" data-day="일">일</button>
+        </div>
+      </div>
+
+      <div class="student-err" id="st-reg-err"></div>
+
+      <div class="reg-actions">
+        <button class="btn btn-ghost" onclick="cancelRegister()">취소</button>
+        <button class="btn btn-primary" onclick="doRegisterAndAttend()">등록 후 출석</button>
       </div>
     </div>
 
@@ -2802,6 +3255,12 @@ const T = {
   timerInterval: null,  // 카운트다운 타이머
   clockInterval: null,  // 현재 시각 표시 타이머
   qrInstance: null,     // QRCode 인스턴스
+
+  // Phase 2E: 출석 명단
+  rosterStudents: [],   // 분모 학생 (오늘 요일 대상자)
+  attendedMap: {},      // {학번: {name, time, isSelf}}
+  realtimeChannel: null,// Realtime 구독 채널
+  listTab: 'all',       // 'all' / 'attended' / 'absent'
 };
 
 async function enterTeacherScreen(room) {
@@ -2873,6 +3332,7 @@ async function enterTeacherScreen(room) {
       document.getElementById('t-session').style.display = 'block';
       buildTeacherQR();
       startTeacherTimer();
+      await loadRosterAndSubscribe();
       return;
     }
   } catch (e) {
@@ -3031,6 +3491,9 @@ async function startTeacherSession() {
     // 타이머 시작
     startTeacherTimer();
 
+    // 명단 로딩 + Realtime 구독 (Phase 2E)
+    await loadRosterAndSubscribe();
+
     sessionStarted = true;
 
   } catch (e) {
@@ -3066,6 +3529,9 @@ function buildTeacherQR() {
 async function refreshTeacherQR() {
   if (!T.session) return;
 
+  // 기존 구독 정리
+  unsubscribeRoster();
+
   // 기존 세션 종료
   try {
     await sb.sessions.end(T.session.sessionId);
@@ -3092,6 +3558,7 @@ async function refreshTeacherQR() {
 
     buildTeacherQR();
     startTeacherTimer();
+    await loadRosterAndSubscribe();
   } catch (e) {
     alert('QR 갱신 실패: ' + (e.message || '오류'));
   }
@@ -3161,11 +3628,14 @@ async function confirmEndSession() {
 
   // 정리
   stopTeacherTimer();
+  unsubscribeRoster();
   if (T.qrInstance) {
     document.getElementById('t-qr-box').innerHTML = '';
     T.qrInstance = null;
   }
   T.session = null;
+  T.rosterStudents = [];
+  T.attendedMap = {};
 
   // 설정 화면으로 복귀
   document.getElementById('t-setup').style.display = 'block';
@@ -3177,10 +3647,245 @@ document.getElementById('modal-end').addEventListener('click', (e) => {
   if (e.target.id === 'modal-end') closeEndModal();
 });
 
+// ══════════════════════════════════════════════════════════════
+//  iOS 더블탭 줌 방지 (학생 화면 보호)
+//  - viewport user-scalable=no는 iOS 10부터 무시됨
+//  - touch-action: manipulation으로 1차 차단
+//  - 추가로 핀치 줌 제스처도 차단 (학생 화면에서만)
+// ══════════════════════════════════════════════════════════════
+
+// 핀치 줌 차단 (iOS Safari)
+document.addEventListener('gesturestart', (e) => {
+  // 학생 화면에서만 차단
+  const studentScreen = document.getElementById('screen-student');
+  if (studentScreen && studentScreen.style.display !== 'none') {
+    e.preventDefault();
+  }
+});
+document.addEventListener('gesturechange', (e) => {
+  const studentScreen = document.getElementById('screen-student');
+  if (studentScreen && studentScreen.style.display !== 'none') {
+    e.preventDefault();
+  }
+});
+
+// 더블탭 자체 차단 (iOS Safari)
+let _lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if (now - _lastTouchEnd <= 350) {
+    // 학생 화면 안의 .np-key는 무조건 더블탭 차단
+    if (e.target.closest && e.target.closest('.np-key')) {
+      e.preventDefault();
+    }
+  }
+  _lastTouchEnd = now;
+}, { passive: false });
+
+// ══════════════════════════════════════════════════════════════
+//  교사 화면 — 출석 명단 + Realtime (Phase 2E)
+// ══════════════════════════════════════════════════════════════
+
+// 요일 한글 매핑 (0=일, 1=월, ...)
+const DAY_KR = ['일', '월', '화', '수', '목', '금', '토'];
+
+// 명단 로딩 + Realtime 구독 (세션 시작/복원 시)
+async function loadRosterAndSubscribe() {
+  if (!T.session) return;
+
+  const { program, room, sessionId } = T.session;
+
+  try {
+    // 1. 분모 학생 조회 (오늘 요일 대상자만)
+    const allStudents = await sb.students.byRoom(program, room);
+    const todayKr = DAY_KR[new Date().getDay()];
+    T.rosterStudents = allStudents.filter(s => {
+      // 출석요일이 NULL이면 매번 대상 (v1 동작 보존)
+      if (!s.출석요일 || s.출석요일.length === 0) return true;
+      return s.출석요일.includes(todayKr);
+    });
+
+    // 학번 순 정렬
+    T.rosterStudents.sort((a, b) =>
+      String(a.학번).localeCompare(String(b.학번), undefined, { numeric: true })
+    );
+
+    // 2. 이미 출석한 학생 조회 (세션 복원 케이스)
+    T.attendedMap = {};
+    const existing = await sb.attendance.bySession(sessionId);
+    existing.forEach(rec => {
+      // 분모 학생 안에 있는지 확인 → 자율 여부 결정
+      const isInRoster = T.rosterStudents.some(s => s.학번 === rec.학번);
+      T.attendedMap[rec.학번] = {
+        name: rec.이름,
+        time: (rec.원래시각 || '').slice(0, 5), // HH:MM
+        isSelf: !isInRoster,  // 분모 밖이면 자율출석
+      };
+    });
+
+    // 3. 화면 렌더링
+    renderRoster();
+
+    // 4. Realtime 구독 시작
+    subscribeRoster();
+
+  } catch (e) {
+    console.error('명단 로딩 실패:', e);
+  }
+}
+
+// Realtime 구독
+function subscribeRoster() {
+  if (!T.session) return;
+  unsubscribeRoster(); // 기존 구독 정리
+
+  T.realtimeChannel = sb.realtime.subscribeAttendance(T.session.sessionId, (newRecord) => {
+    handleRealtimeAttendance(newRecord);
+  });
+}
+
+function unsubscribeRoster() {
+  if (T.realtimeChannel) {
+    sb.realtime.unsubscribe(T.realtimeChannel);
+    T.realtimeChannel = null;
+  }
+}
+
+// Realtime 이벤트 처리 (새 출석)
+function handleRealtimeAttendance(rec) {
+  // 이미 명단에 있으면 무시 (낙관적 업데이트 또는 중복)
+  if (T.attendedMap[rec.학번]) return;
+
+  // 분모 안에 있는지 확인 (자율 여부)
+  const isInRoster = T.rosterStudents.some(s => s.학번 === rec.학번);
+
+  T.attendedMap[rec.학번] = {
+    name: rec.이름,
+    time: (rec.원래시각 || '').slice(0, 5),
+    isSelf: !isInRoster,
+    fresh: true, // 새로 들어온 학생 강조용
+  };
+
+  // 부분 렌더링 (전체 다시 안 그림)
+  renderRoster();
+
+  // 강조 효과는 2.5초 후 제거
+  setTimeout(() => {
+    if (T.attendedMap[rec.학번]) {
+      T.attendedMap[rec.학번].fresh = false;
+    }
+  }, 2500);
+}
+
+// 명단 + 통계 렌더링
+function renderRoster() {
+  // 통계 계산
+  const totalCount = T.rosterStudents.length;
+  // 출석한 분모 학생만 세기 (자율출석은 분자/분모에서 제외)
+  const attendedInRoster = T.rosterStudents.filter(s => {
+    const att = T.attendedMap[s.학번];
+    return att && !att.isSelf;
+  }).length;
+  const absentCount = totalCount - attendedInRoster;
+  const rate = totalCount > 0 ? Math.round(attendedInRoster / totalCount * 100) : 0;
+
+  // 통계 카드 갱신
+  document.getElementById('t-stat-att').textContent = attendedInRoster;
+  document.getElementById('t-stat-abs').textContent = absentCount;
+  document.getElementById('t-stat-rate').textContent = rate;
+
+  // 명단 본문
+  const body = document.getElementById('t-roster-body');
+
+  // 자율 출석 학생 (분모에 없지만 출석한 학생)
+  const selfStudents = Object.entries(T.attendedMap)
+    .filter(([no, _]) => !T.rosterStudents.some(s => s.학번 === no))
+    .map(([no, data]) => ({
+      학번: no,
+      이름: data.name,
+      _att: data,
+      _isSelf: true,
+    }));
+
+  // 분모 학생 + 자율 학생 합치기 (학번 순)
+  const allDisplay = [
+    ...T.rosterStudents.map(s => ({ ...s, _att: T.attendedMap[s.학번], _isSelf: false })),
+    ...selfStudents,
+  ].sort((a, b) =>
+    String(a.학번).localeCompare(String(b.학번), undefined, { numeric: true })
+  );
+
+  // 탭 필터
+  let display = allDisplay;
+  if (T.listTab === 'attended') {
+    display = allDisplay.filter(s => s._att);
+  } else if (T.listTab === 'absent') {
+    display = allDisplay.filter(s => !s._att);
+  }
+
+  // 빈 상태
+  if (display.length === 0) {
+    let emptyMsg = '아직 출석한 학생이 없어요';
+    if (T.listTab === 'attended') emptyMsg = '아직 출석한 학생이 없어요';
+    else if (T.listTab === 'absent') emptyMsg = '미출석 학생이 없어요';
+    body.innerHTML = `
+      <div class="list-empty">
+        <span class="icon">✦</span>
+        ${emptyMsg}
+      </div>
+    `;
+    return;
+  }
+
+  // 행 렌더링
+  body.innerHTML = display.map(s => {
+    const att = s._att;
+    let cls = 'student-row ';
+    let statusIcon = '○';
+    let timeText = '';
+
+    if (att) {
+      if (att.isSelf) {
+        cls += 'self ';
+        statusIcon = '◇';
+        timeText = att.time + ' 자율';
+      } else {
+        cls += 'attended ';
+        statusIcon = '✓';
+        timeText = att.time;
+      }
+      if (att.fresh) cls += 'fresh ';
+    } else {
+      cls += 'absent ';
+      statusIcon = '·';
+      timeText = '—';
+    }
+
+    return `
+      <div class="${cls.trim()}">
+        <div class="row-status">${statusIcon}</div>
+        <div class="row-no">${s.학번}</div>
+        <div class="row-name">${s.이름}</div>
+        <div class="row-time">${timeText}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// 탭 전환
+function switchListTab(tab) {
+  T.listTab = tab;
+  document.querySelectorAll('.list-tab').forEach(btn => {
+    btn.classList.toggle('on', btn.dataset.tab === tab);
+  });
+  renderRoster();
+}
+
 // 페이지 떠날 때 정리
 window.addEventListener('beforeunload', () => {
   stopClock();
   stopTeacherTimer();
+  unsubscribeRoster();
 });
 
 // ══════════════════════════════════════════════════════════════
@@ -3204,6 +3909,7 @@ async function enterStudentScreen(sessionId) {
   document.getElementById('st-error').style.display = 'none';
   document.getElementById('st-input').style.display = 'none';
   document.getElementById('st-success').style.display = 'none';
+  document.getElementById('st-register').style.display = 'none';
 
   if (!sessionId) {
     showStudentError('잘못된 QR 코드예요. 선생님께 문의해주세요.');
@@ -3360,11 +4066,11 @@ async function doStudentAttend() {
     console.warn('학생 조회 실패 (출석은 진행):', e);
   }
 
-  // 명단에 없으면 → 즉석 등록 (Phase 2F에서 본격 구현)
+  // 명단에 없으면 → 즉석 등록 폼 표시 (Phase 2F)
   if (!studentInfo) {
     hideAttendProgress();
     ST.inFlight = false;
-    errEl.textContent = '명단에 없는 학번이에요. 선생님께 등록을 요청해주세요.';
+    showRegisterForm(no);
     return;
   }
 
@@ -3404,17 +4110,126 @@ async function doStudentAttend() {
     return;
   }
 
-  // 성공 (이미 출석한 경우도 성공으로 처리)
-  showStudentSuccess(studentInfo.이름, timeStr);
+  // 성공 (이미 출석한 경우는 약간 다른 메시지)
+  showStudentSuccess(studentInfo.이름, timeStr, result.alreadyAttended);
 }
 
-function showStudentSuccess(name, time) {
+function showStudentSuccess(name, time, alreadyAttended) {
   document.getElementById('st-input').style.display = 'none';
+  document.getElementById('st-register').style.display = 'none';
   document.getElementById('st-success').style.display = 'block';
+
+  // 이미 출석했던 경우는 다른 인사말
+  const titleEl = document.querySelector('#st-success .success-title');
+  if (alreadyAttended) {
+    titleEl.textContent = 'Already Here';
+  } else {
+    titleEl.textContent = 'Welcome';
+  }
+
   document.getElementById('st-success-name').textContent = name + ' 학생';
   document.getElementById('st-success-program').textContent = ST.session.program;
   document.getElementById('st-success-room').textContent = ST.session.room;
   document.getElementById('st-success-time').textContent = time;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  즉석 등록 (Phase 2F)
+// ══════════════════════════════════════════════════════════════
+
+function showRegisterForm(no) {
+  document.getElementById('st-input').style.display = 'none';
+  document.getElementById('st-register').style.display = 'block';
+  document.getElementById('st-reg-no').textContent = no;
+  document.getElementById('st-reg-name').value = '';
+  document.getElementById('st-reg-err').textContent = '';
+
+  // 요일 버튼 초기화 (모두 해제)
+  document.querySelectorAll('#st-register .reg-day-btn').forEach(btn => {
+    btn.classList.remove('on');
+    btn.onclick = () => toggleRegDay(btn);
+  });
+
+  // 이름 입력 필드 포커스
+  setTimeout(() => document.getElementById('st-reg-name').focus(), 200);
+}
+
+function toggleRegDay(btn) {
+  btn.classList.toggle('on');
+}
+
+function cancelRegister() {
+  // 학번 입력 화면으로 복귀
+  document.getElementById('st-register').style.display = 'none';
+  document.getElementById('st-input').style.display = 'block';
+  ST.inputDigits = [];
+  updateNoDisplay();
+}
+
+async function doRegisterAndAttend() {
+  const no = document.getElementById('st-reg-no').textContent.trim();
+  const name = document.getElementById('st-reg-name').value.trim();
+  const errEl = document.getElementById('st-reg-err');
+  errEl.textContent = '';
+
+  if (!name) {
+    errEl.textContent = '이름을 입력해주세요';
+    document.getElementById('st-reg-name').focus();
+    return;
+  }
+
+  // 선택된 요일 수집
+  const selectedDays = [];
+  document.querySelectorAll('#st-register .reg-day-btn.on').forEach(btn => {
+    selectedDays.push(btn.dataset.day);
+  });
+
+  if (ST.inFlight) return;
+  ST.inFlight = true;
+
+  showAttendProgress(no);
+
+  try {
+    // 1. 학생 등록 (upsert)
+    await sb.students.upsert({
+      학번: no,
+      이름: name,
+      프로그램: ST.session.program,
+      장소: ST.session.room,
+      출석요일: selectedDays.length > 0 ? selectedDays : null,
+    });
+
+    // 2. 출석 처리
+    const now = new Date();
+    const timeStr = now.toTimeString().slice(0, 8);
+    const result = await sb.attendance.add({
+      sessionId: ST.session.sessionId,
+      no: no,
+      name: name,
+      date: now.toISOString().slice(0, 10),
+      time: timeStr,
+      program: ST.session.program,
+      room: ST.session.room,
+      teacher: ST.session.teacher,
+    });
+
+    hideAttendProgress();
+    ST.inFlight = false;
+
+    if (!result.ok) {
+      errEl.textContent = '출석 처리 실패: ' + (result.msg || '알 수 없는 오류');
+      return;
+    }
+
+    // 성공
+    showStudentSuccess(name, timeStr, result.alreadyAttended);
+
+  } catch (e) {
+    console.error('등록 실패:', e);
+    hideAttendProgress();
+    ST.inFlight = false;
+    errEl.textContent = '등록 실패: ' + (e.message || '오류');
+  }
 }
 
 // ── 처리 중 오버레이 ──
