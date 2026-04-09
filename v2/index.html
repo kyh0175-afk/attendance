@@ -875,6 +875,92 @@ input { font-family: inherit; }
   margin-bottom: 10px;
 }
 
+/* 커스텀 드롭다운 (네이티브 select 대체) */
+.field-dropdown {
+  position: relative;
+  width: 100%;
+}
+.field-dropdown-trigger {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 13px 40px 13px 16px;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 15px;
+  color: var(--cream);
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+  transition: all 0.3s;
+}
+.field-dropdown-trigger::after {
+  content: '';
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--ink-dim);
+  transform: translateY(-50%);
+  transition: transform 0.2s;
+}
+.field-dropdown.open .field-dropdown-trigger::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+.field-dropdown-trigger:hover {
+  border-color: var(--border2);
+}
+.field-dropdown.open .field-dropdown-trigger {
+  border-color: var(--amber);
+  background: rgba(214, 178, 124, 0.05);
+}
+
+.field-dropdown-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--paper2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 30px 60px -20px rgba(0, 0, 0, 0.7);
+  padding: 6px;
+  z-index: 50;
+  display: none;
+  animation: dropdownIn 0.2s ease-out;
+}
+.field-dropdown.open .field-dropdown-list { display: block; }
+
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.field-dropdown-item {
+  padding: 11px 14px;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+.field-dropdown-item:hover {
+  background: rgba(214, 178, 124, 0.1);
+  color: var(--cream);
+}
+.field-dropdown-item.selected {
+  background: rgba(214, 178, 124, 0.15);
+  color: var(--amber);
+  font-weight: 500;
+}
+.field-dropdown-item.hidden { display: none; }
+
 /* 셀렉트 박스 (프로그램, QR 시간) */
 .field-select {
   width: 100%;
@@ -1389,13 +1475,18 @@ input { font-family: inherit; }
 
       <div class="field-group">
         <label class="field-label">PROGRAM · 프로그램</label>
-        <select class="field-select" id="t-program">
-          <option value="심야 독서시간">심야 독서시간</option>
-          <option value="야간 독서시간">야간 독서시간</option>
-          <option value="방과후 독서시간">방과후 독서시간</option>
-          <option value="토요일 독서시간" data-rikei-only="true">토요일 독서시간</option>
-          <option value="일요일 독서시간" data-rikei-only="true">일요일 독서시간</option>
-        </select>
+        <div class="field-dropdown" id="t-program-dd">
+          <button type="button" class="field-dropdown-trigger" id="t-program-trigger">심야 독서시간</button>
+          <div class="field-dropdown-list">
+            <div class="field-dropdown-item selected" data-value="심야 독서시간">심야 독서시간</div>
+            <div class="field-dropdown-item" data-value="야간 독서시간">야간 독서시간</div>
+            <div class="field-dropdown-item" data-value="방과후 독서시간">방과후 독서시간</div>
+            <div class="field-dropdown-item" data-value="토요일 독서시간" data-rikei-only="true">토요일 독서시간</div>
+            <div class="field-dropdown-item" data-value="일요일 독서시간" data-rikei-only="true">일요일 독서시간</div>
+          </div>
+        </div>
+        <!-- 호환용 hidden input -->
+        <input type="hidden" id="t-program" value="심야 독서시간">
       </div>
 
       <div class="field-group">
@@ -2266,31 +2357,27 @@ async function enterTeacherScreen(room) {
   document.getElementById('t-room-label').textContent = roomLabels[room] || 'ROOM';
 
   // 토/일 옵션은 리케이온만
-  const programSel = document.getElementById('t-program');
   const isRikei = room === '리케이온';
-  [...programSel.options].forEach(opt => {
-    if (opt.dataset.rikeiOnly === 'true') {
-      opt.style.display = isRikei ? '' : 'none';
-      opt.disabled = !isRikei;
+  const allItems = document.querySelectorAll('#t-program-dd .field-dropdown-item');
+  allItems.forEach(item => {
+    if (item.dataset.rikeiOnly === 'true') {
+      item.classList.toggle('hidden', !isRikei);
     }
   });
   // 숨겨진 옵션이 선택되어 있으면 심야로 변경
-  if (programSel.value === '토요일 독서시간' || programSel.value === '일요일 독서시간') {
-    if (!isRikei) programSel.value = '심야 독서시간';
+  const hiddenInput = document.getElementById('t-program');
+  if (!isRikei && (hiddenInput.value === '토요일 독서시간' || hiddenInput.value === '일요일 독서시간')) {
+    setProgramValue('심야 독서시간');
   }
 
   // 화면 표시
   showScreen('screen-teacher');
-  document.getElementById('t-setup').style.display = 'block';
-  document.getElementById('t-session').style.display = 'none';
 
   // 현재 시각 갱신 시작
   startClock();
 
-  // 프로그램 변경 시 교사 자동 채우기
-  programSel.onchange = handleProgramChange;
-  // 첫 진입 시에도 한 번 실행 (심야면 자동 채움)
-  await handleProgramChange();
+  // 드롭다운 이벤트 바인딩 (한 번만)
+  initProgramDropdown();
 
   // 시간 칩 클릭
   document.querySelectorAll('#t-duration .field-chip').forEach(chip => {
@@ -2299,6 +2386,81 @@ async function enterTeacherScreen(room) {
       chip.classList.add('on');
       T.duration = parseInt(chip.dataset.min);
     };
+  });
+
+  // ── 세션 복원 ──
+  // 활성 세션이 있는지 확인 (만료 안 된 것만)
+  document.getElementById('t-setup').style.display = 'none';
+  document.getElementById('t-session').style.display = 'none';
+
+  // 임시 로딩 메시지 (잠깐 깜빡임 방지)
+  try {
+    const active = await sb.sessions.activeByRoom(room);
+    if (active) {
+      // 복원
+      T.session = {
+        sessionId: active.세션id,
+        program: active.프로그램,
+        room: active.장소,
+        teacher: active.교사,
+        expireMs: new Date(active.만료시각).getTime(),
+      };
+
+      document.getElementById('t-sess-program').textContent = T.session.program;
+      document.getElementById('t-sess-meta').textContent = `${T.session.room} · ${T.session.teacher} 선생님`;
+
+      document.getElementById('t-session').style.display = 'block';
+      buildTeacherQR();
+      startTeacherTimer();
+      return;
+    }
+  } catch (e) {
+    console.warn('세션 복원 실패:', e);
+  }
+
+  // 활성 세션 없음 → 설정 화면
+  document.getElementById('t-setup').style.display = 'block';
+  // 첫 진입 시 자동 채움 (심야면 감독 자동 입력)
+  await handleProgramChange();
+}
+
+// 커스텀 드롭다운 초기화 (이벤트 한 번만 바인딩)
+let _dropdownInitialized = false;
+function initProgramDropdown() {
+  if (_dropdownInitialized) return;
+  _dropdownInitialized = true;
+
+  const dd = document.getElementById('t-program-dd');
+  const trigger = document.getElementById('t-program-trigger');
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dd.classList.toggle('open');
+  });
+
+  dd.querySelectorAll('.field-dropdown-item').forEach(item => {
+    item.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (item.classList.contains('hidden')) return;
+      const value = item.dataset.value;
+      setProgramValue(value);
+      dd.classList.remove('open');
+      await handleProgramChange();
+    });
+  });
+
+  // 바깥 클릭 시 닫기
+  document.addEventListener('click', (e) => {
+    if (!dd.contains(e.target)) dd.classList.remove('open');
+  });
+}
+
+// 드롭다운 값 설정 (선택 표시 + hidden input 동기화)
+function setProgramValue(value) {
+  document.getElementById('t-program').value = value;
+  document.getElementById('t-program-trigger').textContent = value;
+  document.querySelectorAll('#t-program-dd .field-dropdown-item').forEach(item => {
+    item.classList.toggle('selected', item.dataset.value === value);
   });
 }
 
@@ -2368,6 +2530,8 @@ async function startTeacherSession() {
   btn.disabled = true;
   btn.textContent = '생성 중...';
 
+  let sessionStarted = false;
+
   try {
     // 만료 시각 계산
     const expireMs = Date.now() + (T.duration * 60 * 1000);
@@ -2406,8 +2570,13 @@ async function startTeacherSession() {
     // 타이머 시작
     startTeacherTimer();
 
+    sessionStarted = true;
+
   } catch (e) {
-    alert('세션 생성 실패: ' + (e.message || '오류'));
+    console.error('세션 생성 실패:', e);
+    alert('세션 생성 실패: ' + (e.message || e.code || '알 수 없는 오류'));
+  } finally {
+    // 버튼 복구 (성공/실패 무관)
     btn.disabled = false;
     btn.textContent = '▶ QR 생성 및 출석 시작';
   }
