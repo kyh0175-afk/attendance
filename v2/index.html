@@ -375,7 +375,6 @@ input { font-family: inherit; }
 .room-card[data-room="3"] { --acc: var(--ochre); }
 .room-card[data-room="4"] { --acc: var(--copper); }
 
-/* 좌측 컬러 바 */
 .room-card::before {
   content: '';
   position: absolute;
@@ -404,7 +403,6 @@ input { font-family: inherit; }
   width: 4px;
 }
 
-/* 라벨 */
 .room-label {
   font-family: 'DM Mono', monospace;
   font-size: 10px;
@@ -425,7 +423,6 @@ input { font-family: inherit; }
   display: inline-block;
 }
 
-/* 메인 한글 이름 */
 .room-name {
   font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 32px;
@@ -436,7 +433,6 @@ input { font-family: inherit; }
   letter-spacing: -0.01em;
 }
 
-/* 안내 문구 */
 .room-action {
   display: flex;
   align-items: center;
@@ -780,10 +776,15 @@ input { font-family: inherit; }
   border-bottom: 1px solid rgba(255,255,255,0.04);
   font-size: 13px;
   font-family: 'DM Mono', monospace;
+  gap: 12px;
 }
 .diag-row:last-child { border-bottom: none; }
-.diag-label { color: var(--ink-dim); }
-.diag-value { color: var(--ink); }
+.diag-label { color: var(--ink-dim); flex-shrink: 0; }
+.diag-value {
+  color: var(--ink);
+  text-align: right;
+  word-break: break-all;
+}
 .diag-value.ok { color: var(--ok); }
 .diag-value.err { color: var(--err); }
 .diag-value.pending { color: var(--warn); }
@@ -865,7 +866,7 @@ input { font-family: inherit; }
 </div>
 
 <!-- ══════════════════════════════════════════ -->
-<!--  장소 선택 화면 (한글 단정 버전)               -->
+<!--  장소 선택 화면                                -->
 <!-- ══════════════════════════════════════════ -->
 <div class="screen" id="screen-rooms" style="display:none">
   <button class="back-btn" onclick="goHome()">
@@ -956,7 +957,7 @@ input { font-family: inherit; }
       <span class="line right"></span>
     </div>
     <h1 class="title-en">Diagnostics</h1>
-    <div class="title-ko">환경 진단</div>
+    <div class="title-ko">환경 진단 · sb 헬퍼 검증</div>
   </div>
 
   <div class="diag-wrap">
@@ -974,6 +975,19 @@ input { font-family: inherit; }
       <div class="diag-row"><span class="diag-label">seats</span><span class="diag-value" id="diag-seats">—</span></div>
       <div class="diag-row"><span class="diag-label">supervisors</span><span class="diag-value" id="diag-supervisors">—</span></div>
       <div class="diag-row"><span class="diag-label">system_settings</span><span class="diag-value" id="diag-settings">—</span></div>
+    </div>
+
+    <div class="diag-card">
+      <h3>sb Helpers</h3>
+      <div class="diag-row"><span class="diag-label">sb.settings.adminPassword()</span><span class="diag-value" id="diag-h-pw">—</span></div>
+      <div class="diag-row"><span class="diag-label">sb.settings.semesterStart()</span><span class="diag-value" id="diag-h-sem">—</span></div>
+      <div class="diag-row"><span class="diag-label">sb.students.list()</span><span class="diag-value" id="diag-h-students">—</span></div>
+      <div class="diag-row"><span class="diag-label">sb.students.byNo('10101')</span><span class="diag-value" id="diag-h-byno">—</span></div>
+      <div class="diag-row"><span class="diag-label">sb.students.byRoom('심야 독서시간', '리케이온')</span><span class="diag-value" id="diag-h-byroom">—</span></div>
+      <div class="diag-row"><span class="diag-label">sb.attendance.history(7)</span><span class="diag-value" id="diag-h-hist">—</span></div>
+      <div class="diag-row"><span class="diag-label">sb.attendance.byStudent('10101')</span><span class="diag-value" id="diag-h-bystu">—</span></div>
+      <div class="diag-row"><span class="diag-label">sb.supervisors.today()</span><span class="diag-value" id="diag-h-sup">—</span></div>
+      <div class="diag-row"><span class="diag-label">sb.requests.list()</span><span class="diag-value" id="diag-h-req">—</span></div>
     </div>
 
     <div class="diag-card">
@@ -1017,23 +1031,617 @@ input { font-family: inherit; }
 </div><!-- /.app -->
 
 <script>
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 //  Supabase 설정
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 const SUPABASE_URL = 'https://rxsmmwqekrtbstcjbagj.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_h7o2vnvgu7Akrg87cAYSkg__DA-KRpn';
 //  ⚠️ 본인 publishable key로 교체
 
-// 임시 비밀번호 (Phase 2B에서 system_settings에서 가져오도록 변경 예정)
-const ADMIN_PW_TEMP = 'yb18128!';
-
-// Supabase 클라이언트 (Phase 2B에서 sb 헬퍼 본격 활용)
+// ══════════════════════════════════════════════════════════════
+//  Supabase 클라이언트
+// ══════════════════════════════════════════════════════════════
 let sbClient = null;
-const sb = {};
 
-// ══════════════════════════════════════════
+function initSupabase() {
+  if (sbClient) return sbClient;
+  if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
+    throw new Error('Supabase SDK가 로드되지 않았어요');
+  }
+  sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  return sbClient;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  ┌─────────────────────────────────────────────────────────┐
+//  │  sb 헬퍼 — Supabase 호출 래퍼                             │
+//  │  v2 코드 전체에서 이 객체를 통해서만 DB와 통신             │
+//  └─────────────────────────────────────────────────────────┘
+// ══════════════════════════════════════════════════════════════
+const sb = {
+  // ─── 캐시 ───
+  _cache: {
+    settings: null,         // {key: value}
+    students: null,         // 전체 학생 명단
+    settingsExpiry: 0,
+    studentsExpiry: 0,
+  },
+
+  _CACHE_TTL: 60 * 1000,    // 1분
+
+  // ─── 클라이언트 접근 ───
+  client() {
+    return sbClient || initSupabase();
+  },
+
+  // ─── 캐시 무효화 ───
+  invalidateCache(key) {
+    if (key === 'settings' || !key) {
+      this._cache.settings = null;
+      this._cache.settingsExpiry = 0;
+    }
+    if (key === 'students' || !key) {
+      this._cache.students = null;
+      this._cache.studentsExpiry = 0;
+    }
+  },
+
+  // ─── 재시도 래퍼 ───
+  async _retry(fn, retries = 2) {
+    let lastErr;
+    for (let i = 0; i <= retries; i++) {
+      try {
+        return await fn();
+      } catch (e) {
+        lastErr = e;
+        if (i < retries) {
+          await new Promise(r => setTimeout(r, 500 * (i + 1)));
+        }
+      }
+    }
+    throw lastErr;
+  },
+
+  // ════════════════════════════════════════
+  //  시스템 설정 (system_settings)
+  // ════════════════════════════════════════
+  settings: {
+    async _loadAll() {
+      if (sb._cache.settings && Date.now() < sb._cache.settingsExpiry) {
+        return sb._cache.settings;
+      }
+      const { data, error } = await sb.client()
+        .from('system_settings')
+        .select('key, value');
+      if (error) throw error;
+      const map = {};
+      data.forEach(r => { map[r.key] = r.value; });
+      sb._cache.settings = map;
+      sb._cache.settingsExpiry = Date.now() + sb._CACHE_TTL;
+      return map;
+    },
+
+    async get(key) {
+      const all = await this._loadAll();
+      return all[key];
+    },
+
+    async adminPassword() {
+      return this.get('admin_password');
+    },
+
+    async semesterStart() {
+      return this.get('semester_start');
+    },
+
+    async update(key, value) {
+      const { error } = await sb.client()
+        .from('system_settings')
+        .update({ value, 수정일시: new Date().toISOString() })
+        .eq('key', key);
+      if (error) throw error;
+      sb.invalidateCache('settings');
+    },
+  },
+
+  // ════════════════════════════════════════
+  //  학생 명단 (students)
+  // ════════════════════════════════════════
+  students: {
+    async list(opts = {}) {
+      // opts.includeInactive = true 면 비활성 포함
+      const includeInactive = !!opts.includeInactive;
+
+      // 캐시 확인 (활성만 + 옵션 없을 때)
+      if (!includeInactive && sb._cache.students && Date.now() < sb._cache.studentsExpiry) {
+        return sb._cache.students;
+      }
+
+      let query = sb.client()
+        .from('students')
+        .select('*')
+        .order('학번', { ascending: true });
+
+      if (!includeInactive) query = query.eq('활성', true);
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      if (!includeInactive) {
+        sb._cache.students = data;
+        sb._cache.studentsExpiry = Date.now() + sb._CACHE_TTL;
+      }
+      return data;
+    },
+
+    async byNo(no) {
+      const { data, error } = await sb.client()
+        .from('students')
+        .select('*')
+        .eq('학번', String(no))
+        .eq('활성', true);
+      if (error) throw error;
+      return data;
+    },
+
+    async byRoom(program, room) {
+      const { data, error } = await sb.client()
+        .from('students')
+        .select('*')
+        .eq('프로그램', program)
+        .eq('장소', room)
+        .eq('활성', true)
+        .order('학번', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+
+    async upsert(student) {
+      const row = {
+        학번: String(student.학번 || student.no),
+        프로그램: student.프로그램 || student.program,
+        이름: student.이름 || student.name,
+        장소: student.장소 || student.cls || student.room,
+        출석요일: student.출석요일 || student.days || null,
+        활성: true,
+        수정일시: new Date().toISOString(),
+      };
+      const { data, error } = await sb.client()
+        .from('students')
+        .upsert(row, { onConflict: '학번,프로그램' })
+        .select();
+      if (error) throw error;
+      sb.invalidateCache('students');
+      return data;
+    },
+
+    async bulkUpsert(studentList) {
+      // 헬퍼 함수 호출 (UPSERT + 비활성화)
+      const payload = studentList.map(s => ({
+        학번: String(s.학번 || s.no),
+        프로그램: s.프로그램 || s.program,
+        이름: s.이름 || s.name,
+        장소: s.장소 || s.cls || s.room,
+        출석요일: s.출석요일 || s.days || null,
+      }));
+      const { data, error } = await sb.client()
+        .rpc('bulk_upsert_students', { p_students: payload });
+      if (error) throw error;
+      sb.invalidateCache('students');
+      return data;
+    },
+
+    async updateDays(no, program, days) {
+      const { error } = await sb.client()
+        .from('students')
+        .update({
+          출석요일: days && days.length ? days : null,
+          수정일시: new Date().toISOString(),
+        })
+        .eq('학번', String(no))
+        .eq('프로그램', program);
+      if (error) throw error;
+      sb.invalidateCache('students');
+    },
+
+    async deactivate(no, program) {
+      const { error } = await sb.client()
+        .from('students')
+        .update({ 활성: false, 수정일시: new Date().toISOString() })
+        .eq('학번', String(no))
+        .eq('프로그램', program);
+      if (error) throw error;
+      sb.invalidateCache('students');
+    },
+  },
+
+  // ════════════════════════════════════════
+  //  출석 기록 (attendance)
+  // ════════════════════════════════════════
+  attendance: {
+    async add(record) {
+      // 정상 출석 (학생이 QR 스캔)
+      const row = {
+        세션id: record.세션id || record.sessionId,
+        학번: String(record.학번 || record.no),
+        이름: record.이름 || record.name,
+        날짜: record.날짜 || new Date().toISOString().slice(0, 10),
+        원래시각: record.원래시각 || record.time || new Date().toTimeString().slice(0, 8),
+        처리시각: null,
+        사후여부: false,
+        프로그램: record.프로그램 || record.program,
+        장소: record.장소 || record.cls || record.room,
+        교사: record.교사 || record.teacher || null,
+        상태: '출석',
+      };
+      const { data, error } = await sb.client()
+        .from('attendance')
+        .insert(row)
+        .select();
+
+      if (error) {
+        // unique 제약 위반 = 이미 출석 = 정상으로 간주
+        if (error.code === '23505') {
+          return { ok: true, alreadyAttended: true };
+        }
+        throw error;
+      }
+      return { ok: true, data: data[0] };
+    },
+
+    async lateAdd(record) {
+      // 사후 출석 (교사가 수동 추가)
+      const now = new Date();
+      const row = {
+        세션id: record.세션id || record.sessionId,
+        학번: String(record.학번 || record.no),
+        이름: record.이름 || record.name,
+        날짜: record.날짜 || record.date,
+        원래시각: record.원래시각 || null,    // 모르면 NULL
+        처리시각: now.toISOString(),
+        사후여부: true,
+        프로그램: record.프로그램 || record.program,
+        장소: record.장소 || record.cls || record.room,
+        교사: record.교사 || record.teacher || null,
+        상태: '출석',
+      };
+      const { data, error } = await sb.client()
+        .from('attendance')
+        .insert(row)
+        .select();
+      if (error) {
+        if (error.code === '23505') return { ok: true, alreadyAttended: true };
+        throw error;
+      }
+      return { ok: true, data: data[0] };
+    },
+
+    async history(days = 7) {
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      const sinceStr = since.toISOString().slice(0, 10);
+
+      const { data, error } = await sb.client()
+        .from('attendance')
+        .select('*')
+        .gte('날짜', sinceStr)
+        .order('날짜', { ascending: false })
+        .order('원래시각', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+
+    async byStudent(no) {
+      const { data, error } = await sb.client()
+        .from('attendance')
+        .select('*')
+        .eq('학번', String(no))
+        .order('날짜', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+
+    async bySession(sessionId) {
+      const { data, error } = await sb.client()
+        .from('attendance')
+        .select('*')
+        .eq('세션id', sessionId)
+        .order('원래시각', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+
+    async delete(id) {
+      const { error } = await sb.client()
+        .from('attendance')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+
+    async deleteSession(sessionId) {
+      // 세션 전체 출석기록 삭제
+      const { error } = await sb.client()
+        .from('attendance')
+        .delete()
+        .eq('세션id', sessionId);
+      if (error) throw error;
+    },
+  },
+
+  // ════════════════════════════════════════
+  //  세션 (sessions)
+  // ════════════════════════════════════════
+  sessions: {
+    async create(session) {
+      const row = {
+        세션id: session.세션id || session.sessionId || String(Date.now()),
+        프로그램: session.프로그램 || session.program,
+        장소: session.장소 || session.cls || session.room,
+        교사: session.교사 || session.teacher,
+        날짜: session.날짜 || new Date().toISOString().slice(0, 10),
+        만료시각: session.만료시각 || session.expireAt,
+        활성: true,
+      };
+      const { data, error } = await sb.client()
+        .from('sessions')
+        .insert(row)
+        .select();
+      if (error) throw error;
+      return data[0];
+    },
+
+    async end(sessionId) {
+      const { error } = await sb.client()
+        .from('sessions')
+        .update({ 활성: false, 종료시각: new Date().toISOString() })
+        .eq('세션id', sessionId);
+      if (error) throw error;
+    },
+
+    async byKey(sessionId) {
+      const { data, error } = await sb.client()
+        .from('sessions')
+        .select('*')
+        .eq('세션id', sessionId)
+        .single();
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw error;
+      }
+      return data;
+    },
+
+    async activeByRoom(room) {
+      const { data, error } = await sb.client()
+        .from('sessions')
+        .select('*')
+        .eq('장소', room)
+        .eq('활성', true)
+        .gt('만료시각', new Date().toISOString())
+        .order('시작시각', { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      return data && data.length ? data[0] : null;
+    },
+  },
+
+  // ════════════════════════════════════════
+  //  좌석 (seats)
+  // ════════════════════════════════════════
+  seats: {
+    async byRoom(program, room) {
+      const { data, error } = await sb.client()
+        .from('seats')
+        .select('*')
+        .eq('프로그램', program)
+        .eq('장소', room);
+      if (error) throw error;
+      return data;
+    },
+
+    async upsert(seat) {
+      const { data, error } = await sb.client()
+        .from('seats')
+        .upsert({
+          프로그램: seat.프로그램 || seat.program,
+          장소: seat.장소 || seat.room,
+          학번: String(seat.학번 || seat.no),
+          이름: seat.이름 || seat.name,
+          좌석번호: String(seat.좌석번호 || seat.seat),
+        }, { onConflict: '프로그램,장소,학번' })
+        .select();
+      if (error) throw error;
+      return data;
+    },
+  },
+
+  // ════════════════════════════════════════
+  //  심야 감독표 (supervisors)
+  // ════════════════════════════════════════
+  supervisors: {
+    async today() {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data, error } = await sb.client()
+        .from('supervisors')
+        .select('교사명')
+        .eq('날짜', today)
+        .single();
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw error;
+      }
+      return data ? data.교사명 : null;
+    },
+
+    async byDate(date) {
+      const { data, error } = await sb.client()
+        .from('supervisors')
+        .select('교사명')
+        .eq('날짜', date)
+        .single();
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw error;
+      }
+      return data ? data.교사명 : null;
+    },
+
+    async list() {
+      const { data, error } = await sb.client()
+        .from('supervisors')
+        .select('*')
+        .order('날짜', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  },
+
+  // ════════════════════════════════════════
+  //  요청 (correction_requests / day_change_requests)
+  // ════════════════════════════════════════
+  requests: {
+    async list(opts = {}) {
+      const status = opts.status || null;
+      let q1 = sb.client().from('correction_requests').select('*').order('요청일시', { ascending: false });
+      let q2 = sb.client().from('day_change_requests').select('*').order('요청일시', { ascending: false });
+      if (status) {
+        q1 = q1.eq('처리상태', status);
+        q2 = q2.eq('처리상태', status);
+      }
+      const [c, d] = await Promise.all([q1, q2]);
+      if (c.error) throw c.error;
+      if (d.error) throw d.error;
+      return {
+        corrections: c.data || [],
+        dayChanges: d.data || [],
+      };
+    },
+
+    async createCorrection(req) {
+      const row = {
+        학번: String(req.학번 || req.no),
+        이름: req.이름 || req.name,
+        대상날짜: req.대상날짜 || req.date,
+        프로그램: req.프로그램 || req.program,
+        장소: req.장소 || req.room,
+        현재상태: req.현재상태 || '결석',
+        요청상태: req.요청상태 || '출석',
+        사유: req.사유 || req.reason,
+        상세: req.상세 || req.detail || '',
+      };
+      const { data, error } = await sb.client()
+        .from('correction_requests')
+        .insert(row)
+        .select();
+      if (error) throw error;
+      return data[0];
+    },
+
+    async createDayChange(req) {
+      const row = {
+        학번: String(req.학번 || req.no),
+        이름: req.이름 || req.name,
+        프로그램: req.프로그램 || req.program,
+        장소: req.장소 || req.room,
+        현재요일: req.현재요일 || null,
+        요청요일: req.요청요일 || req.newDays,
+        사유: req.사유 || req.reason,
+      };
+      const { data, error } = await sb.client()
+        .from('day_change_requests')
+        .insert(row)
+        .select();
+      if (error) throw error;
+      return data[0];
+    },
+
+    async approveCorrection(id, note = '') {
+      const { data, error } = await sb.client()
+        .rpc('approve_correction_request', {
+          p_request_id: id,
+          p_teacher_note: note,
+        });
+      if (error) throw error;
+      return data;
+    },
+
+    async approveDayChange(id, note = '') {
+      const { data, error } = await sb.client()
+        .rpc('approve_day_change_request', {
+          p_request_id: id,
+          p_teacher_note: note,
+        });
+      if (error) throw error;
+      sb.invalidateCache('students');
+      return data;
+    },
+
+    async reject(type, id, note = '') {
+      const table = type === 'correction' ? 'correction_requests' : 'day_change_requests';
+      const { error } = await sb.client()
+        .from(table)
+        .update({
+          처리상태: '거절',
+          교사메모: note,
+          처리일시: new Date().toISOString(),
+        })
+        .eq('id', id);
+      if (error) throw error;
+    },
+  },
+
+  // ════════════════════════════════════════
+  //  실시간 구독 (Realtime)
+  // ════════════════════════════════════════
+  realtime: {
+    _channels: [],
+
+    subscribeAttendance(sessionId, callback) {
+      const channel = sb.client()
+        .channel(`attendance-${sessionId}`)
+        .on('postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'attendance',
+            filter: `세션id=eq.${sessionId}`,
+          },
+          (payload) => callback(payload.new))
+        .subscribe();
+      this._channels.push(channel);
+      return channel;
+    },
+
+    subscribeAllAttendance(callback) {
+      const channel = sb.client()
+        .channel('attendance-all')
+        .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'attendance' },
+          (payload) => callback(payload))
+        .subscribe();
+      this._channels.push(channel);
+      return channel;
+    },
+
+    unsubscribe(channel) {
+      if (channel) {
+        sb.client().removeChannel(channel);
+        this._channels = this._channels.filter(c => c !== channel);
+      } else {
+        this._channels.forEach(c => sb.client().removeChannel(c));
+        this._channels = [];
+      }
+    },
+  },
+};
+
+// 전역에서 sb 사용 가능하도록 (디버깅 편의)
+window.sb = sb;
+
+// ══════════════════════════════════════════════════════════════
 //  화면 라우팅
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
   const el = document.getElementById(id);
@@ -1075,9 +1683,9 @@ function route() {
   showScreen('screen-main');
 }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 //  네비게이션
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 function goHome() {
   history.pushState({}, '', location.pathname);
   route();
@@ -1092,9 +1700,9 @@ function enterRoom(room) {
   route();
 }
 
-// ══════════════════════════════════════════
-//  비밀번호 모달
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+//  비밀번호 모달 (sb.settings.adminPassword 사용)
+// ══════════════════════════════════════════════════════════════
 function openPwModal() {
   const m = document.getElementById('modal-pw');
   document.getElementById('pw-input').value = '';
@@ -1108,12 +1716,26 @@ function closePwModal() {
   document.getElementById('modal-pw').classList.remove('on');
 }
 
-function confirmPw() {
+async function confirmPw() {
   const input = document.getElementById('pw-input');
   const err = document.getElementById('pw-err');
   const val = input.value.trim();
 
-  if (val !== ADMIN_PW_TEMP) {
+  // 입력 잠시 잠금
+  input.disabled = true;
+
+  let correctPw;
+  try {
+    correctPw = await sb.settings.adminPassword();
+  } catch (e) {
+    err.textContent = '비밀번호 확인 실패: ' + (e.message || '오류');
+    input.disabled = false;
+    return;
+  }
+
+  input.disabled = false;
+
+  if (val !== correctPw) {
     err.textContent = '비밀번호가 올바르지 않아요';
     input.classList.add('error');
     input.classList.add('shake');
@@ -1140,9 +1762,9 @@ document.addEventListener('keydown', (e) => {
 
 window.addEventListener('popstate', route);
 
-// ══════════════════════════════════════════
-//  진단 로직 (?diag)
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+//  진단 로직 (?diag) — sb 헬퍼 검증 포함
+// ══════════════════════════════════════════════════════════════
 function diagLog(msg, type = 'info') {
   const el = document.getElementById('diag-log');
   if (!el) return;
@@ -1163,6 +1785,7 @@ async function runDiagnostics() {
   document.getElementById('diag-log').innerHTML = '';
   diagLog('진단 시작', 'info');
 
+  // ── 1. SDK + 클라이언트 ──
   diagSet('diag-url', SUPABASE_URL, 'ok');
 
   if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
@@ -1174,14 +1797,16 @@ async function runDiagnostics() {
   diagLog('SDK 로드 OK', 'ok');
 
   try {
-    sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    initSupabase();
     diagSet('diag-client', '✓ 정상', 'ok');
     diagLog('클라이언트 생성 OK', 'ok');
   } catch (e) {
     diagSet('diag-client', '❌ ' + e.message, 'err');
+    diagLog('클라이언트 생성 실패: ' + e.message, 'err');
     return;
   }
 
+  // ── 2. 테이블 행수 ──
   const tables = [
     { name: 'students',        labelId: 'diag-students',    expected: 514 },
     { name: 'attendance',      labelId: 'diag-attendance',  expected: 817 },
@@ -1206,10 +1831,116 @@ async function runDiagnostics() {
     }
   }
 
+  // ── 3. sb 헬퍼 함수 검증 ──
+  diagLog('sb 헬퍼 함수 검증 시작', 'info');
+
+  // settings.adminPassword
+  diagSet('diag-h-pw', '조회 중...', 'pending');
+  try {
+    const pw = await sb.settings.adminPassword();
+    if (pw && pw.length > 0) {
+      // 보안: 마스킹해서 표시
+      const masked = pw.substring(0, 2) + '***' + pw.substring(pw.length - 1);
+      diagSet('diag-h-pw', `✓ ${masked} (${pw.length}자)`, 'ok');
+      diagLog(`adminPassword(): ${pw.length}자 OK`, 'ok');
+    } else {
+      diagSet('diag-h-pw', '❌ 빈 값', 'err');
+    }
+  } catch (e) {
+    diagSet('diag-h-pw', '❌ ' + e.message, 'err');
+    diagLog('adminPassword() 실패: ' + e.message, 'err');
+  }
+
+  // settings.semesterStart
+  diagSet('diag-h-sem', '조회 중...', 'pending');
+  try {
+    const sem = await sb.settings.semesterStart();
+    diagSet('diag-h-sem', `✓ ${sem}`, 'ok');
+    diagLog(`semesterStart(): ${sem}`, 'ok');
+  } catch (e) {
+    diagSet('diag-h-sem', '❌ ' + e.message, 'err');
+  }
+
+  // students.list
+  diagSet('diag-h-students', '조회 중...', 'pending');
+  try {
+    const list = await sb.students.list();
+    diagSet('diag-h-students', `✓ ${list.length}명`, 'ok');
+    diagLog(`students.list(): ${list.length}명`, 'ok');
+  } catch (e) {
+    diagSet('diag-h-students', '❌ ' + e.message, 'err');
+  }
+
+  // students.byNo
+  diagSet('diag-h-byno', '조회 중...', 'pending');
+  try {
+    const found = await sb.students.byNo('10101');
+    if (found.length > 0) {
+      diagSet('diag-h-byno', `✓ ${found[0].이름} (${found.length}건)`, 'ok');
+      diagLog(`byNo('10101'): ${found.length}건`, 'ok');
+    } else {
+      diagSet('diag-h-byno', '0건 (10101 없음)', 'err');
+    }
+  } catch (e) {
+    diagSet('diag-h-byno', '❌ ' + e.message, 'err');
+  }
+
+  // students.byRoom
+  diagSet('diag-h-byroom', '조회 중...', 'pending');
+  try {
+    const room = await sb.students.byRoom('심야 독서시간', '리케이온');
+    diagSet('diag-h-byroom', `✓ ${room.length}명`, 'ok');
+    diagLog(`byRoom(심야, 리케이온): ${room.length}명`, 'ok');
+  } catch (e) {
+    diagSet('diag-h-byroom', '❌ ' + e.message, 'err');
+  }
+
+  // attendance.history
+  diagSet('diag-h-hist', '조회 중...', 'pending');
+  try {
+    const hist = await sb.attendance.history(7);
+    diagSet('diag-h-hist', `✓ ${hist.length}건 (최근 7일)`, 'ok');
+    diagLog(`history(7): ${hist.length}건`, 'ok');
+  } catch (e) {
+    diagSet('diag-h-hist', '❌ ' + e.message, 'err');
+  }
+
+  // attendance.byStudent
+  diagSet('diag-h-bystu', '조회 중...', 'pending');
+  try {
+    const studentHist = await sb.attendance.byStudent('10101');
+    diagSet('diag-h-bystu', `✓ ${studentHist.length}건`, 'ok');
+    diagLog(`byStudent('10101'): ${studentHist.length}건`, 'ok');
+  } catch (e) {
+    diagSet('diag-h-bystu', '❌ ' + e.message, 'err');
+  }
+
+  // supervisors.today
+  diagSet('diag-h-sup', '조회 중...', 'pending');
+  try {
+    const sup = await sb.supervisors.today();
+    diagSet('diag-h-sup', sup ? `✓ ${sup}` : '오늘 감독 없음', sup ? 'ok' : 'pending');
+    diagLog(`supervisors.today(): ${sup || '없음'}`, 'ok');
+  } catch (e) {
+    diagSet('diag-h-sup', '❌ ' + e.message, 'err');
+  }
+
+  // requests.list
+  diagSet('diag-h-req', '조회 중...', 'pending');
+  try {
+    const reqs = await sb.requests.list();
+    const total = reqs.corrections.length + reqs.dayChanges.length;
+    diagSet('diag-h-req', `✓ ${total}건 (수정 ${reqs.corrections.length}, 요일 ${reqs.dayChanges.length})`, 'ok');
+    diagLog(`requests.list(): 수정 ${reqs.corrections.length}, 요일변경 ${reqs.dayChanges.length}`, 'ok');
+  } catch (e) {
+    diagSet('diag-h-req', '❌ ' + e.message, 'err');
+  }
+
+  // ── 4. Realtime ──
   diagSet('diag-realtime', '연결 중...', 'pending');
   try {
     sbClient
-      .channel('phase2-test')
+      .channel('phase2b-test')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => {})
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
@@ -1222,9 +1953,22 @@ async function runDiagnostics() {
   } catch (e) {
     diagSet('diag-realtime', '❌ ' + e.message, 'err');
   }
+
+  diagLog('진단 완료', 'info');
 }
 
-window.addEventListener('DOMContentLoaded', route);
+// ══════════════════════════════════════════════════════════════
+//  부팅
+// ══════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  // Supabase 클라이언트 미리 초기화 (오류 시 콘솔에만 표시)
+  try {
+    initSupabase();
+  } catch (e) {
+    console.warn('Supabase 초기화 지연:', e.message);
+  }
+  route();
+});
 </script>
 
 </body>
