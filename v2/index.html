@@ -1322,10 +1322,14 @@ input { font-family: inherit; }
 
 /* 우측 패널 헤더 */
 .panel-header {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 22px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
 }
 .panel-title {
   font-family: 'IBM Plex Sans KR', sans-serif;
@@ -1334,6 +1338,42 @@ input { font-family: inherit; }
   color: var(--cream);
   line-height: 1;
   letter-spacing: -0.01em;
+}
+
+/* 학년별 분모 표시 */
+.grade-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.grade-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+}
+.grade-item .grade-label {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-dim);
+}
+.grade-item .grade-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--amber);
+  font-variant-numeric: tabular-nums;
+}
+.grade-item .grade-unit {
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-left: -3px;
+}
+.grade-divider {
+  width: 1px;
+  height: 14px;
+  background: var(--border2);
 }
 
 /* 수동 출석 입력 카드 (우측 패널 상단) */
@@ -2584,6 +2624,9 @@ input { font-family: inherit; }
       <div class="right-panel">
         <div class="panel-header">
           <div class="panel-title">출석 현황</div>
+          <div class="grade-summary" id="t-grade-summary">
+            <span style="font-size:12px;color:var(--ink-faint)">—</span>
+          </div>
         </div>
 
         <!-- 수동 출석 입력 (인터넷 안 되는 학생용) -->
@@ -4165,6 +4208,9 @@ function renderRoster() {
   document.getElementById('t-stat-abs').textContent = absentCount;
   document.getElementById('t-stat-rate').textContent = rate;
 
+  // 학년별 분모 (오늘 요일 대상자 기준, v1 동일)
+  renderGradeSummary();
+
   // 명단 본문
   const body = document.getElementById('t-roster-body');
 
@@ -4245,6 +4291,38 @@ function renderRoster() {
       </div>
     `;
   }).join('');
+}
+
+// 학년별 분모 표시 (1학년 38명 / 2학년 30명 / 3학년 17명)
+function renderGradeSummary() {
+  const el = document.getElementById('t-grade-summary');
+  if (!el) return;
+
+  // 학번 첫 글자로 학년 추출
+  const grades = {};
+  T.rosterStudents.forEach(s => {
+    const g = String(s.학번).trim()[0];
+    if (g && !isNaN(g)) {
+      grades[g] = (grades[g] || 0) + 1;
+    }
+  });
+
+  const sorted = Object.entries(grades).sort((a, b) => Number(a[0]) - Number(b[0]));
+
+  if (sorted.length === 0) {
+    el.innerHTML = '<span style="font-size:12px;color:var(--ink-faint)">—</span>';
+    return;
+  }
+
+  // 학년 사이에 디바이더 삽입
+  const html = sorted.map(([g, cnt]) => `
+    <div class="grade-item">
+      <span class="grade-label">${g}학년</span>
+      <span class="grade-num">${cnt}</span><span class="grade-unit">명</span>
+    </div>
+  `).join('<div class="grade-divider"></div>');
+
+  el.innerHTML = html;
 }
 
 // 탭 전환
