@@ -805,12 +805,12 @@ input { font-family: inherit; }
 }
 
 .teacher-bar-room {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 26px;
-  font-style: italic;
-  font-weight: 500;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
   color: var(--cream);
   line-height: 1;
+  letter-spacing: -0.01em;
 }
 
 .teacher-bar-divider {
@@ -1323,23 +1323,17 @@ input { font-family: inherit; }
 /* 우측 패널 헤더 */
 .panel-header {
   text-align: center;
-  margin-bottom: 18px;
+  margin-bottom: 22px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
 }
 .panel-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 22px;
-  font-style: italic;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--cream);
   line-height: 1;
-  margin-bottom: 4px;
-}
-.panel-title-ko {
-  font-family: 'IBM Plex Sans KR', sans-serif;
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--amber);
-  letter-spacing: 0.05em;
+  letter-spacing: -0.01em;
 }
 
 /* 수동 출석 입력 카드 (우측 패널 상단) */
@@ -1397,34 +1391,60 @@ input { font-family: inherit; }
 }
 
 /* ══ 인앱 넘버패드 모달 (수동 출석용) ══ */
+/* 배경: 투명 (QR 코드가 가려지지 않게) */
+/* 위치: 우측 패널 영역에 absolute로 띄움 */
 .numpad-modal-bg {
   position: fixed;
   inset: 0;
   z-index: 150;
-  background: rgba(10, 8, 5, 0.78);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: transparent;
   display: none;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: 24px;
-  animation: modalBgIn 0.3s ease-out;
+  pointer-events: none;
 }
 .numpad-modal-bg.on { display: flex; }
 
 .numpad-modal {
   position: relative;
-  background: var(--paper);
-  border: 1px solid var(--border2);
+  background: var(--paper2);
+  border: 1px solid var(--amber);
   border-radius: var(--r);
-  padding: 32px 28px 28px;
-  max-width: 360px;
+  padding: 28px 24px 24px;
+  max-width: 340px;
   width: 100%;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.05) inset,
-    0 60px 120px -30px rgba(0, 0, 0, 0.8);
-  animation: modalIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 0 0 1px rgba(214, 178, 124, 0.15),
+    0 60px 120px -30px rgba(0, 0, 0, 0.95),
+    0 30px 60px -20px rgba(0, 0, 0, 0.7);
+  animation: numpadModalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+  /* 우측 패널 영역 위에 표시되도록 위치 조정 */
+  margin-top: 100px;
+  margin-left: auto;
+  margin-right: auto;
+  /* 1100px 컨테이너 안에서 우측 패널 가운데 */
+  transform: translateX(180px);
 }
+
+@keyframes numpadModalIn {
+  from { opacity: 0; transform: translateX(180px) translateY(-10px) scale(0.96); }
+  to   { opacity: 1; transform: translateX(180px) translateY(0) scale(1); }
+}
+
+@media (max-width: 920px) {
+  .numpad-modal {
+    transform: none;
+    margin-top: 60px;
+  }
+  @keyframes numpadModalIn {
+    from { opacity: 0; transform: translateY(-10px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+}
+
 .numpad-modal::before,
 .numpad-modal::after {
   content: '';
@@ -1515,7 +1535,7 @@ input { font-family: inherit; }
   background: var(--paper);
   border: 1px solid var(--border);
   border-radius: var(--r);
-  padding: 18px 16px 16px;
+  padding: 20px 16px 18px;
   text-align: center;
   transition: all 0.3s;
 }
@@ -1532,11 +1552,11 @@ input { font-family: inherit; }
 
 .stat-num {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 36px;
+  font-size: 42px;
   font-weight: 500;
   font-style: italic;
   line-height: 1;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   color: var(--cream);
   font-variant-numeric: tabular-nums;
 }
@@ -1545,18 +1565,18 @@ input { font-family: inherit; }
 .stat-card.rate .stat-num     { color: var(--amber); }
 
 .stat-num .unit {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 400;
   margin-left: 2px;
   opacity: 0.7;
 }
 
 .stat-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-dim);
+  letter-spacing: 0;
 }
 
 /* 명단 헤더 */
@@ -1564,40 +1584,31 @@ input { font-family: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px;
+  padding: 16px 20px;
   background: var(--paper);
   border: 1px solid var(--border);
   border-radius: var(--r) var(--r) 0 0;
   border-bottom: none;
 }
 .list-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 18px;
-  font-style: italic;
-  font-weight: 500;
-  color: var(--cream);
-}
-.list-title-ko {
   font-family: 'IBM Plex Sans KR', sans-serif;
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--ink-faint);
-  margin-left: 8px;
-  letter-spacing: 0.05em;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--cream);
+  letter-spacing: -0.01em;
 }
 .list-tabs {
   display: flex;
   gap: 4px;
 }
 .list-tab {
-  padding: 6px 12px;
+  padding: 8px 14px;
   background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--r);
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--ink-dim);
   cursor: pointer;
   transition: all 0.25s;
@@ -1653,24 +1664,24 @@ input { font-family: inherit; }
 .student-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 18px;
+  gap: 16px;
+  padding: 16px 20px;
   border-bottom: 1px solid rgba(214, 178, 124, 0.06);
   transition: background 0.3s;
 }
 .student-row:last-child { border-bottom: none; }
-.student-row.absent { opacity: 0.5; }
+.student-row.absent { opacity: 0.55; }
 .student-row.self { /* 자율출석 */ }
 
 .row-status {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Cormorant Garamond', serif;
-  font-size: 15px;
+  font-size: 17px;
   font-style: italic;
   flex-shrink: 0;
 }
@@ -1692,24 +1703,24 @@ input { font-family: inherit; }
 
 .row-no {
   font-family: 'DM Mono', monospace;
-  font-size: 12px;
-  color: var(--ink-faint);
-  letter-spacing: 0.05em;
+  font-size: 14px;
+  color: var(--ink-dim);
+  letter-spacing: 0.03em;
   flex-shrink: 0;
-  width: 50px;
+  width: 56px;
 }
 .row-name {
   font-family: 'IBM Plex Sans KR', sans-serif;
-  font-size: 14px;
-  font-weight: 400;
+  font-size: 16px;
+  font-weight: 500;
   color: var(--ink);
   flex: 1;
 }
-.student-row.attended .row-name { color: var(--cream); font-weight: 500; }
+.student-row.attended .row-name { color: var(--cream); font-weight: 600; }
 
 .row-time {
   font-family: 'DM Mono', monospace;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--ink-dim);
   letter-spacing: 0.03em;
   flex-shrink: 0;
@@ -1720,14 +1731,13 @@ input { font-family: inherit; }
 /* 수동 출석 버튼 (미출석 학생만) */
 .row-manual {
   flex-shrink: 0;
-  padding: 6px 12px;
+  padding: 8px 14px;
   background: rgba(123, 160, 135, 0.1);
   border: 1px solid rgba(123, 160, 135, 0.35);
   border-radius: var(--r);
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--sage);
   cursor: pointer;
   transition: all 0.25s;
@@ -2573,8 +2583,7 @@ input { font-family: inherit; }
       <!-- 우측: 통계 + 수동 입력 + 명단 -->
       <div class="right-panel">
         <div class="panel-header">
-          <div class="panel-title">Attendance</div>
-          <div class="panel-title-ko">출석 현황</div>
+          <div class="panel-title">출석 현황</div>
         </div>
 
         <!-- 수동 출석 입력 (인터넷 안 되는 학생용) -->
@@ -2594,24 +2603,21 @@ input { font-family: inherit; }
           <div class="stats-row">
             <div class="stat-card attended">
               <div class="stat-num"><span id="t-stat-att">0</span><span class="unit">명</span></div>
-              <div class="stat-label">ATTENDED · 출석</div>
+              <div class="stat-label">출석</div>
             </div>
             <div class="stat-card absent">
               <div class="stat-num"><span id="t-stat-abs">0</span><span class="unit">명</span></div>
-              <div class="stat-label">ABSENT · 미출석</div>
+              <div class="stat-label">미출석</div>
             </div>
             <div class="stat-card rate">
               <div class="stat-num"><span id="t-stat-rate">0</span><span class="unit">%</span></div>
-              <div class="stat-label">RATE · 출석률</div>
+              <div class="stat-label">출석률</div>
             </div>
           </div>
 
           <!-- 명단 헤더 -->
           <div class="list-header">
-            <div>
-              <span class="list-title">Roster</span>
-              <span class="list-title-ko">출석 명단</span>
-            </div>
+            <div class="list-title">출석 명단</div>
             <div class="list-tabs">
               <button class="list-tab on" data-tab="all" onclick="switchListTab('all')">전체</button>
               <button class="list-tab" data-tab="attended" onclick="switchListTab('attended')">출석</button>
