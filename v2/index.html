@@ -749,6 +749,447 @@ input { font-family: inherit; }
   padding: 24px;
 }
 
+/* ══════════════════════════════════════════ */
+/*  교사 화면 (Phase 2C)                         */
+/* ══════════════════════════════════════════ */
+.teacher-wrap {
+  width: 100%;
+  max-width: 720px;
+}
+
+/* 상단 정보 바 */
+.teacher-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  margin-bottom: 28px;
+  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.4);
+}
+
+.teacher-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.teacher-bar-room {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--cream);
+  line-height: 1;
+}
+
+.teacher-bar-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border2);
+}
+
+.teacher-bar-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+}
+
+.teacher-bar-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--amber);
+  letter-spacing: 0.05em;
+}
+
+/* 설정 폼 카드 */
+.setup-card {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 44px 40px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 30px 60px -20px rgba(0, 0, 0, 0.5);
+  animation: cardIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.setup-card::before,
+.setup-card::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--amber);
+  opacity: 0.4;
+}
+.setup-card::before {
+  top: 12px;
+  left: 12px;
+  border-right: none;
+  border-bottom: none;
+}
+.setup-card::after {
+  bottom: 12px;
+  right: 12px;
+  border-left: none;
+  border-top: none;
+}
+
+.setup-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--cream);
+  text-align: center;
+  margin-bottom: 4px;
+  line-height: 1;
+}
+
+.setup-subtitle {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--ink-dim);
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.field-group {
+  margin-bottom: 22px;
+}
+
+.field-label {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 10px;
+}
+
+/* 셀렉트 박스 (프로그램, QR 시간) */
+.field-select {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 13px 16px;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 15px;
+  color: var(--cream);
+  outline: none;
+  transition: all 0.3s;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%23a89880' d='M6 8L0 0h12z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
+}
+.field-select:focus {
+  border-color: var(--amber);
+  background-color: rgba(214, 178, 124, 0.05);
+  box-shadow: 0 0 0 3px rgba(214, 178, 124, 0.1);
+}
+
+/* 텍스트 입력 (교사명) */
+.field-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 13px 16px;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 15px;
+  color: var(--cream);
+  outline: none;
+  transition: all 0.3s;
+}
+.field-input:focus {
+  border-color: var(--amber);
+  background: rgba(214, 178, 124, 0.05);
+  box-shadow: 0 0 0 3px rgba(214, 178, 124, 0.1);
+}
+.field-input::placeholder {
+  color: var(--ink-faint);
+}
+.field-input.auto-filled {
+  background: rgba(123, 160, 135, 0.08);
+  border-color: rgba(123, 160, 135, 0.3);
+}
+.field-hint {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--sage);
+  margin-top: 6px;
+  display: none;
+}
+.field-hint.on { display: block; }
+
+/* QR 시간 라디오 (작은 칩) */
+.field-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.field-chip {
+  flex: 1;
+  min-width: 60px;
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--ink-dim);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.25s;
+}
+.field-chip:hover {
+  border-color: var(--border2);
+  color: var(--ink);
+}
+.field-chip.on {
+  background: rgba(214, 178, 124, 0.12);
+  border-color: var(--amber);
+  color: var(--amber);
+  font-weight: 500;
+}
+
+/* 시작 버튼 */
+.start-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 18px 24px;
+  background: var(--amber);
+  color: var(--bg);
+  border-radius: var(--r);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  transition: all 0.3s;
+}
+.start-btn:hover:not(:disabled) {
+  background: var(--cream);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -8px rgba(214, 178, 124, 0.4);
+}
+.start-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ══ 세션 진행 화면 (QR 표시) ══ */
+.session-card {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 40px 36px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 30px 60px -20px rgba(0, 0, 0, 0.5);
+  animation: cardIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.session-card::before,
+.session-card::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--amber);
+  opacity: 0.5;
+}
+.session-card::before {
+  top: 12px;
+  left: 12px;
+  border-right: none;
+  border-bottom: none;
+}
+.session-card::after {
+  bottom: 12px;
+  right: 12px;
+  border-left: none;
+  border-top: none;
+}
+
+/* 진행 중 상태 표시 */
+.live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 12px;
+  background: rgba(0, 200, 150, 0.12);
+  border: 1px solid rgba(0, 200, 150, 0.3);
+  border-radius: 100px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--ok);
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.live-pill .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.session-info {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.session-program {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--cream);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.session-meta {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--ink-dim);
+}
+
+/* QR 박스 */
+.qr-box {
+  background: white;
+  padding: 20px;
+  border-radius: var(--r);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  width: fit-content;
+  box-shadow:
+    0 0 0 1px rgba(214, 178, 124, 0.3),
+    0 20px 50px -10px rgba(0, 0, 0, 0.6);
+}
+.qr-box canvas,
+.qr-box img {
+  display: block;
+}
+
+/* 타이머 */
+.timer-block {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.timer-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 56px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--cream);
+  line-height: 1;
+  margin-bottom: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.timer-num.warn { color: var(--warn); }
+.timer-num.danger { color: var(--terra); animation: pulseFast 1s ease-in-out infinite; }
+@keyframes pulseFast {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.timer-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.session-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.session-actions .btn-refresh {
+  flex: 1;
+  padding: 13px 18px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--ink-dim);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  transition: all 0.3s;
+}
+.session-actions .btn-refresh:hover {
+  border-color: var(--border2);
+  color: var(--amber);
+}
+
+.session-actions .btn-end {
+  flex: 1;
+  padding: 13px 18px;
+  background: rgba(184, 84, 63, 0.12);
+  border: 1px solid rgba(184, 84, 63, 0.4);
+  border-radius: var(--r);
+  color: var(--terra);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+.session-actions .btn-end:hover {
+  background: rgba(184, 84, 63, 0.2);
+  border-color: var(--terra);
+}
+
+/* 출석 명단 placeholder (Phase 2E에서 채움) */
+.attendance-placeholder {
+  margin-top: 24px;
+  padding: 24px;
+  background: var(--paper);
+  border: 1px dashed var(--border2);
+  border-radius: var(--r);
+  text-align: center;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  color: var(--ink-faint);
+  font-weight: 300;
+}
+.attendance-placeholder .icon {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  font-style: italic;
+  color: var(--amber);
+  opacity: 0.5;
+  margin-bottom: 8px;
+  display: block;
+}
+
 /* ══ 진단 페이지 (?diag) ══ */
 .diag-wrap {
   max-width: 720px;
@@ -919,6 +1360,109 @@ input { font-family: inherit; }
         <span class="arrow">→</span>
       </div>
     </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  교사 화면 (Phase 2C)                          -->
+<!-- ══════════════════════════════════════════ -->
+<div class="screen" id="screen-teacher" style="display:none">
+  <button class="back-btn" onclick="goHome()">
+    <span>←</span><span>BACK</span>
+  </button>
+
+  <div class="teacher-wrap">
+    <!-- 상단 바 -->
+    <div class="teacher-bar">
+      <div class="teacher-bar-left">
+        <div class="teacher-bar-room" id="t-room-name">—</div>
+        <div class="teacher-bar-divider"></div>
+        <div class="teacher-bar-meta" id="t-room-label">ROOM</div>
+      </div>
+      <div class="teacher-bar-time" id="t-current-time">—</div>
+    </div>
+
+    <!-- 설정 화면 -->
+    <div id="t-setup" class="setup-card">
+      <div class="setup-title">Start Session</div>
+      <div class="setup-subtitle">출석 체크를 시작합니다</div>
+
+      <div class="field-group">
+        <label class="field-label">PROGRAM · 프로그램</label>
+        <select class="field-select" id="t-program">
+          <option value="심야 독서시간">심야 독서시간</option>
+          <option value="야간 독서시간">야간 독서시간</option>
+          <option value="방과후 독서시간">방과후 독서시간</option>
+          <option value="토요일 독서시간" data-rikei-only="true">토요일 독서시간</option>
+          <option value="일요일 독서시간" data-rikei-only="true">일요일 독서시간</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">TEACHER · 담당 교사</label>
+        <input type="text" class="field-input" id="t-teacher" placeholder="이름 입력" autocomplete="off">
+        <div class="field-hint" id="t-teacher-hint">오늘의 심야 감독 교사로 자동 입력됨</div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">QR DURATION · QR 유효 시간</label>
+        <div class="field-chips" id="t-duration">
+          <button type="button" class="field-chip" data-min="5">5분</button>
+          <button type="button" class="field-chip" data-min="10">10분</button>
+          <button type="button" class="field-chip on" data-min="15">15분</button>
+          <button type="button" class="field-chip" data-min="30">30분</button>
+        </div>
+      </div>
+
+      <button class="start-btn" id="t-start-btn" onclick="startTeacherSession()">▶ QR 생성 및 출석 시작</button>
+    </div>
+
+    <!-- 세션 진행 화면 -->
+    <div id="t-session" class="session-card" style="display:none">
+      <div style="text-align:center">
+        <div class="live-pill"><span class="dot"></span><span>LIVE</span></div>
+      </div>
+
+      <div class="session-info">
+        <div class="session-program" id="t-sess-program">—</div>
+        <div class="session-meta" id="t-sess-meta">—</div>
+      </div>
+
+      <div class="qr-box" id="t-qr-box"></div>
+
+      <div class="timer-block">
+        <div class="timer-num" id="t-timer">00:00</div>
+        <div class="timer-label">남은 시간</div>
+      </div>
+
+      <div class="session-actions">
+        <button class="btn-refresh" onclick="refreshTeacherQR()">🔄 QR 갱신</button>
+        <button class="btn-end" onclick="openEndModal()">출석 마감</button>
+      </div>
+
+      <div class="attendance-placeholder">
+        <span class="icon">✦</span>
+        실시간 출석 명단은 다음 단계(Phase 2E)에서 표시됩니다
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 세션 종료 모달 -->
+<div class="modal-bg" id="modal-end">
+  <div class="modal">
+    <div class="modal-icon">✕</div>
+    <div class="modal-title">End Session</div>
+    <div class="modal-title-ko">출석을 마감할까요?</div>
+
+    <div style="font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;font-weight:300;color:var(--ink-dim);text-align:center;line-height:1.7;margin-bottom:24px">
+      마감 후에는 학생이 더 이상<br>QR을 스캔할 수 없어요.
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeEndModal()">취소</button>
+      <button class="btn btn-primary" onclick="confirmEndSession()">마감</button>
+    </div>
   </div>
 </div>
 
@@ -1659,13 +2203,7 @@ function route() {
 
   if (params.has('teacher')) {
     const room = params.get('teacher');
-    document.getElementById('construction-ko').textContent =
-      `${room} — 교사 출석 화면 준비중`;
-    document.getElementById('construction-desc').innerHTML =
-      'QR 코드 생성과 출석 체크 기능은<br>다음 단계(Phase 2C)에서 만들어집니다.';
-    document.getElementById('construction-meta').textContent =
-      'PHASE 2C — TEACHER SCREEN';
-    showScreen('screen-construction');
+    enterTeacherScreen(room);
     return;
   }
 
@@ -1699,6 +2237,321 @@ function enterRoom(room) {
   history.pushState({}, '', location.pathname + '?teacher=' + encodeURIComponent(room));
   route();
 }
+
+// ══════════════════════════════════════════════════════════════
+//  교사 화면 (Phase 2C)
+// ══════════════════════════════════════════════════════════════
+
+// 교사 화면 상태
+const T = {
+  room: null,           // 현재 장소
+  duration: 15,         // QR 유효 시간 (분)
+  session: null,        // 현재 세션 {sessionId, program, room, teacher, expireAt}
+  timerInterval: null,  // 카운트다운 타이머
+  clockInterval: null,  // 현재 시각 표시 타이머
+  qrInstance: null,     // QRCode 인스턴스
+};
+
+async function enterTeacherScreen(room) {
+  T.room = room;
+
+  // 상단바 채우기
+  document.getElementById('t-room-name').textContent = room;
+  const roomLabels = {
+    '아우름': 'ROOM 01',
+    '교과1실': 'ROOM 02',
+    '해오름': 'ROOM 03',
+    '리케이온': 'ROOM 04',
+  };
+  document.getElementById('t-room-label').textContent = roomLabels[room] || 'ROOM';
+
+  // 토/일 옵션은 리케이온만
+  const programSel = document.getElementById('t-program');
+  const isRikei = room === '리케이온';
+  [...programSel.options].forEach(opt => {
+    if (opt.dataset.rikeiOnly === 'true') {
+      opt.style.display = isRikei ? '' : 'none';
+      opt.disabled = !isRikei;
+    }
+  });
+  // 숨겨진 옵션이 선택되어 있으면 심야로 변경
+  if (programSel.value === '토요일 독서시간' || programSel.value === '일요일 독서시간') {
+    if (!isRikei) programSel.value = '심야 독서시간';
+  }
+
+  // 화면 표시
+  showScreen('screen-teacher');
+  document.getElementById('t-setup').style.display = 'block';
+  document.getElementById('t-session').style.display = 'none';
+
+  // 현재 시각 갱신 시작
+  startClock();
+
+  // 프로그램 변경 시 교사 자동 채우기
+  programSel.onchange = handleProgramChange;
+  // 첫 진입 시에도 한 번 실행 (심야면 자동 채움)
+  await handleProgramChange();
+
+  // 시간 칩 클릭
+  document.querySelectorAll('#t-duration .field-chip').forEach(chip => {
+    chip.onclick = () => {
+      document.querySelectorAll('#t-duration .field-chip').forEach(c => c.classList.remove('on'));
+      chip.classList.add('on');
+      T.duration = parseInt(chip.dataset.min);
+    };
+  });
+}
+
+// 현재 시각 표시 (1초마다)
+function startClock() {
+  stopClock();
+  const update = () => {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    const el = document.getElementById('t-current-time');
+    if (el) el.textContent = `${hh}:${mm}:${ss}`;
+  };
+  update();
+  T.clockInterval = setInterval(update, 1000);
+}
+
+function stopClock() {
+  if (T.clockInterval) {
+    clearInterval(T.clockInterval);
+    T.clockInterval = null;
+  }
+}
+
+// 프로그램 변경 시: 심야 독서시간이면 오늘 감독 자동 채움
+async function handleProgramChange() {
+  const program = document.getElementById('t-program').value;
+  const teacherInput = document.getElementById('t-teacher');
+  const hint = document.getElementById('t-teacher-hint');
+
+  if (program === '심야 독서시간') {
+    try {
+      const supervisor = await sb.supervisors.today();
+      if (supervisor) {
+        teacherInput.value = supervisor;
+        teacherInput.classList.add('auto-filled');
+        hint.classList.add('on');
+        return;
+      }
+    } catch (e) {
+      console.warn('감독 조회 실패:', e);
+    }
+  }
+  // 심야가 아니거나 감독 없으면 기본 상태로
+  teacherInput.classList.remove('auto-filled');
+  hint.classList.remove('on');
+  // 자동 채워졌던 값이 있으면 비움
+  if (teacherInput.dataset.wasAutoFilled === 'true') {
+    teacherInput.value = '';
+  }
+  teacherInput.dataset.wasAutoFilled = (program === '심야 독서시간') ? 'true' : 'false';
+}
+
+// 세션 시작
+async function startTeacherSession() {
+  const program = document.getElementById('t-program').value;
+  const teacher = document.getElementById('t-teacher').value.trim();
+  const btn = document.getElementById('t-start-btn');
+
+  if (!teacher) {
+    alert('담당 교사 이름을 입력해주세요');
+    document.getElementById('t-teacher').focus();
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '생성 중...';
+
+  try {
+    // 만료 시각 계산
+    const expireMs = Date.now() + (T.duration * 60 * 1000);
+    const expireAt = new Date(expireMs).toISOString();
+
+    // 세션 생성
+    const sessionId = String(Date.now());
+    await sb.sessions.create({
+      sessionId,
+      program,
+      room: T.room,
+      teacher,
+      expireAt,
+    });
+
+    // 상태 저장
+    T.session = {
+      sessionId,
+      program,
+      room: T.room,
+      teacher,
+      expireMs,
+    };
+
+    // 화면 전환
+    document.getElementById('t-setup').style.display = 'none';
+    document.getElementById('t-session').style.display = 'block';
+
+    // 세션 정보 표시
+    document.getElementById('t-sess-program').textContent = program;
+    document.getElementById('t-sess-meta').textContent = `${T.room} · ${teacher} 선생님`;
+
+    // QR 생성
+    buildTeacherQR();
+
+    // 타이머 시작
+    startTeacherTimer();
+
+  } catch (e) {
+    alert('세션 생성 실패: ' + (e.message || '오류'));
+    btn.disabled = false;
+    btn.textContent = '▶ QR 생성 및 출석 시작';
+  }
+}
+
+// QR 코드 생성
+function buildTeacherQR() {
+  const box = document.getElementById('t-qr-box');
+  box.innerHTML = '';
+
+  // 학생이 스캔할 URL: 학생 화면 + 세션ID
+  const url = `${location.origin}${location.pathname}?mode=student&s=${T.session.sessionId}`;
+
+  // qrcode.js로 그림
+  T.qrInstance = new QRCode(box, {
+    text: url,
+    width: 280,
+    height: 280,
+    colorDark: '#1a130c',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M,
+  });
+}
+
+// QR 갱신 (수동) - 새 세션ID로 새 QR 생성
+async function refreshTeacherQR() {
+  if (!T.session) return;
+
+  // 기존 세션 종료
+  try {
+    await sb.sessions.end(T.session.sessionId);
+  } catch (e) {
+    console.warn('이전 세션 종료 실패:', e);
+  }
+
+  // 새 세션 시작 (같은 프로그램/장소/교사로)
+  const expireMs = Date.now() + (T.duration * 60 * 1000);
+  const expireAt = new Date(expireMs).toISOString();
+  const sessionId = String(Date.now());
+
+  try {
+    await sb.sessions.create({
+      sessionId,
+      program: T.session.program,
+      room: T.session.room,
+      teacher: T.session.teacher,
+      expireAt,
+    });
+
+    T.session.sessionId = sessionId;
+    T.session.expireMs = expireMs;
+
+    buildTeacherQR();
+    startTeacherTimer();
+  } catch (e) {
+    alert('QR 갱신 실패: ' + (e.message || '오류'));
+  }
+}
+
+// 카운트다운 타이머
+function startTeacherTimer() {
+  stopTeacherTimer();
+  const update = () => {
+    const remain = Math.max(0, T.session.expireMs - Date.now());
+    const totalSec = Math.floor(remain / 1000);
+    const mm = Math.floor(totalSec / 60);
+    const ss = totalSec % 60;
+    const el = document.getElementById('t-timer');
+    if (el) {
+      el.textContent = `${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+      el.classList.remove('warn', 'danger');
+      if (totalSec <= 30) el.classList.add('danger');
+      else if (totalSec <= 120) el.classList.add('warn');
+    }
+    // 만료 시 자동 종료
+    if (remain === 0) {
+      stopTeacherTimer();
+      autoEndTeacherSession();
+    }
+  };
+  update();
+  T.timerInterval = setInterval(update, 1000);
+}
+
+function stopTeacherTimer() {
+  if (T.timerInterval) {
+    clearInterval(T.timerInterval);
+    T.timerInterval = null;
+  }
+}
+
+// 자동 종료 (시간 만료)
+async function autoEndTeacherSession() {
+  if (!T.session) return;
+  try {
+    await sb.sessions.end(T.session.sessionId);
+  } catch (e) {
+    console.warn('자동 종료 실패:', e);
+  }
+  alert('QR 시간이 만료되어 세션이 자동 종료됐어요.\n출석 마감을 클릭하면 설정 화면으로 돌아갑니다.');
+  // 화면은 그대로 두고, 마감 버튼으로 돌아가게 안내
+}
+
+// 종료 모달
+function openEndModal() {
+  document.getElementById('modal-end').classList.add('on');
+}
+function closeEndModal() {
+  document.getElementById('modal-end').classList.remove('on');
+}
+
+async function confirmEndSession() {
+  closeEndModal();
+  if (!T.session) return;
+
+  try {
+    await sb.sessions.end(T.session.sessionId);
+  } catch (e) {
+    console.warn('세션 종료 실패:', e);
+  }
+
+  // 정리
+  stopTeacherTimer();
+  if (T.qrInstance) {
+    document.getElementById('t-qr-box').innerHTML = '';
+    T.qrInstance = null;
+  }
+  T.session = null;
+
+  // 설정 화면으로 복귀
+  document.getElementById('t-setup').style.display = 'block';
+  document.getElementById('t-session').style.display = 'none';
+}
+
+// 모달 이벤트
+document.getElementById('modal-end').addEventListener('click', (e) => {
+  if (e.target.id === 'modal-end') closeEndModal();
+});
+
+// 페이지 떠날 때 정리
+window.addEventListener('beforeunload', () => {
+  stopClock();
+  stopTeacherTimer();
+});
 
 // ══════════════════════════════════════════════════════════════
 //  비밀번호 모달 (sb.settings.adminPassword 사용)
@@ -1757,7 +2610,10 @@ document.getElementById('modal-pw').addEventListener('click', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closePwModal();
+  if (e.key === 'Escape') {
+    closePwModal();
+    closeEndModal();
+  }
 });
 
 window.addEventListener('popstate', route);
