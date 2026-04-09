@@ -10,298 +10,1149 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<!-- ══ 폰트 ══ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
 <style>
 /* ══════════════════════════════════════════ */
-/*  디자인 토큰 (v1과 100% 동일 — 절대 변경 금지)  */
+/*  디자인 토큰 — 코지 도서관 (방향 D)             */
 /* ══════════════════════════════════════════ */
-html { background: #0e1117 !important; }
-body {
-  background: #0e1117 !important;
-  color: #edf0f7 !important;
-}
-a { color: inherit; }
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
-
 :root {
-  --ink: #0e1117;
-  --card: rgba(255,255,255,0.05);
-  --card2: rgba(255,255,255,0.09);
-  --border: rgba(255,255,255,0.1);
-  --border2: rgba(255,255,255,0.18);
-  --accent: #e94560;
-  --accent2: #f5a623;
-  --ok: #00c896;
-  --sky: #5eb8ff;
-  --text: #edf0f7;
-  --muted: #7a8499;
-  --r: 14px;
-  --r-sm: 10px;
+  --bg:        #1a130c;
+  --bg2:       #221810;
+  --paper:     #2a1f15;
+  --paper2:    #322619;
+  --paper3:    #3a2c1d;
+
+  --border:    rgba(214, 178, 124, 0.12);
+  --border2:   rgba(214, 178, 124, 0.22);
+  --border3:   rgba(214, 178, 124, 0.4);
+
+  --amber:     #d6b27c;
+  --copper:    #c87f5e;
+  --terra:     #b8543f;
+  --sage:      #7ba087;
+  --cream:     #f4e8d0;
+  --ochre:     #c89b3c;
+  --rust:      #a55a3a;
+
+  --ink:       #e8dcc4;
+  --ink-dim:   #a89880;
+  --ink-faint: #6b5d4a;
+
+  --ok:        #00c896;
+  --err:       #e94560;
+  --warn:      #f5a623;
+  --info:      #5eb8ff;
+
+  --r:         4px;
+  --r-md:      6px;
+  --r-lg:      8px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-body {
-  font-family: 'Noto Sans KR', sans-serif;
-  background: #0e1117;
-  color: #edf0f7;
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-weight: 300;
   min-height: 100vh;
-  font-size: 18px;
-  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
+body { overflow-x: hidden; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input { font-family: inherit; }
 
-body::before {
-  content: '';
+/* ══ 배경 텍스처 ══ */
+.bg-texture {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 100% 60% at 50% 0%, rgba(214, 178, 124, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(184, 84, 63, 0.04) 0%, transparent 60%),
+    var(--bg);
+  pointer-events: none;
+}
+.bg-noise {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(99,102,241,.13) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 90%, rgba(20,184,166,.1) 0%, transparent 60%);
+  opacity: 0.03;
+  background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0);
+  background-size: 3px 3px;
 }
 
-.wrap { position: relative; z-index: 1; }
-
-/* ══════════════════════════════════════════ */
-/*  Phase 1 임시 스타일 (연결 테스트용)            */
-/* ══════════════════════════════════════════ */
-.phase1-status {
-  max-width: 720px;
-  margin: 60px auto;
-  padding: 0 24px;
+/* ══ 레이아웃 ══ */
+.app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-.phase1-title {
-  font-size: 32px;
-  font-weight: 900;
-  color: #f59e0b;
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  animation: screenIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ══ 헤더 ══ */
+.header {
+  text-align: center;
+  margin-bottom: 56px;
+  animation: fadeIn 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.deco-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 22px;
+  color: var(--amber);
+  opacity: 0.6;
+}
+.deco-top .line {
+  width: 50px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--amber));
+}
+.deco-top .line.right {
+  background: linear-gradient(to left, transparent, var(--amber));
+}
+.deco-top .ornament {
+  font-size: 12px;
+  letter-spacing: 0.3em;
+}
+
+.title-en {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(48px, 8vw, 84px);
+  font-weight: 500;
+  font-style: italic;
+  color: var(--cream);
+  letter-spacing: -0.01em;
+  line-height: 1;
   margin-bottom: 8px;
-  letter-spacing: -0.5px;
 }
 
-.phase1-sub {
-  color: #7a8499;
-  font-size: 15px;
-  margin-bottom: 32px;
+.title-ko {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: clamp(18px, 2.5vw, 24px);
+  font-weight: 400;
+  color: var(--amber);
+  letter-spacing: 0.05em;
+  margin-bottom: 14px;
 }
 
-.phase1-card {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 14px;
+.title-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-dim);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.deco-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+.deco-bottom span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--amber);
+  opacity: 0.4;
+}
+.deco-bottom span:nth-child(2) { opacity: 0.7; transform: scale(1.4); }
+
+.header.compact { margin-bottom: 40px; }
+.header.compact .title-en { font-size: clamp(36px, 6vw, 56px); }
+.header.compact .deco-top { margin-bottom: 18px; }
+.header.compact .title-ko { margin-bottom: 10px; }
+
+/* ══ 메인 카드 ══ */
+.cards {
+  display: flex;
+  gap: 28px;
+  width: 100%;
+  max-width: 760px;
+  flex-wrap: wrap;
+}
+
+.card {
+  flex: 1;
+  min-width: 280px;
+  position: relative;
+  padding: 44px 38px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 30px 60px -20px rgba(0, 0, 0, 0.5),
+    0 8px 24px -8px rgba(0, 0, 0, 0.3);
+  animation: cardIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  text-align: left;
+  display: block;
+  width: 100%;
+}
+.card:nth-child(1) { animation-delay: 0.25s; }
+.card:nth-child(2) { animation-delay: 0.4s; }
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card::before,
+.card::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--amber);
+  opacity: 0.4;
+  transition: all 0.5s;
+}
+.card::before {
+  top: 12px;
+  left: 12px;
+  border-right: none;
+  border-bottom: none;
+}
+.card::after {
+  bottom: 12px;
+  right: 12px;
+  border-left: none;
+  border-top: none;
+}
+
+.card:hover {
+  background: var(--paper2);
+  border-color: var(--border2);
+  transform: translateY(-4px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 50px 100px -30px rgba(0, 0, 0, 0.7),
+    0 16px 40px -10px rgba(0, 0, 0, 0.5);
+}
+.card:hover::before,
+.card:hover::after {
+  opacity: 1;
+  width: 24px;
+  height: 24px;
+}
+
+.card-symbol {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 64px;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1;
+  margin-bottom: 24px;
+  display: inline-block;
+}
+.card-attendance .card-symbol { color: var(--terra); }
+.card-admin .card-symbol      { color: var(--sage);  }
+
+.card-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 12px;
+}
+.card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 42px;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--cream);
+  margin-bottom: 4px;
+  line-height: 1;
+}
+.card-title-ko {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--amber);
+  margin-bottom: 22px;
+  letter-spacing: 0.05em;
+}
+.card-desc {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--ink-dim);
+  line-height: 1.8;
+  margin-bottom: 28px;
+}
+.card-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--amber);
+  text-transform: uppercase;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  transition: all 0.4s;
+}
+.card:hover .card-action { border-top-color: var(--border2); }
+.card-action .arrow {
+  display: inline-block;
+  transition: transform 0.4s;
+}
+.card:hover .card-action .arrow { transform: translateX(6px); }
+
+/* ══ 장소 선택 그리드 ══ */
+.rooms-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 22px;
+  width: 100%;
+  max-width: 760px;
+}
+
+@media (max-width: 560px) {
+  .rooms-grid { grid-template-columns: 1fr; }
+}
+
+.room-card {
+  position: relative;
+  padding: 32px 28px 28px 32px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 20px 40px -16px rgba(0, 0, 0, 0.45);
+  animation: cardIn 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  text-align: left;
+  width: 100%;
+  display: block;
+  overflow: hidden;
+}
+.room-card:nth-child(1) { animation-delay: 0.15s; }
+.room-card:nth-child(2) { animation-delay: 0.25s; }
+.room-card:nth-child(3) { animation-delay: 0.35s; }
+.room-card:nth-child(4) { animation-delay: 0.45s; }
+
+.room-card[data-room="1"] { --acc: var(--terra); }
+.room-card[data-room="2"] { --acc: var(--sage); }
+.room-card[data-room="3"] { --acc: var(--ochre); }
+.room-card[data-room="4"] { --acc: var(--copper); }
+
+.room-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 3px;
+  background: var(--acc);
+  opacity: 0.7;
+  transition: all 0.45s;
+  border-radius: 0 2px 2px 0;
+}
+
+.room-card:hover {
+  background: var(--paper2);
+  border-color: var(--acc);
+  transform: translateY(-3px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 30px 60px -20px rgba(0, 0, 0, 0.6);
+}
+.room-card:hover::before {
+  top: 0;
+  bottom: 0;
+  opacity: 1;
+  width: 4px;
+}
+
+.room-symbol {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 38px;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--acc);
+  line-height: 1;
+  margin-bottom: 12px;
+  display: inline-block;
+}
+.room-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--cream);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.room-name-ko {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 14px;
+  letter-spacing: 0.02em;
+}
+.room-desc {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--ink-dim);
+  line-height: 1.7;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+/* ══ 뒤로가기 ══ */
+.back-btn {
+  position: fixed;
+  top: 28px;
+  left: 28px;
+  z-index: 50;
+  padding: 10px 18px 10px 14px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s;
+}
+.back-btn:hover {
+  background: var(--paper2);
+  border-color: var(--border2);
+  color: var(--amber);
+}
+
+/* ══ 비밀번호 모달 ══ */
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(10, 8, 5, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: none;
+  align-items: center;
+  justify-content: center;
   padding: 24px;
+  animation: modalBgIn 0.3s ease-out;
+}
+.modal-bg.on { display: flex; }
+@keyframes modalBgIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  padding: 44px 40px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 60px 120px -30px rgba(0, 0, 0, 0.8);
+  animation: modalIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal::before,
+.modal::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--amber);
+  opacity: 0.5;
+}
+.modal::before {
+  top: 10px;
+  left: 10px;
+  border-right: none;
+  border-bottom: none;
+}
+.modal::after {
+  bottom: 10px;
+  right: 10px;
+  border-left: none;
+  border-top: none;
+}
+
+.modal-icon {
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 56px;
+  font-style: italic;
+  color: var(--amber);
+  line-height: 1;
   margin-bottom: 16px;
 }
 
-.phase1-card h3 {
+.modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--cream);
+  text-align: center;
+  margin-bottom: 4px;
+  line-height: 1;
+}
+.modal-title-ko {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--amber);
+  text-align: center;
+  letter-spacing: 0.05em;
+  margin-bottom: 28px;
+}
+
+.modal-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 18px;
+  font-family: 'DM Mono', monospace;
   font-size: 16px;
-  font-weight: 700;
-  margin-bottom: 12px;
-  color: #edf0f7;
+  color: var(--cream);
+  text-align: center;
+  outline: none;
+  letter-spacing: 0.15em;
+  transition: all 0.3s;
+}
+.modal-input::placeholder {
+  color: var(--ink-faint);
+  letter-spacing: 0.05em;
+  font-size: 13px;
+}
+.modal-input:focus {
+  border-color: var(--amber);
+  background: rgba(214, 178, 124, 0.05);
+  box-shadow: 0 0 0 3px rgba(214, 178, 124, 0.1);
+}
+.modal-input.error {
+  border-color: var(--terra);
+  background: rgba(184, 84, 63, 0.08);
 }
 
-.phase1-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  font-size: 14px;
-}
-
-.phase1-row:last-child { border-bottom: none; }
-.phase1-label { color: #7a8499; }
-.phase1-value {
-  font-family: 'DM Mono', monospace;
-  color: #edf0f7;
-}
-
-.status-ok { color: #00c896; }
-.status-err { color: #e94560; }
-.status-pending { color: #f5a623; }
-
-.phase1-btn {
-  display: inline-block;
-  padding: 12px 24px;
-  background: rgba(0, 200, 150, 0.15);
-  border: 1px solid rgba(0, 200, 150, 0.4);
-  border-radius: 10px;
-  color: #00c896;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 8px;
-  transition: all 0.18s;
-}
-
-.phase1-btn:hover {
-  background: rgba(0, 200, 150, 0.25);
-}
-
-.phase1-log {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
-  padding: 16px;
-  font-family: 'DM Mono', monospace;
+.modal-err {
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 12px;
-  color: #7a8499;
+  color: var(--terra);
+  text-align: center;
+  height: 18px;
+  margin-top: 10px;
+  margin-bottom: 8px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.btn {
+  flex: 1;
+  padding: 13px 20px;
+  border-radius: var(--r);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 500;
+  transition: all 0.3s;
+  border: 1px solid transparent;
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--ink-dim);
+}
+.btn-ghost:hover {
+  border-color: var(--border2);
+  color: var(--ink);
+}
+
+.btn-primary {
+  background: var(--amber);
+  color: var(--bg);
+  font-weight: 600;
+}
+.btn-primary:hover {
+  background: var(--cream);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -6px rgba(214, 178, 124, 0.4);
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+.shake { animation: shake 0.5s ease-in-out; }
+
+/* ══ 공사중 안내 ══ */
+.construction {
+  max-width: 540px;
+  text-align: center;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 64px 40px;
+  position: relative;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.5);
+}
+.construction::before,
+.construction::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--amber);
+  opacity: 0.5;
+}
+.construction::before {
+  top: 14px;
+  left: 14px;
+  border-right: none;
+  border-bottom: none;
+}
+.construction::after {
+  bottom: 14px;
+  right: 14px;
+  border-left: none;
+  border-top: none;
+}
+
+.construction-icon {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 80px;
+  font-style: italic;
+  color: var(--amber);
+  line-height: 1;
+  margin-bottom: 24px;
+}
+.construction-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 38px;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--cream);
+  margin-bottom: 6px;
+}
+.construction-title-ko {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--amber);
+  margin-bottom: 24px;
+}
+.construction-desc {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.8;
+  color: var(--ink-dim);
+  margin-bottom: 32px;
+}
+.construction-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+/* ══ 푸터 ══ */
+.footer {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 0.15em;
+  opacity: 0.5;
+  text-align: center;
+  padding: 24px;
+}
+
+/* ══ 진단 페이지 (?diag) ══ */
+.diag-wrap {
+  max-width: 720px;
+  width: 100%;
+}
+.diag-card {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.diag-card h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 22px;
+  color: var(--cream);
+  margin-bottom: 14px;
+  font-weight: 500;
+}
+.diag-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 13px;
+  font-family: 'DM Mono', monospace;
+}
+.diag-row:last-child { border-bottom: none; }
+.diag-label { color: var(--ink-dim); }
+.diag-value { color: var(--ink); }
+.diag-value.ok { color: var(--ok); }
+.diag-value.err { color: var(--err); }
+.diag-value.pending { color: var(--warn); }
+.diag-log {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: var(--r);
+  padding: 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-dim);
   max-height: 280px;
   overflow-y: auto;
-  margin-top: 12px;
+  margin-top: 10px;
   white-space: pre-wrap;
-  word-break: break-all;
 }
-
-.phase1-log .log-ok { color: #00c896; }
-.phase1-log .log-err { color: #e94560; }
-.phase1-log .log-info { color: #5eb8ff; }
+.diag-log .log-ok { color: var(--ok); }
+.diag-log .log-err { color: var(--err); }
+.diag-log .log-info { color: var(--info); }
 </style>
 </head>
 <body>
-<div class="wrap">
+
+<!-- ══ 배경 ══ -->
+<div class="bg-texture"></div>
+<div class="bg-noise"></div>
+
+<div class="app">
 
 <!-- ══════════════════════════════════════════ -->
-<!--  Phase 1: 연결 진단 페이지                     -->
-<!--  (Phase 2부터 실제 출석 화면이 추가됨)          -->
+<!--  메인 화면                                    -->
 <!-- ══════════════════════════════════════════ -->
-<div class="phase1-status">
-  <div class="phase1-title">코스모스 독서시간 출석 v2</div>
-  <div class="phase1-sub">Phase 1 — 환경 진단 페이지</div>
-
-  <div class="phase1-card">
-    <h3>🔗 Supabase 연결 상태</h3>
-    <div class="phase1-row">
-      <span class="phase1-label">Project URL</span>
-      <span class="phase1-value" id="diag-url">—</span>
+<div class="screen" id="screen-main" style="display:none">
+  <div class="header">
+    <div class="deco-top">
+      <span class="line"></span>
+      <span class="ornament">❦</span>
+      <span class="line right"></span>
     </div>
-    <div class="phase1-row">
-      <span class="phase1-label">SDK 로드</span>
-      <span class="phase1-value" id="diag-sdk">확인 중...</span>
-    </div>
-    <div class="phase1-row">
-      <span class="phase1-label">클라이언트 생성</span>
-      <span class="phase1-value" id="diag-client">확인 중...</span>
+    <h1 class="title-en">Cosmos</h1>
+    <div class="title-ko">코스모스 독서시간</div>
+    <div class="title-sub">YUBONG GIRLS' HIGH SCHOOL · 2026</div>
+    <div class="deco-bottom">
+      <span></span><span></span><span></span>
     </div>
   </div>
 
-  <div class="phase1-card">
-    <h3>📊 데이터 확인</h3>
-    <div class="phase1-row">
-      <span class="phase1-label">학생 명단</span>
-      <span class="phase1-value" id="diag-students">—</span>
-    </div>
-    <div class="phase1-row">
-      <span class="phase1-label">출석 기록</span>
-      <span class="phase1-value" id="diag-attendance">—</span>
-    </div>
-    <div class="phase1-row">
-      <span class="phase1-label">좌석 배치</span>
-      <span class="phase1-value" id="diag-seats">—</span>
-    </div>
-    <div class="phase1-row">
-      <span class="phase1-label">심야 감독표</span>
-      <span class="phase1-value" id="diag-supervisors">—</span>
-    </div>
-    <div class="phase1-row">
-      <span class="phase1-label">시스템 설정</span>
-      <span class="phase1-value" id="diag-settings">—</span>
-    </div>
-  </div>
+  <div class="cards">
+    <button class="card card-attendance" onclick="goAttendance()">
+      <div class="card-symbol">A</div>
+      <div class="card-label">FOR TEACHERS</div>
+      <div class="card-title">Attend</div>
+      <div class="card-title-ko">출석 체크</div>
+      <div class="card-desc">
+        QR 출석 체크를 시작하려면<br>
+        담당하시는 장소를 선택해주세요.
+      </div>
+      <div class="card-action">
+        <span>장소 선택하기</span>
+        <span class="arrow">→</span>
+      </div>
+    </button>
 
-  <div class="phase1-card">
-    <h3>⚡ 실시간 구독 테스트</h3>
-    <div class="phase1-row">
-      <span class="phase1-label">Realtime 채널</span>
-      <span class="phase1-value" id="diag-realtime">—</span>
-    </div>
-    <button class="phase1-btn" onclick="runDiagnostics()">🔄 진단 다시 실행</button>
-  </div>
-
-  <div class="phase1-card">
-    <h3>📋 진단 로그</h3>
-    <div class="phase1-log" id="diag-log"></div>
+    <button class="card card-admin" onclick="openPwModal()">
+      <div class="card-symbol">M</div>
+      <div class="card-label">FOR ADMIN</div>
+      <div class="card-title">Manage</div>
+      <div class="card-title-ko">관리자</div>
+      <div class="card-desc">
+        학생 명단과 출석 기록,<br>
+        분석 자료를 관리합니다.
+      </div>
+      <div class="card-action">
+        <span>관리자 페이지</span>
+        <span class="arrow">→</span>
+      </div>
+    </button>
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════ -->
+<!--  장소 선택 화면                                -->
+<!-- ══════════════════════════════════════════ -->
+<div class="screen" id="screen-rooms" style="display:none">
+  <button class="back-btn" onclick="goHome()">
+    <span>←</span><span>BACK</span>
+  </button>
+
+  <div class="header compact">
+    <div class="deco-top">
+      <span class="line"></span>
+      <span class="ornament">❦</span>
+      <span class="line right"></span>
+    </div>
+    <h1 class="title-en">Select Room</h1>
+    <div class="title-ko">담당 장소를 선택해주세요</div>
+  </div>
+
+  <div class="rooms-grid">
+    <button class="room-card" data-room="1" onclick="enterRoom('아우름')">
+      <div class="room-symbol">A</div>
+      <div class="room-name">Aureum</div>
+      <div class="room-name-ko">아우름</div>
+      <div class="room-desc">독서시간 출석 체크를 시작합니다</div>
+    </button>
+
+    <button class="room-card" data-room="2" onclick="enterRoom('교과1실')">
+      <div class="room-symbol">G</div>
+      <div class="room-name">Gyogwa I</div>
+      <div class="room-name-ko">교과1실</div>
+      <div class="room-desc">독서시간 출석 체크를 시작합니다</div>
+    </button>
+
+    <button class="room-card" data-room="3" onclick="enterRoom('해오름')">
+      <div class="room-symbol">H</div>
+      <div class="room-name">Haeoreum</div>
+      <div class="room-name-ko">해오름</div>
+      <div class="room-desc">독서시간 출석 체크를 시작합니다</div>
+    </button>
+
+    <button class="room-card" data-room="4" onclick="enterRoom('리케이온')">
+      <div class="room-symbol">L</div>
+      <div class="room-name">Lyceum</div>
+      <div class="room-name-ko">리케이온</div>
+      <div class="room-desc">독서시간 출석 체크를 시작합니다</div>
+    </button>
+  </div>
 </div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  공사중 안내 화면                              -->
+<!-- ══════════════════════════════════════════ -->
+<div class="screen" id="screen-construction" style="display:none">
+  <button class="back-btn" onclick="goHome()">
+    <span>←</span><span>BACK</span>
+  </button>
+
+  <div class="construction">
+    <div class="construction-icon">⏳</div>
+    <div class="construction-title">Coming Soon</div>
+    <div class="construction-title-ko" id="construction-ko">공사중입니다</div>
+    <div class="construction-desc" id="construction-desc">
+      이 페이지는 현재 작업 중입니다.<br>
+      다음 단계에서 만들어질 예정이에요.
+    </div>
+    <div class="construction-meta" id="construction-meta">PHASE 2C — UPCOMING</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  진단 페이지 (?diag)                          -->
+<!-- ══════════════════════════════════════════ -->
+<div class="screen" id="screen-diag" style="display:none">
+  <button class="back-btn" onclick="goHome()">
+    <span>←</span><span>BACK</span>
+  </button>
+
+  <div class="header compact">
+    <div class="deco-top">
+      <span class="line"></span>
+      <span class="ornament">❦</span>
+      <span class="line right"></span>
+    </div>
+    <h1 class="title-en">Diagnostics</h1>
+    <div class="title-ko">환경 진단</div>
+  </div>
+
+  <div class="diag-wrap">
+    <div class="diag-card">
+      <h3>Supabase Connection</h3>
+      <div class="diag-row"><span class="diag-label">Project URL</span><span class="diag-value" id="diag-url">—</span></div>
+      <div class="diag-row"><span class="diag-label">SDK Load</span><span class="diag-value" id="diag-sdk">—</span></div>
+      <div class="diag-row"><span class="diag-label">Client Created</span><span class="diag-value" id="diag-client">—</span></div>
+    </div>
+
+    <div class="diag-card">
+      <h3>Data Tables</h3>
+      <div class="diag-row"><span class="diag-label">students</span><span class="diag-value" id="diag-students">—</span></div>
+      <div class="diag-row"><span class="diag-label">attendance</span><span class="diag-value" id="diag-attendance">—</span></div>
+      <div class="diag-row"><span class="diag-label">seats</span><span class="diag-value" id="diag-seats">—</span></div>
+      <div class="diag-row"><span class="diag-label">supervisors</span><span class="diag-value" id="diag-supervisors">—</span></div>
+      <div class="diag-row"><span class="diag-label">system_settings</span><span class="diag-value" id="diag-settings">—</span></div>
+    </div>
+
+    <div class="diag-card">
+      <h3>Realtime</h3>
+      <div class="diag-row"><span class="diag-label">Channel</span><span class="diag-value" id="diag-realtime">—</span></div>
+    </div>
+
+    <div class="diag-card">
+      <h3>Log</h3>
+      <div class="diag-log" id="diag-log"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  비밀번호 모달                                  -->
+<!-- ══════════════════════════════════════════ -->
+<div class="modal-bg" id="modal-pw">
+  <div class="modal">
+    <div class="modal-icon">M</div>
+    <div class="modal-title">Manage</div>
+    <div class="modal-title-ko">관리자 페이지 입장</div>
+
+    <input type="password"
+           id="pw-input"
+           class="modal-input"
+           placeholder="비밀번호"
+           autocomplete="current-password"
+           onkeydown="if(event.key==='Enter')confirmPw()">
+    <div class="modal-err" id="pw-err"></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closePwModal()">취소</button>
+      <button class="btn btn-primary" onclick="confirmPw()">입장</button>
+    </div>
+  </div>
+</div>
+
+<div class="footer">YUBONG · COSMOS READING · v2.0</div>
+
+</div><!-- /.app -->
 
 <script>
 // ══════════════════════════════════════════
 //  Supabase 설정
 // ══════════════════════════════════════════
-
 const SUPABASE_URL = 'https://rxsmmwqekrtbstcjbagj.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_h7o2vnvgu7Akrg87cAYSkg__DA-KRpn';
-//  ⚠️ 사용자분의 진짜 publishable key로 교체 필요
-//     Supabase Dashboard → Project Settings → API Keys → Publishable key
+//  ⚠️ 본인 publishable key로 교체
 
-// ══════════════════════════════════════════
-//  Supabase 클라이언트 + 헬퍼 (sb)
-// ══════════════════════════════════════════
-//  ⚠️ 변수명 'supabase'는 SDK 전역 객체와 충돌하므로 사용 금지
-//     → sbClient 사용
-// ══════════════════════════════════════════
+// 임시 비밀번호 (Phase 2B에서 system_settings에서 가져오도록 변경 예정)
+const ADMIN_PW_TEMP = 'yb18128!';
 
+// Supabase 클라이언트 (Phase 2B에서 sb 헬퍼 본격 활용)
 let sbClient = null;
-const sb = {
-  // Phase 2부터 채워질 예정
-  // 예: students: { list, byNo, upsert, ... }
-  //     attendance: { add, byStudent, ... }
-};
+const sb = {};
 
 // ══════════════════════════════════════════
-//  진단 로직 (Phase 1 전용)
+//  화면 라우팅
 // ══════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'flex';
+}
 
-function log(msg, type = 'info') {
+function route() {
+  const params = new URLSearchParams(location.search);
+
+  if (params.has('diag')) {
+    showScreen('screen-diag');
+    runDiagnostics();
+    return;
+  }
+
+  if (params.has('teacher')) {
+    const room = params.get('teacher');
+    document.getElementById('construction-ko').textContent =
+      `${room} — 교사 출석 화면 준비중`;
+    document.getElementById('construction-desc').innerHTML =
+      'QR 코드 생성과 출석 체크 기능은<br>다음 단계(Phase 2C)에서 만들어집니다.';
+    document.getElementById('construction-meta').textContent =
+      'PHASE 2C — TEACHER SCREEN';
+    showScreen('screen-construction');
+    return;
+  }
+
+  if (params.get('mode') === 'admin') {
+    document.getElementById('construction-ko').textContent =
+      '관리자 페이지 준비중';
+    document.getElementById('construction-desc').innerHTML =
+      '명단 · 기록 · 분석 · 요청 관리 기능은<br>Phase 3에서 만들어집니다.';
+    document.getElementById('construction-meta').textContent =
+      'PHASE 3 — ADMIN PANEL';
+    showScreen('screen-construction');
+    return;
+  }
+
+  showScreen('screen-main');
+}
+
+// ══════════════════════════════════════════
+//  네비게이션
+// ══════════════════════════════════════════
+function goHome() {
+  history.pushState({}, '', location.pathname);
+  route();
+}
+
+function goAttendance() {
+  showScreen('screen-rooms');
+}
+
+function enterRoom(room) {
+  history.pushState({}, '', location.pathname + '?teacher=' + encodeURIComponent(room));
+  route();
+}
+
+// ══════════════════════════════════════════
+//  비밀번호 모달
+// ══════════════════════════════════════════
+function openPwModal() {
+  const m = document.getElementById('modal-pw');
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-err').textContent = '';
+  document.getElementById('pw-input').classList.remove('error');
+  m.classList.add('on');
+  setTimeout(() => document.getElementById('pw-input').focus(), 200);
+}
+
+function closePwModal() {
+  document.getElementById('modal-pw').classList.remove('on');
+}
+
+function confirmPw() {
+  const input = document.getElementById('pw-input');
+  const err = document.getElementById('pw-err');
+  const val = input.value.trim();
+
+  if (val !== ADMIN_PW_TEMP) {
+    err.textContent = '비밀번호가 올바르지 않아요';
+    input.classList.add('error');
+    input.classList.add('shake');
+    setTimeout(() => {
+      input.classList.remove('shake');
+      input.value = '';
+      input.focus();
+    }, 500);
+    return;
+  }
+
+  closePwModal();
+  history.pushState({}, '', location.pathname + '?mode=admin');
+  route();
+}
+
+// 모달 배경 클릭 시 닫기
+document.getElementById('modal-pw').addEventListener('click', (e) => {
+  if (e.target.id === 'modal-pw') closePwModal();
+});
+
+// ESC로 모달 닫기
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closePwModal();
+});
+
+// 브라우저 뒤로가기
+window.addEventListener('popstate', route);
+
+// ══════════════════════════════════════════
+//  진단 로직 (?diag)
+// ══════════════════════════════════════════
+function diagLog(msg, type = 'info') {
   const el = document.getElementById('diag-log');
+  if (!el) return;
   const time = new Date().toLocaleTimeString('ko-KR', { hour12: false });
   const cls = type === 'ok' ? 'log-ok' : type === 'err' ? 'log-err' : 'log-info';
   el.innerHTML += `<span class="${cls}">[${time}] ${msg}</span>\n`;
   el.scrollTop = el.scrollHeight;
 }
 
-function setStatus(id, text, status) {
+function diagSet(id, text, status) {
   const el = document.getElementById(id);
+  if (!el) return;
   el.textContent = text;
-  el.className = 'phase1-value ' + (
-    status === 'ok'  ? 'status-ok' :
-    status === 'err' ? 'status-err' :
-    status === 'pending' ? 'status-pending' : ''
-  );
+  el.className = 'diag-value ' + (status || '');
 }
 
 async function runDiagnostics() {
-  // 로그 초기화
   document.getElementById('diag-log').innerHTML = '';
-  log('진단 시작', 'info');
+  diagLog('진단 시작', 'info');
 
-  // ── 1. SDK 로드 확인 ──
-  setStatus('diag-url', SUPABASE_URL, 'ok');
+  diagSet('diag-url', SUPABASE_URL, 'ok');
 
   if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
-    setStatus('diag-sdk', '❌ 로드 실패', 'err');
-    log('Supabase JS SDK 로드 실패. CDN 차단 가능성', 'err');
+    diagSet('diag-sdk', '❌ 로드 실패', 'err');
+    diagLog('SDK 로드 실패', 'err');
     return;
   }
-  setStatus('diag-sdk', '✅ 정상', 'ok');
-  log('Supabase JS SDK 로드 OK', 'ok');
+  diagSet('diag-sdk', '✓ 정상', 'ok');
+  diagLog('SDK 로드 OK', 'ok');
 
-  // ── 2. 클라이언트 생성 ──
   try {
     sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    setStatus('diag-client', '✅ 정상', 'ok');
-    log('클라이언트 생성 OK', 'ok');
+    diagSet('diag-client', '✓ 정상', 'ok');
+    diagLog('클라이언트 생성 OK', 'ok');
   } catch (e) {
-    setStatus('diag-client', '❌ ' + e.message, 'err');
-    log('클라이언트 생성 실패: ' + e.message, 'err');
+    diagSet('diag-client', '❌ ' + e.message, 'err');
     return;
   }
 
-  // ── 3. 각 테이블 SELECT count ──
   const tables = [
     { name: 'students',        labelId: 'diag-students',    expected: 514 },
     { name: 'attendance',      labelId: 'diag-attendance',  expected: 817 },
@@ -311,61 +1162,43 @@ async function runDiagnostics() {
   ];
 
   for (const t of tables) {
-    setStatus(t.labelId, '조회 중...', 'pending');
+    diagSet(t.labelId, '조회 중...', 'pending');
     try {
       const { count, error } = await sbClient
         .from(t.name)
         .select('*', { count: 'exact', head: true });
-
       if (error) throw error;
-
       const ok = count === t.expected;
-      setStatus(
-        t.labelId,
-        `${count}행${ok ? ' ✓' : ` (예상: ${t.expected})`}`,
-        ok ? 'ok' : 'err'
-      );
-      log(`${t.name}: ${count}행 ${ok ? 'OK' : '⚠ 예상값과 다름'}`, ok ? 'ok' : 'err');
+      diagSet(t.labelId, `${count}행${ok ? ' ✓' : ` (예상: ${t.expected})`}`, ok ? 'ok' : 'err');
+      diagLog(`${t.name}: ${count}행 ${ok ? 'OK' : '⚠'}`, ok ? 'ok' : 'err');
     } catch (e) {
-      setStatus(t.labelId, '❌ ' + (e.message || '오류'), 'err');
-      log(`${t.name} 조회 실패: ${e.message}`, 'err');
+      diagSet(t.labelId, '❌ ' + (e.message || '오류'), 'err');
+      diagLog(`${t.name} 실패: ${e.message}`, 'err');
     }
   }
 
-  // ── 4. Realtime 구독 테스트 ──
-  setStatus('diag-realtime', '연결 중...', 'pending');
+  diagSet('diag-realtime', '연결 중...', 'pending');
   try {
-    const channel = sbClient
-      .channel('phase1-test')
-      .on('postgres_changes',
-          { event: '*', schema: 'public', table: 'attendance' },
-          (payload) => {
-            log('Realtime 이벤트 수신: ' + payload.eventType, 'ok');
-          })
+    sbClient
+      .channel('phase2-test')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => {})
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          setStatus('diag-realtime', '✅ 구독 성공', 'ok');
-          log('Realtime 채널 구독 OK', 'ok');
+          diagSet('diag-realtime', '✓ 구독 성공', 'ok');
+          diagLog('Realtime OK', 'ok');
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          setStatus('diag-realtime', '❌ ' + status, 'err');
-          log('Realtime 구독 실패: ' + status, 'err');
+          diagSet('diag-realtime', '❌ ' + status, 'err');
         }
       });
   } catch (e) {
-    setStatus('diag-realtime', '❌ ' + e.message, 'err');
-    log('Realtime 초기화 실패: ' + e.message, 'err');
+    diagSet('diag-realtime', '❌ ' + e.message, 'err');
   }
-
-  log('진단 완료', 'info');
 }
 
-// 페이지 로드 시 자동 실행
-window.addEventListener('DOMContentLoaded', () => {
-  log('Phase 1 환경 진단 페이지 로드됨', 'info');
-  log('Supabase URL: ' + SUPABASE_URL, 'info');
-  log('SDK 버전: ' + (window.supabase?.version || '확인 불가'), 'info');
-  setTimeout(runDiagnostics, 300);
-});
+// ══════════════════════════════════════════
+//  부팅
+// ══════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', route);
 </script>
 
 </body>
