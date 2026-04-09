@@ -335,7 +335,7 @@ input { font-family: inherit; }
 }
 .card:hover .card-action .arrow { transform: translateX(6px); }
 
-/* ══ 장소 선택 그리드 ══ */
+/* ══ 장소 선택 그리드 (한글 단정 버전) ══ */
 .rooms-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -350,7 +350,7 @@ input { font-family: inherit; }
 
 .room-card {
   position: relative;
-  padding: 32px 28px 28px 32px;
+  padding: 44px 36px 36px;
   background: var(--paper);
   border: 1px solid var(--border);
   border-radius: var(--r);
@@ -375,12 +375,13 @@ input { font-family: inherit; }
 .room-card[data-room="3"] { --acc: var(--ochre); }
 .room-card[data-room="4"] { --acc: var(--copper); }
 
+/* 좌측 컬러 바 */
 .room-card::before {
   content: '';
   position: absolute;
   left: 0;
-  top: 20%;
-  bottom: 20%;
+  top: 22%;
+  bottom: 22%;
   width: 3px;
   background: var(--acc);
   opacity: 0.7;
@@ -403,41 +404,64 @@ input { font-family: inherit; }
   width: 4px;
 }
 
-.room-symbol {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 38px;
-  font-style: italic;
-  font-weight: 400;
-  color: var(--acc);
-  line-height: 1;
-  margin-bottom: 12px;
+/* 라벨 */
+.room-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.room-label::before {
+  content: '';
+  width: 8px;
+  height: 1px;
+  background: var(--acc);
+  opacity: 0.7;
   display: inline-block;
 }
+
+/* 메인 한글 이름 */
 .room-name {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 28px;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 32px;
   font-weight: 500;
-  font-style: italic;
   color: var(--cream);
   line-height: 1;
-  margin-bottom: 4px;
+  margin-bottom: 24px;
+  letter-spacing: -0.01em;
 }
-.room-name-ko {
-  font-family: 'IBM Plex Sans KR', sans-serif;
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--ink);
-  margin-bottom: 14px;
-  letter-spacing: 0.02em;
-}
-.room-desc {
+
+/* 안내 문구 */
+.room-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 12px;
   font-weight: 300;
   color: var(--ink-dim);
-  line-height: 1.7;
-  padding-top: 14px;
+  padding-top: 18px;
   border-top: 1px solid var(--border);
+  transition: all 0.4s;
+}
+.room-card:hover .room-action {
+  border-top-color: var(--border2);
+  color: var(--ink);
+}
+.room-action .arrow {
+  font-family: 'DM Mono', monospace;
+  color: var(--acc);
+  font-size: 14px;
+  transition: transform 0.4s;
+}
+.room-card:hover .room-action .arrow {
+  transform: translateX(6px);
 }
 
 /* ══ 뒤로가기 ══ */
@@ -841,7 +865,7 @@ input { font-family: inherit; }
 </div>
 
 <!-- ══════════════════════════════════════════ -->
-<!--  장소 선택 화면                                -->
+<!--  장소 선택 화면 (한글 단정 버전)               -->
 <!-- ══════════════════════════════════════════ -->
 <div class="screen" id="screen-rooms" style="display:none">
   <button class="back-btn" onclick="goHome()">
@@ -860,31 +884,39 @@ input { font-family: inherit; }
 
   <div class="rooms-grid">
     <button class="room-card" data-room="1" onclick="enterRoom('아우름')">
-      <div class="room-symbol">A</div>
-      <div class="room-name">Aureum</div>
-      <div class="room-name-ko">아우름</div>
-      <div class="room-desc">독서시간 출석 체크를 시작합니다</div>
+      <div class="room-label">ROOM 01</div>
+      <div class="room-name">아우름</div>
+      <div class="room-action">
+        <span>출석 체크 시작</span>
+        <span class="arrow">→</span>
+      </div>
     </button>
 
     <button class="room-card" data-room="2" onclick="enterRoom('교과1실')">
-      <div class="room-symbol">G</div>
-      <div class="room-name">Gyogwa I</div>
-      <div class="room-name-ko">교과1실</div>
-      <div class="room-desc">독서시간 출석 체크를 시작합니다</div>
+      <div class="room-label">ROOM 02</div>
+      <div class="room-name">교과1실</div>
+      <div class="room-action">
+        <span>출석 체크 시작</span>
+        <span class="arrow">→</span>
+      </div>
     </button>
 
     <button class="room-card" data-room="3" onclick="enterRoom('해오름')">
-      <div class="room-symbol">H</div>
-      <div class="room-name">Haeoreum</div>
-      <div class="room-name-ko">해오름</div>
-      <div class="room-desc">독서시간 출석 체크를 시작합니다</div>
+      <div class="room-label">ROOM 03</div>
+      <div class="room-name">해오름</div>
+      <div class="room-action">
+        <span>출석 체크 시작</span>
+        <span class="arrow">→</span>
+      </div>
     </button>
 
     <button class="room-card" data-room="4" onclick="enterRoom('리케이온')">
-      <div class="room-symbol">L</div>
-      <div class="room-name">Lyceum</div>
-      <div class="room-name-ko">리케이온</div>
-      <div class="room-desc">독서시간 출석 체크를 시작합니다</div>
+      <div class="room-label">ROOM 04</div>
+      <div class="room-name">리케이온</div>
+      <div class="room-action">
+        <span>출석 체크 시작</span>
+        <span class="arrow">→</span>
+      </div>
     </button>
   </div>
 </div>
@@ -1098,17 +1130,14 @@ function confirmPw() {
   route();
 }
 
-// 모달 배경 클릭 시 닫기
 document.getElementById('modal-pw').addEventListener('click', (e) => {
   if (e.target.id === 'modal-pw') closePwModal();
 });
 
-// ESC로 모달 닫기
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closePwModal();
 });
 
-// 브라우저 뒤로가기
 window.addEventListener('popstate', route);
 
 // ══════════════════════════════════════════
@@ -1195,9 +1224,6 @@ async function runDiagnostics() {
   }
 }
 
-// ══════════════════════════════════════════
-//  부팅
-// ══════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', route);
 </script>
 
