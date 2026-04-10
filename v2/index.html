@@ -3647,6 +3647,7 @@ input { font-family: inherit; }
 }
 .matrix-td-rate.high { color: var(--sage); }
 .matrix-td-rate.low { color: var(--copper); }
+.matrix-td-rate.na { color: var(--ink-faint); font-weight: 400; font-style: italic; }
 
 /* 셀 (출석 표시) */
 .matrix-cell {
@@ -3672,11 +3673,14 @@ input { font-family: inherit; }
   border: 1px solid rgba(94, 184, 255, 0.35);
 }
 .matrix-cell.absent {
-  color: var(--ink-faint);
-  border: 1px dashed var(--border);
+  color: var(--copper);
+  border: 1px dashed rgba(184, 84, 63, 0.4);
 }
 .matrix-cell.no-target {
-  color: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.04);
+}
+.matrix-cell.no-session {
+  color: rgba(255, 255, 255, 0.04);
 }
 
 .matrix-empty {
@@ -7327,34 +7331,51 @@ function renderAnalysis() {
     attMap[key] = r;
   });
 
-  // 학생별 출석률 계산 (분모: 학생 출석요일에 해당하는 날만)
+  // ⭐ 핵심 변경: (프로그램+장소)별로 실제 세션이 있었던 날짜들 수집
+  // 이걸 통해 학생별 분모를 "실제 운영된 날 중 학생의 출석요일에 맞는 날"로 계산
+  const sessionDatesByPS = {};
+  filteredAtt.forEach(r => {
+    const psKey = `${r.프로그램}|${r.장소}`;
+    if (!sessionDatesByPS[psKey]) sessionDatesByPS[psKey] = new Set();
+    sessionDatesByPS[psKey].add(r.날짜);
+  });
+
+  // 학생별 출석률 계산 (분모: 학생 (프로그램+장소)에 세션이 있었던 날 ∩ 학생 출석요일)
   const studentStats = students.map(s => {
     const days = Array.isArray(s.출석요일) ? s.출석요일 : [];
+    const psKey = `${s.프로그램}|${s.장소}`;
+    const sessionDates = sessionDatesByPS[psKey] || new Set();
+
     let target = 0;
     let attended = 0;
+    let absentDates = []; // 결석한 날짜 목록 (디버깅/툴팁용)
 
-    A.analysisDates.forEach(date => {
+    sessionDates.forEach(date => {
       const d = new Date(date + 'T00:00:00');
       const dayKr = DAY_KR_ANAL[d.getDay()];
 
       // 학생의 출석요일에 해당하지 않으면 분모에서 제외
-      // 단, 출석요일이 비어있으면 모든 날 포함
+      // 단, 출석요일이 비어있으면 모든 세션 날 포함
       const isTarget = days.length === 0 || days.includes(dayKr);
       if (!isTarget) return;
 
       target++;
       const key = `${s.학번}|${s.프로그램}|${date}`;
-      if (attMap[key]) attended++;
+      if (attMap[key]) {
+        attended++;
+      } else {
+        absentDates.push(date);
+      }
     });
 
-    const rate = target > 0 ? Math.round(attended / target * 100) : 0;
+    const rate = target > 0 ? Math.round(attended / target * 100) : null;
     const absent = target - attended;
     return {
       ...s,
       _target: target,
       _attended: attended,
       _absent: absent,
-      _rate: rate,
+      _rate: rate,  // null이면 N/A (분모 0)
     };
   });
 
@@ -7363,15 +7384,16 @@ function renderAnalysis() {
     return;
   }
 
-  // 요약 통계
+  // 요약 통계 (분모가 있는 학생만 평균 계산)
   const totalTarget = studentStats.reduce((sum, s) => sum + s._target, 0);
   const totalAttended = studentStats.reduce((sum, s) => sum + s._attended, 0);
+  const totalAbsent = totalTarget - totalAttended;
   const overallRate = totalTarget > 0 ? Math.round(totalAttended / totalTarget * 100) : 0;
   const sessionCount = new Set(filteredAtt.map(a => a.세션id)).size;
 
-  // 결석 잦은 학생 TOP 5
+  // 결석 잦은 학생 TOP 5 (분모가 있는 학생 중에서)
   const topAbsent = studentStats
-    .filter(s => s._absent > 0)
+    .filter(s => s._absent > 0 && s._target > 0)
     .sort((a, b) => b._absent - a._absent || a._attended - b._attended)
     .slice(0, 5);
 
@@ -7386,7 +7408,7 @@ function renderAnalysis() {
         <div class="summary-label">총 출석</div>
       </div>
       <div class="summary-card absent">
-        <div class="summary-num">${totalTarget - totalAttended}<span class="unit">건</span></div>
+        <div class="summary-num">${totalAbsent}<span class="unit">건</span></div>
         <div class="summary-label">총 미출석</div>
       </div>
       <div class="summary-card rate">
@@ -7419,9 +7441,9 @@ function renderAnalysis() {
           <div class="top-absent-rank">${idx + 1}</div>
           <div style="flex:1;min-width:0">
             <div class="top-absent-name">${escapeHtml(s.이름 || '')}</div>
-            <div class="top-absent-no">${s.학번}</div>
+            <div class="top-absent-no">${s.학번} · ${escapeHtml((s.프로그램 || '').replace(' 독서시간', ''))}</div>
           </div>
-          <div class="top-absent-count">${s._absent}회</div>
+          <div class="top-absent-count">${s._absent}/${s._target}회</div>
         </div>
       `;
     });
@@ -7434,7 +7456,7 @@ function renderAnalysis() {
     <div class="matrix-section">
       <div class="matrix-header">
         <div class="matrix-title">출석 매트릭스</div>
-        <div class="matrix-info">${studentStats.length}명 · ${A.analysisDates.length}일</div>
+        <div class="matrix-info">${studentStats.length}명 · ${A.analysisDates.length}일 · 세션 ${sessionCount}개</div>
       </div>
       <div class="matrix-scroll">
   `;
@@ -7464,6 +7486,9 @@ function renderAnalysis() {
     const displayStats = studentStats.slice(0, 200);
     displayStats.forEach(s => {
       const sDays = Array.isArray(s.출석요일) ? s.출석요일 : [];
+      const psKey = `${s.프로그램}|${s.장소}`;
+      const sessionDates = sessionDatesByPS[psKey] || new Set();
+
       html += `<tr>
         <td class="matrix-td-fixed matrix-td-no">${s.학번}</td>
         <td class="matrix-td-fixed matrix-td-name">${escapeHtml(s.이름 || '')}</td>
@@ -7472,23 +7497,38 @@ function renderAnalysis() {
       A.analysisDates.forEach(date => {
         const d = new Date(date + 'T00:00:00');
         const dayKr = DAY_KR_ANAL[d.getDay()];
+        const hasSession = sessionDates.has(date);
         const isTarget = sDays.length === 0 || sDays.includes(dayKr);
         const key = `${s.학번}|${s.프로그램}|${date}`;
         const rec = attMap[key];
 
-        if (!isTarget) {
-          html += `<td><span class="matrix-cell no-target">·</span></td>`;
+        if (!hasSession) {
+          // 그날 (프로그램+장소)에 세션 자체가 없었음
+          html += `<td><span class="matrix-cell no-session" title="세션 없음">·</span></td>`;
+        } else if (!isTarget) {
+          // 세션은 있었지만 학생 출석요일이 아님
+          html += `<td><span class="matrix-cell no-target" title="출석 대상 아님">·</span></td>`;
         } else if (rec) {
+          // 출석 (정상 또는 사후)
           const time = (rec.원래시각 || '').slice(0, 5);
           const cls = rec.사후여부 ? 'late' : 'attended';
           html += `<td><span class="matrix-cell ${cls}" title="${time} 출석${rec.사후여부 ? ' (사후)' : ''}">✓</span></td>`;
         } else {
-          html += `<td><span class="matrix-cell absent" title="미출석">·</span></td>`;
+          // 결석 (세션 있었고 학생 출석요일이었는데 안 옴)
+          html += `<td><span class="matrix-cell absent" title="결석">·</span></td>`;
         }
       });
 
-      const rateClass = s._rate >= 80 ? 'high' : (s._rate < 50 ? 'low' : '');
-      html += `<td class="matrix-td-fixed matrix-td-rate ${rateClass}">${s._rate}%</td>`;
+      // 출석률 (분모 0이면 N/A)
+      let rateText, rateClass;
+      if (s._rate === null) {
+        rateText = '—';
+        rateClass = 'na';
+      } else {
+        rateText = `${s._rate}%`;
+        rateClass = s._rate >= 80 ? 'high' : (s._rate < 50 ? 'low' : '');
+      }
+      html += `<td class="matrix-td-fixed matrix-td-rate ${rateClass}">${rateText}</td>`;
       html += '</tr>';
     });
 
@@ -7555,6 +7595,14 @@ function exportAnalysisXlsx() {
     attMap[key] = r;
   });
 
+  // (프로그램+장소)별 실제 세션 날짜
+  const sessionDatesByPS = {};
+  filteredAtt.forEach(r => {
+    const psKey = `${r.프로그램}|${r.장소}`;
+    if (!sessionDatesByPS[psKey]) sessionDatesByPS[psKey] = new Set();
+    sessionDatesByPS[psKey].add(r.날짜);
+  });
+
   // 헤더 행
   const header = ['학번', '이름', '프로그램', '장소'];
   A.analysisDates.forEach(date => {
@@ -7568,6 +7616,9 @@ function exportAnalysisXlsx() {
   const rows = [header];
   students.forEach(s => {
     const sDays = Array.isArray(s.출석요일) ? s.출석요일 : [];
+    const psKey = `${s.프로그램}|${s.장소}`;
+    const sessionDates = sessionDatesByPS[psKey] || new Set();
+
     let target = 0;
     let attended = 0;
 
@@ -7576,11 +7627,16 @@ function exportAnalysisXlsx() {
     A.analysisDates.forEach(date => {
       const d = new Date(date + 'T00:00:00');
       const dayKr = DAY_KR_ANAL[d.getDay()];
+      const hasSession = sessionDates.has(date);
       const isTarget = sDays.length === 0 || sDays.includes(dayKr);
       const key = `${s.학번}|${s.프로그램}|${date}`;
       const rec = attMap[key];
 
-      if (!isTarget) {
+      if (!hasSession) {
+        // 그날 세션이 없었음
+        row.push('');
+      } else if (!isTarget) {
+        // 세션은 있었지만 학생 출석요일 아님
         row.push('-');
       } else {
         target++;
@@ -7593,8 +7649,8 @@ function exportAnalysisXlsx() {
       }
     });
 
-    const rate = target > 0 ? Math.round(attended / target * 100) : 0;
-    row.push(attended, target, `${rate}%`);
+    const rate = target > 0 ? Math.round(attended / target * 100) : null;
+    row.push(attended, target, rate === null ? '-' : `${rate}%`);
     rows.push(row);
   });
 
