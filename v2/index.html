@@ -8470,6 +8470,7 @@ const ST = {
   inputDigits: [],       // 학번 5자리 [1, 2, 3, 4, 5]
   inFlight: false,       // 중복 호출 차단
   beaconPayload: null,   // sendBeacon 백업용
+  studentsCache: null,   // 사전 캐싱: 해당 세션의 학생 명단 (학번 → 학생정보)
 };
 
 async function enterStudentScreen(sessionId) {
@@ -8527,6 +8528,24 @@ async function enterStudentScreen(sessionId) {
 
   document.getElementById('st-program').textContent = session.프로그램;
   document.getElementById('st-meta').textContent = `${session.장소} · ${session.교사} 선생님`;
+
+  // 학생 명단 사전 캐싱 (해당 프로그램+장소 전원)
+  ST.studentsCache = null;
+  (async () => {
+    try {
+      const { data, error } = await sb.client()
+        .from('students')
+        .select('학번,이름,프로그램,장소,활성')
+        .eq('프로그램', session.프로그램)
+        .eq('장소', session.장소)
+        .eq('활성', true);
+      if (!error && data) {
+        const map = {};
+        data.forEach(s => { map[String(s.학번)] = s; });
+        ST.studentsCache = map;
+      }
+    } catch (e) { console.warn('학생 사전 캐싱 실패 (출석 가능):', e); }
+  })();
 
   document.getElementById('st-loading').style.display = 'none';
   document.getElementById('st-input').style.display = 'block';
@@ -8617,24 +8636,19 @@ async function doStudentAttend() {
   ST.inFlight = true;
   showAttendProgress(no);
 
-  // 학생 정보 조회 (이름 미리 가져오기)
+  // 학생 정보 조회 — 1) 사전 캐시 히트 → 0 왕복 2) 미스 시 네트워크 폴백
   let studentInfo = null;
-  try {
-    const matches = await sb.students.byNo(no);
-    if (matches && matches.length > 0) {
-      // 1차: (학번 + 프로그램 + 장소) 정확 매칭
-      studentInfo = matches.find(s =>
-        s.프로그램 === ST.session.program && s.장소 === ST.session.room
-      );
-      // 2차 폴백: (학번 + 장소)만 매칭
-      if (!studentInfo) {
-        studentInfo = matches.find(s => s.장소 === ST.session.room);
+  if (ST.studentsCache && ST.studentsCache[no]) {
+    studentInfo = ST.studentsCache[no];
+  } else {
+    try {
+      const matches = await sb.students.byNo(no);
+      if (matches && matches.length > 0) {
+        studentInfo = matches.find(s => s.프로그램 === ST.session.program && s.장소 === ST.session.room)
+                    || matches.find(s => s.장소 === ST.session.room)
+                    || matches[0];
       }
-      // 3차 폴백: 학번만
-      if (!studentInfo) studentInfo = matches[0];
-    }
-  } catch (e) {
-    console.warn('학생 조회 실패 (출석은 진행):', e);
+    } catch (e) { console.warn('학생 조회 실패 (출석은 진행):', e); }
   }
 
   // 명단에 없으면 → 즉석 등록 폼 표시 (Phase 2F)
@@ -8658,30 +8672,39 @@ async function doStudentAttend() {
     teacher: ST.session.teacher,
   };
 
-  // sendBeacon 백업 등록 (페이지가 갑자기 닫히면 자동 발사)
+  // sendBeacon 백업 등록 (페이지가 갑자기 닫히거나 전송 실패해도 unload 시 자동 발사)
   registerAttendBeacon(payload);
 
-  // 정상 출석 처리
-  let result;
-  try {
-    result = await sb.attendance.add(payload);
-  } catch (e) {
-    console.error('출석 처리 실패:', e);
-    result = { ok: false, msg: e.message || '서버 연결 실패' };
-  }
-
-  // 응답 받음 → 백업 해제
-  unregisterAttendBeacon();
+  // ⭐ 낙관적 UI: 즉시 성공 화면 표시 → 백그라운드로 전송
   hideAttendProgress();
   ST.inFlight = false;
+  showStudentSuccess(studentInfo.이름, timeStr, false);
 
-  if (!result.ok) {
-    errEl.textContent = '출석 처리 실패: ' + (result.msg || '알 수 없는 오류');
-    return;
-  }
-
-  // 성공 (이미 출석한 경우는 약간 다른 메시지)
-  showStudentSuccess(studentInfo.이름, timeStr, result.alreadyAttended);
+  // 백그라운드 전송 + 1회 자동 재시도
+  (async () => {
+    const tryOnce = async () => {
+      try { return await sb.attendance.add(payload); }
+      catch (e) { return { ok: false, msg: e.message || '네트워크 오류' }; }
+    };
+    let result = await tryOnce();
+    if (!result.ok) {
+      await new Promise(r => setTimeout(r, 500));
+      result = await tryOnce();
+    }
+    if (result.ok) {
+      unregisterAttendBeacon(); // 성공 확정 → 백업 해제
+      // 이미 출석이었으면 성공 화면을 "이미 출석" 톤으로 업데이트
+      if (result.alreadyAttended) {
+        const successEl = document.getElementById('st-success');
+        const titleEl = successEl && successEl.querySelector('.success-title');
+        if (titleEl) { titleEl.textContent = '이미 출석했어요'; successEl.classList.add('already'); }
+      }
+    } else {
+      // 2회 실패: sendBeacon 백업이 남아있음 (페이지 unload 때 발사). 학생 화면은 이미 성공 상태.
+      console.warn('출석 전송 2회 실패, sendBeacon 백업에 의존:', result.msg);
+    }
+  })();
+  return;
 }
 
 function showStudentSuccess(name, time, alreadyAttended) {
