@@ -2709,6 +2709,49 @@ input { font-family: inherit; }
   color: var(--ink-faint);
   font-style: italic;
 }
+
+/* 인라인 요일 토글 (테이블 셀 안) */
+.row-days {
+  display: flex;
+  gap: 4px;
+}
+.row-day-btn {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0;
+}
+.row-day-btn:hover {
+  border-color: var(--border2);
+  color: var(--ink-dim);
+}
+.row-day-btn.on {
+  background: rgba(214, 178, 124, 0.18);
+  border-color: var(--amber);
+  color: var(--amber);
+  font-weight: 600;
+}
+.row-day-btn.on.weekend {
+  background: rgba(184, 84, 63, 0.15);
+  border-color: var(--copper);
+  color: var(--copper);
+}
+.row-day-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 .st-cell-status {
   font-size: 11px;
   font-weight: 500;
@@ -5403,17 +5446,23 @@ function renderStudentsTable() {
   }
 
   tbody.innerHTML = pageItems.map(s => {
-    const days = Array.isArray(s.출석요일) && s.출석요일.length > 0
-      ? s.출석요일.join(' · ')
-      : '<span class="empty">미설정</span>';
+    const studentDays = Array.isArray(s.출석요일) ? s.출석요일 : [];
     const inactive = !s.활성;
+    const dayList = ['월','화','수','목','금','토','일'];
+    const dayBtnsHtml = dayList.map(d => {
+      const on = studentDays.includes(d);
+      const isWeekend = d === '토' || d === '일';
+      const cls = `row-day-btn ${on ? 'on' : ''} ${isWeekend ? 'weekend' : ''}`.trim();
+      return `<button type="button" class="${cls}" ${inactive ? 'disabled' : ''} onclick="toggleStudentDay('${s.학번}', '${escapeAttr(s.프로그램)}', '${d}', this)">${d}</button>`;
+    }).join('');
+
     return `
       <tr class="${inactive ? 'inactive' : ''}">
         <td class="st-cell-no">${s.학번}</td>
         <td class="st-cell-name">${escapeHtml(s.이름 || '')}</td>
         <td class="st-cell-program">${escapeHtml(s.프로그램 || '')}</td>
         <td class="st-cell-room">${escapeHtml(s.장소 || '')}</td>
-        <td class="st-cell-days">${days}</td>
+        <td><div class="row-days">${dayBtnsHtml}</div></td>
         <td class="st-cell-status ${inactive ? 'inactive' : 'active'}">${inactive ? '비활성' : '활성'}</td>
         <td class="st-cell-actions">
           <button class="admin-btn admin-btn-sm" onclick="editStudent('${s.학번}', '${escapeAttr(s.프로그램)}')">수정</button>
@@ -5579,6 +5628,48 @@ function editStudent(no, program) {
     String(s.학번) === String(no) && s.프로그램 === program
   );
   if (student) openStudentModal(student);
+}
+
+// 인라인 요일 토글 (테이블 셀에서 직접 클릭)
+async function toggleStudentDay(no, program, day, btn) {
+  const student = A.students.find(s =>
+    String(s.학번) === String(no) && s.프로그램 === program
+  );
+  if (!student) return;
+  if (btn.disabled) return;
+
+  const currentDays = Array.isArray(student.출석요일) ? [...student.출석요일] : [];
+  const wasOn = currentDays.includes(day);
+
+  // 새 요일 배열 계산
+  const newDays = wasOn
+    ? currentDays.filter(d => d !== day)
+    : [...currentDays, day];
+
+  // 마지막 요일 제거 시도면 막기 (요일 0개는 즉석 등록 검증과 일관성)
+  if (newDays.length === 0) {
+    showAdminToast('출석 요일은 최소 1개 이상이어야 해요', 'err');
+    return;
+  }
+
+  // 낙관적 업데이트 (UI 먼저)
+  btn.classList.toggle('on', !wasOn);
+  btn.disabled = true;
+  student.출석요일 = newDays;
+
+  // DB 업데이트
+  try {
+    await sb.students.updateDays(no, program, newDays);
+    // 성공 → 카운트 갱신만 (전체 다시 그릴 필요 없음)
+    btn.disabled = false;
+  } catch (e) {
+    console.error('요일 토글 실패:', e);
+    // 롤백
+    btn.classList.toggle('on', wasOn);
+    student.출석요일 = currentDays;
+    btn.disabled = false;
+    showAdminToast('요일 변경 실패: ' + (e.message || '오류'), 'err');
+  }
 }
 
 // ════════════════════════════════════════
