@@ -4293,6 +4293,44 @@ input { font-family: inherit; }
   .ck-day-t-btn{padding:10px 0;font-size:12px}
 }
 
+
+/* 실시간 모니터 탭 */
+.live-search{margin-bottom:20px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:18px 22px}
+.live-search-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;font-weight:600;color:var(--amber);margin-bottom:10px}
+.live-search-row{display:flex;gap:8px;margin-bottom:10px}
+.live-search-row input{flex:1;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;font-family:'DM Mono',monospace;font-size:15px;color:var(--cream);outline:none;letter-spacing:.1em}
+.live-search-row input:focus{border-color:var(--amber);background:rgba(214,178,124,.05)}
+.live-search-result{padding:14px 16px;border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;display:none}
+.live-search-result.on{display:block}
+.live-search-result.ok{background:rgba(123,160,135,.1);border:1px solid rgba(123,160,135,.35);color:var(--sage)}
+.live-search-result.no{background:rgba(184,84,63,.08);border:1px solid rgba(184,84,63,.3);color:var(--copper)}
+.live-search-result .name{font-size:16px;font-weight:700;color:var(--cream)}
+.live-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media (max-width:920px){.live-grid{grid-template-columns:1fr}}
+.live-card{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;position:relative}
+.live-card.active{border-color:rgba(0,200,150,.35);box-shadow:0 0 0 1px rgba(0,200,150,.1)}
+.live-card.inactive{opacity:.55}
+.live-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.live-card-room{font-family:'IBM Plex Sans KR',sans-serif;font-size:18px;font-weight:700;color:var(--cream)}
+.live-pill-s{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:100px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.live-pill-s.on{background:rgba(0,200,150,.12);border:1px solid rgba(0,200,150,.35);color:var(--ok)}
+.live-pill-s.off{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--ink-faint)}
+.live-pill-s.on .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);animation:pulse 1.5s infinite}
+.live-prog{font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;font-weight:500;color:var(--amber);margin-bottom:4px}
+.live-teacher{font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);margin-bottom:12px}
+.live-stat-row{display:flex;gap:16px;padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:12px}
+.live-stat-block{flex:1;text-align:center}
+.live-stat-num{font-family:'DM Mono',monospace;font-size:22px;font-weight:600;color:var(--cream);font-variant-numeric:tabular-nums}
+.live-stat-num.sage{color:var(--sage)}
+.live-stat-num.warn{color:var(--warn)}
+.live-stat-lbl{font-family:'IBM Plex Sans KR',sans-serif;font-size:10px;color:var(--ink-dim);margin-top:2px}
+.live-recent-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:11px;color:var(--ink-faint);margin-bottom:6px;letter-spacing:.05em}
+.live-recent-list{display:flex;flex-direction:column;gap:4px}
+.live-recent-item{display:flex;justify-content:space-between;padding:5px 10px;background:rgba(0,0,0,.18);border-radius:3px;font-family:'IBM Plex Sans KR',sans-serif;font-size:12px}
+.live-recent-item .nm{color:var(--cream);font-weight:500}
+.live-recent-item .tm{font-family:'DM Mono',monospace;color:var(--sage);font-size:11px}
+.live-empty{padding:24px 0;text-align:center;color:var(--ink-faint);font-size:12px;font-family:'IBM Plex Sans KR',sans-serif}
+
 </style>
 </head>
 <body>
@@ -4869,6 +4907,10 @@ input { font-family: inherit; }
           <span class="admin-nav-icon">R</span>
           <span>요청 관리</span>
         </button>
+        <button class="admin-nav-item" data-tab="live" onclick="switchAdminTab('live')">
+          <span class="admin-nav-icon">L</span>
+          <span>실시간</span>
+        </button>
       </nav>
 
       <div class="admin-sidebar-footer">
@@ -5065,6 +5107,24 @@ input { font-family: inherit; }
         </div>
         <div id="req-pane-correction"><div class="req-list" id="req-list-correction"><div class="req-empty"><span class="icon">⏳</span>불러오는 중...</div></div></div>
         <div id="req-pane-daychange" style="display:none"><div class="req-list" id="req-list-daychange"><div class="req-empty"><span class="icon">⏳</span>불러오는 중...</div></div></div>
+      </div>
+
+      <!-- 탭 5: 실시간 모니터 -->
+      <div class="admin-tab-pane" id="admin-tab-live">
+        <div class="admin-page-header">
+          <div class="admin-page-title">실시간</div>
+          <div class="admin-page-actions">
+            <button class="admin-btn" onclick="LIVE.manualRefresh()">🔄 새로고침</button>
+          </div>
+        </div>
+        <div class="live-search">
+          <div class="live-search-title">🔍 학번으로 출석 여부 확인</div>
+          <div class="live-search-row">
+            <input type="text" id="live-search-input" placeholder="학번 5자리" maxlength="5" inputmode="numeric" oninput="LIVE.onSearch()">
+          </div>
+          <div class="live-search-result" id="live-search-result"></div>
+        </div>
+        <div class="live-grid" id="live-grid"><div class="live-empty">불러오는 중...</div></div>
       </div>
 
     </main>
@@ -9449,6 +9509,158 @@ function selectRejectReason(b){document.querySelectorAll('#reject-reasons .rejec
 async function confirmReject(){if(!RQ.rejectTarget)return;const cw=document.getElementById('reject-custom-wrap');if(cw.classList.contains('on'))RQ.rejectReason=document.getElementById('reject-custom-input').value.trim();if(!RQ.rejectReason){document.getElementById('reject-err').textContent='거절 사유를 선택해주세요';return;}const b=document.getElementById('reject-confirm-btn');b.disabled=true;b.textContent='처리 중...';try{await sb.requests.reject(RQ.rejectTarget.type,RQ.rejectTarget.id,RQ.rejectReason);closeRejectModal();showAdminToast('요청이 거절됐어요','ok');await loadRequests();}catch(e){document.getElementById('reject-err').textContent='실패: '+(e.message||'오류');}finally{b.disabled=false;b.textContent='거절';}}
 document.getElementById('modal-reject').addEventListener('click',(e)=>{if(e.target.id==='modal-reject')closeRejectModal();});
 
+
+
+// ══════════════════════════════════════════════════════════════
+//  실시간 모니터 탭
+// ══════════════════════════════════════════════════════════════
+const LIVE = {
+  rooms: ['아우름', '교과1실', '해오름', '리케이온'],
+  pollInterval: null,
+  todayAttendance: [],  // 오늘 하루 전체 출석 기록 (학번 검색용)
+
+  async load() {
+    try {
+      const today = todayKST();
+      // 1. 오늘 모든 세션
+      const { data: sessions } = await sb.client()
+        .from('sessions').select('*').eq('날짜', today).order('시작시각', { ascending: false });
+      // 2. 오늘 전체 출석
+      const { data: atts } = await sb.client()
+        .from('attendance').select('*').eq('날짜', today).order('원래시각', { ascending: false });
+      LIVE.todayAttendance = atts || [];
+
+      // 세션ID → 출석 배열 맵
+      const bySession = {};
+      (atts || []).forEach(a => {
+        if (!bySession[a.세션id]) bySession[a.세션id] = [];
+        bySession[a.세션id].push(a);
+      });
+
+      // 장소별 활성 세션 선택 (하나씩)
+      const byRoom = {};
+      LIVE.rooms.forEach(r => byRoom[r] = null);
+      (sessions || []).forEach(s => {
+        if (!byRoom[s.장소] && s.활성) {
+          byRoom[s.장소] = s;
+        }
+      });
+
+      // 각 활성 세션의 분모 계산을 위해 students 로드
+      const allStudents = await sb.students.list();
+
+      LIVE.render(byRoom, bySession, allStudents);
+    } catch (e) {
+      console.error('LIVE load 실패:', e);
+      document.getElementById('live-grid').innerHTML = '<div class="live-empty">로딩 실패: ' + (e.message || '오류') + '</div>';
+    }
+  },
+
+  render(byRoom, bySession, allStudents) {
+    const dayKr = DAY_KR[new Date().getDay()];
+    const grid = document.getElementById('live-grid');
+    if (!grid) return;
+
+    const cards = LIVE.rooms.map(room => {
+      const s = byRoom[room];
+      if (!s) {
+        return '<div class="live-card inactive"><div class="live-card-head"><div class="live-card-room">' + room + '</div><div class="live-pill-s off">대기</div></div><div class="live-empty">진행 중인 세션이 없어요</div></div>';
+      }
+      // 분모 계산
+      const target = allStudents.filter(st => {
+        if (!st.활성) return false;
+        if (st.프로그램 !== s.프로그램) return false;
+        if (st.장소 !== s.장소) return false;
+        const days = Array.isArray(st.출석요일) ? st.출석요일 : [];
+        return days.length === 0 || days.includes(dayKr);
+      });
+      const atts = bySession[s.세션id] || [];
+      const attSet = new Set(atts.map(a => a.학번));
+      const attInTarget = target.filter(st => attSet.has(st.학번)).length;
+      const absCount = target.length - attInTarget;
+      const rate = target.length > 0 ? Math.round(attInTarget / target.length * 100) : 0;
+
+      // 남은 시간
+      const remainMs = new Date(s.만료시각).getTime() - Date.now();
+      const remainMin = Math.max(0, Math.floor(remainMs / 60000));
+      const remainSec = Math.max(0, Math.floor((remainMs % 60000) / 1000));
+      const remainTxt = remainMin + ':' + String(remainSec).padStart(2, '0');
+
+      // 최근 출석 5명
+      const recent = atts.slice(0, 5).map(a =>
+        '<div class="live-recent-item"><span class="nm">' + escapeHtml(a.이름 || '') + ' (' + a.학번 + ')</span><span class="tm">' + (a.원래시각 || '').slice(0, 5) + '</span></div>'
+      ).join('');
+
+      return '<div class="live-card active">' +
+        '<div class="live-card-head"><div class="live-card-room">' + room + '</div><div class="live-pill-s on"><span class="dot"></span>LIVE</div></div>' +
+        '<div class="live-prog">' + escapeHtml(s.프로그램 || '') + '</div>' +
+        '<div class="live-teacher">' + escapeHtml(s.교사 || '') + ' 선생님 · QR 남은 시간 ' + remainTxt + '</div>' +
+        '<div class="live-stat-row">' +
+          '<div class="live-stat-block"><div class="live-stat-num sage">' + attInTarget + '</div><div class="live-stat-lbl">출석</div></div>' +
+          '<div class="live-stat-block"><div class="live-stat-num warn">' + absCount + '</div><div class="live-stat-lbl">미출석</div></div>' +
+          '<div class="live-stat-block"><div class="live-stat-num">' + rate + '%</div><div class="live-stat-lbl">출석률</div></div>' +
+        '</div>' +
+        '<div class="live-recent-title">최근 출석</div>' +
+        '<div class="live-recent-list">' + (recent || '<div class="live-empty">아직 없음</div>') + '</div>' +
+      '</div>';
+    }).join('');
+
+    grid.innerHTML = cards;
+  },
+
+  onSearch() {
+    const val = document.getElementById('live-search-input').value.trim();
+    const box = document.getElementById('live-search-result');
+    if (!/^\d{5}$/.test(val)) {
+      box.classList.remove('on');
+      return;
+    }
+    const found = (LIVE.todayAttendance || []).filter(a => a.학번 === val);
+    if (found.length === 0) {
+      box.className = 'live-search-result on no';
+      box.innerHTML = '<div class="name">❌ ' + val + '</div>오늘 어떤 세션에도 출석 기록이 없어요';
+    } else {
+      box.className = 'live-search-result on ok';
+      const html = found.map(a => {
+        const t = (a.원래시각 || '').slice(0, 5);
+        const late = a.사후여부 ? ' <span style="color:var(--info)">(사후)</span>' : '';
+        return '<div style="padding:4px 0">' + t + ' · ' + escapeHtml(a.프로그램 || '') + ' · ' + escapeHtml(a.장소 || '') + late + '</div>';
+      }).join('');
+      box.innerHTML = '<div class="name">✓ ' + escapeHtml(found[0].이름 || '') + ' (' + val + ')</div>' + html;
+    }
+  },
+
+  start() {
+    LIVE.load();
+    if (LIVE.pollInterval) clearInterval(LIVE.pollInterval);
+    LIVE.pollInterval = setInterval(() => LIVE.load(), 3000);
+  },
+
+  stop() {
+    if (LIVE.pollInterval) {
+      clearInterval(LIVE.pollInterval);
+      LIVE.pollInterval = null;
+    }
+  },
+
+  manualRefresh() {
+    LIVE.load();
+  },
+};
+
+// 탭 전환 시 LIVE start/stop 관리
+const _prevSwitchAdminTabForLive = switchAdminTab;
+switchAdminTab = function(tab) {
+  _prevSwitchAdminTabForLive(tab);
+  if (tab === 'live') {
+    LIVE.start();
+  } else {
+    LIVE.stop();
+  }
+};
+
+// 페이지 떠날 때 폴링 중지
+window.addEventListener('beforeunload', () => LIVE.stop());
 
 function toggleSidebar(force){
   const sb=document.querySelector('.admin-sidebar');
