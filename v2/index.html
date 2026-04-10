@@ -6337,46 +6337,104 @@ async function loadHistorySessions() {
   const days = parseInt(document.getElementById('hist-filter-range').value);
 
   try {
-    // 1. 세션 목록 조회
+    // attendance 테이블에서 직접 가져와 세션id 기준으로 그룹화
+    // (sessions 테이블은 v1 마이그레이션 시점에 마감된 세션이 빠져있어 사용 불가)
     let query = sb.client()
-      .from('sessions')
-      .select('*')
+      .from('attendance')
+      .select('세션id, 학번, 이름, 프로그램, 장소, 교사, 날짜, 원래시각, 사후여부')
       .order('날짜', { ascending: false })
-      .order('시작시각', { ascending: false });
+      .order('원래시각', { ascending: true });
 
     if (days > 0) {
       query = query.gte('날짜', daysAgoKST(days));
     }
 
-    const { data: sessionsData, error } = await query;
+    const { data: attData, error } = await query;
     if (error) throw error;
 
-    A.historySessions = sessionsData || [];
+    // 세션id 기준으로 그룹화
+    const sessionMap = {};
+    (attData || []).forEach(r => {
+      const key = r.세션id;
+      if (!sessionMap[key]) {
+        sessionMap[key] = {
+          세션id: r.세션id,
+          프로그램: r.프로그램,
+          장소: r.장소,
+          교사: r.교사,
+          날짜: r.날짜,
+          시작시각: null,  // 첫 출석 시각 기반 (KST date+time → ISO timestamp)
+          종료시각: null,  // 마지막 출석 시각 기반
+          만료시각: null,  // 옛 데이터는 알 수 없음
+          활성: false,     // 모두 마감 처리 (옛 데이터는 모두 종료된 세션)
+          _attCount: 0,
+          _firstTime: null,
+          _lastTime: null,
+        };
+      }
+      const sess = sessionMap[key];
+      sess._attCount++;
 
-    // 2. 각 세션의 출석 카운트 조회 (한 번에)
-    if (A.historySessions.length > 0) {
-      const sessionIds = A.historySessions.map(s => s.세션id);
-      const { data: attData, error: attErr } = await sb.client()
-        .from('attendance')
-        .select('세션id')
-        .in('세션id', sessionIds);
+      // 첫/마지막 시각 갱신 (사후 출석 제외하고)
+      if (!r.사후여부 && r.원래시각) {
+        if (!sess._firstTime || r.원래시각 < sess._firstTime) {
+          sess._firstTime = r.원래시각;
+        }
+        if (!sess._lastTime || r.원래시각 > sess._lastTime) {
+          sess._lastTime = r.원래시각;
+        }
+      }
+    });
 
-      if (attErr) throw attErr;
+    // 시작/종료 시각을 ISO timestamp로 변환 (KST 기준)
+    Object.values(sessionMap).forEach(sess => {
+      if (sess._firstTime) {
+        // 날짜 + 시각 → 로컬 시간으로 Date 객체 생성 → ISO
+        sess.시작시각 = new Date(`${sess.날짜}T${sess._firstTime}+09:00`).toISOString();
+      }
+      if (sess._lastTime) {
+        sess.종료시각 = new Date(`${sess.날짜}T${sess._lastTime}+09:00`).toISOString();
+      }
+      delete sess._firstTime;
+      delete sess._lastTime;
+    });
 
-      const countMap = {};
-      (attData || []).forEach(r => {
-        countMap[r.세션id] = (countMap[r.세션id] || 0) + 1;
+    // sessions 테이블에서 활성 세션도 추가 조회 (현재 진행 중인 세션 표시용)
+    try {
+      const { data: activeSess } = await sb.client()
+        .from('sessions')
+        .select('*')
+        .eq('활성', true);
+      (activeSess || []).forEach(s => {
+        // attendance에 아직 출석이 없는 진행 중 세션도 표시
+        if (!sessionMap[s.세션id]) {
+          sessionMap[s.세션id] = {
+            ...s,
+            _attCount: 0,
+            활성: true,
+          };
+        } else {
+          // 진행 중이라고 표시
+          sessionMap[s.세션id].활성 = true;
+          sessionMap[s.세션id].만료시각 = s.만료시각;
+        }
       });
-      A.historySessions.forEach(s => {
-        s._attCount = countMap[s.세션id] || 0;
-      });
+    } catch (e) {
+      console.warn('활성 세션 조회 실패:', e);
     }
+
+    // 정렬: 날짜 내림차순 → 시작시각 내림차순
+    A.historySessions = Object.values(sessionMap).sort((a, b) => {
+      const dateCmp = (b.날짜 || '').localeCompare(a.날짜 || '');
+      if (dateCmp !== 0) return dateCmp;
+      return (b.시작시각 || '').localeCompare(a.시작시각 || '');
+    });
 
     A.historyLoaded = true;
     renderHistoryList();
 
   } catch (e) {
-    console.error('세션 목록 로딩 실패:', e);
+    console.error('출석 기록 로딩 실패:', e);
     container.innerHTML = `<div class="student-table-empty">불러오기 실패: ${e.message || '오류'}</div>`;
   }
 }
