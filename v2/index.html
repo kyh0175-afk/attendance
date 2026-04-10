@@ -1121,6 +1121,22 @@ input { font-family: inherit; }
   cursor: not-allowed;
 }
 
+
+/* 오늘 마감된 세션 (사후 출석용) */
+.past-sessions{margin-bottom:24px;animation:cardIn .6s cubic-bezier(.16,1,.3,1) both}
+.past-sessions-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--amber);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.past-sessions-title::before{content:'';width:20px;height:1px;background:var(--amber);opacity:.6}
+.past-sess-card{background:var(--paper);border:1px solid rgba(214,178,124,.2);border-radius:var(--r);padding:18px 22px;margin-bottom:10px;display:flex;align-items:center;gap:16px;position:relative;box-shadow:0 8px 20px -10px rgba(0,0,0,.4)}
+.past-sess-card::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:3px;background:var(--amber);opacity:.5;border-radius:0 2px 2px 0}
+.past-sess-info{flex:1;min-width:0}
+.past-sess-prog{font-family:'IBM Plex Sans KR',sans-serif;font-size:15px;font-weight:600;color:var(--cream);margin-bottom:4px}
+.past-sess-meta{font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);margin-bottom:3px}
+.past-sess-stats{font-family:'DM Mono',monospace;font-size:11px;color:var(--sage);letter-spacing:.02em}
+.past-sess-stats .abs{color:var(--copper);margin-left:8px}
+.past-sess-btn{flex-shrink:0;padding:11px 18px;background:rgba(123,160,135,.12);border:1px solid rgba(123,160,135,.4);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;font-weight:500;color:var(--sage);cursor:pointer;transition:all .25s}
+.past-sess-btn:hover{background:rgba(123,160,135,.22);border-color:var(--sage);transform:translateY(-1px)}
+@media (max-width:640px){.past-sess-card{flex-direction:column;align-items:stretch;gap:12px}.past-sess-btn{width:100%}}
+
 /* ══ 세션 진행 화면 (QR 표시) ══ */
 .session-card {
   position: relative;
@@ -4415,6 +4431,11 @@ input { font-family: inherit; }
     </div>
 
     <!-- 설정 화면 -->
+    <div id="t-past-sessions" class="past-sessions" style="display:none">
+      <div class="past-sessions-title">오늘 마감된 세션 · 사후 출석</div>
+      <div id="t-past-sessions-list"></div>
+    </div>
+
     <div id="t-setup" class="setup-card">
       <div class="setup-title">Start Session</div>
       <div class="setup-subtitle">출석 체크를 시작합니다</div>
@@ -5974,6 +5995,159 @@ const T = {
   listTab: 'all',       // 'all' / 'attended' / 'absent'
 };
 
+
+// ══════════════════════════════════════════════════════════════
+//  오늘 마감된 세션 (사후 출석용)
+// ══════════════════════════════════════════════════════════════
+async function loadPastSessions() {
+  if (!T.room) return;
+  const container = document.getElementById('t-past-sessions');
+  const list = document.getElementById('t-past-sessions-list');
+  if (!container || !list) return;
+
+  try {
+    const today = todayKST();
+    // 오늘 이 장소에서 생성된 모든 세션 (활성 세션은 제외)
+    const { data: sessions, error } = await sb.client()
+      .from('sessions')
+      .select('*')
+      .eq('장소', T.room)
+      .eq('날짜', today)
+      .eq('활성', false)
+      .order('시작시각', { ascending: false });
+
+    if (error) throw error;
+    if (!sessions || sessions.length === 0) {
+      container.style.display = 'none';
+      return;
+    }
+
+    // 각 세션의 출석/미출석 통계 계산
+    const cards = await Promise.all(sessions.map(async (s) => {
+      try {
+        const att = await sb.attendance.bySession(s.세션id);
+        const attCount = (att || []).length;
+        // 분모 (해당 프로그램+장소의 오늘 요일 대상자)
+        const all = await sb.students.byRoom(s.프로그램, s.장소);
+        const dayKr = DAY_KR[new Date().getDay()];
+        const target = all.filter(st => {
+          const days = Array.isArray(st.출석요일) ? st.출석요일 : [];
+          return days.length === 0 || days.includes(dayKr);
+        });
+        const attSet = new Set((att || []).map(r => r.학번));
+        const targetAtt = target.filter(st => attSet.has(st.학번)).length;
+        const absCount = target.length - targetAtt;
+
+        const endTime = s.종료시각 ? new Date(s.종료시각).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false}) : '—';
+        return `<div class="past-sess-card" data-sid="${s.세션id}">
+          <div class="past-sess-info">
+            <div class="past-sess-prog">${escapeHtml(s.프로그램||'')}</div>
+            <div class="past-sess-meta">${endTime} 마감 · ${escapeHtml(s.교사||'')} 선생님</div>
+            <div class="past-sess-stats">출석 ${targetAtt}명<span class="abs">미출석 ${absCount}명</span></div>
+          </div>
+          <button class="past-sess-btn" onclick="openPastAttend('${s.세션id}')">+ 사후 출석 추가</button>
+        </div>`;
+      } catch (e) { console.warn('past session card 실패:', e); return ''; }
+    }));
+
+    list.innerHTML = cards.filter(Boolean).join('');
+    container.style.display = cards.length ? 'block' : 'none';
+  } catch (e) {
+    console.warn('오늘 마감 세션 로딩 실패:', e);
+    container.style.display = 'none';
+  }
+}
+
+// 사후 출석 모달 컨텍스트 (어느 세션에 추가할지)
+let _pastAttendCtx = null;
+
+function openPastAttend(sessionId) {
+  // 세션 상세 조회 후 모달 열기
+  (async () => {
+    try {
+      const s = await sb.sessions.byKey(sessionId);
+      if (!s) { alert('세션을 찾을 수 없어요'); return; }
+      _pastAttendCtx = {
+        sessionId: s.세션id,
+        program: s.프로그램,
+        room: s.장소,
+        teacher: s.교사,
+        date: s.날짜,
+      };
+      // 기존 manual 넘버패드 재사용하되 _pastAttendCtx가 세팅되면 사후 모드로 동작
+      _manualNpDigits = [];
+      document.getElementById('manual-np-err').textContent = '';
+      // 모달 제목 변경
+      const titleEl = document.querySelector('#manual-numpad-bg .numpad-modal-title');
+      const subEl = document.querySelector('#manual-numpad-bg .numpad-modal-title-ko');
+      if (titleEl) titleEl.textContent = '사후 출석';
+      if (subEl) subEl.textContent = s.프로그램;
+      document.getElementById('manual-numpad-bg').classList.add('on');
+      initManualNumpad();
+      updateManualNoDisplay();
+    } catch (e) {
+      alert('세션 정보 조회 실패: ' + (e.message || '오류'));
+    }
+  })();
+}
+
+// 기존 closeManualNumpad 확장 — 사후 컨텍스트 정리
+const _origCloseManual = closeManualNumpad;
+closeManualNumpad = function() {
+  _origCloseManual();
+  _pastAttendCtx = null;
+  // 제목 복원
+  const titleEl = document.querySelector('#manual-numpad-bg .numpad-modal-title');
+  const subEl = document.querySelector('#manual-numpad-bg .numpad-modal-title-ko');
+  if (titleEl) titleEl.textContent = '학번 입력';
+  if (subEl) subEl.textContent = 'MANUAL';
+};
+
+// 기존 doManualAttendFromNumpad 확장 — 사후 컨텍스트면 lateAdd 호출
+const _origDoManualAttend = doManualAttendFromNumpad;
+doManualAttendFromNumpad = async function() {
+  if (!_pastAttendCtx) { return _origDoManualAttend(); }
+  // 사후 출석 모드
+  if (_manualNpDigits.length !== 5) return;
+  const no = _manualNpDigits.join('');
+  const errEl = document.getElementById('manual-np-err');
+  const ctx = _pastAttendCtx;
+
+  // 학생 조회
+  let studentInfo = null;
+  try {
+    const matches = await sb.students.byNo(no);
+    if (matches && matches.length) {
+      studentInfo = matches.find(s => s.프로그램===ctx.program && s.장소===ctx.room)
+                 || matches.find(s => s.장소===ctx.room)
+                 || matches[0];
+    }
+  } catch (e) {}
+  if (!studentInfo) { errEl.textContent = '명단에 없는 학번이에요'; return; }
+
+  // 중복 체크
+  try {
+    const existing = await sb.attendance.bySession(ctx.sessionId);
+    if ((existing || []).some(r => r.학번 === no)) {
+      errEl.textContent = '이미 출석 처리된 학생이에요';
+      return;
+    }
+  } catch (e) {}
+
+  try {
+    const result = await sb.attendance.lateAdd({
+      sessionId: ctx.sessionId, no, name: studentInfo.이름,
+      date: ctx.date, program: ctx.program, room: ctx.room, teacher: ctx.teacher,
+    });
+    if (!result.ok) throw new Error(result.msg || '실패');
+    closeManualNumpad();
+    await loadPastSessions(); // 카드 통계 갱신
+    alert(studentInfo.이름 + ' 학생 사후 출석 처리됨');
+  } catch (e) {
+    errEl.textContent = '실패: ' + (e.message || '오류');
+  }
+};
+
 async function enterTeacherScreen(room) {
   T.room = room;
 
@@ -6054,6 +6228,7 @@ async function enterTeacherScreen(room) {
   // 활성 세션 없음 → 설정 화면
   document.getElementById('t-setup').style.display = 'block';
   document.getElementById('t-wrap').classList.remove('session-active');
+  loadPastSessions();
   // 첫 진입 시 자동 채움 (심야면 감독 자동 입력)
   await handleProgramChange();
 }
@@ -6380,6 +6555,7 @@ async function confirmEndSession() {
   document.getElementById('t-setup').style.display = 'block';
   document.getElementById('t-session').style.display = 'none';
   document.getElementById('t-wrap').classList.remove('session-active');
+  loadPastSessions();
 }
 
 // 모달 이벤트
