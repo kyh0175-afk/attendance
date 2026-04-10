@@ -3762,6 +3762,67 @@ input { font-family: inherit; }
 .diag-log .log-ok { color: var(--ok); }
 .diag-log .log-err { color: var(--err); }
 .diag-log .log-info { color: var(--info); }
+
+.req-sub-tabs{display:flex;gap:6px;margin-bottom:18px}
+.req-sub-tab{padding:10px 20px;background:transparent;border:1px solid var(--border);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;font-weight:500;color:var(--ink-dim);cursor:pointer;transition:all .25s;display:inline-flex;align-items:center;gap:8px}
+.req-sub-tab:hover{border-color:var(--border2);color:var(--ink)}
+.req-sub-tab.on{background:rgba(214,178,124,.12);border-color:var(--amber);color:var(--amber)}
+.req-sub-tab .badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:10px;font-family:'DM Mono',monospace;font-size:11px;font-weight:600;background:rgba(214,178,124,.15);color:var(--amber)}
+.req-sub-tab .badge.pending{background:rgba(245,166,35,.2);color:var(--warn)}
+.req-sub-tab .badge.zero{opacity:.4}
+.req-list{display:flex;flex-direction:column;gap:12px}
+.req-card{position:relative;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:22px 24px;transition:all .25s;animation:cardIn .4s cubic-bezier(.16,1,.3,1) both}
+.req-card:hover{border-color:var(--border2);background:var(--paper2)}
+.req-card::before{content:'';position:absolute;left:0;top:16px;bottom:16px;width:3px;border-radius:0 2px 2px 0}
+.req-card.pending::before{background:var(--warn)}
+.req-card.approved::before{background:var(--sage);opacity:.6}
+.req-card.rejected::before{background:var(--terra);opacity:.5}
+.req-card-top{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.req-status-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;font-family:'IBM Plex Sans KR',sans-serif;font-size:11px;font-weight:600;flex-shrink:0}
+.req-status-badge.pending{background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.4);color:var(--warn)}
+.req-status-badge.approved{background:rgba(123,160,135,.12);border:1px solid rgba(123,160,135,.3);color:var(--sage)}
+.req-status-badge.rejected{background:rgba(184,84,63,.1);border:1px solid rgba(184,84,63,.3);color:var(--terra)}
+.req-status-badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.req-status-badge.pending .dot{animation:pulse 1.5s ease-in-out infinite}
+.req-student-info{flex:1;min-width:0}
+.req-student-name{font-family:'IBM Plex Sans KR',sans-serif;font-size:16px;font-weight:600;color:var(--cream);margin-bottom:2px}
+.req-student-no{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-dim);letter-spacing:.05em}
+.req-time{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-faint);flex-shrink:0;text-align:right}
+.req-card-body{background:rgba(0,0,0,.15);border:1px solid rgba(214,178,124,.06);border-radius:var(--r);padding:16px 18px;margin-bottom:14px}
+.req-detail-row{display:flex;align-items:baseline;gap:10px;padding:5px 0;font-family:'IBM Plex Sans KR',sans-serif;font-size:13px}
+.req-detail-row+.req-detail-row{border-top:1px solid rgba(214,178,124,.05)}
+.req-detail-label{font-size:11px;color:var(--ink-faint);flex-shrink:0;min-width:70px;font-weight:500}
+.req-detail-value{color:var(--ink);flex:1}
+.req-detail-value.highlight{color:var(--amber);font-weight:500}
+.req-detail-value.from-to{display:flex;align-items:center;gap:8px}
+.req-detail-value .arrow-icon{color:var(--ink-faint);font-size:14px}
+.req-day-badges{display:inline-flex;gap:4px}
+.req-day-badge{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:3px;font-family:'IBM Plex Sans KR',sans-serif;font-size:11px;font-weight:600}
+.req-day-badge.on{background:rgba(214,178,124,.18);border:1px solid rgba(214,178,124,.4);color:var(--amber)}
+.req-day-badge.on.weekend{background:rgba(184,84,63,.15);border:1px solid rgba(184,84,63,.35);color:var(--copper)}
+.req-day-badge.off{background:rgba(0,0,0,.2);border:1px solid var(--border);color:var(--ink-faint)}
+.req-reason{font-style:italic;color:var(--ink-dim);line-height:1.6}
+.req-teacher-note{margin-top:10px;padding:10px 14px;background:rgba(123,160,135,.06);border:1px solid rgba(123,160,135,.2);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim)}
+.req-card.rejected .req-teacher-note{background:rgba(184,84,63,.06);border-color:rgba(184,84,63,.2)}
+.req-teacher-note .note-label{font-weight:600;color:var(--ink);margin-right:6px}
+.req-card-actions{display:flex;gap:8px;justify-content:flex-end}
+.req-card.approved,.req-card.rejected{opacity:.75}
+.req-card.approved:hover,.req-card.rejected:hover{opacity:1}
+.req-empty{text-align:center;padding:60px 24px;color:var(--ink-faint);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px}
+.req-empty .icon{font-family:'Cormorant Garamond',serif;font-size:36px;font-style:italic;color:var(--amber);opacity:.4;display:block;margin-bottom:12px}
+.reject-modal{max-width:420px;padding:36px 32px}
+.reject-modal .modal-title{font-family:'IBM Plex Sans KR',sans-serif;font-style:normal;font-size:20px;font-weight:600;margin-bottom:6px}
+.reject-modal-info{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink-dim);text-align:center;margin-bottom:20px}
+.reject-reasons{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.reject-reason-btn{padding:12px 16px;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink-dim);text-align:left;cursor:pointer;transition:all .2s}
+.reject-reason-btn:hover{border-color:var(--border2);color:var(--ink);background:rgba(0,0,0,.3)}
+.reject-reason-btn.on{background:rgba(184,84,63,.12);border-color:rgba(184,84,63,.5);color:var(--terra);font-weight:500}
+.reject-custom-wrap{margin-bottom:16px;display:none}
+.reject-custom-wrap.on{display:block}
+.reject-custom-input{width:100%;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--cream);outline:none}
+.reject-custom-input:focus{border-color:var(--amber);background:rgba(214,178,124,.05)}
+.reject-custom-input::placeholder{color:var(--ink-faint)}
+
 </style>
 </head>
 <body>
@@ -4425,10 +4486,23 @@ input { font-family: inherit; }
       <div class="admin-tab-pane" id="admin-tab-requests">
         <div class="admin-page-header">
           <div class="admin-page-title">요청 관리</div>
+          <div class="admin-page-actions">
+            <button class="admin-btn" onclick="loadRequests()">🔄 새로고침</button>
+          </div>
         </div>
-        <div class="student-table-wrap">
-          <div class="student-table-empty">요청 관리 탭은 Phase 3D에서 만들어집니다.</div>
+        <div class="req-sub-tabs">
+          <button class="req-sub-tab on" data-reqtab="correction" onclick="switchReqSubTab('correction')">수정 요청<span class="badge" id="req-badge-correction">0</span></button>
+          <button class="req-sub-tab" data-reqtab="daychange" onclick="switchReqSubTab('daychange')">요일 변경 요청<span class="badge" id="req-badge-daychange">0</span></button>
         </div>
+        <div class="admin-filters">
+          <select class="admin-filter-select" id="req-filter-status" onchange="renderRequests()">
+            <option value="">전체 상태</option><option value="대기" selected>대기중</option><option value="승인">승인됨</option><option value="거절">거절됨</option>
+          </select>
+          <input type="text" class="admin-search" id="req-search" placeholder="학번 또는 이름으로 검색..." oninput="renderRequests()">
+          <span class="admin-result-count" id="req-count">—</span>
+        </div>
+        <div id="req-pane-correction"><div class="req-list" id="req-list-correction"><div class="req-empty"><span class="icon">⏳</span>불러오는 중...</div></div></div>
+        <div id="req-pane-daychange" style="display:none"><div class="req-list" id="req-list-daychange"><div class="req-empty"><span class="icon">⏳</span>불러오는 중...</div></div></div>
       </div>
 
     </main>
@@ -4531,6 +4605,21 @@ input { font-family: inherit; }
   </div>
 </div>
 
+<div class="modal-bg" id="modal-reject"><div class="modal reject-modal">
+<div class="modal-icon" style="color:var(--terra)">✕</div><div class="modal-title">요청 거절</div>
+<div class="reject-modal-info" id="reject-modal-info">—</div>
+<div class="reject-reasons" id="reject-reasons">
+<button class="reject-reason-btn" data-reason="확인 결과 출석이 맞지 않음" onclick="selectRejectReason(this)">확인 결과 출석이 맞지 않음</button>
+<button class="reject-reason-btn" data-reason="증빙 자료 부족" onclick="selectRejectReason(this)">증빙 자료 부족</button>
+<button class="reject-reason-btn" data-reason="요청 기간 초과" onclick="selectRejectReason(this)">요청 기간 초과</button>
+<button class="reject-reason-btn" data-reason="중복 요청" onclick="selectRejectReason(this)">중복 요청</button>
+<button class="reject-reason-btn" data-reason="custom" onclick="selectRejectReason(this)">직접 입력</button>
+</div>
+<div class="reject-custom-wrap" id="reject-custom-wrap"><input type="text" class="reject-custom-input" id="reject-custom-input" placeholder="거절 사유를 입력해주세요" maxlength="100"></div>
+<div class="modal-err" id="reject-err"></div>
+<div class="modal-actions"><button class="btn btn-ghost" onclick="closeRejectModal()">취소</button><button class="btn btn-primary" id="reject-confirm-btn" style="background:var(--terra);color:white" onclick="confirmReject()">거절</button></div>
+</div></div>
+
 <!-- 토스트 알림 -->
 <div class="admin-toast" id="admin-toast"></div>
 
@@ -4618,7 +4707,7 @@ input { font-family: inherit; }
   </div>
 </div>
 
-<div class="footer">YUBONG · COSMOS READING · v2.0</div>
+<div class="footer">YUBONG · COSMOS READING · v2.0 · 3D</div>
 
 </div><!-- /.app -->
 
@@ -6261,11 +6350,9 @@ function switchAdminTab(tab) {
       renderHistoryList();
     }
   } else if (tab === 'analysis') {
-    if (!A.analysisLoaded) {
-      loadAnalysis();
-    } else {
-      renderAnalysis();
-    }
+    if (!A.analysisLoaded) { loadAnalysis(); } else { renderAnalysis(); }
+  } else if (tab === 'requests') {
+    if (!RQ.loaded) { loadRequests(); } else { renderRequests(); }
   }
 }
 
@@ -8350,6 +8437,7 @@ document.addEventListener('keydown', (e) => {
     closeStudentModal();
     closeConfirmModal();
     closeLateAttendModal();
+    closeRejectModal();
   }
 });
 
@@ -8549,6 +8637,28 @@ async function runDiagnostics() {
 
   diagLog('진단 완료', 'info');
 }
+
+
+const RQ={loaded:false,corrections:[],dayChanges:[],currentSubTab:'correction',rejectTarget:null,rejectReason:''};
+async function loadRequests(){try{const r=await sb.requests.list();RQ.corrections=r.corrections||[];RQ.dayChanges=r.dayChanges||[];RQ.loaded=true;updateReqBadges();renderRequests();}catch(e){console.error(e);showAdminToast('요청 로딩 실패: '+(e.message||'오류'),'err');}}
+function updateReqBadges(){const pC=RQ.corrections.filter(r=>r.처리상태==='대기').length;const pD=RQ.dayChanges.filter(r=>r.처리상태==='대기').length;const bC=document.getElementById('req-badge-correction');const bD=document.getElementById('req-badge-daychange');if(bC){bC.textContent=pC;bC.className='badge'+(pC>0?' pending':' zero');}if(bD){bD.textContent=pD;bD.className='badge'+(pD>0?' pending':' zero');}}
+function switchReqSubTab(t){RQ.currentSubTab=t;document.querySelectorAll('.req-sub-tab').forEach(b=>b.classList.toggle('on',b.dataset.reqtab===t));document.getElementById('req-pane-correction').style.display=t==='correction'?'block':'none';document.getElementById('req-pane-daychange').style.display=t==='daychange'?'block':'none';renderRequests();}
+function renderRequests(){const fs=document.getElementById('req-filter-status').value;const sr=document.getElementById('req-search').value.trim().toLowerCase();if(RQ.currentSubTab==='correction')renderCorrReqs(fs,sr);else renderDayReqs(fs,sr);}
+function _filt(items,fs,sr){let r=items;if(fs)r=r.filter(x=>x.처리상태===fs);if(sr)r=r.filter(x=>String(x.학번||'').includes(sr)||(x.이름||'').toLowerCase().includes(sr));r.sort((a,b)=>{const ap=a.처리상태==='대기'?0:1;const bp=b.처리상태==='대기'?0:1;if(ap!==bp)return ap-bp;return(b.요청일시||'').localeCompare(a.요청일시||'');});return r;}
+function _fmtRD(s){if(!s)return'—';try{const d=new Date(s);return(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}catch(e){return'—';}}
+function _statCls(s){return s==='대기'?'pending':s==='승인'?'approved':'rejected';}
+function _statTxt(s){return s==='대기'?'대기중':s==='승인'?'승인됨':'거절됨';}
+function _hdr(r){const sc=_statCls(r.처리상태);return '<div class="req-card-top"><div class="req-status-badge '+sc+'"><span class="dot"></span>'+_statTxt(r.처리상태)+'</div><div class="req-student-info"><div class="req-student-name">'+escapeHtml(r.이름||'')+'</div><div class="req-student-no">'+r.학번+' · '+escapeHtml(r.프로그램||'')+' · '+escapeHtml(r.장소||'')+'</div></div><div class="req-time">'+_fmtRD(r.요청일시)+'</div></div>';}
+function _note(r){if(r.처리상태==='대기'||!r.교사메모)return'';return '<div class="req-teacher-note"><span class="note-label">'+(r.처리상태==='승인'?'승인':'거절')+' 사유:</span>'+escapeHtml(r.교사메모)+'</div>';}
+function renderCorrReqs(fs,sr){const c=document.getElementById('req-list-correction');if(!c)return;const items=_filt(RQ.corrections,fs,sr);document.getElementById('req-count').textContent=items.length+'건';if(!items.length){c.innerHTML='<div class="req-empty"><span class="icon">✦</span>'+(fs==='대기'?'대기 중인 수정 요청이 없어요':'조건에 맞는 요청이 없어요')+'</div>';return;}c.innerHTML=items.map(r=>{const sc=_statCls(r.처리상태);let act='';if(r.처리상태==='대기')act='<div class="req-card-actions"><button class="admin-btn success" onclick="approveCorrection('+r.id+')">승인</button><button class="admin-btn danger" onclick="openRejectModal(\'correction\','+r.id+',\''+escapeAttr(r.이름||'')+'\',\''+r.학번+'\')">거절</button></div>';return '<div class="req-card '+sc+'">'+_hdr(r)+'<div class="req-card-body"><div class="req-detail-row"><span class="req-detail-label">대상 날짜</span><span class="req-detail-value highlight">'+(r.대상날짜||'—')+'</span></div><div class="req-detail-row"><span class="req-detail-label">변경 요청</span><span class="req-detail-value from-to"><span>'+escapeHtml(r.현재상태||'결석')+'</span><span class="arrow-icon">→</span><span style="color:var(--sage);font-weight:500">'+escapeHtml(r.요청상태||'출석')+'</span></span></div><div class="req-detail-row"><span class="req-detail-label">사유</span><span class="req-detail-value req-reason">'+escapeHtml(r.사유||'—')+'</span></div>'+(r.상세?'<div class="req-detail-row"><span class="req-detail-label">상세</span><span class="req-detail-value">'+escapeHtml(r.상세)+'</span></div>':'')+'</div>'+_note(r)+act+'</div>';}).join('');}
+function renderDayReqs(fs,sr){const c=document.getElementById('req-list-daychange');if(!c)return;const items=_filt(RQ.dayChanges,fs,sr);document.getElementById('req-count').textContent=items.length+'건';if(!items.length){c.innerHTML='<div class="req-empty"><span class="icon">✦</span>'+(fs==='대기'?'대기 중인 요일 변경 요청이 없어요':'조건에 맞는 요청이 없어요')+'</div>';return;}const ad=['월','화','수','목','금','토','일'];const mb=(ds)=>ad.map(d=>{const o=ds.includes(d);const w=d==='토'||d==='일';return '<span class="req-day-badge '+(o?'on':'off')+(w&&o?' weekend':'')+'">'+d+'</span>';}).join('');c.innerHTML=items.map(r=>{const sc=_statCls(r.처리상태);const cd=Array.isArray(r.현재요일)?r.현재요일:[];const rd=Array.isArray(r.요청요일)?r.요청요일:[];let act='';if(r.처리상태==='대기')act='<div class="req-card-actions"><button class="admin-btn success" onclick="approveDayChange('+r.id+')">승인</button><button class="admin-btn danger" onclick="openRejectModal(\'daychange\','+r.id+',\''+escapeAttr(r.이름||'')+'\',\''+r.학번+'\')">거절</button></div>';return '<div class="req-card '+sc+'">'+_hdr(r)+'<div class="req-card-body"><div class="req-detail-row"><span class="req-detail-label">현재 요일</span><span class="req-detail-value"><div class="req-day-badges">'+mb(cd)+'</div></span></div><div class="req-detail-row"><span class="req-detail-label">요청 요일</span><span class="req-detail-value"><div class="req-day-badges">'+mb(rd)+'</div></span></div><div class="req-detail-row"><span class="req-detail-label">사유</span><span class="req-detail-value req-reason">'+escapeHtml(r.사유||'—')+'</span></div></div>'+_note(r)+act+'</div>';}).join('');}
+async function approveCorrection(id){try{await sb.requests.approveCorrection(id,'');showAdminToast('수정 요청이 승인됐어요','ok');await loadRequests();}catch(e){showAdminToast('승인 실패: '+(e.message||'오류'),'err');}}
+async function approveDayChange(id){try{await sb.requests.approveDayChange(id,'');showAdminToast('요일 변경 요청이 승인됐어요','ok');sb.invalidateCache('students');await loadAllStudents();await loadRequests();}catch(e){showAdminToast('승인 실패: '+(e.message||'오류'),'err');}}
+function openRejectModal(t,id,n,no){RQ.rejectTarget={type:t,id:id};RQ.rejectReason='';document.getElementById('reject-modal-info').textContent=n+' ('+no+')';document.getElementById('reject-err').textContent='';document.getElementById('reject-custom-input').value='';document.getElementById('reject-custom-wrap').classList.remove('on');document.querySelectorAll('#reject-reasons .reject-reason-btn').forEach(b=>b.classList.remove('on'));document.getElementById('modal-reject').classList.add('on');}
+function closeRejectModal(){document.getElementById('modal-reject').classList.remove('on');RQ.rejectTarget=null;}
+function selectRejectReason(b){document.querySelectorAll('#reject-reasons .reject-reason-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');const r=b.dataset.reason;if(r==='custom'){RQ.rejectReason='';document.getElementById('reject-custom-wrap').classList.add('on');setTimeout(()=>document.getElementById('reject-custom-input').focus(),100);}else{RQ.rejectReason=r;document.getElementById('reject-custom-wrap').classList.remove('on');}}
+async function confirmReject(){if(!RQ.rejectTarget)return;const cw=document.getElementById('reject-custom-wrap');if(cw.classList.contains('on'))RQ.rejectReason=document.getElementById('reject-custom-input').value.trim();if(!RQ.rejectReason){document.getElementById('reject-err').textContent='거절 사유를 선택해주세요';return;}const b=document.getElementById('reject-confirm-btn');b.disabled=true;b.textContent='처리 중...';try{await sb.requests.reject(RQ.rejectTarget.type,RQ.rejectTarget.id,RQ.rejectReason);closeRejectModal();showAdminToast('요청이 거절됐어요','ok');await loadRequests();}catch(e){document.getElementById('reject-err').textContent='실패: '+(e.message||'오류');}finally{b.disabled=false;b.textContent='거절';}}
+document.getElementById('modal-reject').addEventListener('click',(e)=>{if(e.target.id==='modal-reject')closeRejectModal();});
 
 // ══════════════════════════════════════════════════════════════
 //  부팅
