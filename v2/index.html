@@ -4500,16 +4500,6 @@ input { font-family: inherit; }
         <div class="field-hint" id="t-teacher-hint">오늘의 심야 감독 교사로 자동 입력됨</div>
       </div>
 
-      <div class="field-group">
-        <label class="field-label">QR DURATION · QR 유효 시간</label>
-        <div class="field-chips" id="t-duration">
-          <button type="button" class="field-chip" data-min="5">5분</button>
-          <button type="button" class="field-chip" data-min="10">10분</button>
-          <button type="button" class="field-chip on" data-min="15">15분</button>
-          <button type="button" class="field-chip" data-min="30">30분</button>
-        </div>
-      </div>
-
       <button class="start-btn" id="t-start-btn" onclick="startTeacherSession()">▶ QR 생성 및 출석 시작</button>
     </div>
 
@@ -6064,7 +6054,7 @@ function enterRoom(room) {
 // 교사 화면 상태
 const T = {
   room: null,           // 현재 장소
-  duration: 15,         // QR 유효 시간 (분)
+  duration: 20,         // QR 유효 시간 (분, 고정)
   session: null,        // 현재 세션 {sessionId, program, room, teacher, expireAt}
   timerInterval: null,  // 카운트다운 타이머
   clockInterval: null,  // 현재 시각 표시 타이머
@@ -6266,15 +6256,6 @@ async function enterTeacherScreen(room) {
 
   // 드롭다운 이벤트 바인딩 (한 번만)
   initProgramDropdown();
-
-  // 시간 칩 클릭
-  document.querySelectorAll('#t-duration .field-chip').forEach(chip => {
-    chip.onclick = () => {
-      document.querySelectorAll('#t-duration .field-chip').forEach(c => c.classList.remove('on'));
-      chip.classList.add('on');
-      T.duration = parseInt(chip.dataset.min);
-    };
-  });
 
   // ── 세션 복원 ──
   // 활성 세션이 있는지 확인 (만료 안 된 것만)
