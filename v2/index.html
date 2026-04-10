@@ -4257,6 +4257,41 @@ function initSupabase() {
 
 // ══════════════════════════════════════════════════════════════
 //  ┌─────────────────────────────────────────────────────────┐
+//  │  KST 시간 헬퍼                                             │
+//  │  toISOString()은 UTC 기준이라 KST 새벽 시간대에는           │
+//  │  날짜가 전날로 계산되는 문제 발생                          │
+//  │  이 함수들로 모든 날짜 처리 통일                           │
+//  └─────────────────────────────────────────────────────────┘
+// ══════════════════════════════════════════════════════════════
+
+// KST 기준 오늘 날짜 (YYYY-MM-DD)
+function todayKST() {
+  const now = new Date();
+  // 로컬 시간 사용 (브라우저는 보통 KST로 설정됨)
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+// KST 기준 N일 전 날짜 (YYYY-MM-DD)
+function daysAgoKST(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// 현재 시각 (HH:MM:SS) — 로컬 기준
+function nowTimeStr() {
+  const d = new Date();
+  return d.toTimeString().slice(0, 8);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  ┌─────────────────────────────────────────────────────────┐
 //  │  sb 헬퍼 — Supabase 호출 래퍼                             │
 //  │  v2 코드 전체에서 이 객체를 통해서만 DB와 통신             │
 //  └─────────────────────────────────────────────────────────┘
@@ -4468,8 +4503,8 @@ const sb = {
         세션id: record.세션id || record.sessionId,
         학번: String(record.학번 || record.no),
         이름: record.이름 || record.name,
-        날짜: record.날짜 || new Date().toISOString().slice(0, 10),
-        원래시각: record.원래시각 || record.time || new Date().toTimeString().slice(0, 8),
+        날짜: record.날짜 || todayKST(),
+        원래시각: record.원래시각 || record.time || nowTimeStr(),
         처리시각: null,
         사후여부: false,
         프로그램: record.프로그램 || record.program,
@@ -4520,9 +4555,7 @@ const sb = {
     },
 
     async history(days = 7) {
-      const since = new Date();
-      since.setDate(since.getDate() - days);
-      const sinceStr = since.toISOString().slice(0, 10);
+      const sinceStr = daysAgoKST(days);
 
       const { data, error } = await sb.client()
         .from('attendance')
@@ -4582,7 +4615,7 @@ const sb = {
         프로그램: session.프로그램 || session.program,
         장소: session.장소 || session.cls || session.room,
         교사: session.교사 || session.teacher,
-        날짜: session.날짜 || new Date().toISOString().slice(0, 10),
+        날짜: session.날짜 || todayKST(),
         만료시각: session.만료시각 || session.expireAt,
         활성: true,
       };
@@ -4664,7 +4697,7 @@ const sb = {
   // ════════════════════════════════════════
   supervisors: {
     async today() {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = todayKST();
       const { data, error } = await sb.client()
         .from('supervisors')
         .select('교사명')
@@ -5628,7 +5661,7 @@ async function manualAttend(no, name) {
       sessionId: T.session.sessionId,
       no: no,
       name: name,
-      date: now.toISOString().slice(0, 10),
+      date: todayKST(),
       time: timeStr,
       program: T.session.program,
       room: T.session.room,
@@ -6312,9 +6345,7 @@ async function loadHistorySessions() {
       .order('시작시각', { ascending: false });
 
     if (days > 0) {
-      const since = new Date();
-      since.setDate(since.getDate() - days);
-      query = query.gte('날짜', since.toISOString().slice(0, 10));
+      query = query.gte('날짜', daysAgoKST(days));
     }
 
     const { data: sessionsData, error } = await query;
@@ -7100,13 +7131,12 @@ async function doStudentAttend() {
   }
 
   // 출석 페이로드
-  const now = new Date();
-  const timeStr = now.toTimeString().slice(0, 8);
+  const timeStr = nowTimeStr();
   const payload = {
     sessionId: ST.session.sessionId,
     no: no,
     name: studentInfo.이름,
-    date: now.toISOString().slice(0, 10),
+    date: todayKST(),
     time: timeStr,
     program: ST.session.program,
     room: ST.session.room,
@@ -7235,13 +7265,12 @@ async function doRegisterAndAttend() {
     });
 
     // 2. 출석 처리
-    const now = new Date();
-    const timeStr = now.toTimeString().slice(0, 8);
+    const timeStr = nowTimeStr();
     const result = await sb.attendance.add({
       sessionId: ST.session.sessionId,
       no: no,
       name: name,
-      date: now.toISOString().slice(0, 10),
+      date: todayKST(),
       time: timeStr,
       program: ST.session.program,
       room: ST.session.room,
