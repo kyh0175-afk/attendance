@@ -7587,36 +7587,61 @@ async function loadHistorySessions() {
   const days = parseInt(document.getElementById('hist-filter-range').value);
 
   try {
-    // attendance 테이블에서 직접 가져와 세션id 기준으로 그룹화
-    // (sessions 테이블은 v1 마이그레이션 시점에 마감된 세션이 빠져있어 사용 불가)
-    let query = sb.client()
+    // 1. attendance 조회 (기존 로직)
+    let attQ = sb.client()
       .from('attendance')
       .select('세션id, 학번, 이름, 프로그램, 장소, 교사, 날짜, 원래시각, 사후여부')
       .order('날짜', { ascending: false })
       .order('원래시각', { ascending: true });
+    if (days > 0) attQ = attQ.gte('날짜', daysAgoKST(days));
+    const attRes = await attQ;
+    if (attRes.error) throw attRes.error;
+    const attData = attRes.data || [];
 
-    if (days > 0) {
-      query = query.gte('날짜', daysAgoKST(days));
-    }
+    // 2. sessions 조회 (빈 세션 포함)
+    let sessQ = sb.client()
+      .from('sessions')
+      .select('*')
+      .order('날짜', { ascending: false });
+    if (days > 0) sessQ = sessQ.gte('날짜', daysAgoKST(days));
+    const sessRes = await sessQ;
+    const sessTable = sessRes.error ? [] : (sessRes.data || []);
 
-    const { data: attData, error } = await query;
-    if (error) throw error;
-
-    // 세션id 기준으로 그룹화
     const sessionMap = {};
-    (attData || []).forEach(r => {
+
+    // 2-1. sessions 테이블 기반으로 먼저 채우기 (메타데이터 신뢰)
+    sessTable.forEach(s => {
+      sessionMap[s.세션id] = {
+        세션id: s.세션id,
+        프로그램: s.프로그램,
+        장소: s.장소,
+        교사: s.교사,
+        날짜: s.날짜,
+        시작시각: s.시작시각 || null,
+        종료시각: s.종료시각 || null,
+        만료시각: s.만료시각 || null,
+        활성: s.활성 || false,
+        _attCount: 0,
+        _firstTime: null,
+        _lastTime: null,
+      };
+    });
+
+    // 2-2. attendance로 카운트 채우고, sessions에 없는 세션은 attendance로 생성
+    attData.forEach(r => {
       const key = r.세션id;
       if (!sessionMap[key]) {
+        // v1 이관 데이터: attendance만 존재
         sessionMap[key] = {
           세션id: r.세션id,
           프로그램: r.프로그램,
           장소: r.장소,
           교사: r.교사,
           날짜: r.날짜,
-          시작시각: null,  // 첫 출석 시각 기반 (KST date+time → ISO timestamp)
-          종료시각: null,  // 마지막 출석 시각 기반
-          만료시각: null,  // 옛 데이터는 알 수 없음
-          활성: false,     // 모두 마감 처리 (옛 데이터는 모두 종료된 세션)
+          시작시각: null,
+          종료시각: null,
+          만료시각: null,
+          활성: false,
           _attCount: 0,
           _firstTime: null,
           _lastTime: null,
@@ -7624,54 +7649,23 @@ async function loadHistorySessions() {
       }
       const sess = sessionMap[key];
       sess._attCount++;
-
-      // 첫/마지막 시각 갱신 (사후 출석 제외하고)
       if (!r.사후여부 && r.원래시각) {
-        if (!sess._firstTime || r.원래시각 < sess._firstTime) {
-          sess._firstTime = r.원래시각;
-        }
-        if (!sess._lastTime || r.원래시각 > sess._lastTime) {
-          sess._lastTime = r.원래시각;
-        }
+        if (!sess._firstTime || r.원래시각 < sess._firstTime) sess._firstTime = r.원래시각;
+        if (!sess._lastTime || r.원래시각 > sess._lastTime) sess._lastTime = r.원래시각;
       }
     });
 
-    // 시작/종료 시각을 ISO timestamp로 변환 (KST 기준)
+    // 2-3. 시작/종료 시각 보정 (sessions에 없으면 attendance로 추정)
     Object.values(sessionMap).forEach(sess => {
-      if (sess._firstTime) {
-        // 날짜 + 시각 → 로컬 시간으로 Date 객체 생성 → ISO
+      if (!sess.시작시각 && sess._firstTime) {
         sess.시작시각 = new Date(`${sess.날짜}T${sess._firstTime}+09:00`).toISOString();
       }
-      if (sess._lastTime) {
+      if (!sess.종료시각 && sess._lastTime) {
         sess.종료시각 = new Date(`${sess.날짜}T${sess._lastTime}+09:00`).toISOString();
       }
       delete sess._firstTime;
       delete sess._lastTime;
     });
-
-    // sessions 테이블에서 활성 세션도 추가 조회 (현재 진행 중인 세션 표시용)
-    try {
-      const { data: activeSess } = await sb.client()
-        .from('sessions')
-        .select('*')
-        .eq('활성', true);
-      (activeSess || []).forEach(s => {
-        // attendance에 아직 출석이 없는 진행 중 세션도 표시
-        if (!sessionMap[s.세션id]) {
-          sessionMap[s.세션id] = {
-            ...s,
-            _attCount: 0,
-            활성: true,
-          };
-        } else {
-          // 진행 중이라고 표시
-          sessionMap[s.세션id].활성 = true;
-          sessionMap[s.세션id].만료시각 = s.만료시각;
-        }
-      });
-    } catch (e) {
-      console.warn('활성 세션 조회 실패:', e);
-    }
 
     // 정렬: 날짜 내림차순 → 시작시각 내림차순
     A.historySessions = Object.values(sessionMap).sort((a, b) => {
