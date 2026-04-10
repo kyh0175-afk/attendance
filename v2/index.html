@@ -3580,7 +3580,7 @@ input { font-family: inherit; }
 .matrix-th-no, .matrix-th-name, .matrix-th-rate {
   position: sticky;
   z-index: 11;
-  background: rgba(0, 0, 0, 0.4) !important;
+  background: #1e1810 !important;
 }
 .matrix-th-no { left: 0; min-width: 60px; padding: 0 12px; }
 .matrix-th-name { left: 60px; min-width: 80px; padding: 0 12px; text-align: left; }
@@ -3612,12 +3612,24 @@ input { font-family: inherit; }
   font-size: 12px;
 }
 .matrix-table tbody tr:hover td { background: rgba(214, 178, 124, 0.04); }
-.matrix-table tbody tr:hover .matrix-td-fixed { background: rgba(214, 178, 124, 0.06) !important; }
+.matrix-table tbody tr:hover .matrix-td-fixed { background: #2a221a !important; }
 
 .matrix-td-fixed {
   position: sticky;
-  background: var(--paper) !important;
+  /* 진한 불투명 배경 + 옆 그림자로 매트릭스 셀과 분리 */
+  background: #251e16 !important;
   z-index: 5;
+}
+.matrix-td-no, .matrix-th-no {
+  box-shadow: none;
+}
+.matrix-td-name, .matrix-th-name {
+  /* 우측 경계 그림자 — 학번/이름 컬럼 끝 */
+  box-shadow: 4px 0 8px -2px rgba(0, 0, 0, 0.6);
+}
+.matrix-td-rate, .matrix-th-rate {
+  /* 좌측 경계 그림자 — 출석률 컬럼 시작 */
+  box-shadow: -4px 0 8px -2px rgba(0, 0, 0, 0.6);
 }
 .matrix-td-no {
   left: 0;
@@ -3673,8 +3685,13 @@ input { font-family: inherit; }
   border: 1px solid rgba(94, 184, 255, 0.35);
 }
 .matrix-cell.absent {
-  color: var(--copper);
-  border: 1px dashed rgba(184, 84, 63, 0.4);
+  background: rgba(184, 84, 63, 0.18);
+  color: var(--terra);
+  border: 1px solid rgba(184, 84, 63, 0.5);
+  font-weight: 700;
+  font-style: normal;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 12px;
 }
 .matrix-cell.no-target {
   color: rgba(255, 255, 255, 0.04);
@@ -7247,7 +7264,7 @@ async function loadAnalysis() {
   try {
     let query = sb.client()
       .from('attendance')
-      .select('학번, 이름, 프로그램, 장소, 날짜, 원래시각, 사후여부, 상태');
+      .select('세션id, 학번, 이름, 프로그램, 장소, 날짜, 원래시각, 사후여부, 상태');
 
     if (days > 0) {
       query = query.gte('날짜', daysAgoKST(days));
@@ -7515,7 +7532,7 @@ function renderAnalysis() {
           html += `<td><span class="matrix-cell ${cls}" title="${time} 출석${rec.사후여부 ? ' (사후)' : ''}">✓</span></td>`;
         } else {
           // 결석 (세션 있었고 학생 출석요일이었는데 안 옴)
-          html += `<td><span class="matrix-cell absent" title="결석">·</span></td>`;
+          html += `<td><span class="matrix-cell absent" title="결석">X</span></td>`;
         }
       });
 
