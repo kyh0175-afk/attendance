@@ -1580,7 +1580,7 @@ input { font-family: inherit; }
 /* 통계 카드 */
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   margin-bottom: 18px;
 }
@@ -1604,6 +1604,10 @@ input { font-family: inherit; }
 .stat-card.rate {
   border-color: rgba(214, 178, 124, 0.25);
 }
+.stat-card.self {
+  border-color: rgba(94, 184, 255, 0.25);
+}
+.stat-card.self .stat-num { color: var(--info); }
 
 .stat-num {
   font-family: 'Cormorant Garamond', serif;
@@ -4513,6 +4517,10 @@ input { font-family: inherit; }
               <div class="stat-num"><span id="t-stat-rate">0</span><span class="unit">%</span></div>
               <div class="stat-label">출석률</div>
             </div>
+            <div class="stat-card self">
+              <div class="stat-num"><span id="t-stat-self">0</span><span class="unit">명</span></div>
+              <div class="stat-label">자율</div>
+            </div>
           </div>
 
           <!-- 명단 헤더 -->
@@ -5855,7 +5863,9 @@ const sb = {
             filter: `세션id=eq.${sessionId}`,
           },
           (payload) => callback(payload.new))
-        .subscribe();
+        .subscribe((status, err) => {
+          console.log('[Realtime]', sessionId, status, err || '');
+        });
       this._channels.push(channel);
       return channel;
     },
@@ -5960,6 +5970,7 @@ const T = {
   rosterStudents: [],   // 분모 학생 (오늘 요일 대상자)
   attendedMap: {},      // {학번: {name, time, isSelf}}
   realtimeChannel: null,// Realtime 구독 채널
+  pollInterval: null,   // 백업 폴링 interval
   listTab: 'all',       // 'all' / 'attended' / 'absent'
 };
 
@@ -6471,12 +6482,41 @@ function subscribeRoster() {
   T.realtimeChannel = sb.realtime.subscribeAttendance(T.session.sessionId, (newRecord) => {
     handleRealtimeAttendance(newRecord);
   });
+
+  // 백업 폴링 (3초마다) — Realtime이 WebSocket 차단/지연으로 못 받는 경우 대비
+  T.pollInterval = setInterval(async () => {
+    if (!T.session) return;
+    try {
+      const records = await sb.attendance.bySession(T.session.sessionId);
+      let changed = false;
+      records.forEach(rec => {
+        if (!T.attendedMap[rec.학번]) {
+          const isInRoster = T.rosterStudents.some(s => s.학번 === rec.학번);
+          T.attendedMap[rec.학번] = {
+            name: rec.이름,
+            time: (rec.원래시각 || '').slice(0, 5),
+            isSelf: !isInRoster,
+            fresh: true,
+          };
+          changed = true;
+          setTimeout(() => {
+            if (T.attendedMap[rec.학번]) T.attendedMap[rec.학번].fresh = false;
+          }, 2500);
+        }
+      });
+      if (changed) renderRoster();
+    } catch (e) { console.warn('폴링 실패:', e); }
+  }, 3000);
 }
 
 function unsubscribeRoster() {
   if (T.realtimeChannel) {
     sb.realtime.unsubscribe(T.realtimeChannel);
     T.realtimeChannel = null;
+  }
+  if (T.pollInterval) {
+    clearInterval(T.pollInterval);
+    T.pollInterval = null;
   }
 }
 
@@ -6522,6 +6562,13 @@ function renderRoster() {
   document.getElementById('t-stat-att').textContent = attendedInRoster;
   document.getElementById('t-stat-abs').textContent = absentCount;
   document.getElementById('t-stat-rate').textContent = rate;
+
+  // 자율 출석 카운트 (분모 밖 학생)
+  const selfCount = Object.entries(T.attendedMap).filter(([no, _]) =>
+    !T.rosterStudents.some(s => s.학번 === no)
+  ).length;
+  const selfEl = document.getElementById('t-stat-self');
+  if (selfEl) selfEl.textContent = selfCount;
 
   // 학년별 분모 (오늘 요일 대상자 기준, v1 동일)
   renderGradeSummary();
