@@ -4082,7 +4082,7 @@ input { font-family: inherit; }
 .check-login-input:focus{border-color:var(--amber);background:rgba(214,178,124,.05)}
 .check-login-input::placeholder{color:var(--ink-faint);font-size:14px;letter-spacing:.05em}
 .check-login-err{color:var(--terra);font-size:12px;min-height:18px;margin-bottom:10px}
-.check-login-btn{width:100%;padding:14px;background:var(--amber);color:var(--bg);border-radius:var(--r);font-family:'DM Mono',monospace;font-size:12px;font-weight:600;letter-spacing:.15em;text-transform:uppercase}
+.check-login-btn{width:100%;padding:14px;background:var(--amber);color:var(--bg);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;font-weight:600;letter-spacing:.02em}
 .check-login-btn:hover:not(:disabled){background:var(--cream)}
 .check-login-btn:disabled{opacity:.4;cursor:not-allowed}
 .check-dash{padding:24px 16px}
@@ -4104,7 +4104,7 @@ input { font-family: inherit; }
 .dash-tabs{display:flex;gap:4px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:4px;margin-bottom:14px}
 .dash-tab{flex:1;padding:10px;background:transparent;border:none;border-radius:3px;font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;font-weight:500;color:var(--ink-dim);cursor:pointer}
 .dash-tab.on{background:rgba(214,178,124,.15);color:var(--amber);font-weight:600}
-.dash-legend{display:flex;flex-wrap:wrap;gap:10px;padding:10px 14px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;font-family:'IBM Plex Sans KR',sans-serif;font-size:11px;color:var(--ink-dim)}
+.dash-legend{display:flex;flex-wrap:wrap;gap:14px 18px;padding:12px 16px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;font-family:'IBM Plex Sans KR',sans-serif;font-size:11px;color:var(--ink-dim)}
 .dash-legend .li{display:flex;align-items:center;gap:5px}
 .dash-legend .dt{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-style:italic;font-family:'Cormorant Garamond',serif}
 .dt.O{background:rgba(123,160,135,.15);color:var(--sage);border:1px solid rgba(123,160,135,.4)}
@@ -4138,6 +4138,67 @@ input { font-family: inherit; }
 .day-badge.J{background:rgba(214,178,124,.12);color:var(--amber);border:1px solid rgba(214,178,124,.4)}
 .day-badge.Q{background:rgba(94,184,255,.12);color:var(--info);border:1px solid rgba(94,184,255,.4);font-family:'IBM Plex Sans KR';font-style:normal;font-weight:700}
 .day-badge.N{background:transparent;color:var(--ink-faint);border:1px dashed var(--border)}
+
+
+/* 월간 보기 */
+.month-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px}
+.month-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:15px;font-weight:600;color:var(--cream)}
+.month-prog-card{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:10px}
+.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
+.month-dow{text-align:center;font-family:'IBM Plex Sans KR',sans-serif;font-size:10px;color:var(--ink-faint);padding:4px 0;font-weight:500}
+.month-dow.sun{color:var(--terra)}.month-dow.sat{color:var(--info)}
+.month-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:3px;padding:2px;position:relative}
+.month-cell.empty{visibility:hidden}
+.month-cell.today{background:rgba(214,178,124,.08)}
+.month-cell.x{cursor:pointer}
+.month-cell.x:hover{background:rgba(184,84,63,.08)}
+.month-cell .mn{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink-faint);margin-bottom:2px}
+.month-cell .mb{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:11px;font-style:italic;font-weight:600}
+.mb.O{background:rgba(123,160,135,.15);color:var(--sage);border:1px solid rgba(123,160,135,.4)}
+.mb.X{background:rgba(184,84,63,.15);color:var(--terra);border:1px solid rgba(184,84,63,.5);font-family:'IBM Plex Sans KR';font-style:normal;font-weight:700}
+.mb.J{background:rgba(214,178,124,.12);color:var(--amber);border:1px solid rgba(214,178,124,.4)}
+.mb.Q{background:rgba(94,184,255,.12);color:var(--info);border:1px solid rgba(94,184,255,.4);font-family:'IBM Plex Sans KR';font-style:normal;font-weight:700}
+.mb.N{background:transparent;color:var(--ink-faint);border:1px dashed var(--border)}
+/* 출석 요일 */
+.sched-card{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:18px 22px;margin-bottom:10px}
+.sched-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;font-weight:600;color:var(--cream);margin-bottom:12px}
+.sched-days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.sched-day{padding:14px 0;text-align:center;background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;font-weight:600;color:var(--ink-faint)}
+.sched-day.on{background:rgba(123,160,135,.15);border-color:var(--sage);color:var(--sage)}
+/* 수정요청 내역 */
+.req-list-item{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;margin-bottom:8px}
+.req-li-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.req-li-date{font-family:'DM Mono',monospace;font-size:12px;color:var(--amber);font-weight:600}
+.req-li-st{font-family:'IBM Plex Sans KR',sans-serif;font-size:10px;padding:3px 10px;border-radius:100px;font-weight:600}
+.req-li-st.wait{background:rgba(245,166,35,.15);color:var(--warn);border:1px solid rgba(245,166,35,.4)}
+.req-li-st.ok{background:rgba(123,160,135,.12);color:var(--sage);border:1px solid rgba(123,160,135,.3)}
+.req-li-st.no{background:rgba(184,84,63,.1);color:var(--terra);border:1px solid rgba(184,84,63,.3)}
+.req-li-meta{font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim)}
+.req-li-reason{font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink);margin-top:6px;font-style:italic}
+.req-li-note{margin-top:8px;padding:8px 12px;background:rgba(0,0,0,.2);border-radius:3px;font-size:11px;color:var(--ink-dim)}
+/* 수정요청 모달 */
+.ck-modal-bg{position:fixed;inset:0;z-index:150;background:rgba(10,8,5,.78);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px}
+.ck-modal-bg.on{display:flex}
+.ck-modal{background:var(--paper);border:1px solid var(--border2);border-radius:var(--r);padding:32px 28px;max-width:420px;width:100%;position:relative;animation:modalIn .4s cubic-bezier(.16,1,.3,1)}
+.ck-modal::before,.ck-modal::after{content:'';position:absolute;width:16px;height:16px;border:1px solid var(--amber);opacity:.5}
+.ck-modal::before{top:10px;left:10px;border-right:none;border-bottom:none}
+.ck-modal::after{bottom:10px;right:10px;border-left:none;border-top:none}
+.ck-modal-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:18px;font-weight:600;color:var(--cream);text-align:center;margin-bottom:6px}
+.ck-modal-sub{font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);text-align:center;margin-bottom:20px;line-height:1.7}
+.ck-modal-info{background:rgba(0,0,0,.2);border-radius:var(--r);padding:12px 16px;margin-bottom:16px;font-family:'IBM Plex Sans KR',sans-serif;font-size:13px}
+.ck-modal-info .k{color:var(--ink-faint);font-size:11px;margin-right:8px}
+.ck-modal-info .v{color:var(--cream);font-weight:500}
+.ck-modal-info .row{padding:4px 0}
+.ck-modal-lbl{font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;font-weight:600;color:var(--ink-dim);margin-bottom:10px}
+.ck-reasons{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.ck-reason-btn{padding:9px 14px;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:100px;font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);cursor:pointer}
+.ck-reason-btn.on{background:rgba(214,178,124,.12);border-color:var(--amber);color:var(--amber);font-weight:600}
+.ck-textarea{width:100%;height:70px;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--cream);resize:none;outline:none;margin-bottom:14px}
+.ck-textarea:focus{border-color:var(--amber)}
+.ck-textarea::placeholder{color:var(--ink-faint)}
+.ck-modal-err{color:var(--terra);font-size:12px;min-height:16px;margin-bottom:10px;text-align:center}
+.ck-modal-acts{display:flex;gap:10px}
+.ck-modal-acts .btn{padding:12px}
 
 </style>
 </head>
@@ -4605,6 +4666,23 @@ input { font-family: inherit; }
         <div class="li"><span class="dt N">─</span>비대상</div>
       </div>
       <div id="ck-view"></div>
+    </div>
+  </div>
+</div>
+
+
+<div class="ck-modal-bg" id="ck-modal-bg">
+  <div class="ck-modal">
+    <div class="ck-modal-title">출석 수정 요청</div>
+    <div class="ck-modal-sub">아래 내용을 확인하고 사유를 선택해주세요.<br>교사 확인 후 반영됩니다.</div>
+    <div class="ck-modal-info" id="ck-mi"></div>
+    <div class="ck-modal-lbl">수정 사유 선택</div>
+    <div class="ck-reasons" id="ck-reasons"></div>
+    <textarea class="ck-textarea" id="ck-detail" placeholder="추가 설명이 있으면 적어주세요 (선택)"></textarea>
+    <div class="ck-modal-err" id="ck-merr"></div>
+    <div class="ck-modal-acts">
+      <button class="btn btn-ghost" onclick="ckCloseReq()">취소</button>
+      <button class="btn btn-primary" id="ck-submit" onclick="ckSubmitReq()" disabled>요청 보내기</button>
     </div>
   </div>
 </div>
@@ -9061,8 +9139,19 @@ function ckRenderDash(){document.getElementById('ck-login').style.display='none'
 function ckSwitch(v){CK.view=v;document.querySelectorAll('.dash-tab').forEach(b=>b.classList.toggle('on',b.dataset.v===v));ckRenderView();}
 function ckGetMonday(d){const dt=new Date(d);const day=dt.getDay();const diff=day===0?-6:1-day;dt.setDate(dt.getDate()+diff);dt.setHours(0,0,0,0);return dt;}
 function ckFmtD(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function ckRenderView(){const c=document.getElementById('ck-view');if(CK.view==='weekly')c.innerHTML=ckRenderWeekly();else c.innerHTML='<div class="prog-card" style="text-align:center;color:var(--ink-faint);padding:40px">이 탭은 다음 단계에서 만들어져요</div>';}
-function ckRenderWeekly(){const today=new Date();today.setHours(0,0,0,0);const monday=ckGetMonday(today);monday.setDate(monday.getDate()+CK.weekOffset*7);const sunday=new Date(monday);sunday.setDate(sunday.getDate()+6);const days=[];for(let i=0;i<7;i++){const d=new Date(monday);d.setDate(d.getDate()+i);days.push(d);}const range=(monday.getMonth()+1)+'/'+monday.getDate()+' ~ '+(sunday.getMonth()+1)+'/'+sunday.getDate();const title=CK.weekOffset===0?'이번 주':(CK.weekOffset===-1?'지난 주':(CK.weekOffset===1?'다음 주':(CK.weekOffset<0?Math.abs(CK.weekOffset)+'주 전':CK.weekOffset+'주 후')));let h='<div class="week-nav"><button class="week-nav-btn" onclick="ckWeek(-1)">‹</button><div class="week-nav-info"><div class="week-nav-title">'+title+'</div><div class="week-nav-range">'+range+'</div></div><button class="week-nav-btn" onclick="ckWeek(1)">›</button></div>';CK.programs.forEach(p=>{const stuDays=p.days?p.days.split(',').map(s=>s.trim()).filter(Boolean):[];let pAtt=0,pTar=0;const cells=days.map(d=>{const dStr=ckFmtD(d);const dayKr=CK_DAY[d.getDay()];const isTarget=stuDays.length===0||stuDays.includes(dayKr);const isFuture=d>today;const rec=CK.records.find(r=>r.date===dStr&&r.program===p.program&&r.location===p.location);const req=CK.requests.find(r=>r.대상날짜===dStr&&r.프로그램===p.program&&r.처리상태==='대기');let badge='N',cls='';if(!isTarget||isFuture)badge='N';else if(rec&&(rec.status==='출석'||rec.status==='사후출석')){badge='O';pAtt++;pTar++;}else if(req){badge='Q';pTar++;}else{badge='X';cls=' x';pTar++;}const isToday=ckFmtD(d)===ckFmtD(today);return '<div class="day-col'+(isToday?' today':'')+cls+'" '+(badge==='X'?'onclick="ckOpenReq(\''+dStr+'\',\''+p.program+'\',\''+p.location+'\')"':'')+'><div class="day-name">'+dayKr+'</div><div class="day-num">'+d.getDate()+'</div><span class="day-badge '+badge+'">'+(badge==='O'?'O':badge==='X'?'X':badge==='J'?'자':badge==='Q'?'?':'·')+'</span></div>';}).join('');const rate=pTar?Math.round(pAtt/pTar*100):0;const rcls=rate>=80?'':rate<50?' low':' mid';h+='<div class="prog-card"><div class="prog-head"><div class="prog-name">'+p.program+' · '+p.location+'</div><div class="prog-rate'+rcls+'">'+rate+'%</div></div><div class="week-grid">'+cells+'</div></div>';});return h;}
+function ckRenderView(){const c=document.getElementById('ck-view');if(CK.view==='weekly')c.innerHTML=ckRenderWeekly();else if(CK.view==='monthly')c.innerHTML=ckRenderMonthly();else if(CK.view==='schedule')c.innerHTML=ckRenderSchedule();else c.innerHTML=ckRenderRequests();}
+function ckRenderMonthly(){if(!CK.monthOffset)CK.monthOffset=0;const today=new Date();today.setHours(0,0,0,0);const base=new Date(today.getFullYear(),today.getMonth()+CK.monthOffset,1);const y=base.getFullYear(),m=base.getMonth();const first=new Date(y,m,1);const last=new Date(y,m+1,0);const startDow=first.getDay();const title=y+'년 '+(m+1)+'월'+(CK.monthOffset===0?' (이번 달)':'');let h='<div class="month-nav"><button class="week-nav-btn" onclick="ckMon(-1)">‹</button><div class="month-title">'+title+'</div><button class="week-nav-btn" onclick="ckMon(1)">›</button></div>';const dows=['일','월','화','수','목','금','토'];CK.programs.forEach(p=>{const stuDays=p.days?p.days.split(',').map(s=>s.trim()).filter(Boolean):[];let pAtt=0,pTar=0;let cells='';dows.forEach((d,i)=>cells+='<div class="month-dow'+(i===0?' sun':i===6?' sat':'')+'">'+d+'</div>');for(let i=0;i<startDow;i++)cells+='<div class="month-cell empty"></div>';for(let day=1;day<=last.getDate();day++){const d=new Date(y,m,day);const dStr=ckFmtD(d);const dayKr=CK_DAY[d.getDay()];const isTarget=stuDays.length===0||stuDays.includes(dayKr);const isTodayOrFuture=d>=today;const rec=CK.records.find(r=>r.date===dStr&&r.program===p.program&&r.location===p.location);const req=CK.requests.find(r=>r.대상날짜===dStr&&r.프로그램===p.program&&r.처리상태==='대기');let b='N',cls='';if(!isTarget)b='N';else if(rec&&(rec.status==='출석'||rec.status==='사후출석')){b='O';pAtt++;pTar++;}else if(req){b='Q';pTar++;}else if(isTodayOrFuture)b='N';else{b='X';cls=' x';pTar++;}const isToday=ckFmtD(d)===ckFmtD(today);cells+='<div class="month-cell'+(isToday?' today':'')+cls+'" '+(b==='X'?'onclick="ckOpenReq(\''+dStr+'\',\''+p.program+'\',\''+p.location+'\')"':'')+'><div class="mn">'+day+'</div><span class="mb '+b+'">'+(b==='O'?'O':b==='X'?'X':b==='J'?'자':b==='Q'?'?':'·')+'</span></div>';}const rate=pTar?Math.round(pAtt/pTar*100):0;const rcls=rate>=80?'':rate<50?' low':' mid';h+='<div class="month-prog-card"><div class="prog-head"><div class="prog-name">'+p.program+' · '+p.location+'</div><div class="prog-rate'+rcls+'">'+rate+'%</div></div><div class="month-grid">'+cells+'</div></div>';});return h;}
+function ckMon(d){if(!CK.monthOffset)CK.monthOffset=0;CK.monthOffset+=d;ckRenderView();}
+function ckRenderSchedule(){const dows=['월','화','수','목','금','토','일'];let h='';CK.programs.forEach(p=>{const stuDays=p.days?p.days.split(',').map(s=>s.trim()).filter(Boolean):[];h+='<div class="sched-card"><div class="sched-title">'+p.program+' · '+p.location+'</div><div class="sched-days">'+dows.map(d=>{const on=stuDays.length===0||stuDays.includes(d);return '<div class="sched-day'+(on?' on':'')+'">'+d+'</div>';}).join('')+'</div></div>';});if(!CK.programs.length)h='<div class="sched-card" style="text-align:center;color:var(--ink-faint)">등록된 프로그램이 없어요</div>';return h;}
+function ckRenderRequests(){const all=[...(CK.requests||[]).map(r=>({...r,_t:'c'})),...(CK.dayRequests||[]).map(r=>({...r,_t:'d'}))];all.sort((a,b)=>(b.요청일시||'').localeCompare(a.요청일시||''));if(!all.length)return '<div class="sched-card" style="text-align:center;color:var(--ink-faint);padding:40px">요청 내역이 없어요</div>';return all.map(r=>{const st=r.처리상태||'대기';const cls=st==='대기'?'wait':st==='승인'?'ok':'no';const type=r._t==='c'?'출석 수정':'요일 변경';const date=r._t==='c'?(r.대상날짜||'—'):((r.요청일시||'').slice(0,10));let meta='';if(r._t==='c')meta=(r.프로그램||'')+' · '+(r.장소||'');else meta=(r.프로그램||'')+' → '+(Array.isArray(r.요청요일)?r.요청요일.join(','):'');return '<div class="req-list-item"><div class="req-li-top"><div class="req-li-date">'+type+' · '+date+'</div><div class="req-li-st '+cls+'">'+st+'</div></div><div class="req-li-meta">'+meta+'</div><div class="req-li-reason">"'+(r.사유||'')+'"</div>'+(r.교사메모?'<div class="req-li-note"><strong>교사 메모:</strong> '+r.교사메모+'</div>':'')+'</div>';}).join('');}
+const CK_REASONS=['출석했으나 미기록','QR 인식 오류','지각 후 출석 처리 누락','사유 결석 (병결 등)','기타'];
+let _ckReqCtx=null,_ckReason='';
+function ckOpenReq(date,prog,loc){_ckReqCtx={date,prog,loc};_ckReason='';document.getElementById('ck-mi').innerHTML='<div class="row"><span class="k">날짜</span><span class="v">'+date+'</span></div><div class="row"><span class="k">프로그램</span><span class="v">'+prog+'</span></div><div class="row"><span class="k">장소</span><span class="v">'+loc+'</span></div>';document.getElementById('ck-reasons').innerHTML=CK_REASONS.map(r=>'<button class="ck-reason-btn" onclick="ckPickReason(this,''+r+'')">'+r+'</button>').join('');document.getElementById('ck-detail').value='';document.getElementById('ck-merr').textContent='';document.getElementById('ck-submit').disabled=true;document.getElementById('ck-modal-bg').classList.add('on');}
+function ckCloseReq(){document.getElementById('ck-modal-bg').classList.remove('on');_ckReqCtx=null;_ckReason='';}
+function ckPickReason(b,r){document.querySelectorAll('.ck-reason-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');_ckReason=r;document.getElementById('ck-submit').disabled=false;}
+async function ckSubmitReq(){if(!_ckReqCtx||!_ckReason)return;const b=document.getElementById('ck-submit');b.disabled=true;b.textContent='전송 중...';try{await sb.requests.createCorrection({no:CK.no,name:CK.name,date:_ckReqCtx.date,program:_ckReqCtx.prog,room:_ckReqCtx.loc,reason:_ckReason,detail:document.getElementById('ck-detail').value.trim()});ckCloseReq();b.textContent='요청 보내기';const{data:cr}=await sb.client().from('correction_requests').select('*').eq('학번',CK.no).order('요청일시',{ascending:false});CK.requests=cr||[];ckRenderView();alert('요청이 전송됐어요! 교사 확인 후 반영됩니다.');}catch(e){document.getElementById('ck-merr').textContent='실패: '+(e.message||'오류');b.disabled=false;b.textContent='요청 보내기';}}
+document.addEventListener('click',e=>{if(e.target.id==='ck-modal-bg')ckCloseReq();});
+function ckRenderWeekly(){const today=new Date();today.setHours(0,0,0,0);const monday=ckGetMonday(today);monday.setDate(monday.getDate()+CK.weekOffset*7);const sunday=new Date(monday);sunday.setDate(sunday.getDate()+6);const days=[];for(let i=0;i<7;i++){const d=new Date(monday);d.setDate(d.getDate()+i);days.push(d);}const range=(monday.getMonth()+1)+'/'+monday.getDate()+' ~ '+(sunday.getMonth()+1)+'/'+sunday.getDate();const title=CK.weekOffset===0?'이번 주':(CK.weekOffset===-1?'지난 주':(CK.weekOffset===1?'다음 주':(CK.weekOffset<0?Math.abs(CK.weekOffset)+'주 전':CK.weekOffset+'주 후')));let h='<div class="week-nav"><button class="week-nav-btn" onclick="ckWeek(-1)">‹</button><div class="week-nav-info"><div class="week-nav-title">'+title+'</div><div class="week-nav-range">'+range+'</div></div><button class="week-nav-btn" onclick="ckWeek(1)">›</button></div>';CK.programs.forEach(p=>{const stuDays=p.days?p.days.split(',').map(s=>s.trim()).filter(Boolean):[];let pAtt=0,pTar=0;const cells=days.map(d=>{const dStr=ckFmtD(d);const dayKr=CK_DAY[d.getDay()];const isTarget=stuDays.length===0||stuDays.includes(dayKr);const isFuture=d>today;const rec=CK.records.find(r=>r.date===dStr&&r.program===p.program&&r.location===p.location);const req=CK.requests.find(r=>r.대상날짜===dStr&&r.프로그램===p.program&&r.처리상태==='대기');let badge='N',cls='';const isTodayOrFuture=d>=today;if(!isTarget||isFuture)badge='N';else if(rec&&(rec.status==='출석'||rec.status==='사후출석')){badge='O';pAtt++;pTar++;}else if(req){badge='Q';pTar++;}else if(isTodayOrFuture){badge='N';}else{badge='X';cls=' x';pTar++;}const isToday=ckFmtD(d)===ckFmtD(today);return '<div class="day-col'+(isToday?' today':'')+cls+'" '+(badge==='X'?'onclick="ckOpenReq(\''+dStr+'\',\''+p.program+'\',\''+p.location+'\')"':'')+'><div class="day-name">'+dayKr+'</div><div class="day-num">'+d.getDate()+'</div><span class="day-badge '+badge+'">'+(badge==='O'?'O':badge==='X'?'X':badge==='J'?'자':badge==='Q'?'?':'·')+'</span></div>';}).join('');const rate=pTar?Math.round(pAtt/pTar*100):0;const rcls=rate>=80?'':rate<50?' low':' mid';h+='<div class="prog-card"><div class="prog-head"><div class="prog-name">'+p.program+' · '+p.location+'</div><div class="prog-rate'+rcls+'">'+rate+'%</div></div><div class="week-grid">'+cells+'</div></div>';});return h;}
 function ckWeek(d){CK.weekOffset+=d;ckRenderView();}
 function ckOpenReq(date,prog,loc){alert('수정요청 모달은 다음 단계에서!\n'+date+' '+prog+' '+loc);}
 
