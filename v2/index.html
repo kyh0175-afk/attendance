@@ -4069,6 +4069,76 @@ input { font-family: inherit; }
 
 .mobile-matrix-notice { display: none; }
 
+
+.check-wrap{width:100%;max-width:720px;margin:0 auto;padding:60px 20px}
+.check-login{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:48px 36px;text-align:center;position:relative;box-shadow:0 30px 60px -20px rgba(0,0,0,.5)}
+.check-login::before,.check-login::after{content:'';position:absolute;width:18px;height:18px;border:1px solid var(--amber);opacity:.4}
+.check-login::before{top:12px;left:12px;border-right:none;border-bottom:none}
+.check-login::after{bottom:12px;right:12px;border-left:none;border-top:none}
+.check-login-icon{font-family:'Cormorant Garamond',serif;font-size:56px;font-style:italic;color:var(--amber);line-height:1;margin-bottom:14px}
+.check-login-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-style:italic;color:var(--cream);margin-bottom:4px;line-height:1}
+.check-login-sub{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink-dim);margin-bottom:24px;line-height:1.7}
+.check-login-input{width:100%;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;font-family:'DM Mono',monospace;font-size:18px;color:var(--cream);text-align:center;outline:none;letter-spacing:.15em;margin-bottom:10px}
+.check-login-input:focus{border-color:var(--amber);background:rgba(214,178,124,.05)}
+.check-login-input::placeholder{color:var(--ink-faint);font-size:14px;letter-spacing:.05em}
+.check-login-err{color:var(--terra);font-size:12px;min-height:18px;margin-bottom:10px}
+.check-login-btn{width:100%;padding:14px;background:var(--amber);color:var(--bg);border-radius:var(--r);font-family:'DM Mono',monospace;font-size:12px;font-weight:600;letter-spacing:.15em;text-transform:uppercase}
+.check-login-btn:hover:not(:disabled){background:var(--cream)}
+.check-login-btn:disabled{opacity:.4;cursor:not-allowed}
+.check-dash{padding:24px 16px}
+.dash-top{display:flex;align-items:center;justify-content:space-between;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:18px 22px;margin-bottom:14px}
+.dash-stu{display:flex;align-items:center;gap:14px}
+.dash-avatar{width:48px;height:48px;border-radius:50%;background:rgba(214,178,124,.15);border:1px solid var(--amber);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Sans KR',sans-serif;font-size:18px;font-weight:700;color:var(--amber)}
+.dash-name{font-family:'IBM Plex Sans KR',sans-serif;font-size:18px;font-weight:600;color:var(--cream);line-height:1.1}
+.dash-no{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-dim);margin-top:2px}
+.dash-logout{padding:8px 14px;background:transparent;border:1px solid var(--border);border-radius:var(--r);font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-dim);letter-spacing:.1em}
+.dash-logout:hover{border-color:var(--border2);color:var(--amber)}
+.dash-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.dash-stat{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:18px 14px;text-align:center}
+.dash-stat-num{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:32px;font-weight:500;line-height:1;margin-bottom:4px}
+.dash-stat.rate .dash-stat-num{color:var(--amber)}
+.dash-stat.att .dash-stat-num{color:var(--sage)}
+.dash-stat.abs .dash-stat-num{color:var(--terra)}
+.dash-stat-num .u{font-size:14px;opacity:.7}
+.dash-stat-lbl{font-size:11px;color:var(--ink-dim)}
+.dash-tabs{display:flex;gap:4px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:4px;margin-bottom:14px}
+.dash-tab{flex:1;padding:10px;background:transparent;border:none;border-radius:3px;font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;font-weight:500;color:var(--ink-dim);cursor:pointer}
+.dash-tab.on{background:rgba(214,178,124,.15);color:var(--amber);font-weight:600}
+.dash-legend{display:flex;flex-wrap:wrap;gap:10px;padding:10px 14px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;font-family:'IBM Plex Sans KR',sans-serif;font-size:11px;color:var(--ink-dim)}
+.dash-legend .li{display:flex;align-items:center;gap:5px}
+.dash-legend .dt{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-style:italic;font-family:'Cormorant Garamond',serif}
+.dt.O{background:rgba(123,160,135,.15);color:var(--sage);border:1px solid rgba(123,160,135,.4)}
+.dt.X{background:rgba(184,84,63,.15);color:var(--terra);border:1px solid rgba(184,84,63,.4);font-family:'IBM Plex Sans KR';font-style:normal}
+.dt.J{background:rgba(214,178,124,.12);color:var(--amber);border:1px solid rgba(214,178,124,.4)}
+.dt.Q{background:rgba(94,184,255,.12);color:var(--info);border:1px solid rgba(94,184,255,.4);font-family:'IBM Plex Sans KR';font-style:normal}
+.dt.N{background:transparent;color:var(--ink-faint);border:1px dashed var(--border)}
+.week-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px}
+.week-nav-btn{width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.25);border:1px solid var(--border);color:var(--amber);font-size:16px;cursor:pointer}
+.week-nav-btn:hover{background:rgba(214,178,124,.1)}
+.week-nav-info{text-align:center}
+.week-nav-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;font-weight:600;color:var(--cream);margin-bottom:2px}
+.week-nav-range{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-dim)}
+.prog-card{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:10px}
+.prog-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.prog-name{font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;font-weight:600;color:var(--cream)}
+.prog-name::before{content:'●';color:var(--amber);margin-right:6px;font-size:10px}
+.prog-rate{font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--sage)}
+.prog-rate.low{color:var(--terra)}
+.prog-rate.mid{color:var(--warn)}
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.day-col{padding:8px 2px;text-align:center;border-radius:3px;cursor:default}
+.day-col.today{background:rgba(214,178,124,.08)}
+.day-col.x{cursor:pointer}
+.day-col.x:hover{background:rgba(184,84,63,.08)}
+.day-name{font-family:'IBM Plex Sans KR',sans-serif;font-size:10px;color:var(--ink-faint);margin-bottom:2px}
+.day-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-dim);margin-bottom:6px}
+.day-badge{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:13px;font-weight:600;font-style:italic}
+.day-badge.O{background:rgba(123,160,135,.15);color:var(--sage);border:1px solid rgba(123,160,135,.4)}
+.day-badge.X{background:rgba(184,84,63,.15);color:var(--terra);border:1px solid rgba(184,84,63,.5);font-family:'IBM Plex Sans KR';font-style:normal;font-weight:700}
+.day-badge.J{background:rgba(214,178,124,.12);color:var(--amber);border:1px solid rgba(214,178,124,.4)}
+.day-badge.Q{background:rgba(94,184,255,.12);color:var(--info);border:1px solid rgba(94,184,255,.4);font-family:'IBM Plex Sans KR';font-style:normal;font-weight:700}
+.day-badge.N{background:transparent;color:var(--ink-faint);border:1px dashed var(--border)}
+
 </style>
 </head>
 <body>
@@ -4493,6 +4563,49 @@ input { font-family: inherit; }
       </div>
     </div>
 
+  </div>
+</div>
+
+
+<div class="screen" id="screen-check" style="display:none">
+  <button class="back-btn" onclick="goHome()"><span>←</span><span>BACK</span></button>
+  <div class="check-wrap">
+    <div id="ck-login" class="check-login">
+      <div class="check-login-icon">C</div>
+      <div class="check-login-title">Check</div>
+      <div class="check-login-sub">학번을 입력하면 내 출석 현황을<br>확인하고 수정을 요청할 수 있어요.</div>
+      <input type="tel" id="ck-no" class="check-login-input" placeholder="학번 5자리" maxlength="5" inputmode="numeric" oninput="ckOnInput()" onkeydown="if(event.key==='Enter')ckLogin()">
+      <div class="check-login-err" id="ck-err"></div>
+      <button id="ck-btn" class="check-login-btn" onclick="ckLogin()" disabled>조회하기</button>
+    </div>
+    <div id="ck-dash" style="display:none">
+      <div class="dash-top">
+        <div class="dash-stu">
+          <div class="dash-avatar" id="ck-avatar">—</div>
+          <div><div class="dash-name" id="ck-name">—</div><div class="dash-no" id="ck-no2">—</div></div>
+        </div>
+        <button class="dash-logout" onclick="ckLogout()">로그아웃</button>
+      </div>
+      <div class="dash-stats">
+        <div class="dash-stat rate"><div class="dash-stat-num"><span id="ck-rate">0</span><span class="u">%</span></div><div class="dash-stat-lbl">출석률</div></div>
+        <div class="dash-stat att"><div class="dash-stat-num" id="ck-att">0</div><div class="dash-stat-lbl">출석</div></div>
+        <div class="dash-stat abs"><div class="dash-stat-num" id="ck-abs">0</div><div class="dash-stat-lbl">결석</div></div>
+      </div>
+      <div class="dash-tabs">
+        <button class="dash-tab on" data-v="weekly" onclick="ckSwitch('weekly')">주간 보기</button>
+        <button class="dash-tab" data-v="monthly" onclick="ckSwitch('monthly')">월간 보기</button>
+        <button class="dash-tab" data-v="schedule" onclick="ckSwitch('schedule')">출석 요일</button>
+        <button class="dash-tab" data-v="requests" onclick="ckSwitch('requests')">수정요청</button>
+      </div>
+      <div class="dash-legend">
+        <div class="li"><span class="dt O">O</span>출석</div>
+        <div class="li"><span class="dt X">X</span>결석(탭)</div>
+        <div class="li"><span class="dt J">자</span>자율</div>
+        <div class="li"><span class="dt Q">?</span>요청중</div>
+        <div class="li"><span class="dt N">─</span>비대상</div>
+      </div>
+      <div id="ck-view"></div>
+    </div>
   </div>
 </div>
 
@@ -5632,6 +5745,7 @@ function route() {
     return;
   }
 
+  if (params.get('mode') === 'check') { enterCheckScreen(); return; }
   if (params.get('mode') === 'admin') {
     enterAdminScreen();
     return;
@@ -5648,6 +5762,7 @@ function goHome() {
   route();
 }
 
+function goCheck(){history.pushState({},"",location.pathname+"?mode=check");route();}
 function goAttendance() {
   showScreen('screen-rooms');
 }
@@ -8934,6 +9049,22 @@ selectHistorySession=async function(sid){
     };
   }
 };
+
+
+const CK={no:'',name:'',programs:[],records:[],requests:[],dayRequests:[],weekOffset:0,view:'weekly'};
+const CK_DAY=['일','월','화','수','목','금','토'];
+async function enterCheckScreen(){showScreen('screen-check');document.getElementById('ck-login').style.display='block';document.getElementById('ck-dash').style.display='none';document.getElementById('ck-no').value='';document.getElementById('ck-err').textContent='';const sav=sessionStorage.getItem('ck_no');if(sav){document.getElementById('ck-no').value=sav;ckOnInput();ckLogin();}else setTimeout(()=>document.getElementById('ck-no').focus(),200);}
+function ckOnInput(){const v=document.getElementById('ck-no').value.trim();document.getElementById('ck-btn').disabled=!/^\d{5}$/.test(v);document.getElementById('ck-err').textContent='';}
+async function ckLogin(){const no=document.getElementById('ck-no').value.trim();if(!/^\d{5}$/.test(no))return;const btn=document.getElementById('ck-btn');btn.disabled=true;btn.textContent='조회 중...';try{const stus=await sb.students.byNo(no);if(!stus||stus.length===0){document.getElementById('ck-err').textContent='등록되지 않은 학번이에요';btn.textContent='조회하기';ckOnInput();return;}CK.no=no;CK.name=stus[0].이름;CK.programs=stus.map(s=>({program:s.프로그램,location:s.장소,days:Array.isArray(s.출석요일)?s.출석요일.join(','):''}));const att=await sb.attendance.byStudent(no);CK.records=(att||[]).map(r=>({date:r.날짜,program:r.프로그램,location:r.장소,status:r.사후여부?'사후출석':(r.상태||'출석')}));try{const{data:cr}=await sb.client().from('correction_requests').select('*').eq('학번',no).order('요청일시',{ascending:false});CK.requests=cr||[];}catch(e){CK.requests=[];}try{const{data:dr}=await sb.client().from('day_change_requests').select('*').eq('학번',no).order('요청일시',{ascending:false});CK.dayRequests=dr||[];}catch(e){CK.dayRequests=[];}sessionStorage.setItem('ck_no',no);ckRenderDash();}catch(e){console.error(e);document.getElementById('ck-err').textContent='조회 실패: '+(e.message||'오류');btn.textContent='조회하기';ckOnInput();}}
+function ckLogout(){sessionStorage.removeItem('ck_no');CK.no='';enterCheckScreen();}
+function ckRenderDash(){document.getElementById('ck-login').style.display='none';document.getElementById('ck-dash').style.display='block';document.getElementById('ck-avatar').textContent=CK.name[0]||'?';document.getElementById('ck-name').textContent=CK.name;document.getElementById('ck-no2').textContent=CK.no;let att=0,abs=0;CK.records.forEach(r=>{if(r.status==='출석'||r.status==='사후출석')att++;else if(r.status==='결석')abs++;});const tot=att+abs;document.getElementById('ck-rate').textContent=tot?Math.round(att/tot*100):0;document.getElementById('ck-att').textContent=att;document.getElementById('ck-abs').textContent=abs;ckRenderView();}
+function ckSwitch(v){CK.view=v;document.querySelectorAll('.dash-tab').forEach(b=>b.classList.toggle('on',b.dataset.v===v));ckRenderView();}
+function ckGetMonday(d){const dt=new Date(d);const day=dt.getDay();const diff=day===0?-6:1-day;dt.setDate(dt.getDate()+diff);dt.setHours(0,0,0,0);return dt;}
+function ckFmtD(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function ckRenderView(){const c=document.getElementById('ck-view');if(CK.view==='weekly')c.innerHTML=ckRenderWeekly();else c.innerHTML='<div class="prog-card" style="text-align:center;color:var(--ink-faint);padding:40px">이 탭은 다음 단계에서 만들어져요</div>';}
+function ckRenderWeekly(){const today=new Date();today.setHours(0,0,0,0);const monday=ckGetMonday(today);monday.setDate(monday.getDate()+CK.weekOffset*7);const sunday=new Date(monday);sunday.setDate(sunday.getDate()+6);const days=[];for(let i=0;i<7;i++){const d=new Date(monday);d.setDate(d.getDate()+i);days.push(d);}const range=(monday.getMonth()+1)+'/'+monday.getDate()+' ~ '+(sunday.getMonth()+1)+'/'+sunday.getDate();const title=CK.weekOffset===0?'이번 주':(CK.weekOffset===-1?'지난 주':(CK.weekOffset===1?'다음 주':(CK.weekOffset<0?Math.abs(CK.weekOffset)+'주 전':CK.weekOffset+'주 후')));let h='<div class="week-nav"><button class="week-nav-btn" onclick="ckWeek(-1)">‹</button><div class="week-nav-info"><div class="week-nav-title">'+title+'</div><div class="week-nav-range">'+range+'</div></div><button class="week-nav-btn" onclick="ckWeek(1)">›</button></div>';CK.programs.forEach(p=>{const stuDays=p.days?p.days.split(',').map(s=>s.trim()).filter(Boolean):[];let pAtt=0,pTar=0;const cells=days.map(d=>{const dStr=ckFmtD(d);const dayKr=CK_DAY[d.getDay()];const isTarget=stuDays.length===0||stuDays.includes(dayKr);const isFuture=d>today;const rec=CK.records.find(r=>r.date===dStr&&r.program===p.program&&r.location===p.location);const req=CK.requests.find(r=>r.대상날짜===dStr&&r.프로그램===p.program&&r.처리상태==='대기');let badge='N',cls='';if(!isTarget||isFuture)badge='N';else if(rec&&(rec.status==='출석'||rec.status==='사후출석')){badge='O';pAtt++;pTar++;}else if(req){badge='Q';pTar++;}else{badge='X';cls=' x';pTar++;}const isToday=ckFmtD(d)===ckFmtD(today);return '<div class="day-col'+(isToday?' today':'')+cls+'" '+(badge==='X'?'onclick="ckOpenReq(\''+dStr+'\',\''+p.program+'\',\''+p.location+'\')"':'')+'><div class="day-name">'+dayKr+'</div><div class="day-num">'+d.getDate()+'</div><span class="day-badge '+badge+'">'+(badge==='O'?'O':badge==='X'?'X':badge==='J'?'자':badge==='Q'?'?':'·')+'</span></div>';}).join('');const rate=pTar?Math.round(pAtt/pTar*100):0;const rcls=rate>=80?'':rate<50?' low':' mid';h+='<div class="prog-card"><div class="prog-head"><div class="prog-name">'+p.program+' · '+p.location+'</div><div class="prog-rate'+rcls+'">'+rate+'%</div></div><div class="week-grid">'+cells+'</div></div>';});return h;}
+function ckWeek(d){CK.weekOffset+=d;ckRenderView();}
+function ckOpenReq(date,prog,loc){alert('수정요청 모달은 다음 단계에서!\n'+date+' '+prog+' '+loc);}
 
 // ══════════════════════════════════════════════════════════════
 //  부팅
