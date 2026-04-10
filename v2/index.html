@@ -6413,7 +6413,7 @@ document.addEventListener('gesturechange', (e) => {
 let _lastTouchEnd = 0;
 document.addEventListener('touchend', (e) => {
   const now = Date.now();
-  if (now - _lastTouchEnd <= 350) {
+  if (now - _lastTouchEnd <= 80) {
     // 학생 화면 안의 .np-key는 무조건 더블탭 차단
     if (e.target.closest && e.target.closest('.np-key')) {
       e.preventDefault();
@@ -6776,11 +6776,17 @@ function initManualNumpad() {
   if (_manualNpInitialized) return;
   _manualNpInitialized = true;
 
+  let _mLastPtrTs = 0;
   document.querySelectorAll('#manual-numpad-bg .np-key').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const key = btn.dataset.mkey;
-      handleManualNumpadKey(key);
-    });
+    const fire = (e) => {
+      const now = Date.now();
+      if (e.type === 'click' && now - _mLastPtrTs < 500) return;
+      if (e.type === 'pointerdown') _mLastPtrTs = now;
+      e.preventDefault();
+      handleManualNumpadKey(btn.dataset.mkey);
+    };
+    btn.addEventListener('pointerdown', fire);
+    btn.addEventListener('click', fire);
   });
 
   // 배경 클릭 시 닫기
@@ -8631,11 +8637,19 @@ function initNumpad() {
   if (_numpadInitialized) return;
   _numpadInitialized = true;
 
-  document.querySelectorAll('.np-key').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const key = btn.dataset.key;
-      handleNumpadKey(key);
-    });
+  // pointerdown 우선 + click 폴백 (중복 실행 방지)
+  let _lastPtrTs = 0;
+  document.querySelectorAll('#screen-student .np-key').forEach(btn => {
+    const fire = (e) => {
+      const now = Date.now();
+      // pointerdown 후 click이 중복 발화하는 경우 차단 (같은 버튼 50ms 이내)
+      if (e.type === 'click' && now - _lastPtrTs < 500) return;
+      if (e.type === 'pointerdown') _lastPtrTs = now;
+      e.preventDefault();
+      handleNumpadKey(btn.dataset.key);
+    };
+    btn.addEventListener('pointerdown', fire);
+    btn.addEventListener('click', fire);  // 폴백 (pointer 미지원 시)
   });
 
   // 키보드 입력도 받기 (PC 테스트용)
