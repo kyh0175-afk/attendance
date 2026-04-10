@@ -4535,7 +4535,6 @@ input { font-family: inherit; }
         </div>
 
         <div class="session-actions">
-          <button class="btn-refresh" onclick="refreshTeacherQR()">🔄 QR 갱신</button>
           <button class="btn-end" onclick="openEndModal()">출석 마감</button>
         </div>
       </div>
@@ -4990,6 +4989,7 @@ input { font-family: inherit; }
 
       <!-- 탭 2: 출석 기록 (Phase 3B) -->
       <div class="admin-tab-pane" id="admin-tab-history">
+        <div id="hist-warn-banner" style="display:none;margin-bottom:16px;padding:14px 18px;background:rgba(184,84,63,.12);border:1px solid rgba(184,84,63,.4);border-radius:4px;color:var(--copper);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px"></div>
         <div class="admin-page-header">
           <div class="admin-page-title">출석 기록</div>
           <div class="admin-page-actions">
@@ -5599,8 +5599,17 @@ const sb = {
   attendance: {
     async add(record) {
       // 정상 출석 (학생이 QR 스캔)
+      const sessionId = record.세션id || record.sessionId;
+      // ⭐ 세션 활성 검증 — 만료/비활성 세션엔 출석 차단 (좀비 QR 방지)
+      try {
+        const { data: sess } = await sb.client()
+          .from('sessions').select('활성').eq('세션id', sessionId).maybeSingle();
+        if (!sess) return { ok: false, msg: '세션을 찾을 수 없어요. 새 QR을 받아주세요.' };
+        if (!sess.활성) return { ok: false, msg: '이 세션은 이미 마감됐어요. 선생님께 새 QR을 요청해주세요.' };
+      } catch (e) { console.warn('[attendance.add] 세션 검증 실패 (계속 진행):', e); }
+
       const row = {
-        세션id: record.세션id || record.sessionId,
+        세션id: sessionId,
         학번: String(record.학번 || record.no),
         이름: record.이름 || record.name,
         날짜: record.날짜 || todayKST(),
@@ -5711,6 +5720,7 @@ const sb = {
   sessions: {
     async create(session) {
       const room = session.장소 || session.cls || session.room;
+      console.log('[SESSION CREATE] 호출 →', room, session.프로그램 || session.program, new Error().stack);
       // ⭐ 같은 장소의 기존 활성 세션을 모두 비활성화 (좀비 방지)
       try {
         await sb.client()
@@ -6489,43 +6499,7 @@ function buildTeacherQR() {
 }
 
 // QR 갱신 (수동) - 새 세션ID로 새 QR 생성
-async function refreshTeacherQR() {
-  if (!T.session) return;
-
-  // 기존 구독 정리
-  unsubscribeRoster();
-
-  // 기존 세션 종료
-  try {
-    await sb.sessions.end(T.session.sessionId);
-  } catch (e) {
-    console.warn('이전 세션 종료 실패:', e);
-  }
-
-  // 새 세션 시작 (같은 프로그램/장소/교사로)
-  const expireMs = Date.now() + (T.duration * 60 * 1000);
-  const expireAt = new Date(expireMs).toISOString();
-  const sessionId = String(Date.now());
-
-  try {
-    await sb.sessions.create({
-      sessionId,
-      program: T.session.program,
-      room: T.session.room,
-      teacher: T.session.teacher,
-      expireAt,
-    });
-
-    T.session.sessionId = sessionId;
-    T.session.expireMs = expireMs;
-
-    buildTeacherQR();
-    startTeacherTimer();
-    await loadRosterAndSubscribe();
-  } catch (e) {
-    alert('QR 갱신 실패: ' + (e.message || '오류'));
-  }
-}
+async function refreshTeacherQR() { /* removed: QR 갱신 기능 제거됨 */ }
 
 // 카운트다운 타이머
 function startTeacherTimer() {
@@ -6562,6 +6536,7 @@ function stopTeacherTimer() {
 // 자동 종료 (시간 만료)
 async function autoEndTeacherSession() {
   if (!T.session) return;
+  console.log('[SESSION END] autoEndTeacherSession 호출 →', T.session.sessionId, '만료시각:', new Date(T.session.expireMs).toISOString(), '현재시각:', new Date().toISOString());
 
   // 1. 세션 종료 (DB)
   try {
@@ -6607,6 +6582,7 @@ function closeEndModal() {
 async function confirmEndSession() {
   closeEndModal();
   if (!T.session) return;
+  console.log('[SESSION END] confirmEndSession 호출 (사용자가 마감 버튼 클릭) →', T.session.sessionId, new Error().stack);
 
   try {
     await sb.sessions.end(T.session.sessionId);
@@ -9020,8 +8996,24 @@ async function doStudentAttend() {
         if (titleEl) { titleEl.textContent = '이미 출석했어요'; successEl.classList.add('already'); }
       }
     } else {
-      // 2회 실패: sendBeacon 백업이 남아있음 (페이지 unload 때 발사). 학생 화면은 이미 성공 상태.
-      console.warn('출석 전송 2회 실패, sendBeacon 백업에 의존:', result.msg);
+      // ⭐ 세션 만료/마감 거부 → 즉시 학생에게 알림 (낙관적 UI 되돌리기)
+      const msg = result.msg || '';
+      if (/마감|찾을 수 없|만료/.test(msg)) {
+        unregisterAttendBeacon(); // 더 이상 재시도 안 함
+        const successEl = document.getElementById('st-success');
+        if (successEl) {
+          successEl.classList.add('already');
+          successEl.style.background = 'rgba(184,84,63,.08)';
+          const titleEl = successEl.querySelector('.success-title');
+          const subEl = successEl.querySelector('.success-sub');
+          if (titleEl) { titleEl.textContent = '출석 실패'; titleEl.style.color = 'var(--terra)'; }
+          if (subEl) subEl.textContent = msg;
+        }
+        console.warn('[출석 거부]', msg);
+      } else {
+        // 일반 네트워크 오류: sendBeacon 백업이 남아있음. 학생 화면은 성공 상태 유지.
+        console.warn('출석 전송 2회 실패, sendBeacon 백업에 의존:', msg);
+      }
     }
   })();
   return;
