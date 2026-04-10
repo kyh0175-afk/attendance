@@ -2361,6 +2361,570 @@ input { font-family: inherit; }
 .reg-actions { display: flex; gap: 10px; }
 .reg-actions .btn { padding: 14px 20px; font-size: 12px; }
 
+/* ══════════════════════════════════════════ */
+/*  관리자 페이지 (Phase 3)                       */
+/* ══════════════════════════════════════════ */
+
+/* 관리자 화면 컨테이너 */
+#screen-admin {
+  padding: 0;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  width: 100%;
+  min-height: 100vh;
+  animation: screenIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (max-width: 920px) {
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 좌측 사이드바 */
+.admin-sidebar {
+  background: var(--paper);
+  border-right: 1px solid var(--border);
+  padding: 28px 0;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 920px) {
+  .admin-sidebar {
+    position: relative;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 18px 0;
+  }
+}
+
+.admin-brand {
+  padding: 0 26px 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 18px;
+}
+.admin-brand-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 30px;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--cream);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.admin-brand-sub {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--amber);
+  letter-spacing: 0.05em;
+}
+
+.admin-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 12px;
+}
+
+.admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r);
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-dim);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+.admin-nav-item:hover {
+  background: rgba(214, 178, 124, 0.06);
+  color: var(--ink);
+}
+.admin-nav-item.on {
+  background: rgba(214, 178, 124, 0.12);
+  border-color: rgba(214, 178, 124, 0.3);
+  color: var(--amber);
+}
+.admin-nav-icon {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  font-style: italic;
+  width: 22px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.admin-sidebar-footer {
+  padding: 18px 16px 0;
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+}
+.admin-back-btn {
+  width: 100%;
+  padding: 11px 14px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.admin-back-btn:hover {
+  border-color: var(--border2);
+  color: var(--amber);
+}
+
+/* 우측 메인 영역 */
+.admin-main {
+  padding: 32px 36px;
+  overflow-x: hidden;
+}
+
+@media (max-width: 920px) {
+  .admin-main { padding: 24px 20px; }
+}
+
+.admin-tab-pane {
+  display: none;
+  animation: tabIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.admin-tab-pane.on { display: block; }
+@keyframes tabIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 탭 페이지 헤더 */
+.admin-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.admin-page-title {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--cream);
+  letter-spacing: -0.01em;
+}
+.admin-page-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.admin-btn {
+  padding: 10px 16px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.25s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.admin-btn:hover {
+  border-color: var(--border2);
+  color: var(--cream);
+  background: var(--paper2);
+}
+.admin-btn.primary {
+  background: rgba(214, 178, 124, 0.12);
+  border-color: var(--amber);
+  color: var(--amber);
+}
+.admin-btn.primary:hover {
+  background: rgba(214, 178, 124, 0.2);
+}
+.admin-btn.danger {
+  background: rgba(184, 84, 63, 0.1);
+  border-color: rgba(184, 84, 63, 0.4);
+  color: var(--terra);
+}
+.admin-btn.danger:hover {
+  background: rgba(184, 84, 63, 0.2);
+}
+.admin-btn.success {
+  background: rgba(123, 160, 135, 0.1);
+  border-color: rgba(123, 160, 135, 0.4);
+  color: var(--sage);
+}
+.admin-btn.success:hover {
+  background: rgba(123, 160, 135, 0.2);
+}
+.admin-btn-sm {
+  padding: 6px 11px;
+  font-size: 11px;
+}
+
+/* 필터 행 */
+.admin-filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.admin-filter-select {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 9px 14px;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  color: var(--cream);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%23a89880' d='M5 6L0 0h10z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+  min-width: 160px;
+}
+.admin-filter-select:focus {
+  border-color: var(--amber);
+}
+
+.admin-search {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 9px 14px;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  color: var(--cream);
+  outline: none;
+  flex: 1;
+  min-width: 200px;
+  max-width: 320px;
+}
+.admin-search::placeholder { color: var(--ink-faint); }
+.admin-search:focus {
+  border-color: var(--amber);
+  background: rgba(214, 178, 124, 0.04);
+}
+
+.admin-result-count {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 12px;
+  color: var(--ink-dim);
+  margin-left: auto;
+}
+
+/* 학생 테이블 */
+.student-table-wrap {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.student-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+}
+.student-table thead {
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--border2);
+}
+.student-table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--amber);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.student-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(214, 178, 124, 0.05);
+  font-size: 14px;
+  color: var(--ink);
+  vertical-align: middle;
+}
+.student-table tr:last-child td { border-bottom: none; }
+.student-table tr:hover td { background: rgba(214, 178, 124, 0.03); }
+.student-table tr.inactive td { opacity: 0.4; }
+
+.st-cell-no {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--ink-dim);
+}
+.st-cell-name {
+  font-weight: 500;
+  color: var(--cream);
+}
+.st-cell-program {
+  font-size: 12px;
+  color: var(--ink-dim);
+}
+.st-cell-room {
+  font-size: 13px;
+}
+.st-cell-days {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--amber);
+  letter-spacing: 0.05em;
+}
+.st-cell-days.empty {
+  color: var(--ink-faint);
+  font-style: italic;
+}
+.st-cell-status {
+  font-size: 11px;
+  font-weight: 500;
+}
+.st-cell-status.active { color: var(--sage); }
+.st-cell-status.inactive { color: var(--ink-faint); }
+.st-cell-actions {
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.student-table-empty {
+  padding: 60px 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+/* 페이지네이션 */
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 18px;
+}
+.admin-page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.admin-page-btn:hover:not(:disabled) {
+  border-color: var(--border2);
+  color: var(--amber);
+}
+.admin-page-btn.on {
+  background: rgba(214, 178, 124, 0.15);
+  border-color: var(--amber);
+  color: var(--amber);
+  font-weight: 600;
+}
+.admin-page-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* 학생 추가/수정 모달 */
+.student-modal {
+  max-width: 480px;
+  padding: 36px 32px;
+}
+.student-modal-title {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--cream);
+  text-align: center;
+  margin-bottom: 6px;
+}
+.student-modal-subtitle {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-dim);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+.form-group.full { grid-column: 1 / -1; }
+.form-group label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 6px;
+}
+.form-group input,
+.form-group select {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 11px 14px;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 14px;
+  color: var(--cream);
+  outline: none;
+  transition: all 0.2s;
+}
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--amber);
+  background: rgba(214, 178, 124, 0.05);
+}
+.form-group select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%23a89880' d='M5 6L0 0h10z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+/* 요일 토글 */
+.days-toggle {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.day-toggle-btn {
+  padding: 10px 0;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.day-toggle-btn:hover {
+  border-color: var(--border2);
+  color: var(--ink);
+}
+.day-toggle-btn.on {
+  background: rgba(214, 178, 124, 0.15);
+  border-color: var(--amber);
+  color: var(--amber);
+  font-weight: 600;
+}
+.day-toggle-btn.on.weekend {
+  background: rgba(184, 84, 63, 0.12);
+  border-color: var(--copper);
+  color: var(--copper);
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+/* 토스트 알림 (간단) */
+.admin-toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 14px 22px;
+  background: var(--paper2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  color: var(--cream);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.6);
+  z-index: 200;
+  display: none;
+  animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.admin-toast.on { display: block; }
+.admin-toast.ok { border-color: rgba(123, 160, 135, 0.5); color: var(--sage); }
+.admin-toast.err { border-color: rgba(184, 84, 63, 0.5); color: var(--terra); }
+@keyframes toastIn {
+  from { opacity: 0; transform: translate(-50%, 16px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* 확인 다이얼로그 */
+.confirm-modal {
+  max-width: 380px;
+  padding: 36px 32px 28px;
+}
+.confirm-modal .modal-icon {
+  font-size: 48px;
+  color: var(--terra);
+}
+.confirm-modal .modal-title {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  font-style: normal;
+  color: var(--cream);
+  margin-bottom: 8px;
+}
+.confirm-modal-desc {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--ink-dim);
+  text-align: center;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
 /* ══ 진단 페이지 (?diag) ══ */
 .diag-wrap {
   max-width: 720px;
@@ -2869,6 +3433,220 @@ input { font-family: inherit; }
     <div class="construction-meta" id="construction-meta">PHASE 2C — UPCOMING</div>
   </div>
 </div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  관리자 페이지 (Phase 3)                       -->
+<!-- ══════════════════════════════════════════ -->
+<div class="screen" id="screen-admin" style="display:none">
+  <div class="admin-layout">
+
+    <!-- 좌측 사이드바 -->
+    <aside class="admin-sidebar">
+      <div class="admin-brand">
+        <div class="admin-brand-title">Cosmos</div>
+        <div class="admin-brand-sub">관리자 페이지</div>
+      </div>
+
+      <nav class="admin-nav">
+        <button class="admin-nav-item on" data-tab="students" onclick="switchAdminTab('students')">
+          <span class="admin-nav-icon">S</span>
+          <span>명단 관리</span>
+        </button>
+        <button class="admin-nav-item" data-tab="history" onclick="switchAdminTab('history')">
+          <span class="admin-nav-icon">H</span>
+          <span>출석 기록</span>
+        </button>
+        <button class="admin-nav-item" data-tab="analysis" onclick="switchAdminTab('analysis')">
+          <span class="admin-nav-icon">A</span>
+          <span>분석</span>
+        </button>
+        <button class="admin-nav-item" data-tab="requests" onclick="switchAdminTab('requests')">
+          <span class="admin-nav-icon">R</span>
+          <span>요청 관리</span>
+        </button>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        <button class="admin-back-btn" onclick="goHome()">← 메인으로</button>
+      </div>
+    </aside>
+
+    <!-- 우측 메인 -->
+    <main class="admin-main">
+
+      <!-- 탭 1: 명단 관리 -->
+      <div class="admin-tab-pane on" id="admin-tab-students">
+        <div class="admin-page-header">
+          <div class="admin-page-title">명단 관리</div>
+          <div class="admin-page-actions">
+            <label class="admin-btn" style="cursor:pointer">
+              📂 엑셀 업로드
+              <input type="file" id="excel-upload-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleExcelUpload(event)">
+            </label>
+            <button class="admin-btn" onclick="downloadStudentTemplate()">📥 양식 다운로드</button>
+            <button class="admin-btn primary" onclick="openStudentModal()">+ 학생 추가</button>
+          </div>
+        </div>
+
+        <div class="admin-filters">
+          <input type="text" class="admin-search" id="students-search" placeholder="학번 또는 이름으로 검색..." oninput="renderStudentsTable()">
+          <select class="admin-filter-select" id="students-filter-prog" onchange="renderStudentsTable()">
+            <option value="">전체 프로그램</option>
+            <option>심야 독서시간</option>
+            <option>야간 독서시간</option>
+            <option>방과후 독서시간</option>
+            <option>토요일 독서시간</option>
+            <option>일요일 독서시간</option>
+          </select>
+          <select class="admin-filter-select" id="students-filter-room" onchange="renderStudentsTable()">
+            <option value="">전체 장소</option>
+            <option>아우름</option>
+            <option>교과1실</option>
+            <option>해오름</option>
+            <option>리케이온</option>
+          </select>
+          <select class="admin-filter-select" id="students-filter-grade" onchange="renderStudentsTable()">
+            <option value="">전체 학년</option>
+            <option value="1">1학년</option>
+            <option value="2">2학년</option>
+            <option value="3">3학년</option>
+          </select>
+          <select class="admin-filter-select" id="students-filter-active" onchange="renderStudentsTable()">
+            <option value="active">활성만</option>
+            <option value="all">전체 (비활성 포함)</option>
+            <option value="inactive">비활성만</option>
+          </select>
+          <span class="admin-result-count" id="students-count">—</span>
+        </div>
+
+        <div class="student-table-wrap">
+          <table class="student-table">
+            <thead>
+              <tr>
+                <th>학번</th>
+                <th>이름</th>
+                <th>프로그램</th>
+                <th>장소</th>
+                <th>출석 요일</th>
+                <th>상태</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="students-tbody">
+              <tr><td colspan="7" class="student-table-empty">불러오는 중...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="admin-pagination" id="students-pagination"></div>
+      </div>
+
+      <!-- 탭 2: 출석 기록 (Phase 3B) -->
+      <div class="admin-tab-pane" id="admin-tab-history">
+        <div class="admin-page-header">
+          <div class="admin-page-title">출석 기록</div>
+        </div>
+        <div class="student-table-wrap">
+          <div class="student-table-empty">출석 기록 탭은 Phase 3B에서 만들어집니다.</div>
+        </div>
+      </div>
+
+      <!-- 탭 3: 분석 (Phase 3C) -->
+      <div class="admin-tab-pane" id="admin-tab-analysis">
+        <div class="admin-page-header">
+          <div class="admin-page-title">분석</div>
+        </div>
+        <div class="student-table-wrap">
+          <div class="student-table-empty">분석 탭은 Phase 3C에서 만들어집니다.</div>
+        </div>
+      </div>
+
+      <!-- 탭 4: 요청 관리 (Phase 3D) -->
+      <div class="admin-tab-pane" id="admin-tab-requests">
+        <div class="admin-page-header">
+          <div class="admin-page-title">요청 관리</div>
+        </div>
+        <div class="student-table-wrap">
+          <div class="student-table-empty">요청 관리 탭은 Phase 3D에서 만들어집니다.</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- 학생 추가/수정 모달 -->
+<div class="modal-bg" id="modal-student">
+  <div class="modal student-modal">
+    <div class="student-modal-title" id="student-modal-title">학생 추가</div>
+    <div class="student-modal-subtitle" id="student-modal-subtitle">새 학생 정보를 입력해주세요</div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>학번</label>
+        <input type="text" id="sm-no" placeholder="10101" maxlength="5" inputmode="numeric">
+      </div>
+      <div class="form-group">
+        <label>이름</label>
+        <input type="text" id="sm-name" placeholder="홍길동">
+      </div>
+      <div class="form-group">
+        <label>프로그램</label>
+        <select id="sm-program">
+          <option>심야 독서시간</option>
+          <option>야간 독서시간</option>
+          <option>방과후 독서시간</option>
+          <option>토요일 독서시간</option>
+          <option>일요일 독서시간</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>장소</label>
+        <select id="sm-room">
+          <option>아우름</option>
+          <option>교과1실</option>
+          <option>해오름</option>
+          <option>리케이온</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>출석 요일</label>
+        <div class="days-toggle" id="sm-days">
+          <button type="button" class="day-toggle-btn" data-day="월">월</button>
+          <button type="button" class="day-toggle-btn" data-day="화">화</button>
+          <button type="button" class="day-toggle-btn" data-day="수">수</button>
+          <button type="button" class="day-toggle-btn" data-day="목">목</button>
+          <button type="button" class="day-toggle-btn" data-day="금">금</button>
+          <button type="button" class="day-toggle-btn weekend" data-day="토">토</button>
+          <button type="button" class="day-toggle-btn weekend" data-day="일">일</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-err" id="sm-err"></div>
+
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeStudentModal()">취소</button>
+      <button class="btn btn-primary" id="sm-save-btn" onclick="saveStudent()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 확인 다이얼로그 (삭제/비활성화) -->
+<div class="modal-bg" id="modal-confirm">
+  <div class="modal confirm-modal">
+    <div class="modal-icon">!</div>
+    <div class="modal-title" id="confirm-title">확인</div>
+    <div class="confirm-modal-desc" id="confirm-desc">—</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeConfirmModal()">취소</button>
+      <button class="btn btn-primary" id="confirm-ok-btn" onclick="executeConfirm()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 토스트 알림 -->
+<div class="admin-toast" id="admin-toast"></div>
 
 <!-- ══════════════════════════════════════════ -->
 <!--  진단 페이지 (?diag)                          -->
@@ -3598,13 +4376,7 @@ function route() {
   }
 
   if (params.get('mode') === 'admin') {
-    document.getElementById('construction-ko').textContent =
-      '관리자 페이지 준비중';
-    document.getElementById('construction-desc').innerHTML =
-      '명단 · 기록 · 분석 · 요청 관리 기능은<br>Phase 3에서 만들어집니다.';
-    document.getElementById('construction-meta').textContent =
-      'PHASE 3 — ADMIN PANEL';
-    showScreen('screen-construction');
+    enterAdminScreen();
     return;
   }
 
@@ -4511,6 +5283,574 @@ async function doManualAttendFromNumpad() {
   await manualAttend(studentInfo.학번, studentInfo.이름);
 }
 
+// ══════════════════════════════════════════════════════════════
+//  관리자 페이지 (Phase 3)
+// ══════════════════════════════════════════════════════════════
+
+// 관리자 상태
+const A = {
+  currentTab: 'students',
+  // 명단 관리
+  students: [],          // 전체 학생 (활성 + 비활성)
+  studentsLoaded: false,
+  studentsPage: 1,
+  studentsPerPage: 30,
+  editingStudent: null,  // 수정 중인 학생 (null = 신규)
+  // 확인 다이얼로그
+  pendingConfirm: null,  // {action: 'deactivate' | 'delete' | 'reactivate', no, program}
+};
+
+// 관리자 화면 진입
+async function enterAdminScreen() {
+  showScreen('screen-admin');
+
+  // 첫 진입 시 학생 명단 로딩
+  if (!A.studentsLoaded) {
+    await loadAllStudents();
+  }
+
+  switchAdminTab(A.currentTab);
+}
+
+// 탭 전환
+function switchAdminTab(tab) {
+  A.currentTab = tab;
+  document.querySelectorAll('.admin-nav-item').forEach(btn => {
+    btn.classList.toggle('on', btn.dataset.tab === tab);
+  });
+  document.querySelectorAll('.admin-tab-pane').forEach(pane => {
+    pane.classList.toggle('on', pane.id === 'admin-tab-' + tab);
+  });
+
+  // 탭별 초기 로딩
+  if (tab === 'students') {
+    renderStudentsTable();
+  }
+}
+
+// 토스트
+function showAdminToast(msg, type) {
+  const el = document.getElementById('admin-toast');
+  el.textContent = msg;
+  el.className = 'admin-toast on ' + (type || '');
+  setTimeout(() => el.classList.remove('on'), 2500);
+}
+
+// ════════════════════════════════════════
+//  명단 관리 — 데이터 로딩
+// ════════════════════════════════════════
+
+async function loadAllStudents() {
+  try {
+    // 활성/비활성 모두 가져오기
+    A.students = await sb.students.list({ includeInactive: true });
+    A.studentsLoaded = true;
+  } catch (e) {
+    console.error('명단 로딩 실패:', e);
+    showAdminToast('명단을 불러오지 못했어요: ' + (e.message || '오류'), 'err');
+  }
+}
+
+// ════════════════════════════════════════
+//  명단 관리 — 테이블 렌더링
+// ════════════════════════════════════════
+
+function renderStudentsTable() {
+  const tbody = document.getElementById('students-tbody');
+  if (!tbody) return;
+
+  // 필터 적용
+  const search = document.getElementById('students-search').value.trim().toLowerCase();
+  const filterProg = document.getElementById('students-filter-prog').value;
+  const filterRoom = document.getElementById('students-filter-room').value;
+  const filterGrade = document.getElementById('students-filter-grade').value;
+  const filterActive = document.getElementById('students-filter-active').value;
+
+  let filtered = A.students.filter(s => {
+    if (filterProg && s.프로그램 !== filterProg) return false;
+    if (filterRoom && s.장소 !== filterRoom) return false;
+    if (filterGrade && String(s.학번)[0] !== filterGrade) return false;
+    if (filterActive === 'active' && !s.활성) return false;
+    if (filterActive === 'inactive' && s.활성) return false;
+    if (search) {
+      const matchNo = String(s.학번).includes(search);
+      const matchName = (s.이름 || '').toLowerCase().includes(search);
+      if (!matchNo && !matchName) return false;
+    }
+    return true;
+  });
+
+  // 정렬: 학번 → 프로그램
+  filtered.sort((a, b) => {
+    const noCmp = String(a.학번).localeCompare(String(b.학번), undefined, { numeric: true });
+    if (noCmp !== 0) return noCmp;
+    return (a.프로그램 || '').localeCompare(b.프로그램 || '');
+  });
+
+  // 카운트 표시
+  document.getElementById('students-count').textContent = `${filtered.length}명`;
+
+  // 페이지네이션
+  const totalPages = Math.max(1, Math.ceil(filtered.length / A.studentsPerPage));
+  if (A.studentsPage > totalPages) A.studentsPage = totalPages;
+  const start = (A.studentsPage - 1) * A.studentsPerPage;
+  const pageItems = filtered.slice(start, start + A.studentsPerPage);
+
+  if (pageItems.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="student-table-empty">조건에 맞는 학생이 없어요</td></tr>';
+    document.getElementById('students-pagination').innerHTML = '';
+    return;
+  }
+
+  tbody.innerHTML = pageItems.map(s => {
+    const days = Array.isArray(s.출석요일) && s.출석요일.length > 0
+      ? s.출석요일.join(' · ')
+      : '<span class="empty">미설정</span>';
+    const inactive = !s.활성;
+    return `
+      <tr class="${inactive ? 'inactive' : ''}">
+        <td class="st-cell-no">${s.학번}</td>
+        <td class="st-cell-name">${escapeHtml(s.이름 || '')}</td>
+        <td class="st-cell-program">${escapeHtml(s.프로그램 || '')}</td>
+        <td class="st-cell-room">${escapeHtml(s.장소 || '')}</td>
+        <td class="st-cell-days">${days}</td>
+        <td class="st-cell-status ${inactive ? 'inactive' : 'active'}">${inactive ? '비활성' : '활성'}</td>
+        <td class="st-cell-actions">
+          <button class="admin-btn admin-btn-sm" onclick="editStudent('${s.학번}', '${escapeAttr(s.프로그램)}')">수정</button>
+          ${inactive
+            ? `<button class="admin-btn admin-btn-sm success" onclick="reactivateStudent('${s.학번}', '${escapeAttr(s.프로그램)}')">활성화</button>
+               <button class="admin-btn admin-btn-sm danger" onclick="confirmDeleteStudent('${s.학번}', '${escapeAttr(s.프로그램)}')">완전삭제</button>`
+            : `<button class="admin-btn admin-btn-sm danger" onclick="confirmDeactivateStudent('${s.학번}', '${escapeAttr(s.프로그램)}')">비활성화</button>`
+          }
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  // 페이지네이션 렌더
+  renderStudentsPagination(totalPages);
+}
+
+function renderStudentsPagination(totalPages) {
+  const el = document.getElementById('students-pagination');
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+
+  let html = '';
+  html += `<button class="admin-page-btn" ${A.studentsPage === 1 ? 'disabled' : ''} onclick="goStudentsPage(${A.studentsPage - 1})">‹</button>`;
+
+  // 페이지 번호 (최대 7개)
+  let startP = Math.max(1, A.studentsPage - 3);
+  let endP = Math.min(totalPages, startP + 6);
+  if (endP - startP < 6) startP = Math.max(1, endP - 6);
+
+  if (startP > 1) {
+    html += `<button class="admin-page-btn" onclick="goStudentsPage(1)">1</button>`;
+    if (startP > 2) html += `<span style="color:var(--ink-faint);font-size:12px">…</span>`;
+  }
+
+  for (let p = startP; p <= endP; p++) {
+    html += `<button class="admin-page-btn ${p === A.studentsPage ? 'on' : ''}" onclick="goStudentsPage(${p})">${p}</button>`;
+  }
+
+  if (endP < totalPages) {
+    if (endP < totalPages - 1) html += `<span style="color:var(--ink-faint);font-size:12px">…</span>`;
+    html += `<button class="admin-page-btn" onclick="goStudentsPage(${totalPages})">${totalPages}</button>`;
+  }
+
+  html += `<button class="admin-page-btn" ${A.studentsPage === totalPages ? 'disabled' : ''} onclick="goStudentsPage(${A.studentsPage + 1})">›</button>`;
+
+  el.innerHTML = html;
+}
+
+function goStudentsPage(p) {
+  A.studentsPage = p;
+  renderStudentsTable();
+  document.querySelector('.admin-main').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// HTML 이스케이프
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+function escapeAttr(str) {
+  return String(str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+// ════════════════════════════════════════
+//  명단 관리 — 학생 추가/수정 모달
+// ════════════════════════════════════════
+
+function openStudentModal(student) {
+  A.editingStudent = student || null;
+  const isEdit = !!student;
+
+  document.getElementById('student-modal-title').textContent = isEdit ? '학생 정보 수정' : '학생 추가';
+  document.getElementById('student-modal-subtitle').textContent = isEdit
+    ? '정보를 수정한 후 저장해주세요'
+    : '새 학생 정보를 입력해주세요';
+
+  // 폼 초기화
+  document.getElementById('sm-no').value = student ? student.학번 : '';
+  document.getElementById('sm-no').disabled = isEdit;  // 수정 시 학번 변경 불가
+  document.getElementById('sm-name').value = student ? student.이름 : '';
+  document.getElementById('sm-program').value = student ? student.프로그램 : '심야 독서시간';
+  document.getElementById('sm-program').disabled = isEdit; // 복합키 → 수정 불가
+  document.getElementById('sm-room').value = student ? student.장소 : '아우름';
+  document.getElementById('sm-err').textContent = '';
+
+  // 요일 토글 초기화
+  const days = student && Array.isArray(student.출석요일) ? student.출석요일 : [];
+  document.querySelectorAll('#sm-days .day-toggle-btn').forEach(btn => {
+    btn.classList.toggle('on', days.includes(btn.dataset.day));
+    btn.onclick = () => btn.classList.toggle('on');
+  });
+
+  document.getElementById('modal-student').classList.add('on');
+  setTimeout(() => document.getElementById('sm-no').focus(), 200);
+}
+
+function closeStudentModal() {
+  document.getElementById('modal-student').classList.remove('on');
+  A.editingStudent = null;
+}
+
+async function saveStudent() {
+  const no = document.getElementById('sm-no').value.trim();
+  const name = document.getElementById('sm-name').value.trim();
+  const program = document.getElementById('sm-program').value;
+  const room = document.getElementById('sm-room').value;
+  const errEl = document.getElementById('sm-err');
+  const btn = document.getElementById('sm-save-btn');
+  errEl.textContent = '';
+
+  if (!no || !/^\d{5}$/.test(no)) {
+    errEl.textContent = '학번은 5자리 숫자여야 해요';
+    return;
+  }
+  if (!name) {
+    errEl.textContent = '이름을 입력해주세요';
+    return;
+  }
+
+  // 선택된 요일
+  const selectedDays = [];
+  document.querySelectorAll('#sm-days .day-toggle-btn.on').forEach(btn => {
+    selectedDays.push(btn.dataset.day);
+  });
+  if (selectedDays.length === 0) {
+    errEl.textContent = '출석 요일을 1개 이상 선택해주세요';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '저장 중...';
+
+  try {
+    await sb.students.upsert({
+      학번: no,
+      이름: name,
+      프로그램: program,
+      장소: room,
+      출석요일: selectedDays,
+    });
+
+    closeStudentModal();
+    await loadAllStudents();
+    renderStudentsTable();
+    showAdminToast(A.editingStudent ? '학생 정보가 수정됐어요' : '학생이 추가됐어요', 'ok');
+
+  } catch (e) {
+    console.error('학생 저장 실패:', e);
+    errEl.textContent = '저장 실패: ' + (e.message || '오류');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '저장';
+  }
+}
+
+// 수정
+function editStudent(no, program) {
+  const student = A.students.find(s =>
+    String(s.학번) === String(no) && s.프로그램 === program
+  );
+  if (student) openStudentModal(student);
+}
+
+// ════════════════════════════════════════
+//  명단 관리 — 비활성화/완전삭제/활성화
+// ════════════════════════════════════════
+
+function confirmDeactivateStudent(no, program) {
+  const student = A.students.find(s =>
+    String(s.학번) === String(no) && s.프로그램 === program
+  );
+  if (!student) return;
+  openConfirmModal(
+    '학생 비활성화',
+    `${student.이름} (${no}) — ${program}\n\n비활성화하면 출석 명단에서 제외되지만,\n출석 기록은 그대로 보존돼요.`,
+    'deactivate',
+    { no, program }
+  );
+}
+
+function confirmDeleteStudent(no, program) {
+  const student = A.students.find(s =>
+    String(s.학번) === String(no) && s.프로그램 === program
+  );
+  if (!student) return;
+  openConfirmModal(
+    '⚠️ 학생 완전 삭제',
+    `${student.이름} (${no}) — ${program}\n\nDB에서 영구 삭제됩니다.\n관련 출석 기록도 함께 삭제될 수 있어요.\n이 작업은 되돌릴 수 없습니다.`,
+    'delete',
+    { no, program }
+  );
+}
+
+async function reactivateStudent(no, program) {
+  try {
+    const student = A.students.find(s =>
+      String(s.학번) === String(no) && s.프로그램 === program
+    );
+    if (!student) return;
+
+    await sb.client()
+      .from('students')
+      .update({ 활성: true, 수정일시: new Date().toISOString() })
+      .eq('학번', no)
+      .eq('프로그램', program);
+
+    sb.invalidateCache('students');
+    await loadAllStudents();
+    renderStudentsTable();
+    showAdminToast(`${student.이름} 학생이 활성화됐어요`, 'ok');
+  } catch (e) {
+    showAdminToast('활성화 실패: ' + (e.message || '오류'), 'err');
+  }
+}
+
+// 확인 다이얼로그
+function openConfirmModal(title, desc, action, payload) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-desc').textContent = desc;
+  A.pendingConfirm = { action, ...payload };
+
+  // 위험도에 따라 버튼 색상 변경
+  const okBtn = document.getElementById('confirm-ok-btn');
+  if (action === 'delete') {
+    okBtn.textContent = '완전 삭제';
+    okBtn.className = 'btn btn-primary';
+    okBtn.style.background = 'var(--terra)';
+    okBtn.style.color = 'white';
+  } else if (action === 'deactivate') {
+    okBtn.textContent = '비활성화';
+    okBtn.className = 'btn btn-primary';
+    okBtn.style.background = '';
+    okBtn.style.color = '';
+  } else {
+    okBtn.textContent = '확인';
+    okBtn.className = 'btn btn-primary';
+    okBtn.style.background = '';
+    okBtn.style.color = '';
+  }
+
+  document.getElementById('modal-confirm').classList.add('on');
+}
+
+function closeConfirmModal() {
+  document.getElementById('modal-confirm').classList.remove('on');
+  A.pendingConfirm = null;
+}
+
+async function executeConfirm() {
+  if (!A.pendingConfirm) return;
+  const { action, no, program } = A.pendingConfirm;
+  const okBtn = document.getElementById('confirm-ok-btn');
+  okBtn.disabled = true;
+
+  try {
+    const student = A.students.find(s =>
+      String(s.학번) === String(no) && s.프로그램 === program
+    );
+    const name = student ? student.이름 : no;
+
+    if (action === 'deactivate') {
+      await sb.students.deactivate(no, program);
+      showAdminToast(`${name} 학생이 비활성화됐어요`, 'ok');
+    } else if (action === 'delete') {
+      // 완전 삭제 — 학생 + 관련 출석 기록 모두
+      await sb.client()
+        .from('attendance')
+        .delete()
+        .eq('학번', no)
+        .eq('프로그램', program);
+      await sb.client()
+        .from('students')
+        .delete()
+        .eq('학번', no)
+        .eq('프로그램', program);
+      sb.invalidateCache('students');
+      showAdminToast(`${name} 학생이 완전 삭제됐어요`, 'ok');
+    }
+
+    closeConfirmModal();
+    await loadAllStudents();
+    renderStudentsTable();
+
+  } catch (e) {
+    console.error('실행 실패:', e);
+    showAdminToast('실패: ' + (e.message || '오류'), 'err');
+  } finally {
+    okBtn.disabled = false;
+  }
+}
+
+// ════════════════════════════════════════
+//  명단 관리 — xlsx 업로드/다운로드
+// ════════════════════════════════════════
+
+function downloadStudentTemplate() {
+  if (typeof XLSX === 'undefined') {
+    showAdminToast('xlsx 라이브러리 로드 실패', 'err');
+    return;
+  }
+
+  const header = ['프로그램', '장소', '학번', '이름', '월', '화', '수', '목', '금', '토', '일'];
+  const ws = XLSX.utils.aoa_to_sheet([
+    header,
+    ['방과후 독서시간', '교과1실', '10101', '홍길동', 'O', '', 'O', '', 'O', '', ''],
+    ['방과후 독서시간', '교과1실', '10102', '김철수', 'O', '', 'O', '', 'O', '', ''],
+    ['야간 독서시간',   '해오름',  '20101', '이영희', '', 'O', '', 'O', '', '', ''],
+    ['심야 독서시간',   '리케이온', '30101', '박민수', 'O', 'O', 'O', 'O', 'O', '', ''],
+  ]);
+
+  ws['!cols'] = [
+    {wch:18},{wch:12},{wch:10},{wch:10},
+    {wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5}
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '명단');
+  XLSX.writeFile(wb, '학생명단_양식.xlsx');
+  showAdminToast('양식 파일이 다운로드됐어요', 'ok');
+}
+
+async function handleExcelUpload(event) {
+  const file = event.target.files[0];
+  event.target.value = ''; // 같은 파일 다시 선택 가능하도록
+  if (!file) return;
+
+  if (typeof XLSX === 'undefined') {
+    showAdminToast('xlsx 라이브러리 로드 실패', 'err');
+    return;
+  }
+
+  showAdminToast('파일을 읽는 중...', '');
+
+  try {
+    const data = await file.arrayBuffer();
+    const wb = XLSX.read(data, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+    if (rows.length < 2) {
+      showAdminToast('파일에 데이터가 없어요', 'err');
+      return;
+    }
+
+    // 헤더 검증
+    const header = rows[0].map(h => String(h).trim());
+    const expectedCols = ['프로그램', '장소', '학번', '이름', '월', '화', '수', '목', '금', '토', '일'];
+    const colIdx = {};
+    expectedCols.forEach(col => {
+      colIdx[col] = header.indexOf(col);
+    });
+
+    if (colIdx['학번'] === -1 || colIdx['이름'] === -1) {
+      showAdminToast('헤더가 올바르지 않아요. 양식을 다운로드해서 확인해주세요', 'err');
+      return;
+    }
+
+    // 데이터 파싱
+    const dayCols = ['월', '화', '수', '목', '금', '토', '일'];
+    const studentList = [];
+    const errors = [];
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || row.every(c => c === '' || c === null)) continue;
+
+      const no = String(row[colIdx['학번']] || '').trim();
+      const name = String(row[colIdx['이름']] || '').trim();
+      const program = String(row[colIdx['프로그램']] || '').trim();
+      const room = String(row[colIdx['장소']] || '').trim();
+
+      if (!no || !name || !program || !room) {
+        errors.push(`행 ${i+1}: 필수값 누락`);
+        continue;
+      }
+      if (!/^\d{5}$/.test(no)) {
+        errors.push(`행 ${i+1}: 학번 형식 오류 (${no})`);
+        continue;
+      }
+
+      const days = [];
+      dayCols.forEach(d => {
+        if (colIdx[d] === -1) return;
+        const val = String(row[colIdx[d]] || '').trim().toUpperCase();
+        if (val === 'O' || val === 'V' || val === '✓' || val === '1' || val === 'TRUE') {
+          days.push(d);
+        }
+      });
+
+      studentList.push({
+        학번: no,
+        이름: name,
+        프로그램: program,
+        장소: room,
+        출석요일: days.length > 0 ? days : null,
+      });
+    }
+
+    if (studentList.length === 0) {
+      showAdminToast('유효한 학생 데이터가 없어요', 'err');
+      return;
+    }
+
+    // 일괄 등록 (bulk_upsert_students RPC)
+    showAdminToast(`${studentList.length}명 등록 중...`, '');
+
+    try {
+      await sb.students.bulkUpsert(studentList);
+      await loadAllStudents();
+      renderStudentsTable();
+      let msg = `${studentList.length}명이 등록됐어요`;
+      if (errors.length > 0) msg += ` (${errors.length}건 오류 — 콘솔 확인)`;
+      showAdminToast(msg, 'ok');
+      if (errors.length > 0) console.warn('업로드 오류:', errors);
+    } catch (e) {
+      console.error('일괄 등록 실패:', e);
+      showAdminToast('등록 실패: ' + (e.message || '오류'), 'err');
+    }
+
+  } catch (e) {
+    console.error('xlsx 파싱 실패:', e);
+    showAdminToast('파일 읽기 실패: ' + (e.message || '오류'), 'err');
+  }
+}
+
+// 모달 배경 클릭 / ESC로 닫기 (학생 모달, 확인 모달)
+document.getElementById('modal-student').addEventListener('click', (e) => {
+  if (e.target.id === 'modal-student') closeStudentModal();
+});
+document.getElementById('modal-confirm').addEventListener('click', (e) => {
+  if (e.target.id === 'modal-confirm') closeConfirmModal();
+});
+
 // 페이지 떠날 때 정리
 window.addEventListener('beforeunload', () => {
   stopClock();
@@ -5015,6 +6355,8 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closePwModal();
     closeEndModal();
+    closeStudentModal();
+    closeConfirmModal();
   }
 });
 
