@@ -4200,6 +4200,60 @@ input { font-family: inherit; }
 .ck-modal-acts{display:flex;gap:10px}
 .ck-modal-acts .btn{padding:12px}
 
+
+/* check 헤더 */
+.ck-header{background:var(--paper);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.ck-header-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--cream);line-height:1}
+.ck-header-sub{font-family:'IBM Plex Sans KR',sans-serif;font-size:11px;color:var(--amber);margin-top:2px}
+.ck-header-date{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-dim)}
+/* 요일 변경 버튼 (출석 요일 탭) */
+.sched-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sched-change-btn{padding:7px 14px;background:rgba(214,178,124,.1);border:1px solid rgba(214,178,124,.35);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:11px;font-weight:500;color:var(--amber);cursor:pointer}
+.sched-change-btn:hover{background:rgba(214,178,124,.18);border-color:var(--amber)}
+.ck-day-toggle{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:14px}
+.ck-day-t-btn{padding:12px 0;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;font-weight:500;color:var(--ink-dim);cursor:pointer}
+.ck-day-t-btn.on{background:rgba(123,160,135,.15);border-color:var(--sage);color:var(--sage);font-weight:600}
+.ck-day-summary{background:rgba(0,0,0,.2);border-radius:3px;padding:10px 14px;margin-bottom:14px;font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);display:none}
+.ck-day-summary.on{display:block}
+.ck-day-summary .added{color:var(--sage);font-weight:600}
+.ck-day-summary .removed{color:var(--terra);text-decoration:line-through}
+/* 토스트 */
+.ck-toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);padding:14px 24px;background:var(--paper2);border:1px solid var(--border2);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--cream);z-index:250;display:none;box-shadow:0 20px 50px -10px rgba(0,0,0,.6)}
+.ck-toast.on{display:block;animation:toastIn .3s}
+.ck-toast.ok{border-color:rgba(123,160,135,.5);color:var(--sage)}
+.ck-toast.err{border-color:rgba(184,84,63,.5);color:var(--terra)}
+/* 모바일 */
+@media (max-width:640px){
+  .check-wrap{padding:20px 12px}
+  .check-login{padding:36px 24px}
+  .check-login-title{font-size:28px}
+  .dash-top{padding:14px 16px;flex-wrap:wrap;gap:10px}
+  .dash-name{font-size:16px}
+  .dash-stats{gap:6px}
+  .dash-stat{padding:14px 8px}
+  .dash-stat-num{font-size:26px}
+  .dash-stat-lbl{font-size:10px}
+  .dash-tabs{padding:3px;gap:2px}
+  .dash-tab{padding:9px 4px;font-size:11px}
+  .dash-legend{gap:10px 14px;font-size:10px;padding:10px 12px}
+  .dash-legend .dt{width:16px;height:16px;font-size:9px}
+  .week-nav{padding:12px 14px}
+  .week-nav-btn{width:32px;height:32px;font-size:14px}
+  .prog-card,.month-prog-card{padding:14px}
+  .prog-name{font-size:13px}
+  .prog-rate{font-size:12px}
+  .day-col{padding:6px 1px}
+  .day-name{font-size:9px}
+  .day-num{font-size:10px}
+  .day-badge{width:24px;height:24px;font-size:11px}
+  .month-cell .mb{width:20px;height:20px;font-size:10px}
+  .month-cell .mn{font-size:9px}
+  .sched-day{padding:12px 0;font-size:12px}
+  .ck-modal{padding:24px 20px}
+  .ck-reason-btn{font-size:11px;padding:8px 12px}
+  .ck-day-t-btn{padding:10px 0;font-size:12px}
+}
+
 </style>
 </head>
 <body>
@@ -4686,6 +4740,26 @@ input { font-family: inherit; }
     </div>
   </div>
 </div>
+
+
+<div class="ck-modal-bg" id="ck-day-modal-bg">
+  <div class="ck-modal">
+    <div class="ck-modal-title">출석 요일 변경 요청</div>
+    <div class="ck-modal-sub">변경할 요일을 선택해주세요.<br>교사 확인 후 반영됩니다.</div>
+    <div class="ck-modal-info" id="ck-dmi"></div>
+    <div class="ck-modal-lbl">출석 요일 선택</div>
+    <div class="ck-day-toggle" id="ck-day-tgl"></div>
+    <div class="ck-day-summary" id="ck-day-sum"></div>
+    <div class="ck-modal-lbl">변경 사유</div>
+    <textarea class="ck-textarea" id="ck-day-reason" placeholder="변경 사유를 적어주세요 (필수)"></textarea>
+    <div class="ck-modal-err" id="ck-dmerr"></div>
+    <div class="ck-modal-acts">
+      <button class="btn btn-ghost" onclick="ckCloseDayReq()">취소</button>
+      <button class="btn btn-primary" id="ck-day-submit" onclick="ckSubmitDayReq()" disabled>변경 요청</button>
+    </div>
+  </div>
+</div>
+<div class="ck-toast" id="ck-toast"></div>
 
 <!-- 처리 중 오버레이 (전체 화면) -->
 <div class="attend-progress" id="attend-progress">
@@ -9154,6 +9228,25 @@ document.addEventListener('click',e=>{if(e.target.id==='ck-modal-bg')ckCloseReq(
 function ckRenderWeekly(){const today=new Date();today.setHours(0,0,0,0);const monday=ckGetMonday(today);monday.setDate(monday.getDate()+CK.weekOffset*7);const sunday=new Date(monday);sunday.setDate(sunday.getDate()+6);const days=[];for(let i=0;i<7;i++){const d=new Date(monday);d.setDate(d.getDate()+i);days.push(d);}const range=(monday.getMonth()+1)+'/'+monday.getDate()+' ~ '+(sunday.getMonth()+1)+'/'+sunday.getDate();const title=CK.weekOffset===0?'이번 주':(CK.weekOffset===-1?'지난 주':(CK.weekOffset===1?'다음 주':(CK.weekOffset<0?Math.abs(CK.weekOffset)+'주 전':CK.weekOffset+'주 후')));let h='<div class="week-nav"><button class="week-nav-btn" onclick="ckWeek(-1)">‹</button><div class="week-nav-info"><div class="week-nav-title">'+title+'</div><div class="week-nav-range">'+range+'</div></div><button class="week-nav-btn" onclick="ckWeek(1)">›</button></div>';CK.programs.forEach(p=>{const stuDays=p.days?p.days.split(',').map(s=>s.trim()).filter(Boolean):[];let pAtt=0,pTar=0;const cells=days.map(d=>{const dStr=ckFmtD(d);const dayKr=CK_DAY[d.getDay()];const isTarget=stuDays.length===0||stuDays.includes(dayKr);const isFuture=d>today;const rec=CK.records.find(r=>r.date===dStr&&r.program===p.program&&r.location===p.location);const req=CK.requests.find(r=>r.대상날짜===dStr&&r.프로그램===p.program&&r.처리상태==='대기');let badge='N',cls='';const isTodayOrFuture=d>=today;if(!isTarget||isFuture)badge='N';else if(rec&&(rec.status==='출석'||rec.status==='사후출석')){badge='O';pAtt++;pTar++;}else if(req){badge='Q';pTar++;}else if(isTodayOrFuture){badge='N';}else{badge='X';cls=' x';pTar++;}const isToday=ckFmtD(d)===ckFmtD(today);return '<div class="day-col'+(isToday?' today':'')+cls+'" '+(badge==='X'?('onclick="ckOpenReq(&#39;'+dStr+'&#39;,&#39;'+p.program+'&#39;,&#39;'+p.location+'&#39;)"'):'')+'><div class="day-name">'+dayKr+'</div><div class="day-num">'+d.getDate()+'</div><span class="day-badge '+badge+'">'+(badge==='O'?'O':badge==='X'?'X':badge==='J'?'자':badge==='Q'?'?':'·')+'</span></div>';}).join('');const rate=pTar?Math.round(pAtt/pTar*100):0;const rcls=rate>=80?'':rate<50?' low':' mid';h+='<div class="prog-card"><div class="prog-head"><div class="prog-name">'+p.program+' · '+p.location+'</div><div class="prog-rate'+rcls+'">'+rate+'%</div></div><div class="week-grid">'+cells+'</div></div>';});return h;}
 function ckWeek(d){CK.weekOffset+=d;ckRenderView();}
 function ckOpenReq(date,prog,loc){alert('수정요청 모달은 다음 단계에서!\n'+date+' '+prog+' '+loc);}
+
+
+function ckToast(msg,type){const t=document.getElementById('ck-toast');t.textContent=msg;t.className='ck-toast on '+(type||'');setTimeout(()=>t.classList.remove('on'),2800);}
+function ckUpdateHeaderDate(){const d=new Date();const mm=d.getMonth()+1,dd=d.getDate();const dk=['일','월','화','수','목','금','토'][d.getDay()];const el=document.getElementById('ck-hdate');if(el)el.textContent=mm+'월 '+dd+'일 ('+dk+')';}
+const _origRenderDash=ckRenderDash;
+ckRenderDash=function(){_origRenderDash();ckUpdateHeaderDate();};
+// ckRenderSchedule 교체 (요일 변경 버튼 추가)
+ckRenderSchedule=function(){const dows=['월','화','수','목','금','토','일'];let h='';CK.programs.forEach((p,idx)=>{const stuDays=p.days?p.days.split(',').map(s=>s.trim()).filter(Boolean):[];h+='<div class="sched-card"><div class="sched-card-head"><div class="sched-title">'+p.program+' · '+p.location+'</div><button class="sched-change-btn" onclick="ckOpenDayReq('+idx+')">요일 변경 요청</button></div><div class="sched-days">'+dows.map(d=>{const on=stuDays.length===0||stuDays.includes(d);return '<div class="sched-day'+(on?' on':'')+'">'+d+'</div>';}).join('')+'</div></div>';});if(!CK.programs.length)h='<div class="sched-card" style="text-align:center;color:var(--ink-faint)">등록된 프로그램이 없어요</div>';return h;};
+// 요일 변경 모달
+let _ckDayCtx=null,_ckDaySelected=[];
+function ckOpenDayReq(idx){const p=CK.programs[idx];if(!p)return;_ckDayCtx={idx:idx,program:p.program,location:p.location,current:p.days?p.days.split(',').map(s=>s.trim()).filter(Boolean):[]};_ckDaySelected=[..._ckDayCtx.current];document.getElementById('ck-dmi').innerHTML='<div class="row"><span class="k">프로그램</span><span class="v">'+p.program+'</span></div><div class="row"><span class="k">장소</span><span class="v">'+p.location+'</span></div><div class="row"><span class="k">현재 요일</span><span class="v">'+(_ckDayCtx.current.join(', ')||'—')+'</span></div>';const dows=['월','화','수','목','금','토','일'];document.getElementById('ck-day-tgl').innerHTML=dows.map(d=>'<button class="ck-day-t-btn'+(_ckDaySelected.includes(d)?' on':'')+'" onclick="ckToggleDay(this,&#39;'+d+'&#39;)">'+d+'</button>').join('');document.getElementById('ck-day-reason').value='';document.getElementById('ck-dmerr').textContent='';ckUpdateDaySummary();document.getElementById('ck-day-modal-bg').classList.add('on');}
+function ckCloseDayReq(){document.getElementById('ck-day-modal-bg').classList.remove('on');_ckDayCtx=null;_ckDaySelected=[];}
+function ckToggleDay(btn,d){const i=_ckDaySelected.indexOf(d);if(i>=0)_ckDaySelected.splice(i,1);else _ckDaySelected.push(d);btn.classList.toggle('on');ckUpdateDaySummary();}
+function ckUpdateDaySummary(){if(!_ckDayCtx)return;const cur=_ckDayCtx.current,sel=_ckDaySelected;const added=sel.filter(d=>!cur.includes(d));const removed=cur.filter(d=>!sel.includes(d));const sum=document.getElementById('ck-day-sum');const btn=document.getElementById('ck-day-submit');if(!added.length&&!removed.length){sum.classList.remove('on');btn.disabled=true;return;}if(!sel.length){sum.classList.remove('on');btn.disabled=true;return;}sum.classList.add('on');sum.innerHTML='변경: '+(added.length?'<span class="added">+'+added.join(',')+'</span> ':'')+(removed.length?'<span class="removed">'+removed.join(',')+'</span>':'');btn.disabled=false;}
+async function ckSubmitDayReq(){if(!_ckDayCtx)return;const reason=document.getElementById('ck-day-reason').value.trim();if(!reason){document.getElementById('ck-dmerr').textContent='변경 사유를 입력해주세요';return;}if(!_ckDaySelected.length){document.getElementById('ck-dmerr').textContent='요일을 1개 이상 선택해주세요';return;}const b=document.getElementById('ck-day-submit');b.disabled=true;b.textContent='전송 중...';try{await sb.requests.createDayChange({no:CK.no,name:CK.name,program:_ckDayCtx.program,room:_ckDayCtx.location,현재요일:_ckDayCtx.current,요청요일:_ckDaySelected,reason:reason});ckCloseDayReq();b.textContent='변경 요청';const{data:dr}=await sb.client().from('day_change_requests').select('*').eq('학번',CK.no).order('요청일시',{ascending:false});CK.dayRequests=dr||[];ckSwitch('requests');ckToast('요청이 전송됐어요','ok');}catch(e){document.getElementById('ck-dmerr').textContent='실패: '+(e.message||'오류');b.disabled=false;b.textContent='변경 요청';}}
+document.addEventListener('click',e=>{if(e.target.id==='ck-day-modal-bg')ckCloseDayReq();});
+// ckSubmitReq 에서 alert → toast 로 변경
+const _origSubmitReq=ckSubmitReq;
+ckSubmitReq=async function(){const b=document.getElementById('ck-submit');if(!_ckReqCtx||!_ckReason)return;b.disabled=true;b.textContent='전송 중...';try{await sb.requests.createCorrection({no:CK.no,name:CK.name,date:_ckReqCtx.date,program:_ckReqCtx.prog,room:_ckReqCtx.loc,reason:_ckReason,detail:document.getElementById('ck-detail').value.trim()});ckCloseReq();b.textContent='요청 보내기';const{data:cr}=await sb.client().from('correction_requests').select('*').eq('학번',CK.no).order('요청일시',{ascending:false});CK.requests=cr||[];ckSwitch('requests');ckToast('요청이 전송됐어요','ok');}catch(e){document.getElementById('ck-merr').textContent='실패: '+(e.message||'오류');b.disabled=false;b.textContent='요청 보내기';}};
 
 // ══════════════════════════════════════════════════════════════
 //  부팅
