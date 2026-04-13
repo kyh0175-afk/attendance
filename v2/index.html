@@ -4303,6 +4303,10 @@ input { font-family: inherit; }
 .detail-group-name{font-family:'IBM Plex Sans KR',sans-serif;font-size:11px;font-weight:600;color:var(--amber);letter-spacing:.12em;text-transform:uppercase}
 .detail-group-count{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-dim);font-variant-numeric:tabular-nums}
 
+
+.teacher-edit-btn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-left:6px;padding:0;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--ink-dim);font-size:11px;cursor:pointer;vertical-align:middle;transition:all .2s}
+.teacher-edit-btn:hover{background:rgba(214,178,124,.1);border-color:var(--amber);color:var(--amber)}
+
 /* 실시간 모니터 탭 */
 .live-search{margin-bottom:20px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:18px 22px}
 .live-search-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;font-weight:600;color:var(--amber);margin-bottom:10px}
@@ -4506,7 +4510,7 @@ input { font-family: inherit; }
       <div class="field-group">
         <label class="field-label">TEACHER · 담당 교사</label>
         <input type="text" class="field-input" id="t-teacher" placeholder="이름 입력" autocomplete="off">
-        <div class="field-hint" id="t-teacher-hint">오늘의 심야 감독 교사로 자동 입력됨</div>
+        <div class="field-hint" id="t-teacher-hint">⚠️ 오늘의 심야 감독으로 자동 입력됨 — 다르면 직접 수정하세요</div>
       </div>
 
       <button class="start-btn" id="t-start-btn" onclick="startTeacherSession()">▶ QR 생성 및 출석 시작</button>
@@ -7859,6 +7863,52 @@ async function selectHistorySession(sessionId) {
 }
 
 // 우측 상세 렌더링
+
+// 교사 이름 수정 모달 (관리자 출석 기록 상세)
+function openEditTeacherModal() {
+  if (!A.selectedSession) return;
+  const cur = A.selectedSession.교사 || '';
+  const input = document.getElementById('edit-teacher-input');
+  input.value = cur;
+  document.getElementById('edit-teacher-err').textContent = '';
+  document.getElementById('modal-edit-teacher').classList.add('on');
+  setTimeout(() => { input.focus(); input.select(); }, 100);
+}
+
+function closeEditTeacherModal() {
+  document.getElementById('modal-edit-teacher').classList.remove('on');
+}
+
+async function saveEditTeacher() {
+  const newName = document.getElementById('edit-teacher-input').value.trim();
+  const errEl = document.getElementById('edit-teacher-err');
+  if (!newName) { errEl.textContent = '이름을 입력해주세요'; return; }
+  if (!A.selectedSession) return;
+
+  const sessionId = A.selectedSession.세션id;
+  try {
+    // sibling 세션이면 같은 세션id의 모든 행 (아우름+교과1실) 동시 수정
+    const { error } = await sb.client()
+      .from('sessions')
+      .update({ 교사: newName })
+      .eq('세션id', sessionId);
+    if (error) throw error;
+
+    // 로컬 상태 갱신
+    A.selectedSession.교사 = newName;
+    // 좌측 목록에서도 갱신
+    const idx = A.historySessions.findIndex(s => s.세션id === sessionId);
+    if (idx >= 0) A.historySessions[idx].교사 = newName;
+
+    closeEditTeacherModal();
+    showAdminToast('교사 이름이 수정됐어요', 'ok');
+    renderHistoryList();
+    renderHistoryDetail();
+  } catch (e) {
+    errEl.textContent = '저장 실패: ' + (e.message || '오류');
+  }
+}
+
 function renderHistoryDetail() {
   const detail = document.getElementById('history-detail');
   if (!A.selectedSession) {
@@ -7972,7 +8022,8 @@ function renderHistoryDetail() {
         <span class="sep">·</span>
         ${escapeHtml(s.장소 || '')}
         <span class="sep">·</span>
-        ${escapeHtml(s.교사 || '')} 선생님
+        <span id="detail-teacher-name">${escapeHtml(s.교사 || '(미입력)')}</span> 선생님
+        <button class="teacher-edit-btn" onclick="openEditTeacherModal()" title="교사 이름 수정">✏️</button>
         <br>
         <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-faint)">${startTime} ~ ${endTime}</span>
       </div>
@@ -9823,6 +9874,28 @@ window.addEventListener('DOMContentLoaded', () => {
   route();
 });
 </script>
+
+
+<!-- 교사 이름 수정 모달 -->
+<div class="modal-bg" id="modal-edit-teacher">
+  <div class="modal-card" style="max-width:420px">
+    <div class="modal-head">
+      <div class="modal-title">교사 이름 수정</div>
+      <button class="modal-close" onclick="closeEditTeacherModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-group">
+        <label class="field-label">담당 교사 이름</label>
+        <input type="text" id="edit-teacher-input" class="field-input" placeholder="이름 입력">
+      </div>
+      <div id="edit-teacher-err" style="color:var(--terra);font-size:12px;margin-top:8px;min-height:16px"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeEditTeacherModal()">취소</button>
+      <button class="btn btn-primary" onclick="saveEditTeacher()">저장</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
