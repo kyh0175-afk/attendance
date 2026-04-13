@@ -4307,6 +4307,9 @@ input { font-family: inherit; }
 .teacher-edit-btn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-left:6px;padding:0;background:transparent;border:1px solid var(--border);border-radius:3px;color:var(--ink-dim);font-size:11px;cursor:pointer;vertical-align:middle;transition:all .2s}
 .teacher-edit-btn:hover{background:rgba(214,178,124,.1);border-color:var(--amber);color:var(--amber)}
 
+
+.btn.disabled,.btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+
 /* 실시간 모니터 탭 */
 .live-search{margin-bottom:20px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:18px 22px}
 .live-search-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;font-weight:600;color:var(--amber);margin-bottom:10px}
@@ -4662,6 +4665,25 @@ input { font-family: inherit; }
     </div>
   </div>
 </div>
+
+<!-- 세션 연장 모달 (QR 자동 만료 시) -->
+<div class="modal-bg" id="modal-extend">
+  <div class="modal-card" style="max-width:440px;text-align:center">
+    <div class="modal-head" style="justify-content:center">
+      <div class="modal-title">QR 시간이 만료됐어요</div>
+    </div>
+    <div class="modal-body" style="text-align:center">
+      <div id="modal-extend-note" style="font-family:&#39;IBM Plex Sans KR&#39;,sans-serif;font-size:13px;color:var(--ink-dim);line-height:1.6;margin-bottom:20px">학생이 더 올 예정이면 10분 연장할 수 있어요. 연장은 1회만 가능합니다.</div>
+      <div style="font-family:&#39;DM Mono&#39;,monospace;font-size:42px;font-weight:600;color:var(--amber);letter-spacing:.05em;margin:16px 0 6px" id="modal-extend-countdown">5 : 00</div>
+      <div style="font-family:&#39;IBM Plex Sans KR&#39;,sans-serif;font-size:11px;color:var(--ink-faint);letter-spacing:.05em">후 자동 종료</div>
+    </div>
+    <div class="modal-foot" style="justify-content:center;gap:12px">
+      <button class="btn btn-ghost" onclick="confirmExtendEnd()">세션 마감</button>
+      <button class="btn btn-primary" id="modal-extend-btn-extend" onclick="confirmExtendSession()">+ 10분 연장</button>
+    </div>
+  </div>
+</div>
+
 
 <!-- ══════════════════════════════════════════ -->
 <!--  학생 화면 (Phase 2D)                          -->
@@ -5759,6 +5781,28 @@ const sb = {
       return data.find(r => r.장소 === room) || data[0];
     },
 
+    // 세션 연장 (atomic): 이미 연장된 경우 실패 반환
+    async extend(sessionId, minutes) {
+      const newExpire = new Date(Date.now() + minutes * 60 * 1000).toISOString();
+      // 조건부 UPDATE: 연장됨 = false 인 행만 갱신 (동시 연장 경쟁 차단)
+      const { data, error } = await sb.client()
+        .from('sessions')
+        .update({
+          활성: true,
+          만료시각: newExpire,
+          연장됨: true,
+          종료시각: null,
+        })
+        .eq('세션id', sessionId)
+        .eq('연장됨', false)
+        .select();
+      if (error) return { ok: false, msg: error.message };
+      if (!data || data.length === 0) {
+        return { ok: false, alreadyExtended: true, msg: '이미 연장된 세션이에요' };
+      }
+      return { ok: true, newExpireMs: new Date(newExpire).getTime(), rowsAffected: data.length };
+    },
+
     async end(sessionId) {
       const { error } = await sb.client()
         .from('sessions')
@@ -5834,12 +5878,9 @@ const sb = {
         .from('supervisors')
         .select('교사명')
         .eq('날짜', today)
-        .single();
-      if (error) {
-        if (error.code === 'PGRST116') return null;
-        throw error;
-      }
-      return data ? data.교사명 : null;
+        .limit(1);
+      if (error) throw error;
+      return (data && data.length) ? data[0].교사명 : null;
     },
 
     async byDate(date) {
@@ -5847,12 +5888,9 @@ const sb = {
         .from('supervisors')
         .select('교사명')
         .eq('날짜', date)
-        .single();
-      if (error) {
-        if (error.code === 'PGRST116') return null;
-        throw error;
-      }
-      return data ? data.교사명 : null;
+        .limit(1);
+      if (error) throw error;
+      return (data && data.length) ? data[0].교사명 : null;
     },
 
     async list() {
@@ -6035,7 +6073,8 @@ function route() {
 
   if (params.get('mode') === 'student') {
     const sessionId = params.get('s');
-    enterStudentScreen(sessionId);
+    const scanRoom = params.get('r');
+    enterStudentScreen(sessionId, scanRoom);
     return;
   }
 
@@ -6084,6 +6123,8 @@ const T = {
   attendedMap: {},      // {학번: {name, time, isSelf}}
   realtimeChannel: null,// Realtime 구독 채널
   pollInterval: null,   // 백업 폴링 interval
+  extendModalTimer: null,   // 5분 자동 종료 타이머
+  extendCountdownInterval: null, // 모달 내 카운트다운 interval
   listTab: 'all',       // 'all' / 'attended' / 'absent'
 };
 
@@ -6227,9 +6268,11 @@ doManualAttendFromNumpad = async function() {
   } catch (e) {}
 
   try {
+    // 학생 본인의 등록 장소 우선 (sibling 세션이면 ctx.room이 부정확할 수 있음)
+    const effectiveRoom = (studentInfo && studentInfo.장소) || ctx.room;
     const result = await sb.attendance.lateAdd({
       sessionId: ctx.sessionId, no, name: studentInfo.이름,
-      date: ctx.date, program: ctx.program, room: ctx.room, teacher: ctx.teacher,
+      date: ctx.date, program: ctx.program, room: effectiveRoom, teacher: ctx.teacher,
     });
     if (!result.ok) throw new Error(result.msg || '실패');
     closeManualNumpad();
@@ -6293,6 +6336,7 @@ async function enterTeacherScreen(room) {
         room: active.장소,
         teacher: active.교사,
         expireMs: new Date(active.만료시각).getTime(),
+        extended: active.연장됨 || false,
       };
 
       document.getElementById('t-sess-program').textContent = T.session.program;
@@ -6462,6 +6506,7 @@ async function startTeacherSession() {
       room: T.room,
       teacher,
       expireMs,
+      extended: false,
     };
 
     // 화면 전환
@@ -6500,8 +6545,8 @@ function buildTeacherQR() {
   const box = document.getElementById('t-qr-box');
   box.innerHTML = '';
 
-  // 학생이 스캔할 URL: 학생 화면 + 세션ID
-  const url = `${location.origin}${location.pathname}?mode=student&s=${T.session.sessionId}`;
+  // 학생이 스캔할 URL: 학생 화면 + 세션ID + 장소 (sibling 세션 구분용)
+  const url = `${location.origin}${location.pathname}?mode=student&s=${T.session.sessionId}&r=${encodeURIComponent(T.session.room)}`;
 
   // qrcode.js로 그림
   T.qrInstance = new QRCode(box, {
@@ -6552,16 +6597,128 @@ function stopTeacherTimer() {
 // 자동 종료 (시간 만료)
 async function autoEndTeacherSession() {
   if (!T.session) return;
-  console.log('[SESSION END] autoEndTeacherSession 호출 →', T.session.sessionId, '만료시각:', new Date(T.session.expireMs).toISOString(), '현재시각:', new Date().toISOString());
+  console.log('[SESSION EXPIRE] autoEndTeacherSession 호출 →', T.session.sessionId, '연장됨:', T.session.extended);
 
-  // 1. 세션 종료 (DB)
+  // 일단 타이머 정지 (QR 타이머는 멈춤, 세션은 아직 살아있음)
+  stopTeacherTimer();
+
+  // DB에서 일시 비활성화 (학생 출석 차단)
   try {
     await sb.sessions.end(T.session.sessionId);
   } catch (e) {
-    console.warn('자동 종료 실패:', e);
+    console.warn('[SESSION EXPIRE] DB 비활성화 실패:', e);
   }
 
-  // 2. 정리
+  // 연장 모달 표시 (5분 카운트다운)
+  openExtendModal();
+}
+
+// ─── 연장 모달 ───────────────────────────────
+function openExtendModal() {
+  const alreadyExtended = !!(T.session && T.session.extended);
+  const modal = document.getElementById('modal-extend');
+  const extBtn = document.getElementById('modal-extend-btn-extend');
+  const cdEl = document.getElementById('modal-extend-countdown');
+  const noteEl = document.getElementById('modal-extend-note');
+
+  if (alreadyExtended) {
+    extBtn.disabled = true;
+    extBtn.classList.add('disabled');
+    noteEl.textContent = '이미 한 번 연장했어요. 이제는 세션을 마감해야 해요.';
+  } else {
+    extBtn.disabled = false;
+    extBtn.classList.remove('disabled');
+    noteEl.textContent = '학생이 더 올 예정이면 10분 연장할 수 있어요. 연장은 1회만 가능합니다.';
+  }
+
+  modal.classList.add('on');
+
+  // 5분 카운트다운
+  let remainSec = 300; // 5분
+  const render = () => {
+    const mm = Math.floor(remainSec / 60);
+    const ss = remainSec % 60;
+    cdEl.textContent = mm + ' : ' + String(ss).padStart(2, '0');
+  };
+  render();
+
+  // 기존 타이머 정리
+  if (T.extendCountdownInterval) clearInterval(T.extendCountdownInterval);
+  if (T.extendModalTimer) clearTimeout(T.extendModalTimer);
+
+  T.extendCountdownInterval = setInterval(() => {
+    remainSec--;
+    if (remainSec <= 0) {
+      clearInterval(T.extendCountdownInterval);
+      T.extendCountdownInterval = null;
+      return;
+    }
+    render();
+  }, 1000);
+
+  T.extendModalTimer = setTimeout(() => {
+    console.log('[SESSION EXPIRE] 5분 경과, 자동 종료');
+    confirmExtendEnd();
+  }, 5 * 60 * 1000);
+}
+
+function closeExtendModal() {
+  document.getElementById('modal-extend').classList.remove('on');
+  if (T.extendCountdownInterval) { clearInterval(T.extendCountdownInterval); T.extendCountdownInterval = null; }
+  if (T.extendModalTimer) { clearTimeout(T.extendModalTimer); T.extendModalTimer = null; }
+}
+
+// [10분 연장] 클릭
+async function confirmExtendSession() {
+  if (!T.session) return;
+  const btn = document.getElementById('modal-extend-btn-extend');
+  btn.disabled = true;
+  btn.textContent = '연장 중...';
+
+  try {
+    const result = await sb.sessions.extend(T.session.sessionId, 10);
+    if (!result.ok) {
+      if (result.alreadyExtended) {
+        alert('이미 다른 화면에서 연장됐어요. 현재 세션을 계속 사용하세요.');
+        // 로컬 상태 동기화
+        T.session.extended = true;
+        // DB에서 최신 만료시각 가져와 반영
+        try {
+          const fresh = await sb.sessions.byKey(T.session.sessionId);
+          if (fresh && fresh.만료시각) {
+            T.session.expireMs = new Date(fresh.만료시각).getTime();
+          }
+        } catch (e) {}
+      } else {
+        alert('연장 실패: ' + (result.msg || '오류'));
+        btn.disabled = false;
+        btn.textContent = '+ 10분 연장';
+        return;
+      }
+    } else {
+      // 연장 성공
+      T.session.extended = true;
+      T.session.expireMs = result.newExpireMs;
+    }
+
+    closeExtendModal();
+    startTeacherTimer();
+    console.log('[SESSION EXTEND] 10분 연장 완료, 새 만료시각:', new Date(T.session.expireMs).toISOString());
+  } catch (e) {
+    alert('연장 실패: ' + (e.message || '오류'));
+    btn.disabled = false;
+    btn.textContent = '+ 10분 연장';
+  }
+}
+
+// [세션 마감] 클릭 또는 5분 경과 → 진짜 종료
+async function confirmExtendEnd() {
+  if (!T.session) return;
+  closeExtendModal();
+
+  // (DB 비활성화는 이미 autoEndTeacherSession에서 처리됨)
+
+  // 정리
   stopTeacherTimer();
   unsubscribeRoster();
   if (T.qrInstance) {
@@ -6569,19 +6726,19 @@ async function autoEndTeacherSession() {
     T.qrInstance = null;
   }
 
-  // 3. 출석 통계 (요약)
+  // 출석 통계
   const attendedCount = Object.values(T.attendedMap).filter(a => !a.isSelf).length;
   const totalCount = T.rosterStudents.length;
 
-  // 4. 사용자 알림
-  alert(`QR 시간이 만료됐어요.\n\n출석: ${attendedCount}명 / 전체 ${totalCount}명\n\n메인 화면으로 이동합니다.`);
+  // 사용자 알림
+  alert('QR 시간이 만료돼서 세션이 종료됐어요.\n\n출석: ' + attendedCount + '명 / 전체 ' + totalCount + '명\n\n메인 화면으로 이동합니다.');
 
-  // 5. 상태 초기화
+  // 상태 초기화
   T.session = null;
   T.rosterStudents = [];
   T.attendedMap = {};
 
-  // 6. 메인 화면으로 이동
+  // 메인 화면으로
   document.getElementById('t-wrap').classList.remove('session-active');
   history.pushState({}, '', location.pathname);
   route();
@@ -7986,8 +8143,8 @@ function renderHistoryDetail() {
         const noStr = String(s.학번 || '');
         const classNum = parseInt(noStr.slice(1, 3), 10); // 학번 2~3번째 = 반
         if (!isNaN(classNum)) {
-          const targetRoom = (classNum >= 1 && classNum <= 4) ? '아우름'
-                          : (classNum >= 5 && classNum <= 9) ? '교과1실' : null;
+          const targetRoom = (classNum >= 1 && classNum <= 5) ? '아우름'
+                          : (classNum >= 6 && classNum <= 9) ? '교과1실' : null;
           if (targetRoom) g = groups.find(g => g.room === targetRoom);
         }
       }
@@ -8206,13 +8363,15 @@ async function doLateAttend() {
     }
 
     // 사후 출석 추가
+    // 학생 본인의 등록 장소 우선 (sibling 세션이면 s.장소가 부정확할 수 있음)
+    const effectiveRoom2 = (studentInfo && studentInfo.장소) || s.장소;
     const result = await sb.attendance.lateAdd({
       sessionId: s.세션id,
       no: no,
       name: studentInfo.이름,
       date: s.날짜,
       program: s.프로그램,
-      room: s.장소,
+      room: effectiveRoom2,
       teacher: s.교사,
     });
 
@@ -8883,7 +9042,7 @@ const ST = {
   studentsCache: null,   // 사전 캐싱: 해당 세션의 학생 명단 (학번 → 학생정보)
 };
 
-async function enterStudentScreen(sessionId) {
+async function enterStudentScreen(sessionId, scanRoom) {
   showScreen('screen-student');
 
   // 모든 하위 상태 숨김 + 로딩 표시
@@ -8927,10 +9086,12 @@ async function enterStudentScreen(sessionId) {
 
   // 정상 → 입력 화면
   ST.sessionId = sessionId;
+  // sibling 세션이면 byKey가 아무 행이나 가져오니, URL의 r 파라미터를 우선 사용
+  const effectiveRoom = scanRoom || session.장소;
   ST.session = {
     sessionId,
     program: session.프로그램,
-    room: session.장소,
+    room: effectiveRoom,
     teacher: session.교사,
     expireMs,
   };
