@@ -5756,16 +5756,14 @@ const sb = {
     },
 
     async byKey(sessionId) {
+      // sibling 세션은 세션id가 같은 행이 여러 개 있을 수 있어 limit(1)로 안전하게
       const { data, error } = await sb.client()
         .from('sessions')
         .select('*')
         .eq('세션id', sessionId)
-        .single();
-      if (error) {
-        if (error.code === 'PGRST116') return null;
-        throw error;
-      }
-      return data;
+        .limit(1);
+      if (error) throw error;
+      return (data && data.length) ? data[0] : null;
     },
 
     async activeByRoom(room) {
