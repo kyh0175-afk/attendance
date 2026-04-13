@@ -7867,10 +7867,12 @@ function renderHistoryDetail() {
   const DAY_KR_HD = ['일','월','화','수','목','금','토'];
   const dayKr = DAY_KR_HD[sessDate.getDay()];
 
+  // sibling 장소 지원: 아우름/교과1실 통합 분모
+  const targetRooms = getRoomGroup(s.장소);
   const targetStudents = (A.students || []).filter(st => {
     if (!st.활성) return false;
     if (st.프로그램 !== s.프로그램) return false;
-    if (st.장소 !== s.장소) return false;
+    if (!targetRooms.includes(st.장소)) return false;
     const days = Array.isArray(st.출석요일) ? st.출석요일 : [];
     return days.length === 0 || days.includes(dayKr);
   });
