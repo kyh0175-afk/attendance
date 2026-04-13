@@ -4294,6 +4294,9 @@ input { font-family: inherit; }
 }
 
 
+
+.row-room-tag{display:inline-block;margin-left:8px;padding:2px 7px;border-radius:3px;font-family:'IBM Plex Sans KR',sans-serif;font-size:10px;font-weight:500;background:rgba(214,178,124,.12);border:1px solid rgba(214,178,124,.3);color:var(--amber);vertical-align:middle;letter-spacing:.02em}
+
 /* 실시간 모니터 탭 */
 .live-search{margin-bottom:20px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:18px 22px}
 .live-search-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;font-weight:600;color:var(--amber);margin-bottom:10px}
@@ -5513,11 +5516,12 @@ const sb = {
     },
 
     async byRoom(program, room) {
+      const rooms = getRoomGroup(room); // sibling 포함
       const { data, error } = await sb.client()
         .from('students')
         .select('*')
         .eq('프로그램', program)
-        .eq('장소', room)
+        .in('장소', rooms)
         .eq('활성', true)
         .order('학번', { ascending: true });
       if (error) throw error;
@@ -5710,32 +5714,37 @@ const sb = {
   sessions: {
     async create(session) {
       const room = session.장소 || session.cls || session.room;
-      console.log('[SESSION CREATE] 호출 →', room, session.프로그램 || session.program, new Error().stack);
-      // ⭐ 같은 장소의 기존 활성 세션을 모두 비활성화 (좀비 방지)
+      const rooms = getRoomGroup(room); // sibling 포함 (아우름+교과1실 또는 단일)
+      console.log('[SESSION CREATE] 호출 →', rooms.join('+'), session.프로그램 || session.program, new Error().stack);
+      // ⭐ 해당 그룹의 기존 활성 세션 모두 비활성화 (좀비 방지, sibling 포함)
       try {
         await sb.client()
           .from('sessions')
           .update({ 활성: false, 종료시각: new Date().toISOString() })
-          .eq('장소', room)
+          .in('장소', rooms)
           .eq('활성', true);
       } catch (e) {
         console.warn('[sessions.create] 기존 활성 세션 정리 실패 (계속 진행):', e);
       }
-      const row = {
-        세션id: session.세션id || session.sessionId || String(Date.now()),
+      // 세션 메타 공통부
+      const sessionId = session.세션id || session.sessionId || String(Date.now());
+      const common = {
+        세션id: sessionId,
         프로그램: session.프로그램 || session.program,
-        장소: room,
-        교사: session.교사 || session.teacher,
+        교사: session.교사 || session.teacher || '',
         날짜: session.날짜 || todayKST(),
         만료시각: session.만료시각 || session.expireAt,
         활성: true,
       };
+      // sibling 있으면 여러 행, 없으면 1행
+      const rows = rooms.map(r => ({ ...common, 장소: r }));
       const { data, error } = await sb.client()
         .from('sessions')
-        .insert(row)
+        .insert(rows)
         .select();
       if (error) throw error;
-      return data[0];
+      // 호출자 장소 행 우선 반환
+      return data.find(r => r.장소 === room) || data[0];
     },
 
     async end(sessionId) {
@@ -6276,7 +6285,8 @@ async function enterTeacherScreen(room) {
       };
 
       document.getElementById('t-sess-program').textContent = T.session.program;
-      document.getElementById('t-sess-meta').textContent = `${T.session.room} · ${T.session.teacher} 선생님`;
+      const _sib2 = getSiblingRoom(T.session.room);
+      document.getElementById('t-sess-meta').textContent = _sib2 ? `${T.session.room} + ${_sib2} 통합` : `${T.session.room} · ${T.session.teacher} 선생님`;
 
       document.getElementById('t-session').style.display = 'grid';
       document.getElementById('t-wrap').classList.add('session-active');
@@ -6293,6 +6303,18 @@ async function enterTeacherScreen(room) {
   document.getElementById('t-setup').style.display = 'block';
   document.getElementById('t-wrap').classList.remove('session-active');
   loadPastSessions();
+  // 쌍둥이 장소면 교사 입력 선택 사항으로 안내
+  const _sibEnter = getSiblingRoom(room);
+  const _teacherField = document.getElementById('t-teacher');
+  const _teacherLabel = _teacherField && _teacherField.closest('.field-group')?.querySelector('.field-label');
+  if (_sibEnter) {
+    _teacherField.placeholder = '(비워둬도 됨 — ' + room + '+' + _sibEnter + ' 통합 운영)';
+    if (_teacherLabel) _teacherLabel.textContent = 'TEACHER · 담당 교사 (선택)';
+  } else if (_teacherField) {
+    _teacherField.placeholder = '이름 입력';
+    if (_teacherLabel) _teacherLabel.textContent = 'TEACHER · 담당 교사';
+  }
+
   // 첫 진입 시 자동 채움 (심야면 감독 자동 입력)
   await handleProgramChange();
 }
@@ -6395,7 +6417,8 @@ async function startTeacherSession() {
   const teacher = document.getElementById('t-teacher').value.trim();
   const btn = document.getElementById('t-start-btn');
 
-  if (!teacher) {
+  const _sibStart = getSiblingRoom(T.room);
+  if (!teacher && !_sibStart) {
     alert('담당 교사 이름을 입력해주세요');
     document.getElementById('t-teacher').focus();
     return;
@@ -6437,7 +6460,8 @@ async function startTeacherSession() {
 
     // 세션 정보 표시
     document.getElementById('t-sess-program').textContent = program;
-    document.getElementById('t-sess-meta').textContent = `${T.room} · ${teacher} 선생님`;
+    const _sib = getSiblingRoom(T.room);
+    document.getElementById('t-sess-meta').textContent = _sib ? `${T.room} + ${_sib} 통합` : `${T.room} · ${teacher} 선생님`;
 
     // QR 생성
     buildTeacherQR();
@@ -6634,6 +6658,17 @@ document.addEventListener('touchend', (e) => {
 // ══════════════════════════════════════════════════════════════
 
 // 요일 한글 매핑 (0=일, 1=월, ...)
+// 쌍둥이 장소: 양쪽 모두 같은 세션ID 공유, 학생 명단 통합
+const SIBLING_ROOMS = {
+  '아우름': '교과1실',
+  '교과1실': '아우름',
+};
+function getSiblingRoom(room) { return SIBLING_ROOMS[room] || null; }
+function getRoomGroup(room) {
+  const sib = getSiblingRoom(room);
+  return sib ? [room, sib] : [room];
+}
+
 const DAY_KR = ['일', '월', '화', '수', '목', '금', '토'];
 
 // 명단 로딩 + Realtime 구독 (세션 시작/복원 시)
@@ -6850,11 +6885,12 @@ function renderRoster() {
       actionHtml = `<button class="row-manual" onclick="manualAttend('${s.학번}', '${(s.이름 || '').replace(/'/g, "\&#39;")}')">출석</button>`;
     }
 
+    const _roomLabel = getSiblingRoom(T.session.room) && s.장소 ? `<span class="row-room-tag">${s.장소}</span>` : '';
     return `
       <div class="${cls.trim()}">
         <div class="row-status">${statusIcon}</div>
         <div class="row-no">${s.학번}</div>
-        <div class="row-name">${s.이름}</div>
+        <div class="row-name">${s.이름}${_roomLabel}</div>
         <div class="row-time">${timeText}</div>
         ${actionHtml}
       </div>
