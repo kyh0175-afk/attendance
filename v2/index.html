@@ -7807,7 +7807,7 @@ function renderHistoryList() {
           <div class="session-info-block">
             <div class="session-info-line1">
               <span class="session-info-prog">${escapeHtml(s.프로그램 || '')}</span>
-              <span class="session-info-room">${escapeHtml(s.장소 || '')}</span>
+              <span class="session-info-room">${(()=>{const sib=getSiblingRoom(s.장소);return sib?escapeHtml(s.장소+' + '+sib):escapeHtml(s.장소||'');})()}</span>
             </div>
             <div class="session-info-line2">
               <span class="session-info-time">${startTime}</span>
@@ -7906,6 +7906,15 @@ function renderHistoryDetail() {
   ].sort((a, b) =>
     String(a.학번).localeCompare(String(b.학번), undefined, { numeric: true })
   );
+
+  // sibling 세션이면 장소별로 그룹화
+  const _sibDetail = getSiblingRoom(s.장소);
+  const allDisplayGrouped = _sibDetail
+    ? targetRooms.map(rm => ({
+        room: rm,
+        students: allDisplay.filter(d => d.장소 === rm),
+      })).filter(g => g.students.length > 0)
+    : null;
 
   const totalCount = targetStudents.length;
   const absentCount = totalCount - attendedInTarget;
