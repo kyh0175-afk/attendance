@@ -4486,7 +4486,7 @@ input { font-family: inherit; }
         <div class="field-dropdown" id="t-program-dd">
           <button type="button" class="field-dropdown-trigger" id="t-program-trigger">심야 독서시간</button>
           <div class="field-dropdown-list">
-            <div class="field-dropdown-item selected" data-value="심야 독서시간">심야 독서시간</div>
+            <div class="field-dropdown-item selected" data-value="심야 독서시간" data-rikei-only="true">심야 독서시간</div>
             <div class="field-dropdown-item" data-value="야간 독서시간">야간 독서시간</div>
             <div class="field-dropdown-item" data-value="방과후 독서시간">방과후 독서시간</div>
             <div class="field-dropdown-item" data-value="토요일 독서시간" data-rikei-only="true">토요일 독서시간</div>
@@ -6251,10 +6251,11 @@ async function enterTeacherScreen(room) {
       item.classList.toggle('hidden', !isRikei);
     }
   });
-  // 숨겨진 옵션이 선택되어 있으면 심야로 변경
+  // 숨겨진 옵션이 선택되어 있으면 기본값으로 변경
+  // 리케이온이 아니면 심야/토/일 다 숨김 → 기본값은 야간
   const hiddenInput = document.getElementById('t-program');
-  if (!isRikei && (hiddenInput.value === '토요일 독서시간' || hiddenInput.value === '일요일 독서시간')) {
-    setProgramValue('심야 독서시간');
+  if (!isRikei && (hiddenInput.value === '토요일 독서시간' || hiddenInput.value === '일요일 독서시간' || hiddenInput.value === '심야 독서시간')) {
+    setProgramValue('야간 독서시간');
   }
 
   // 화면 표시
@@ -7955,45 +7956,49 @@ function renderHistoryDetail() {
     <div class="detail-list">
   `;
 
+  // 행 렌더 함수 (인라인)
+  const renderRow = (st) => {
+    const a = st._att;
+    let cls = 'detail-row ';
+    let statusIcon = '·';
+    let timeText = '—';
+    let actionHtml = '';
+    if (a) {
+      if (a.사후여부) {
+        cls += 'late '; statusIcon = '✓';
+        timeText = (a.원래시각 || '').slice(0, 5) || '시각 미상';
+      } else if (st._isSelf) {
+        cls += 'self '; statusIcon = '◇';
+        timeText = (a.원래시각 || '').slice(0, 5) + ' 자율';
+      } else {
+        cls += 'attended '; statusIcon = '✓';
+        timeText = (a.원래시각 || '').slice(0, 5);
+      }
+      actionHtml = `<div class="detail-row-action"><button class="admin-btn admin-btn-sm danger" onclick="confirmDeleteAttendance(${a.id})">삭제</button></div>`;
+    } else {
+      cls += 'absent ';
+    }
+    return `
+      <div class="${cls.trim()}">
+        <div class="detail-row-status">${statusIcon}</div>
+        <div class="detail-row-no">${st.학번}</div>
+        <div class="detail-row-name">${escapeHtml(st.이름 || '')}</div>
+        <div class="detail-row-time">${timeText}</div>
+        ${actionHtml}
+      </div>
+    `;
+  };
+
   if (allDisplay.length === 0) {
     html += '<div class="detail-empty">학생이 없어요</div>';
-  } else {
-    html += allDisplay.map(st => {
-      const a = st._att;
-      let cls = 'detail-row ';
-      let statusIcon = '·';
-      let timeText = '—';
-      let actionHtml = '';
-
-      if (a) {
-        if (a.사후여부) {
-          cls += 'late ';
-          statusIcon = '✓';
-          timeText = (a.원래시각 || '').slice(0, 5) || '시각 미상';
-        } else if (st._isSelf) {
-          cls += 'self ';
-          statusIcon = '◇';
-          timeText = (a.원래시각 || '').slice(0, 5) + ' 자율';
-        } else {
-          cls += 'attended ';
-          statusIcon = '✓';
-          timeText = (a.원래시각 || '').slice(0, 5);
-        }
-        actionHtml = `<div class="detail-row-action"><button class="admin-btn admin-btn-sm danger" onclick="confirmDeleteAttendance(${a.id})">삭제</button></div>`;
-      } else {
-        cls += 'absent ';
-      }
-
-      return `
-        <div class="${cls.trim()}">
-          <div class="detail-row-status">${statusIcon}</div>
-          <div class="detail-row-no">${st.학번}</div>
-          <div class="detail-row-name">${escapeHtml(st.이름 || '')}</div>
-          <div class="detail-row-time">${timeText}</div>
-          ${actionHtml}
-        </div>
-      `;
+  } else if (allDisplayGrouped) {
+    // sibling 세션: 장소별 섹션 헤더와 함께
+    html += allDisplayGrouped.map(g => {
+      const head = `<div class="detail-group-header"><span class="detail-group-name">${escapeHtml(g.room)}</span><span class="detail-group-count">${g.students.length}명</span></div>`;
+      return head + g.students.map(renderRow).join('');
     }).join('');
+  } else {
+    html += allDisplay.map(renderRow).join('');
   }
 
   html += '</div>';
