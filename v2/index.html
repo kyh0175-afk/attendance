@@ -5595,11 +5595,13 @@ const sb = {
       // 정상 출석 (학생이 QR 스캔)
       const sessionId = record.세션id || record.sessionId;
       // ⭐ 세션 활성 검증 — 만료/비활성 세션엔 출석 차단 (좀비 QR 방지)
+      // sibling 세션은 같은 세션id로 여러 행 존재 가능 → limit(1)로 첫 행만
       try {
-        const { data: sess } = await sb.client()
-          .from('sessions').select('활성').eq('세션id', sessionId).maybeSingle();
-        if (!sess) return { ok: false, msg: '세션을 찾을 수 없어요. 새 QR을 받아주세요.' };
-        if (!sess.활성) return { ok: false, msg: '이 세션은 이미 마감됐어요. 선생님께 새 QR을 요청해주세요.' };
+        const { data: sessArr, error: sessErr } = await sb.client()
+          .from('sessions').select('활성').eq('세션id', sessionId).limit(1);
+        if (sessErr) throw sessErr;
+        if (!sessArr || sessArr.length === 0) return { ok: false, msg: '세션을 찾을 수 없어요. 새 QR을 받아주세요.' };
+        if (!sessArr[0].활성) return { ok: false, msg: '이 세션은 이미 마감됐어요. 선생님께 새 QR을 요청해주세요.' };
       } catch (e) { console.warn('[attendance.add] 세션 검증 실패 (계속 진행):', e); }
 
       const row = {
