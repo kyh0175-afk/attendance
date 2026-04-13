@@ -6313,7 +6313,7 @@ async function enterTeacherScreen(room) {
   // 쌍둥이 장소면 교사 입력 선택 사항으로 안내
   const _sibEnter = getSiblingRoom(room);
   const _teacherField = document.getElementById('t-teacher');
-  const _teacherLabel = _teacherField && _teacherField.closest('.field-group')?.querySelector('.field-label');
+  const _teacherLabel = (_teacherField && _teacherField.closest('.field-group')) ? _teacherField.closest('.field-group').querySelector('.field-label') : null;
   if (_sibEnter) {
     _teacherField.placeholder = '(비워둬도 됨 — ' + room + '+' + _sibEnter + ' 통합 운영)';
     if (_teacherLabel) _teacherLabel.textContent = 'TEACHER · 담당 교사 (선택)';
@@ -7630,7 +7630,7 @@ async function executeConfirm() {
       showAdminToast('출석 기록이 삭제됐어요', 'ok');
       closeConfirmModal();
       // 좌측 카운트도 갱신
-      const sess = A.historySessions.find(s => s.세션id === A.selectedSession?.세션id);
+      const sess = A.historySessions.find(s => s.세션id === (A.selectedSession && A.selectedSession.세션id));
       if (sess) {
         sess._attCount = (sess._attCount || 1) - 1;
         renderHistoryList();
