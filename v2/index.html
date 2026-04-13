@@ -4297,6 +4297,12 @@ input { font-family: inherit; }
 
 .row-room-tag{display:inline-block;margin-left:8px;padding:2px 7px;border-radius:3px;font-family:'IBM Plex Sans KR',sans-serif;font-size:10px;font-weight:500;background:rgba(214,178,124,.12);border:1px solid rgba(214,178,124,.3);color:var(--amber);vertical-align:middle;letter-spacing:.02em}
 
+
+.detail-group-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px 8px;margin-top:10px;border-bottom:1px dashed rgba(214,178,124,.25)}
+.detail-group-header:first-child{margin-top:0}
+.detail-group-name{font-family:'IBM Plex Sans KR',sans-serif;font-size:11px;font-weight:600;color:var(--amber);letter-spacing:.12em;text-transform:uppercase}
+.detail-group-count{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-dim);font-variant-numeric:tabular-nums}
+
 /* 실시간 모니터 탭 */
 .live-search{margin-bottom:20px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:18px 22px}
 .live-search-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;font-weight:600;color:var(--amber);margin-bottom:10px}
@@ -7909,12 +7915,44 @@ function renderHistoryDetail() {
 
   // sibling 세션이면 장소별로 그룹화
   const _sibDetail = getSiblingRoom(s.장소);
-  const allDisplayGrouped = _sibDetail
-    ? targetRooms.map(rm => ({
-        room: rm,
-        students: allDisplay.filter(d => d.장소 === rm),
-      })).filter(g => g.students.length > 0)
-    : null;
+  let allDisplayGrouped = null;
+  if (_sibDetail) {
+    // 분모 학생: 장소별 그룹
+    const groups = targetRooms.map(rm => ({
+      room: rm,
+      students: allDisplay.filter(d => !d._isSelf && d.장소 === rm),
+    }));
+    // 자율 학생: 매칭되는 장소 그룹에 합침
+    // 1순위: attendance.장소로 매칭
+    // 2순위: 학번 반 번호로 매칭 (1~4반 → 아우름, 5~9반 → 교과1실) — 아우름/교과1실 sibling일 때만
+    const isAureumPair = targetRooms.includes('아우름') && targetRooms.includes('교과1실');
+    const selfRows = allDisplay.filter(d => d._isSelf);
+    const orphanSelf = [];
+    selfRows.forEach(s => {
+      // 1순위: attendance.장소
+      let g = groups.find(g => g.room === (s._att && s._att.장소));
+      // 2순위: 아우름/교과1실 sibling이면 학번 반 번호로 추정
+      if (!g && isAureumPair) {
+        const noStr = String(s.학번 || '');
+        const classNum = parseInt(noStr.slice(1, 3), 10); // 학번 2~3번째 = 반
+        if (!isNaN(classNum)) {
+          const targetRoom = (classNum >= 1 && classNum <= 4) ? '아우름'
+                          : (classNum >= 5 && classNum <= 9) ? '교과1실' : null;
+          if (targetRoom) g = groups.find(g => g.room === targetRoom);
+        }
+      }
+      if (g) g.students.push(s);
+      else orphanSelf.push(s);
+    });
+    // 각 장소 그룹 내 학번 순 정렬
+    groups.forEach(g => g.students.sort((a, b) =>
+      String(a.학번).localeCompare(String(b.학번), undefined, { numeric: true })
+    ));
+    allDisplayGrouped = groups.filter(g => g.students.length > 0);
+    if (orphanSelf.length > 0) {
+      allDisplayGrouped.push({ room: '자율 (기타)', students: orphanSelf });
+    }
+  }
 
   const totalCount = targetStudents.length;
   const absentCount = totalCount - attendedInTarget;
