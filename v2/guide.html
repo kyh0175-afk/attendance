@@ -358,6 +358,20 @@ code {
   .toc-title { color: #b8843f; font-size: 16pt; }
   .toc a { color: #1a1a1a; }
   .toc li::before { color: #b8843f; }
+
+  /* 섹션마다 새 페이지로 시작 — 내용이 길면 자연스럽게 2페이지 이상으로 이어짐 */
+  section {
+    page-break-before: always;
+    break-before: page;
+  }
+  section > h1 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  h2 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
   .toc ul li { color: #555; }
 
   section { page-break-inside: avoid; margin-bottom: 32px; }
