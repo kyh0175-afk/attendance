@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>코스모스 독서시간 출석 시스템 — 이용 가이드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --paper:     #2a1f15;
+  --paper2:    #322619;
+  --paper3:    #3a2c1d;
+  --border:    rgba(214, 178, 124, 0.12);
+  --border2:   rgba(214, 178, 124, 0.22);
+  --border3:   rgba(214, 178, 124, 0.4);
+  --amber:     #d6b27c;
+  --copper:    #c87f5e;
+  --terra:     #b8543f;
+  --sage:      #7ba087;
+  --cream:     #f4e8d0;
+  --ink:       #e8dcc4;
+  --ink-dim:   #a89880;
+  --ink-faint: #6b5d4a;
+  --info:      #5eb8ff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--paper);
+  color: var(--cream);
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 15px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 60px 40px 120px;
+}
+
+/* ─── 헤더 ─── */
+.doc-head {
+  margin-bottom: 60px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border2);
+}
+.doc-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 48px;
+  color: var(--cream);
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+}
+.doc-sub {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--amber);
+  letter-spacing: 0.02em;
+  margin-bottom: 16px;
+}
+.doc-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-faint);
+  letter-spacing: 0.05em;
+}
+
+/* ─── 목차 ─── */
+.toc {
+  background: var(--paper2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--amber);
+  border-radius: 4px;
+  padding: 28px 32px;
+  margin-bottom: 60px;
+}
+.toc-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 24px;
+  color: var(--amber);
+  margin-bottom: 16px;
+}
+.toc ol {
+  list-style: none;
+  counter-reset: toc;
+}
+.toc li {
+  counter-increment: toc;
+  padding: 6px 0;
+  font-size: 14px;
+}
+.toc li::before {
+  content: counter(toc, decimal-leading-zero) ".";
+  font-family: 'DM Mono', monospace;
+  color: var(--amber);
+  margin-right: 12px;
+  font-weight: 500;
+}
+.toc a {
+  color: var(--cream);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.toc a:hover { color: var(--amber); }
+.toc ul {
+  list-style: none;
+  margin: 4px 0 4px 28px;
+  padding: 0;
+}
+.toc ul li {
+  counter-increment: none;
+  font-size: 13px;
+  color: var(--ink-dim);
+  padding: 3px 0;
+}
+.toc ul li::before {
+  content: "→";
+  color: var(--ink-faint);
+  margin-right: 8px;
+}
+
+/* ─── 섹션 ─── */
+section { margin-bottom: 80px; scroll-margin-top: 40px; }
+.section-num {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--amber);
+  letter-spacing: 0.15em;
+  margin-bottom: 8px;
+}
+h1 {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--cream);
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border2);
+  letter-spacing: -0.01em;
+}
+h2 {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--amber);
+  margin-top: 48px;
+  margin-bottom: 16px;
+  letter-spacing: -0.005em;
+  scroll-margin-top: 40px;
+}
+h3 {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--cream);
+  margin-top: 32px;
+  margin-bottom: 12px;
+}
+p {
+  margin-bottom: 14px;
+  color: var(--ink);
+}
+p + p { margin-top: -2px; }
+
+/* ─── 이미지 placeholder ─── */
+.img-placeholder {
+  display: block;
+  background: var(--paper3);
+  border: 2px dashed var(--border2);
+  border-radius: 4px;
+  padding: 40px 24px;
+  margin: 20px 0 28px;
+  text-align: center;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  color: var(--ink-dim);
+}
+.img-placeholder-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--amber);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.img-placeholder-desc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* 실제 이미지로 교체할 때 사용할 클래스 */
+.guide-img {
+  display: block;
+  max-width: 100%;
+  margin: 20px auto 28px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.guide-img-caption {
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-dim);
+  margin-top: -20px;
+  margin-bottom: 28px;
+}
+
+/* ─── 단계 박스 ─── */
+.step {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 16px;
+  padding: 16px 20px;
+  background: var(--paper2);
+  border-left: 2px solid var(--border3);
+  border-radius: 0 4px 4px 0;
+}
+.step-num {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--amber);
+  color: var(--paper);
+  font-family: 'DM Mono', monospace;
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.step-body { flex: 1; padding-top: 2px; }
+.step-body strong { color: var(--cream); }
+
+/* ─── 알림박스 ─── */
+.note {
+  margin: 20px 0;
+  padding: 16px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.note-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.note-info {
+  background: rgba(94, 184, 255, 0.06);
+  border-left: 3px solid var(--info);
+}
+.note-info .note-title { color: var(--info); }
+.note-warn {
+  background: rgba(214, 178, 124, 0.06);
+  border-left: 3px solid var(--amber);
+}
+.note-warn .note-title { color: var(--amber); }
+.note-danger {
+  background: rgba(184, 84, 63, 0.07);
+  border-left: 3px solid var(--terra);
+}
+.note-danger .note-title { color: var(--terra); }
+.note-good {
+  background: rgba(123, 160, 135, 0.07);
+  border-left: 3px solid var(--sage);
+}
+.note-good .note-title { color: var(--sage); }
+
+/* ─── 리스트 ─── */
+ul.plain {
+  list-style: none;
+  margin: 12px 0 18px;
+  padding: 0;
+}
+ul.plain li {
+  padding: 4px 0 4px 22px;
+  position: relative;
+  color: var(--ink);
+}
+ul.plain li::before {
+  content: "·";
+  position: absolute;
+  left: 6px;
+  color: var(--amber);
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* ─── 강조 ─── */
+strong { color: var(--cream); font-weight: 600; }
+em { color: var(--amber); font-style: italic; font-family: 'Cormorant Garamond', serif; font-size: 1.08em; }
+code {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.9em;
+  background: var(--paper3);
+  padding: 2px 8px;
+  border-radius: 3px;
+  color: var(--amber);
+}
+
+/* ─── 푸터 ─── */
+.doc-foot {
+  margin-top: 100px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border2);
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 16px;
+  color: var(--ink-faint);
+}
+
+/* ══════════════ 인쇄용 ══════════════ */
+@media print {
+  @page { margin: 18mm 16mm; size: A4; }
+
+  body {
+    background: #ffffff;
+    color: #1a1a1a;
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+  .wrap { max-width: none; padding: 0; }
+
+  .doc-head { border-bottom-color: #888; margin-bottom: 24px; padding-bottom: 16px; }
+  .doc-title { color: #1a1a1a; font-size: 28pt; }
+  .doc-sub { color: #b8843f; font-size: 14pt; }
+  .doc-meta { color: #666; }
+
+  .toc {
+    background: #f7f2e8;
+    border-color: #d0c4a6;
+    border-left-color: #b8843f;
+    padding: 14px 18px;
+    page-break-after: always;
+  }
+  .toc-title { color: #b8843f; font-size: 16pt; }
+  .toc a { color: #1a1a1a; }
+  .toc li::before { color: #b8843f; }
+  .toc ul li { color: #555; }
+
+  section { page-break-inside: avoid; margin-bottom: 32px; }
+  section:not(:first-of-type) { page-break-before: auto; }
+
+  h1 {
+    color: #1a1a1a;
+    border-bottom-color: #888;
+    font-size: 20pt;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    page-break-after: avoid;
+  }
+  h2 { color: #b8843f; font-size: 14pt; margin-top: 22px; page-break-after: avoid; }
+  h3 { color: #1a1a1a; font-size: 12pt; margin-top: 16px; page-break-after: avoid; }
+  p { color: #222; margin-bottom: 8px; }
+
+  .section-num { color: #888; }
+
+  strong { color: #000; }
+  em { color: #a0601e; }
+  code { background: #f0e9d6; color: #8b5a1e; }
+
+  .img-placeholder {
+    background: #faf6ec;
+    border-color: #c0b088;
+    padding: 24px;
+  }
+  .img-placeholder-label { color: #8b5a1e; }
+  .img-placeholder-desc { color: #444; }
+  .guide-img { border-color: #c0b088; }
+  .guide-img-caption { color: #666; }
+
+  .step {
+    background: #faf6ec;
+    border-left-color: #b8843f;
+    page-break-inside: avoid;
+  }
+  .step-num { background: #b8843f; color: #fff; }
+  .step-body { color: #222; }
+  .step-body strong { color: #000; }
+
+  .note { page-break-inside: avoid; }
+  .note-info { background: #eaf4fd; border-left-color: #3a8cc8; }
+  .note-info .note-title { color: #2a6c9d; }
+  .note-warn { background: #faf2de; border-left-color: #b8843f; }
+  .note-warn .note-title { color: #8b5a1e; }
+  .note-danger { background: #fbeae3; border-left-color: #a03818; }
+  .note-danger .note-title { color: #802808; }
+  .note-good { background: #eaf3ec; border-left-color: #4a7658; }
+  .note-good .note-title { color: #355a42; }
+
+  ul.plain li { color: #222; }
+  ul.plain li::before { color: #b8843f; }
+
+  .doc-foot { color: #888; border-top-color: #ccc; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ═══════════════════ 헤더 ═══════════════════ -->
+<header class="doc-head">
+  <div class="doc-title">Cosmos</div>
+  <div class="doc-sub">코스모스 독서시간 출석 시스템 — 이용 가이드</div>
+  <div class="doc-meta">v2 · 2026-04-15 기준 · 유봉여자고등학교</div>
+</header>
+
+<!-- ═══════════════════ 목차 ═══════════════════ -->
+<nav class="toc">
+  <div class="toc-title">목차</div>
+  <ol>
+    <li><a href="#intro">시작하기 전에</a></li>
+    <li><a href="#student">학생용 — 출석하기</a>
+      <ul>
+        <li><a href="#stu-qr">QR 코드로 출석하기</a></li>
+        <li><a href="#stu-check">내 출석 기록 확인하기</a></li>
+        <li><a href="#stu-fix">출석 기록이 이상할 때</a></li>
+      </ul>
+    </li>
+    <li><a href="#teacher">교사·관리자용 — 출석 받기</a>
+      <ul>
+        <li><a href="#tch-start">출석 시간 시작하기</a></li>
+        <li><a href="#tch-supervisor">심야 감독 교사 자동 채움</a></li>
+        <li><a href="#tch-monitor">학생 출석 현황 보기</a></li>
+        <li><a href="#tch-manual">학번으로 직접 출석 추가</a></li>
+        <li><a href="#tch-extend">QR 시간이 끝났을 때 (연장 안내 창)</a></li>
+        <li><a href="#tch-end">출석 시간 마감하기</a></li>
+        <li><a href="#tch-late">지난 시간에 나중에 출석 추가하기</a></li>
+      </ul>
+    </li>
+    <li><a href="#admin">관리자 페이지</a>
+      <ul>
+        <li><a href="#adm-students">명단 관리</a></li>
+        <li><a href="#adm-history">출석 기록</a></li>
+        <li><a href="#adm-analysis">분석</a></li>
+        <li><a href="#adm-requests">요청 관리</a></li>
+        <li><a href="#adm-live">실시간</a></li>
+        <li><a href="#adm-diag">진단</a></li>
+      </ul>
+    </li>
+    <li><a href="#routine">일상 운영 체크리스트</a></li>
+    <li><a href="#trouble">자주 있는 문제</a></li>
+  </ol>
+</nav>
+
+<!-- ═══════════════════ 1. 시작하기 전에 ═══════════════════ -->
+<section id="intro">
+  <div class="section-num">SECTION 01</div>
+  <h1>시작하기 전에</h1>
+
+  <p>이 시스템은 유봉여자고등학교의 <em>코스모스 독서시간</em> 출석을 QR 코드로 관리하는 웹 애플리케이션입니다. 교사가 QR 코드를 생성해 학생에게 보여주면, 학생이 본인 휴대폰으로 스캔해 학번을 입력하는 방식으로 출석이 처리됩니다.</p>
+
+  <h2>접속 주소</h2>
+  <p>모든 사용자는 아래 주소로 접속합니다. 별도의 앱 설치나 로그인은 필요하지 않습니다.</p>
+  <p><code>https://kyh0175-afk.github.io/attendance/v2/</code></p>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 01] 메인 화면</div>
+    <div class="img-placeholder-desc">접속 직후 뜨는 메인 화면. "아우름 / 교과1실 / 해오름 / 리케이온" 네 장소 선택 카드와 "학생 · 내 출석 확인" 버튼이 보이는 상태.</div>
+  </div>
+
+  <h2>역할별 진입 방법</h2>
+  <ul class="plain">
+    <li><strong>학생</strong> — 교사가 보여주는 QR 코드를 휴대폰 카메라로 스캔하면 바로 출석 화면으로 이동합니다. 직접 주소를 입력할 필요는 없습니다.</li>
+    <li><strong>교사</strong> — 메인 화면에서 본인이 담당하는 장소 카드를 선택해 교사 화면으로 이동합니다. (아우름 · 교과1실 · 해오름 · 리케이온)</li>
+    <li><strong>관리자</strong> — 메인 화면 우측 상단의 <strong>관리자 페이지</strong> 버튼으로 이동합니다.</li>
+  </ul>
+
+  <h2>운영 중인 프로그램</h2>
+  <ul class="plain">
+    <li><strong>방과후 독서시간</strong> — 평일 16:30 ~ 18:20 · 아우름 / 교과1실 / 해오름</li>
+    <li><strong>야간 독서시간</strong> — 평일 19:20 ~ 21:30 · 아우름 / 교과1실 / 해오름</li>
+    <li><strong>심야 독서시간</strong> — 평일 21:30 ~ 23:00 · 리케이온</li>
+    <li><strong>토요일 독서시간</strong> — 오전 08:30 ~ 12:30 / 오후 13:30 ~ 17:30 · 리케이온</li>
+    <li><strong>일요일 독서시간</strong> — 오후 13:30 ~ 17:30 · 리케이온</li>
+  </ul>
+
+  <div class="note note-info">
+    <div class="note-title">💡 쌍둥이 장소 운영</div>
+    아우름과 교과1실은 실질적으로 같은 공간으로 통합 운영됩니다. 교사 한 분이 양쪽을 동시에 관리하며, 학생은 어느 쪽 QR 코드를 스캔해도 같은 출석 시간에 기록됩니다.
+  </div>
+</section>
+
+<!-- ═══════════════════ 2. 학생용 ═══════════════════ -->
+<section id="student">
+  <div class="section-num">SECTION 02</div>
+  <h1>학생용 — 출석하기</h1>
+
+  <h2 id="stu-qr">QR 코드로 출석하기</h2>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body"><strong>교사가 보여주는 QR 코드를</strong> 휴대폰 카메라 앱으로 스캔합니다. 별도의 QR 스캐너 앱은 필요하지 않습니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">스캔 후 뜨는 링크를 눌러 <strong>출석 화면</strong>으로 이동합니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">화면에 본인의 <strong>학번 5자리</strong>를 입력합니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">"<strong>환영합니다, ○○○님</strong>" 화면이 뜨면 <strong>출석이 완료</strong>된 것입니다. 이 화면이 뜨지 않으면 출석이 처리되지 않은 것이니 교사에게 알려주세요.</div>
+  </div>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 02] 학생 출석 화면 — 학번 입력</div>
+    <div class="img-placeholder-desc">QR 스캔 직후 학생이 보는 화면. 상단에 프로그램명·장소·교사 이름이 보이고, 중앙에 5자리 학번을 입력하는 숫자 키패드가 있는 상태.</div>
+  </div>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 03] 학생 출석 완료 화면</div>
+    <div class="img-placeholder-desc">출석 처리된 후 뜨는 환영 메시지 화면. "환영합니다, ○○○님" 같은 문구와 출석 시각이 보이는 상태.</div>
+  </div>
+
+  <div class="note note-warn">
+    <div class="note-title">⚠ QR 코드 유효 시간</div>
+    QR 코드는 생성 후 <strong>20분 동안만</strong> 사용할 수 있습니다. 20분이 지나면 교사가 새 QR 코드를 만들거나 연장해야 합니다. 출석 화면에서 "이 시간은 이미 마감됐어요" 같은 메시지가 나오면 교사에게 알려 새 QR 코드를 받으세요.
+  </div>
+
+  <h2 id="stu-check">내 출석 기록 확인하기</h2>
+
+  <p>본인의 지난 출석 기록을 직접 확인할 수 있습니다.</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">접속 주소로 이동합니다. (<code>https://kyh0175-afk.github.io/attendance/v2/</code>)</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">메인 화면에서 "<strong>내 출석 확인</strong>" 버튼을 누릅니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body"><strong>학번 5자리</strong>를 입력하면 본인의 최근 출석 기록이 날짜별로 표시됩니다.</div>
+  </div>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 04] 학생 출석 조회 화면</div>
+    <div class="img-placeholder-desc">학번 입력 후 뜨는 본인의 출석 기록 목록. 날짜·프로그램·상태(출석/미출석)가 리스트로 보이는 상태.</div>
+  </div>
+
+  <h2 id="stu-fix">출석 기록이 이상할 때</h2>
+
+  <p>본인 출석 조회 화면에서 기록이 잘못되어 있으면 <strong>수정 요청</strong>을 보낼 수 있습니다.</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">내 출석 기록에서 수정을 원하는 날짜의 항목을 누릅니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">변경할 <strong>출석 상태</strong>(출석/결석/자율 등)를 고르고, <strong>사유</strong>를 간단히 적습니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">"요청 보내기"를 누르면 관리자에게 요청이 전달됩니다. 관리자가 승인해야 기록이 변경됩니다.</div>
+  </div>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 05] 출석 수정 요청 화면</div>
+    <div class="img-placeholder-desc">특정 날짜 기록을 눌렀을 때 뜨는 수정 요청 폼. 상태 선택 옵션과 사유 입력란이 있는 상태.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════ 3. 교사용 ═══════════════════ -->
+<section id="teacher">
+  <div class="section-num">SECTION 03</div>
+  <h1>교사·관리자용 — 출석 받기</h1>
+
+  <p>교사 화면에서는 QR 코드를 생성해 학생 출석을 받고, 실시간으로 출석 현황을 확인하며, 필요 시 직접 학번을 입력해 출석을 추가할 수 있습니다.</p>
+
+  <h2 id="tch-start">출석 시간 시작하기</h2>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">메인 화면에서 본인이 담당하는 <strong>장소 카드</strong>(아우름·교과1실·해오름·리케이온)를 선택합니다.</div>
+  </div>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 06] 교사 화면 — 설정 단계</div>
+    <div class="img-placeholder-desc">장소 진입 직후 화면. 상단에 장소명, 중앙에 "프로그램 선택" 드롭다운과 "담당 교사 이름" 입력란, 아래에 "QR 생성 및 출석 시작" 버튼이 있는 상태.</div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body"><strong>프로그램</strong>을 선택합니다. (심야 · 야간 · 방과후 · 토요일 · 일요일 독서시간) 리케이온이 아닌 장소에서는 심야/토요일/일요일 옵션이 보이지 않습니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body"><strong>담당 교사 이름</strong>을 입력합니다. 아우름 + 교과1실 통합 운영일 때는 생략할 수 있습니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">"<strong>QR 생성 및 출석 시작</strong>" 버튼을 누릅니다.</div>
+  </div>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 07] 교사 화면 — QR 코드 표시</div>
+    <div class="img-placeholder-desc">출석 시간 시작 후 뜨는 화면. 중앙에 큰 QR 코드, 상단에 프로그램·장소·교사 정보, 우측에 남은 시간 카운트다운, 아래에 출석 학생 명단이 있는 상태.</div>
+  </div>
+
+  <h2 id="tch-supervisor">심야 감독 교사 자동 채움</h2>
+
+  <p>리케이온에서 <strong>심야 독서시간</strong>을 선택하면 그날의 심야 감독 교사 이름이 자동으로 입력됩니다. 이 정보는 미리 등록해둔 감독표에서 가져옵니다.</p>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 08] 심야 감독 자동 채움 상태</div>
+    <div class="img-placeholder-desc">리케이온 + 심야 독서시간 선택 시 교사 이름 칸에 자동으로 이름이 들어가 있고, 그 아래에 "⚠️ 오늘의 심야 감독으로 자동 입력됨 — 다르면 직접 수정하세요" 안내가 보이는 상태.</div>
+  </div>
+
+  <div class="note note-danger">
+    <div class="note-title">⚠ 반드시 확인하세요</div>
+    <p>자동 채움은 감독표 기준이라 <strong>실제 감독자와 다를 수 있습니다</strong>. 시작 버튼을 누르기 전 반드시 본인 이름이 맞는지 확인하고, 다르면 직접 지우고 올바른 이름을 입력하세요.</p>
+    <p>자동 채움이 틀린 채로 출석 시간을 시작해버렸다면, 나중에 관리자 페이지의 <strong>출석 기록</strong> 탭에서 수정할 수 있습니다. (해당 세션 선택 후 교사 이름 옆 연필 아이콘 클릭)</p>
+  </div>
+
+  <h2 id="tch-monitor">학생 출석 현황 보기</h2>
+
+  <p>QR 코드가 표시된 화면에서 학생이 출석할 때마다 <strong>실시간으로 명단</strong>이 갱신됩니다. 전체 / 출석 / 미출석 탭으로 구분해 볼 수 있습니다.</p>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 09] 출석 명단 영역</div>
+    <div class="img-placeholder-desc">교사 화면 하단의 학생 명단. "전체 / 출석 / 미출석" 탭이 있고, 학생 한 명씩 체크 표시(출석) 또는 회색 점(미출석) 아이콘과 함께 학번·이름이 보이는 상태. 아우름+교과1실 통합일 때는 학생 이름 옆에 장소 태그가 붙은 상태.</div>
+  </div>
+
+  <div class="note note-info">
+    <div class="note-title">💡 실시간 갱신</div>
+    학생이 QR을 스캔해 학번을 입력하면 교사 화면에 즉시 반영됩니다. 네트워크 문제로 반영이 늦어도 최대 3초 이내에 자동으로 새로고침됩니다. 수동 새로고침은 불필요합니다.
+  </div>
+
+  <h2 id="tch-manual">학번으로 직접 출석 추가</h2>
+
+  <p>학생의 휴대폰이 없거나 QR 스캔이 안 되는 경우, 교사가 직접 학번을 입력해 출석을 추가할 수 있습니다.</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">QR 코드 화면 오른쪽의 "<strong>직접 출석 추가</strong>" 버튼을 누릅니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">숫자 키패드가 뜨면 <strong>학번 5자리</strong>를 입력합니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">입력이 완료되면 해당 학생이 명단에 추가됩니다.</div>
+  </div>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 10] 직접 출석 추가 키패드</div>
+    <div class="img-placeholder-desc">"직접 출석 추가" 버튼 클릭 시 뜨는 숫자 키패드 모달. 0~9 숫자 버튼과 학번 표시 영역이 있는 상태.</div>
+  </div>
+
+  <h2 id="tch-extend">QR 시간이 끝났을 때 — 연장 안내 창</h2>
+
+  <p>QR 코드 유효 시간 20분이 지나면 자동으로 <strong>연장 안내 창</strong>이 뜹니다. 이 창이 뜨는 동안 학생은 임시로 출석을 할 수 없으며, 교사의 선택을 기다립니다.</p>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 11] 연장 안내 창</div>
+    <div class="img-placeholder-desc">"QR 시간이 만료됐어요" 제목과 함께 중앙에 큰 카운트다운(5:00부터 감소), 아래에 "세션 마감" 과 "+ 10분 연장" 두 버튼이 있는 상태.</div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">창 중앙에 <strong>5분 카운트다운</strong>이 시작됩니다. 이 시간 안에 선택해야 합니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">아직 올 학생이 더 있으면 "<strong>+ 10분 연장</strong>" 버튼을 누릅니다. QR이 다시 활성화되고 학생이 계속 출석할 수 있습니다. <strong>연장은 1회만 가능</strong>합니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">더 받을 학생이 없으면 "<strong>세션 마감</strong>" 버튼을 누릅니다. 출석 시간이 완전히 종료되고 메인 화면으로 돌아갑니다.</div>
+  </div>
+
+  <div class="note note-warn">
+    <div class="note-title">⏰ 5분 안에 선택하지 않으면</div>
+    5분 카운트다운이 끝날 때까지 아무 버튼도 누르지 않으면 <strong>자동으로 세션이 마감</strong>되고 메인 화면으로 이동합니다. 자리를 비웠거나 창을 닫아도 안전하게 정리됩니다.
+  </div>
+
+  <div class="note note-info">
+    <div class="note-title">💡 연장 후 두 번째 만료</div>
+    이미 한 번 연장한 뒤 또 20분이 지나면 연장 안내 창이 다시 뜨지만, 이번에는 "+ 10분 연장" 버튼이 <strong>회색으로 비활성화</strong>됩니다. 이제는 "세션 마감"만 누를 수 있고, 5분 뒤 자동 마감됩니다.
+  </div>
+
+  <h2 id="tch-end">출석 시간 마감하기</h2>
+
+  <p>수업이 끝났거나 모든 학생이 출석을 마쳤으면 직접 출석 시간을 마감할 수 있습니다. 굳이 20분을 다 기다릴 필요는 없습니다.</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">QR 코드 화면에서 "<strong>출석 마감</strong>" 버튼을 누릅니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">확인 창에서 "<strong>마감</strong>"을 한 번 더 누릅니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">출석 현황 요약이 간단히 표시된 후 메인 화면으로 돌아갑니다.</div>
+  </div>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 12] 출석 마감 확인 창</div>
+    <div class="img-placeholder-desc">"출석 마감" 버튼 클릭 시 뜨는 확인 모달. "정말 마감할까요?" 같은 문구와 취소/마감 두 버튼이 있는 상태.</div>
+  </div>
+
+  <h2 id="tch-late">지난 시간에 나중에 출석 추가하기</h2>
+
+  <p>수업이 끝난 뒤에 뒤늦게 온 학생이나 QR 스캔 실패로 출석이 안 된 학생을 나중에 추가할 수 있습니다. 이를 <strong>사후 출석</strong>이라고 합니다.</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">메인 화면에서 본인 장소를 선택해 교사 화면으로 이동합니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">설정 화면 아래쪽의 "<strong>오늘 마감된 시간 — 사후 출석</strong>" 영역에서 해당 출석 시간 카드의 "<strong>사후 출석 추가</strong>" 버튼을 누릅니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">숫자 키패드로 학번을 입력하면 해당 학생이 사후 출석으로 추가됩니다.</div>
+  </div>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 13] 오늘 마감된 시간 카드</div>
+    <div class="img-placeholder-desc">교사 화면 아래쪽 "오늘 마감된 시간 · 사후 출석" 섹션. 오늘 이미 끝난 출석 시간 카드 목록이 나오고 각 카드에 "사후 출석 추가" 버튼이 있는 상태.</div>
+  </div>
+
+  <div class="note note-good">
+    <div class="note-title">✓ 사후 출석은 명단에 표시됩니다</div>
+    사후로 추가된 학생은 출석 기록에서 <strong>"사후"</strong> 라벨로 구분됩니다. 정상 출석과 혼동되지 않게 관리됩니다.
+  </div>
+</section>
+
+<!-- ═══════════════════ 4. 관리자 페이지 ═══════════════════ -->
+<section id="admin">
+  <div class="section-num">SECTION 04</div>
+  <h1>관리자 페이지</h1>
+
+  <p>관리자 페이지는 명단·기록·분석·요청 등 전반적인 운영을 처리하는 곳입니다. 메인 화면 우측 상단의 <strong>관리자 페이지</strong> 버튼으로 이동할 수 있습니다. 왼쪽 사이드바에서 탭을 전환하며 사용합니다.</p>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 14] 관리자 페이지 전체 레이아웃</div>
+    <div class="img-placeholder-desc">좌측에 세로 사이드바(Cosmos 로고 + 6개 메뉴: S 명단 관리 / H 출석 기록 / A 분석 / R 요청 관리 / L 실시간 / D 진단)와 우측 메인 콘텐츠 영역이 있는 전체 화면.</div>
+  </div>
+
+  <h2 id="adm-students">명단 관리</h2>
+
+  <p>학생 명단을 추가·수정·삭제하고, 엑셀 파일로 일괄 업로드할 수 있습니다.</p>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 15] 명단 관리 탭</div>
+    <div class="img-placeholder-desc">프로그램·장소·학년·활성 상태 필터가 상단에 있고, 그 아래에 학번·이름·프로그램·장소·출석 요일·상태 열로 구성된 학생 목록 테이블이 있는 상태.</div>
+  </div>
+
+  <h3>학생 개별 추가 · 수정</h3>
+  <ul class="plain">
+    <li>우측 상단 "<strong>+ 학생 추가</strong>" 버튼으로 한 명씩 추가할 수 있습니다.</li>
+    <li>학생 행을 누르면 수정 모달이 떠서 이름·프로그램·장소·출석 요일 등을 변경할 수 있습니다.</li>
+  </ul>
+
+  <h3>엑셀로 일괄 업로드</h3>
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">"<strong>양식 다운로드</strong>" 버튼으로 템플릿 엑셀 파일을 받습니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">엑셀에서 학생 정보(학번·이름·프로그램·장소·출석 요일)를 입력·수정합니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">"<strong>엑셀 업로드</strong>" 버튼으로 파일을 올립니다.</div>
+  </div>
+
+  <div class="note note-good">
+    <div class="note-title">✓ 비파괴 업로드</div>
+    엑셀에 있는 학생은 추가되거나 정보가 갱신됩니다. 엑셀에 없는 기존 학생은 <strong>그대로 유지</strong>됩니다. 부분 업데이트할 때 다른 학생이 사라질 걱정은 없습니다.
+  </div>
+
+  <h2 id="adm-history">출석 기록</h2>
+
+  <p>지난 출석 시간의 기록을 날짜별로 조회하고, 학생별 출석 상태를 확인할 수 있습니다.</p>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 16] 출석 기록 탭 전체</div>
+    <div class="img-placeholder-desc">좌측에 날짜별 출석 시간 카드 목록(기간·프로그램·장소 필터), 우측에 선택된 출석 시간의 상세 정보(전체 학생 수, 출석/미출석 수, 출석률, 학생 명단)가 있는 2열 레이아웃.</div>
+  </div>
+
+  <ul class="plain">
+    <li>좌측 목록에서 <strong>필터</strong>로 기간·프로그램·장소를 좁힐 수 있습니다.</li>
+    <li>카드를 누르면 우측에 해당 출석 시간의 <strong>상세 명단</strong>이 보입니다. 쌍둥이 장소는 아우름/교과1실 섹션으로 구분되어 표시됩니다.</li>
+    <li>출석 시간 제목 옆의 <strong>연필 아이콘</strong>을 누르면 담당 교사 이름을 수정할 수 있습니다. (심야 자동 채움이 틀린 경우 등)</li>
+    <li>"<strong>+ 사후 출석 추가</strong>" 버튼으로 해당 출석 시간에 학생을 추가할 수 있습니다.</li>
+    <li>개별 학생 행의 "<strong>삭제</strong>" 버튼으로 잘못된 출석 기록을 제거할 수 있습니다.</li>
+  </ul>
+
+  <h2 id="adm-analysis">분석</h2>
+
+  <p>기간별 출석률, 프로그램별 통계, 학생별 출석 횟수 등을 한눈에 볼 수 있습니다.</p>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 17] 분석 탭</div>
+    <div class="img-placeholder-desc">프로그램별·장소별 출석률 요약 카드와 기간별 출석 추이 그래프가 있는 상태.</div>
+  </div>
+
+  <h2 id="adm-requests">요청 관리</h2>
+
+  <p>학생이 보낸 출석 수정 요청이나 출석 요일 변경 요청을 확인하고 승인·반려할 수 있습니다.</p>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 18] 요청 관리 탭</div>
+    <div class="img-placeholder-desc">대기 중 / 처리됨 탭으로 나뉘어 학생이 보낸 요청 목록이 표시되고, 각 요청에 "승인" / "반려" 버튼이 있는 상태.</div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">요청 카드에서 <strong>학생 정보</strong>와 <strong>요청 사유</strong>를 확인합니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">"<strong>승인</strong>" 또는 "<strong>반려</strong>"를 누릅니다. 승인 시 출석 기록이 즉시 변경됩니다.</div>
+  </div>
+
+  <h2 id="adm-live">실시간</h2>
+
+  <p>지금 이 순간 운영 중인 네 장소의 출석 현황을 한 화면에서 볼 수 있습니다. 학생 문의가 왔을 때 (<em>"저 출석이 안 됐어요"</em>) 빠르게 확인할 때 쓰세요.</p>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 19] 실시간 탭</div>
+    <div class="img-placeholder-desc">아우름 · 교과1실 · 해오름 · 리케이온 네 장소의 카드가 가로로 배치되고, 각 카드에 현재 출석 시간·출석 인원·학생 명단이 보이는 상태. 상단에 학번 검색 박스가 있음.</div>
+  </div>
+
+  <ul class="plain">
+    <li>각 장소 카드는 현재 활성화된 출석 시간이 있을 때만 정보를 표시합니다.</li>
+    <li>상단의 <strong>학번 검색</strong>에 5자리를 입력하면 해당 학생이 오늘 어디에 출석했는지 바로 확인할 수 있습니다.</li>
+  </ul>
+
+  <h2 id="adm-diag">진단</h2>
+
+  <p>오늘 예정된 출석 시간이 모두 정상적으로 생성됐는지 확인하고, 교사 기기에서 발생한 이벤트 로그를 조회할 수 있습니다. <strong>이 탭은 운영 중 문제가 생겼는지 조기에 발견하는 데 가장 중요합니다.</strong></p>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 20] 진단 탭</div>
+    <div class="img-placeholder-desc">상단에 "오늘의 세션 현황" 카드 그리드(각 프로그램별로 녹색/amber/빨강/회색 상태 표시), 하단에 장소·이벤트 필터가 있는 최근 교사 기기 로그 테이블이 있는 상태.</div>
+  </div>
+
+  <h3>오늘의 세션 현황</h3>
+  <p>각 프로그램별로 <strong>예정된 출석 시간이 실제로 생성됐는지</strong>를 색상으로 한눈에 보여줍니다.</p>
+
+  <ul class="plain">
+    <li><strong style="color:#7ba087">녹색 — 정상 진행 중 / 운영 완료</strong>. 출석 시간이 잘 만들어져 동작 중이거나 이미 잘 마무리됐습니다.</li>
+    <li><strong style="color:#d6b27c">amber — 마감됨</strong>. 운영 시간 안에 출석 시간이 만들어졌다가 정상적으로 마감됐습니다.</li>
+    <li><strong style="color:#b8543f">빨강 — 세션 미생성</strong>. 예정 시각이 지났는데 해당 출석 시간이 아직 만들어지지 않았습니다. <strong>즉시 담당 교사에게 확인</strong>하세요.</li>
+    <li><strong style="color:#6b5d4a">회색 — 예정</strong>. 아직 시작 시각 전입니다.</li>
+  </ul>
+
+  <h3>최근 교사 기기 로그</h3>
+  <p>교사 기기에서 발생한 주요 이벤트(페이지 진입·프로그램 선택·세션 생성·만료·연장·종료 등)를 시각 순으로 볼 수 있습니다. 장소별·이벤트 유형별로 필터링할 수 있습니다.</p>
+
+  <ul class="plain">
+    <li><strong>에러만</strong> 필터 — 실패 이벤트(<code>*_fail</code>)만 표시</li>
+    <li><strong>세션 관련</strong> 필터 — 세션 시작·생성·만료·연장·종료 이벤트만 표시</li>
+    <li><strong>감독 자동 채움</strong> 필터 — 심야 감독 자동 채움 관련 이벤트만 표시</li>
+  </ul>
+</section>
+
+<!-- ═══════════════════ 5. 체크리스트 ═══════════════════ -->
+<section id="routine">
+  <div class="section-num">SECTION 05</div>
+  <h1>일상 운영 체크리스트</h1>
+
+  <p>매일 반복되는 기본 루틴입니다. 특히 <strong>관리자는 각 프로그램 시작 5~10분 후 진단 탭을 한 번씩 열어보는 습관</strong>을 들이면 대부분의 문제를 조기에 발견할 수 있습니다.</p>
+
+  <h2>교사 일상 루틴</h2>
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">담당 시간 시작 5분 전: 메인 → 장소 선택 → 프로그램·교사 이름 확인</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">시작 시각: "QR 생성 및 출석 시작" 버튼 누르기</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">운영 중: 출석 명단 확인 + 필요 시 직접 출석 추가</div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">20분 후 연장 안내 창이 뜨면 연장 / 마감 선택</div>
+  </div>
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body">수업이 끝나면 "출석 마감" 버튼으로 정리</div>
+  </div>
+
+  <h2>관리자 일상 루틴</h2>
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">16:35 경: 진단 탭 열어서 방과후 독서시간 세션 상태 확인 (빨강 없는지)</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">19:25 경: 진단 탭으로 야간 독서시간 세션 상태 확인</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">21:35 경: 진단 탭으로 심야 독서시간 세션 상태 확인</div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">수시: 학생 수정 요청이 오면 <strong>요청 관리</strong> 탭에서 처리</div>
+  </div>
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body">학생 문의 있을 때: <strong>실시간</strong> 탭에서 학번 검색으로 확인</div>
+  </div>
+
+  <div class="note note-warn">
+    <div class="note-title">⚠ 빨강 카드가 뜨면</div>
+    진단 탭에 <strong>빨강 카드(세션 미생성)</strong>가 보이면 해당 장소 담당 교사에게 즉시 연락하세요. 시작 버튼을 잊었을 가능성이 큽니다. 교사가 뒤늦게라도 시작하면 남은 학생들은 정상 출석 가능하고, 이미 오간 학생은 관리자가 <strong>사후 출석</strong>으로 처리할 수 있습니다.
+  </div>
+</section>
+
+<!-- ═══════════════════ 6. 트러블슈팅 ═══════════════════ -->
+<section id="trouble">
+  <div class="section-num">SECTION 06</div>
+  <h1>자주 있는 문제</h1>
+
+  <h2>학생이 "출석이 안 돼요"라고 할 때</h2>
+  <ol>
+    <li>관리자 페이지 → <strong>실시간</strong> 탭 → 학번 검색으로 오늘 출석 여부 확인</li>
+    <li>정말 누락돼 있으면 → <strong>출석 기록</strong> 탭에서 해당 출석 시간 선택 → "사후 출석 추가"</li>
+    <li>기록이 있는데 학생이 못 봤다면 → 학생에게 <strong>"내 출석 확인"</strong> 화면에서 학번 입력해 직접 보게 안내</li>
+  </ol>
+
+  <h2>QR 코드를 스캔해도 연결이 안 될 때</h2>
+  <ul class="plain">
+    <li><strong>QR 시간 만료 가능성</strong> — 20분이 지났으면 교사가 새 QR을 만들거나 연장해야 함</li>
+    <li><strong>학생 휴대폰 인터넷 확인</strong> — 학교 와이파이가 불안정하면 데이터로 전환</li>
+    <li><strong>교사 화면 새로고침</strong> — 드문 경우 화면이 멈춰 있을 수 있음</li>
+  </ul>
+
+  <h2>심야 감독 교사 이름이 잘못 들어갔을 때</h2>
+  <ol>
+    <li>출석 시간 시작 <strong>전</strong>이면 → 교사 화면에서 이름 직접 수정</li>
+    <li>출석 시간이 이미 진행 중이거나 끝났으면 → 관리자 페이지 → <strong>출석 기록</strong> 탭 → 해당 세션 선택 → 교사 이름 옆 <strong>연필 아이콘</strong> 클릭 → 수정</li>
+  </ol>
+
+  <h2>출석 시간이 예정 시각에 시작되지 않았을 때</h2>
+  <ol>
+    <li>관리자 → <strong>진단</strong> 탭에서 확인 (빨강 카드로 표시됨)</li>
+    <li>담당 교사에게 즉시 연락</li>
+    <li>교사가 뒤늦게라도 시작하면 남은 학생은 정상 출석</li>
+    <li>이미 오간 학생은 <strong>사후 출석</strong>으로 추가</li>
+  </ol>
+
+  <h2>엑셀 업로드가 이상하게 동작할 때</h2>
+  <ul class="plain">
+    <li>반드시 "<strong>양식 다운로드</strong>" 버튼으로 받은 템플릿을 사용하세요.</li>
+    <li>열 이름(학번·이름·프로그램·장소·출석 요일)이 정확히 일치해야 합니다.</li>
+    <li>엑셀에 없는 학생은 비활성화되지 않습니다. 부분 업데이트 안전합니다.</li>
+  </ul>
+
+  <h2>그 외 문제</h2>
+  <p>위에 없는 문제라면 관리자 페이지 → <strong>진단</strong> 탭의 <strong>교사 기기 로그</strong>를 확인하세요. 최근 발생한 이벤트·에러가 시간 순으로 기록되어 있어 문제 원인을 찾는 데 도움이 됩니다.</p>
+</section>
+
+<!-- ═══════════════════ 푸터 ═══════════════════ -->
+<footer class="doc-foot">
+  Cosmos — 독서의 시간이 기록되는 곳<br>
+  <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;">유봉여자고등학교 · 2026</span>
+</footer>
+
+</div>
+</body>
+</html>
