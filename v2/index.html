@@ -4311,6 +4311,44 @@ input { font-family: inherit; }
 .btn.disabled,.btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
 
 /* 실시간 모니터 탭 */
+/* ═══ 진단 탭 ═══ */
+.diag-section { margin-bottom: 32px; }
+.diag-section-title { font-family: 'IBM Plex Sans KR', sans-serif; font-size: 13px; font-weight: 600; color: var(--amber); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.diag-hint { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink-faint); font-weight: 400; text-transform: none; letter-spacing: 0; margin-left: 8px; }
+.diag-schedule-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.diag-sched-card { background: var(--paper2); border: 1px solid var(--border); border-radius: 4px; padding: 16px; position: relative; }
+.diag-sched-card.ok { border-left: 3px solid var(--sage); }
+.diag-sched-card.warn { border-left: 3px solid var(--amber); }
+.diag-sched-card.miss { border-left: 3px solid var(--terra); background: rgba(184, 84, 63, .05); }
+.diag-sched-card.future { border-left: 3px solid var(--border2); opacity: .6; }
+.diag-sched-prog { font-family: 'IBM Plex Sans KR', sans-serif; font-size: 14px; font-weight: 600; color: var(--cream); margin-bottom: 4px; }
+.diag-sched-room { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink-dim); margin-bottom: 10px; }
+.diag-sched-time { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink-dim); }
+.diag-sched-status { font-family: 'IBM Plex Sans KR', sans-serif; font-size: 12px; margin-top: 8px; line-height: 1.5; }
+.diag-sched-status.ok { color: var(--sage); }
+.diag-sched-status.warn { color: var(--amber); }
+.diag-sched-status.miss { color: var(--terra); font-weight: 500; }
+.diag-sched-status.future { color: var(--ink-faint); }
+.diag-empty { text-align: center; padding: 40px; color: var(--ink-faint); font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14px; }
+
+.diag-filter-row { display: flex; gap: 10px; margin-bottom: 14px; }
+.diag-filter-row select { background: var(--paper2); border: 1px solid var(--border); border-radius: 3px; color: var(--cream); font-family: 'IBM Plex Sans KR', sans-serif; font-size: 12px; padding: 6px 12px; cursor: pointer; }
+.diag-filter-row select:focus { outline: 1px solid var(--amber); }
+
+.diag-log-table { background: var(--paper2); border: 1px solid var(--border); border-radius: 4px; max-height: 600px; overflow-y: auto; }
+.diag-log-row { display: grid; grid-template-columns: 80px 90px 90px 150px 1fr; gap: 12px; padding: 8px 14px; border-bottom: 1px solid rgba(214,178,124,.08); font-family: 'DM Mono', monospace; font-size: 11px; align-items: center; }
+.diag-log-row:last-child { border-bottom: none; }
+.diag-log-row:hover { background: rgba(214,178,124,.04); }
+.diag-log-row.err { background: rgba(184, 84, 63, .08); }
+.diag-log-time { color: var(--ink-dim); }
+.diag-log-room { color: var(--amber); }
+.diag-log-dev { color: var(--ink-faint); font-size: 10px; }
+.diag-log-event { color: var(--cream); font-weight: 500; }
+.diag-log-event.err { color: var(--terra); }
+.diag-log-event.ok { color: var(--sage); }
+.diag-log-data { color: var(--ink-dim); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* ═══ /진단 탭 ═══ */
+
 .live-search{margin-bottom:20px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:18px 22px}
 .live-search-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;font-weight:600;color:var(--amber);margin-bottom:10px}
 .live-search-row{display:flex;gap:8px;margin-bottom:10px}
@@ -4935,6 +4973,10 @@ input { font-family: inherit; }
           <span class="admin-nav-icon">L</span>
           <span>실시간</span>
         </button>
+        <button class="admin-nav-item" data-tab="diag" onclick="switchAdminTab('diag')">
+          <span class="admin-nav-icon">D</span>
+          <span>진단</span>
+        </button>
       </nav>
 
       <div class="admin-sidebar-footer">
@@ -5150,6 +5192,45 @@ input { font-family: inherit; }
           <div class="live-search-result" id="live-search-result"></div>
         </div>
         <div class="live-grid" id="live-grid"><div class="live-empty">불러오는 중...</div></div>
+      </div>
+
+      <!-- 탭 6: 진단 (오늘 대시보드 + 기기 로그) -->
+      <div class="admin-tab-pane" id="admin-tab-diag">
+        <div class="admin-page-header">
+          <div class="admin-page-title">진단</div>
+          <div class="admin-page-actions">
+            <button class="admin-btn" onclick="DIAG.refresh()">🔄 새로고침</button>
+          </div>
+        </div>
+
+        <div class="diag-section">
+          <div class="diag-section-title">오늘의 세션 현황</div>
+          <div class="diag-schedule-grid" id="diag-schedule-grid">
+            <div class="diag-empty">불러오는 중...</div>
+          </div>
+        </div>
+
+        <div class="diag-section">
+          <div class="diag-section-title">최근 교사 기기 로그 <span class="diag-hint">(최근 100건)</span></div>
+          <div class="diag-filter-row">
+            <select id="diag-log-room" onchange="DIAG.renderLogs()">
+              <option value="">전체 장소</option>
+              <option value="아우름">아우름</option>
+              <option value="교과1실">교과1실</option>
+              <option value="해오름">해오름</option>
+              <option value="리케이온">리케이온</option>
+            </select>
+            <select id="diag-log-event" onchange="DIAG.renderLogs()">
+              <option value="">모든 이벤트</option>
+              <option value="errors">에러만 (fail)</option>
+              <option value="session">세션 관련</option>
+              <option value="supervisor">감독 자동채움</option>
+            </select>
+          </div>
+          <div class="diag-log-table" id="diag-log-table">
+            <div class="diag-empty">불러오는 중...</div>
+          </div>
+        </div>
       </div>
 
     </main>
@@ -5450,6 +5531,85 @@ function nowTimeStr() {
 //  │  v2 코드 전체에서 이 객체를 통해서만 DB와 통신             │
 //  └─────────────────────────────────────────────────────────┘
 // ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+//  교사 기기 로깅 (진단·블랙박스용)
+// ══════════════════════════════════════════════════════════════
+const TLOG = {
+  deviceId: null,
+  queue: [],            // 전송 실패 시 대기 큐
+  QUEUE_KEY: 'cosmos_tlog_queue',
+  DEVICE_KEY: 'cosmos_device_id',
+  ENABLED: true,
+
+  init() {
+    // 기기 ID (없으면 생성)
+    try {
+      let id = localStorage.getItem(this.DEVICE_KEY);
+      if (!id) {
+        id = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem(this.DEVICE_KEY, id);
+      }
+      this.deviceId = id;
+      // 큐 복원
+      const q = localStorage.getItem(this.QUEUE_KEY);
+      if (q) {
+        try { this.queue = JSON.parse(q) || []; } catch (e) { this.queue = []; }
+      }
+    } catch (e) {
+      // localStorage 불가 환경 (극히 드묾)
+      this.deviceId = 'dev_fallback_' + Date.now();
+      this.ENABLED = false;
+    }
+  },
+
+  _persistQueue() {
+    if (!this.ENABLED) return;
+    try { localStorage.setItem(this.QUEUE_KEY, JSON.stringify(this.queue.slice(-200))); } catch (e) {}
+  },
+
+  // 이벤트 로깅 (비동기, await 불필요)
+  log(eventName, data) {
+    if (!this.deviceId) this.init();
+    const row = {
+      기기id: this.deviceId,
+      장소: (typeof T !== 'undefined' && T.room) ? T.room : null,
+      이벤트: eventName,
+      데이터: data || null,
+      발생시각: new Date().toISOString(),
+    };
+    // 큐에 추가
+    this.queue.push(row);
+    this._persistQueue();
+    // 즉시 플러시 시도 (비동기, await 안 함)
+    this._flush();
+  },
+
+  async _flush() {
+    if (!this.ENABLED || this.queue.length === 0) return;
+    if (this._flushing) return;
+    this._flushing = true;
+    try {
+      // sbClient 없으면 스킵 (아직 SDK 로드 전일 수 있음)
+      if (typeof sbClient === 'undefined' || !sbClient) {
+        this._flushing = false;
+        return;
+      }
+      const batch = this.queue.slice(0, 20);
+      const { error } = await sbClient.from('teacher_logs').insert(batch);
+      if (!error) {
+        this.queue = this.queue.slice(batch.length);
+        this._persistQueue();
+      }
+    } catch (e) {
+      // 조용히 실패, 다음 플러시에 재시도
+    }
+    this._flushing = false;
+  },
+};
+
+// 페이지 로드 직후 초기화
+try { TLOG.init(); } catch (e) {}
+
 const sb = {
   // ─── 캐시 ───
   _cache: {
@@ -6314,6 +6474,16 @@ doManualAttendFromNumpad = async function() {
 
 async function enterTeacherScreen(room) {
   T.room = room;
+  TLOG.log('teacher_enter', { room });
+  _startAttemptCount = 0; // 진입 시 시도 카운터 리셋
+  // SDK 로드 상태 체크
+  try {
+    if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
+      TLOG.log('sdk_fail', { msg: 'window.supabase undefined' });
+    } else {
+      TLOG.log('sdk_ok');
+    }
+  } catch (e) { TLOG.log('sdk_fail', { err: String(e && e.message || e) }); }
 
   // 상단바 채우기
   document.getElementById('t-room-name').textContent = room;
@@ -6367,6 +6537,7 @@ async function enterTeacherScreen(room) {
         expireMs: new Date(active.만료시각).getTime(),
         extended: active.연장됨 || false,
       };
+      TLOG.log('session_restore_ok', { sessionId: active.세션id, program: active.프로그램 });
 
       document.getElementById('t-sess-program').textContent = T.session.program;
       const _sib2 = getSiblingRoom(T.session.room);
@@ -6381,6 +6552,7 @@ async function enterTeacherScreen(room) {
     }
   } catch (e) {
     console.warn('세션 복원 실패:', e);
+    TLOG.log('session_restore_fail', { err: String(e && e.message || e) });
   }
 
   // 활성 세션 없음 → 설정 화면
@@ -6470,6 +6642,7 @@ async function handleProgramChange() {
   const program = document.getElementById('t-program').value;
   const teacherInput = document.getElementById('t-teacher');
   const hint = document.getElementById('t-teacher-hint');
+  TLOG.log('program_change', { to: program });
 
   if (program === '심야 독서시간') {
     try {
@@ -6479,10 +6652,14 @@ async function handleProgramChange() {
         teacherInput.classList.add('auto-filled');
         teacherInput.dataset.wasAutoFilled = 'true';
         hint.classList.add('on');
+        TLOG.log('supervisor_fetch_ok', { name: supervisor });
         return;
+      } else {
+        TLOG.log('supervisor_fetch_ok', { name: null });
       }
     } catch (e) {
       console.warn('감독 조회 실패:', e);
+      TLOG.log('supervisor_fetch_fail', { err: String(e && e.message || e) });
     }
   }
   // 심야가 아니거나 감독 없으면 기본 상태로
@@ -6496,10 +6673,13 @@ async function handleProgramChange() {
 }
 
 // 세션 시작
+let _startAttemptCount = 0;
 async function startTeacherSession() {
   const program = document.getElementById('t-program').value;
   const teacher = document.getElementById('t-teacher').value.trim();
   const btn = document.getElementById('t-start-btn');
+  _startAttemptCount++;
+  TLOG.log('start_clicked', { program, teacher: teacher || null, room: T.room, attempt: _startAttemptCount });
 
   const _sibStart = getSiblingRoom(T.room);
   if (!teacher && !_sibStart) {
@@ -6520,6 +6700,7 @@ async function startTeacherSession() {
 
     // 세션 생성
     const sessionId = String(Date.now());
+    TLOG.log('session_create_try', { sessionId, program, room: T.room });
     await sb.sessions.create({
       sessionId,
       program,
@@ -6527,6 +6708,7 @@ async function startTeacherSession() {
       teacher,
       expireAt,
     });
+    TLOG.log('session_create_ok', { sessionId });
 
     // 상태 저장
     T.session = {
@@ -6561,6 +6743,7 @@ async function startTeacherSession() {
 
   } catch (e) {
     console.error('세션 생성 실패:', e);
+    TLOG.log('session_create_fail', { err: String(e && e.message || e), code: e && e.code });
     alert('세션 생성 실패: ' + (e.message || e.code || '알 수 없는 오류'));
   } finally {
     // 버튼 복구 (성공/실패 무관)
@@ -6627,6 +6810,7 @@ function stopTeacherTimer() {
 async function autoEndTeacherSession() {
   if (!T.session) return;
   console.log('[SESSION EXPIRE] autoEndTeacherSession 호출 →', T.session.sessionId, '연장됨:', T.session.extended);
+  TLOG.log('auto_expire', { sessionId: T.session.sessionId, extended: T.session.extended });
 
   // 일단 타이머 정지 (QR 타이머는 멈춤, 세션은 아직 살아있음)
   stopTeacherTimer();
@@ -6700,6 +6884,7 @@ function closeExtendModal() {
 // [10분 연장] 클릭
 async function confirmExtendSession() {
   if (!T.session) return;
+  TLOG.log('extend_clicked', { sessionId: T.session.sessionId });
   const btn = document.getElementById('modal-extend-btn-extend');
   btn.disabled = true;
   btn.textContent = '연장 중...';
@@ -6728,6 +6913,7 @@ async function confirmExtendSession() {
       // 연장 성공
       T.session.extended = true;
       T.session.expireMs = result.newExpireMs;
+      TLOG.log('extend_ok', { sessionId: T.session.sessionId, newExpire: new Date(T.session.expireMs).toISOString() });
     }
 
     closeExtendModal();
@@ -6735,6 +6921,7 @@ async function confirmExtendSession() {
     console.log('[SESSION EXTEND] 10분 연장 완료, 새 만료시각:', new Date(T.session.expireMs).toISOString());
   } catch (e) {
     alert('연장 실패: ' + (e.message || '오류'));
+    TLOG.log('extend_fail', { err: String(e && e.message || e) });
     btn.disabled = false;
     btn.textContent = '+ 10분 연장';
   }
@@ -6785,11 +6972,14 @@ async function confirmEndSession() {
   closeEndModal();
   if (!T.session) return;
   console.log('[SESSION END] confirmEndSession 호출 (사용자가 마감 버튼 클릭) →', T.session.sessionId, new Error().stack);
+  TLOG.log('session_end_clicked', { sessionId: T.session.sessionId });
 
   try {
     await sb.sessions.end(T.session.sessionId);
+    TLOG.log('session_end_ok', { sessionId: T.session.sessionId });
   } catch (e) {
     console.warn('세션 종료 실패:', e);
+    TLOG.log('session_end_fail', { err: String(e && e.message || e) });
   }
 
   // 정리
@@ -9832,6 +10022,188 @@ document.getElementById('modal-reject').addEventListener('click',(e)=>{if(e.targ
 // ══════════════════════════════════════════════════════════════
 //  실시간 모니터 탭
 // ══════════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════
+//  진단 탭 (오늘 세션 대시보드 + 교사 기기 로그)
+// ══════════════════════════════════════════════════════════════
+
+// 프로그램별 예정 운영 시간표 (KST 기준)
+const DIAG_SCHEDULE = [
+  { 프로그램: '방과후 독서시간', 장소: '아우름', 시작: '16:30', 종료: '18:20' },
+  { 프로그램: '방과후 독서시간', 장소: '교과1실', 시작: '16:30', 종료: '18:20' },
+  { 프로그램: '방과후 독서시간', 장소: '해오름', 시작: '16:30', 종료: '18:20' },
+  { 프로그램: '야간 독서시간', 장소: '아우름', 시작: '19:20', 종료: '21:30' },
+  { 프로그램: '야간 독서시간', 장소: '교과1실', 시작: '19:20', 종료: '21:30' },
+  { 프로그램: '야간 독서시간', 장소: '해오름', 시작: '19:20', 종료: '21:30' },
+  { 프로그램: '심야 독서시간', 장소: '리케이온', 시작: '21:30', 종료: '23:00' },
+  { 프로그램: '토요일 독서시간', 장소: '리케이온', 시작: '08:00', 종료: '12:00', 요일: 6 },
+  { 프로그램: '일요일 독서시간', 장소: '리케이온', 시작: '08:00', 종료: '12:00', 요일: 0 },
+];
+
+const DIAG = {
+  logs: [],
+  sessionsToday: [],
+
+  async refresh() {
+    await this.loadSessionsToday();
+    await this.loadLogs();
+    this.renderSchedule();
+    this.renderLogs();
+  },
+
+  async loadSessionsToday() {
+    try {
+      const today = todayKST();
+      const { data, error } = await sb.client()
+        .from('sessions')
+        .select('*')
+        .eq('날짜', today)
+        .order('시작시각', { ascending: true });
+      if (error) throw error;
+      this.sessionsToday = data || [];
+    } catch (e) {
+      console.warn('DIAG loadSessionsToday 실패:', e);
+      this.sessionsToday = [];
+    }
+  },
+
+  async loadLogs() {
+    try {
+      const { data, error } = await sb.client()
+        .from('teacher_logs')
+        .select('*')
+        .order('기록시각', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      this.logs = data || [];
+    } catch (e) {
+      console.warn('DIAG loadLogs 실패:', e);
+      this.logs = [];
+    }
+  },
+
+  renderSchedule() {
+    const grid = document.getElementById('diag-schedule-grid');
+    if (!grid) return;
+    const now = new Date();
+    const todayDayOfWeek = now.getDay();
+
+    const relevant = DIAG_SCHEDULE.filter(s => {
+      if (s.요일 === undefined) return true;
+      return s.요일 === todayDayOfWeek;
+    });
+
+    const cards = [];
+    const seen = new Set();
+    relevant.forEach(s => {
+      const sib = getSiblingRoom(s.장소);
+      if (sib && relevant.find(x => x.프로그램 === s.프로그램 && x.장소 === sib)) {
+        const key = s.프로그램 + ':' + [s.장소, sib].sort().join('+');
+        if (seen.has(key)) return;
+        seen.add(key);
+        cards.push({ ...s, 장소표시: s.장소 + ' + ' + sib, sibling: true });
+      } else {
+        cards.push({ ...s, 장소표시: s.장소, sibling: false });
+      }
+    });
+
+    const html = cards.map(card => {
+      const 시작H = parseInt(card.시작.slice(0,2), 10);
+      const 시작M = parseInt(card.시작.slice(3,5), 10);
+      const 종료H = parseInt(card.종료.slice(0,2), 10);
+      const 종료M = parseInt(card.종료.slice(3,5), 10);
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      const startMin = 시작H * 60 + 시작M;
+      const endMin = 종료H * 60 + 종료M;
+
+      const targetRooms = card.sibling ? getRoomGroup(card.장소) : [card.장소];
+      const matched = this.sessionsToday.find(sess =>
+        sess.프로그램 === card.프로그램 && targetRooms.includes(sess.장소)
+      );
+
+      let cls, statusText;
+
+      if (nowMin < startMin - 10) {
+        cls = 'future';
+        statusText = card.시작 + ' 시작 예정';
+      } else if (nowMin >= startMin - 10 && nowMin <= endMin + 30) {
+        if (matched) {
+          if (matched.활성) {
+            cls = 'ok';
+            const startT = matched.시작시각 ? new Date(matched.시작시각).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }) : '—';
+            statusText = '✓ 정상 진행 중 (' + startT + ' 시작)';
+          } else {
+            cls = 'warn';
+            const endT = matched.종료시각 ? new Date(matched.종료시각).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }) : '—';
+            statusText = '✓ 마감됨 (' + endT + ' 종료)';
+          }
+        } else {
+          cls = 'miss';
+          statusText = nowMin < startMin ? '시작 예정이지만 세션 없음' : '⚠️ 세션 미생성 — 교사 확인 필요';
+        }
+      } else {
+        if (matched) {
+          cls = 'ok';
+          statusText = '✓ 운영 완료';
+        } else {
+          cls = 'miss';
+          statusText = '세션 없이 시간 지남';
+        }
+      }
+
+      return '<div class="diag-sched-card ' + cls + '">'
+        + '<div class="diag-sched-prog">' + escapeHtml(card.프로그램) + '</div>'
+        + '<div class="diag-sched-room">' + escapeHtml(card.장소표시) + '</div>'
+        + '<div class="diag-sched-time">' + card.시작 + ' ~ ' + card.종료 + '</div>'
+        + '<div class="diag-sched-status ' + cls + '">' + escapeHtml(statusText) + '</div>'
+        + '</div>';
+    }).join('');
+
+    grid.innerHTML = html || '<div class="diag-empty">오늘 예정된 프로그램이 없어요</div>';
+  },
+
+  renderLogs() {
+    const box = document.getElementById('diag-log-table');
+    if (!box) return;
+    const roomFilter = document.getElementById('diag-log-room').value;
+    const eventFilter = document.getElementById('diag-log-event').value;
+
+    let rows = this.logs.slice();
+    if (roomFilter) rows = rows.filter(r => r.장소 === roomFilter);
+    if (eventFilter === 'errors') rows = rows.filter(r => (r.이벤트 || '').includes('fail'));
+    else if (eventFilter === 'session') rows = rows.filter(r => {
+      const ev = r.이벤트 || '';
+      return ev.includes('session') || ev.includes('start') || ev.includes('extend') || ev.includes('expire');
+    });
+    else if (eventFilter === 'supervisor') rows = rows.filter(r => (r.이벤트 || '').includes('supervisor'));
+
+    if (rows.length === 0) {
+      box.innerHTML = '<div class="diag-empty">조건에 맞는 로그가 없어요</div>';
+      return;
+    }
+
+    const html = rows.map(r => {
+      const t = new Date(r.발생시각 || r.기록시각);
+      const timeStr = t.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+      const ev = r.이벤트 || '';
+      let evCls = '';
+      if (ev.includes('fail')) evCls = 'err';
+      else if (ev.includes('ok')) evCls = 'ok';
+      const rowCls = ev.includes('fail') ? 'err' : '';
+      const dataStr = r.데이터 ? JSON.stringify(r.데이터) : '';
+      const devShort = (r.기기id || '').slice(-8);
+      return '<div class="diag-log-row ' + rowCls + '">'
+        + '<div class="diag-log-time">' + timeStr + '</div>'
+        + '<div class="diag-log-room">' + escapeHtml(r.장소 || '—') + '</div>'
+        + '<div class="diag-log-dev" title="' + escapeHtml(r.기기id || '') + '">' + escapeHtml(devShort) + '</div>'
+        + '<div class="diag-log-event ' + evCls + '">' + escapeHtml(ev) + '</div>'
+        + '<div class="diag-log-data" title="' + escapeHtml(dataStr) + '">' + escapeHtml(dataStr) + '</div>'
+        + '</div>';
+    }).join('');
+    box.innerHTML = html;
+  },
+};
+
 const LIVE = {
   rooms: ['아우름', '교과1실', '해오름', '리케이온'],
   pollInterval: null,
@@ -9974,6 +10346,9 @@ switchAdminTab = function(tab) {
     LIVE.start();
   } else {
     LIVE.stop();
+  }
+  if (tab === 'diag') {
+    DIAG.refresh();
   }
 };
 
