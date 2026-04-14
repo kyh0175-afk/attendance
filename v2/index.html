@@ -10029,6 +10029,7 @@ document.getElementById('modal-reject').addEventListener('click',(e)=>{if(e.targ
 
 // 프로그램별 예정 운영 시간표 (KST 기준)
 const DIAG_SCHEDULE = [
+  // 평일
   { 프로그램: '방과후 독서시간', 장소: '아우름', 시작: '16:30', 종료: '18:20' },
   { 프로그램: '방과후 독서시간', 장소: '교과1실', 시작: '16:30', 종료: '18:20' },
   { 프로그램: '방과후 독서시간', 장소: '해오름', 시작: '16:30', 종료: '18:20' },
@@ -10036,8 +10037,10 @@ const DIAG_SCHEDULE = [
   { 프로그램: '야간 독서시간', 장소: '교과1실', 시작: '19:20', 종료: '21:30' },
   { 프로그램: '야간 독서시간', 장소: '해오름', 시작: '19:20', 종료: '21:30' },
   { 프로그램: '심야 독서시간', 장소: '리케이온', 시작: '21:30', 종료: '23:00' },
-  { 프로그램: '토요일 독서시간', 장소: '리케이온', 시작: '08:00', 종료: '12:00', 요일: 6 },
-  { 프로그램: '일요일 독서시간', 장소: '리케이온', 시작: '08:00', 종료: '12:00', 요일: 0 },
+  // 주말 (오전/오후 분리 — sessionSlot로 구분)
+  { 프로그램: '토요일 독서시간', 장소: '리케이온', 시작: '08:30', 종료: '12:30', 요일: 6, 슬롯: '오전' },
+  { 프로그램: '토요일 독서시간', 장소: '리케이온', 시작: '13:30', 종료: '17:30', 요일: 6, 슬롯: '오후' },
+  { 프로그램: '일요일 독서시간', 장소: '리케이온', 시작: '13:30', 종료: '17:30', 요일: 0, 슬롯: '오후' },
 ];
 
 const DIAG = {
@@ -10117,9 +10120,19 @@ const DIAG = {
       const endMin = 종료H * 60 + 종료M;
 
       const targetRooms = card.sibling ? getRoomGroup(card.장소) : [card.장소];
-      const matched = this.sessionsToday.find(sess =>
-        sess.프로그램 === card.프로그램 && targetRooms.includes(sess.장소)
-      );
+      // 슬롯이 있는 주말 카드: 세션 시작시각이 오전(12시 이전)인지 오후인지 구분
+      const matched = this.sessionsToday.find(sess => {
+        if (sess.프로그램 !== card.프로그램) return false;
+        if (!targetRooms.includes(sess.장소)) return false;
+        if (card.슬롯) {
+          if (!sess.시작시각) return false;
+          const h = new Date(sess.시작시각).getHours();
+          const isAM = h < 12;
+          if (card.슬롯 === '오전' && !isAM) return false;
+          if (card.슬롯 === '오후' && isAM) return false;
+        }
+        return true;
+      });
 
       let cls, statusText;
 
@@ -10151,8 +10164,9 @@ const DIAG = {
         }
       }
 
+      const progLabel = card.슬롯 ? (card.프로그램 + ' · ' + card.슬롯) : card.프로그램;
       return '<div class="diag-sched-card ' + cls + '">'
-        + '<div class="diag-sched-prog">' + escapeHtml(card.프로그램) + '</div>'
+        + '<div class="diag-sched-prog">' + escapeHtml(progLabel) + '</div>'
         + '<div class="diag-sched-room">' + escapeHtml(card.장소표시) + '</div>'
         + '<div class="diag-sched-time">' + card.시작 + ' ~ ' + card.종료 + '</div>'
         + '<div class="diag-sched-status ' + cls + '">' + escapeHtml(statusText) + '</div>'
