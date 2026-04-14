@@ -457,14 +457,7 @@ code {
   <div class="toc-title">목차</div>
   <ol>
     <li><a href="#intro">시작하기 전에</a></li>
-    <li><a href="#student">학생용 — 출석하기</a>
-      <ul>
-        <li><a href="#stu-qr">QR 코드로 출석하기</a></li>
-        <li><a href="#stu-check">내 출석 기록 확인하기</a></li>
-        <li><a href="#stu-fix">출석 기록이 이상할 때</a></li>
-      </ul>
-    </li>
-    <li><a href="#teacher">교사·관리자용 — 출석 받기</a>
+    <li><a href="#teacher">교사·관리자용 — 출석 진행 및 확인</a>
       <ul>
         <li><a href="#tch-start">출석 시간 시작하기</a></li>
         <li><a href="#tch-supervisor">심야 감독 교사 자동 채움</a></li>
@@ -473,6 +466,13 @@ code {
         <li><a href="#tch-extend">QR 시간이 끝났을 때 (연장 안내 창)</a></li>
         <li><a href="#tch-end">출석 시간 마감하기</a></li>
         <li><a href="#tch-late">지난 시간에 나중에 출석 추가하기</a></li>
+      </ul>
+    </li>
+    <li><a href="#student">학생용 — 출석하기</a>
+      <ul>
+        <li><a href="#stu-qr">QR 코드로 출석하기</a></li>
+        <li><a href="#stu-check">내 출석 기록 확인하기</a></li>
+        <li><a href="#stu-fix">출석 기록이 이상할 때</a></li>
       </ul>
     </li>
     <li><a href="#admin">관리자 페이지</a>
@@ -529,94 +529,10 @@ code {
   </div>
 </section>
 
-<!-- ═══════════════════ 2. 학생용 ═══════════════════ -->
-<section id="student">
-  <div class="section-num">SECTION 02</div>
-  <h1>학생용 — 출석하기</h1>
-
-  <h2 id="stu-qr">QR 코드로 출석하기</h2>
-
-  <div class="step">
-    <div class="step-num">1</div>
-    <div class="step-body"><strong>교사가 보여주는 QR 코드를</strong> 휴대폰 카메라 앱으로 스캔합니다. 별도의 QR 스캐너 앱은 필요하지 않습니다.</div>
-  </div>
-  <div class="step">
-    <div class="step-num">2</div>
-    <div class="step-body">스캔 후 뜨는 링크를 눌러 <strong>출석 화면</strong>으로 이동합니다.</div>
-  </div>
-  <div class="step">
-    <div class="step-num">3</div>
-    <div class="step-body">화면에 본인의 <strong>학번 5자리</strong>를 입력합니다.</div>
-  </div>
-  <div class="step">
-    <div class="step-num">4</div>
-    <div class="step-body">"<strong>환영합니다, ○○○님</strong>" 화면이 뜨면 <strong>출석이 완료</strong>된 것입니다. 이 화면이 뜨지 않으면 출석이 처리되지 않은 것이니 교사에게 알려주세요.</div>
-  </div>
-
-  <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 02] 학생 출석 화면 — 학번 입력</div>
-    <div class="img-placeholder-desc">QR 스캔 직후 학생이 보는 화면. 상단에 프로그램명·장소·교사 이름이 보이고, 중앙에 5자리 학번을 입력하는 숫자 키패드가 있는 상태.</div>
-  </div>
-
-  <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 03] 학생 출석 완료 화면</div>
-    <div class="img-placeholder-desc">출석 처리된 후 뜨는 환영 메시지 화면. "환영합니다, ○○○님" 같은 문구와 출석 시각이 보이는 상태.</div>
-  </div>
-
-  <div class="note note-warn">
-    <div class="note-title">⚠ QR 코드 유효 시간</div>
-    QR 코드는 생성 후 <strong>20분 동안만</strong> 사용할 수 있습니다. 20분이 지나면 교사가 새 QR 코드를 만들거나 연장해야 합니다. 출석 화면에서 "이 시간은 이미 마감됐어요" 같은 메시지가 나오면 교사에게 알려 새 QR 코드를 받으세요.
-  </div>
-
-  <h2 id="stu-check">내 출석 기록 확인하기</h2>
-
-  <p>본인의 지난 출석 기록을 직접 확인할 수 있습니다.</p>
-
-  <div class="step">
-    <div class="step-num">1</div>
-    <div class="step-body">접속 주소로 이동합니다. (<code>https://kyh0175-afk.github.io/attendance/v2/</code>)</div>
-  </div>
-  <div class="step">
-    <div class="step-num">2</div>
-    <div class="step-body">메인 화면에서 "<strong>내 출석 확인</strong>" 버튼을 누릅니다.</div>
-  </div>
-  <div class="step">
-    <div class="step-num">3</div>
-    <div class="step-body"><strong>학번 5자리</strong>를 입력하면 본인의 최근 출석 기록이 날짜별로 표시됩니다.</div>
-  </div>
-
-  <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 04] 학생 출석 조회 화면</div>
-    <div class="img-placeholder-desc">학번 입력 후 뜨는 본인의 출석 기록 목록. 날짜·프로그램·상태(출석/미출석)가 리스트로 보이는 상태.</div>
-  </div>
-
-  <h2 id="stu-fix">출석 기록이 이상할 때</h2>
-
-  <p>본인 출석 조회 화면에서 기록이 잘못되어 있으면 <strong>수정 요청</strong>을 보낼 수 있습니다.</p>
-
-  <div class="step">
-    <div class="step-num">1</div>
-    <div class="step-body">내 출석 기록에서 수정을 원하는 날짜의 항목을 누릅니다.</div>
-  </div>
-  <div class="step">
-    <div class="step-num">2</div>
-    <div class="step-body">변경할 <strong>출석 상태</strong>(출석/결석/자율 등)를 고르고, <strong>사유</strong>를 간단히 적습니다.</div>
-  </div>
-  <div class="step">
-    <div class="step-num">3</div>
-    <div class="step-body">"요청 보내기"를 누르면 관리자에게 요청이 전달됩니다. 관리자가 승인해야 기록이 변경됩니다.</div>
-  </div>
-
-  <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 05] 출석 수정 요청 화면</div>
-    <div class="img-placeholder-desc">특정 날짜 기록을 눌렀을 때 뜨는 수정 요청 폼. 상태 선택 옵션과 사유 입력란이 있는 상태.</div>
-  </div>
-</section>
-
-<!-- ═══════════════════ 3. 교사용 ═══════════════════ -->
+<!-- ═══════════════════ 2. 교사·관리자용 ═══════════════════ -->
 <section id="teacher">
-  <div class="section-num">SECTION 03</div>
-  <h1>교사·관리자용 — 출석 받기</h1>
+  <div class="section-num">SECTION 02</div>
+  <h1>교사·관리자용 — 출석 진행 및 확인</h1>
 
   <p>교사 화면에서는 QR 코드를 생성해 학생 출석을 받고, 실시간으로 출석 현황을 확인하며, 필요 시 직접 학번을 입력해 출석을 추가할 수 있습니다.</p>
 
@@ -628,7 +544,7 @@ code {
   </div>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 06] 교사 화면 — 설정 단계</div>
+    <div class="img-placeholder-label">[이미지 02] 교사 화면 — 설정 단계</div>
     <div class="img-placeholder-desc">장소 진입 직후 화면. 상단에 장소명, 중앙에 "프로그램 선택" 드롭다운과 "담당 교사 이름" 입력란, 아래에 "QR 생성 및 출석 시작" 버튼이 있는 상태.</div>
   </div>
 
@@ -646,7 +562,7 @@ code {
   </div>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 07] 교사 화면 — QR 코드 표시</div>
+    <div class="img-placeholder-label">[이미지 03] 교사 화면 — QR 코드 표시</div>
     <div class="img-placeholder-desc">출석 시간 시작 후 뜨는 화면. 중앙에 큰 QR 코드, 상단에 프로그램·장소·교사 정보, 우측에 남은 시간 카운트다운, 아래에 출석 학생 명단이 있는 상태.</div>
   </div>
 
@@ -655,7 +571,7 @@ code {
   <p>리케이온에서 <strong>심야 독서시간</strong>을 선택하면 그날의 심야 감독 교사 이름이 자동으로 입력됩니다. 이 정보는 미리 등록해둔 감독표에서 가져옵니다.</p>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 08] 심야 감독 자동 채움 상태</div>
+    <div class="img-placeholder-label">[이미지 04] 심야 감독 자동 채움 상태</div>
     <div class="img-placeholder-desc">리케이온 + 심야 독서시간 선택 시 교사 이름 칸에 자동으로 이름이 들어가 있고, 그 아래에 "⚠️ 오늘의 심야 감독으로 자동 입력됨 — 다르면 직접 수정하세요" 안내가 보이는 상태.</div>
   </div>
 
@@ -670,7 +586,7 @@ code {
   <p>QR 코드가 표시된 화면에서 학생이 출석할 때마다 <strong>실시간으로 명단</strong>이 갱신됩니다. 전체 / 출석 / 미출석 탭으로 구분해 볼 수 있습니다.</p>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 09] 출석 명단 영역</div>
+    <div class="img-placeholder-label">[이미지 05] 출석 명단 영역</div>
     <div class="img-placeholder-desc">교사 화면 하단의 학생 명단. "전체 / 출석 / 미출석" 탭이 있고, 학생 한 명씩 체크 표시(출석) 또는 회색 점(미출석) 아이콘과 함께 학번·이름이 보이는 상태. 아우름+교과1실 통합일 때는 학생 이름 옆에 장소 태그가 붙은 상태.</div>
   </div>
 
@@ -697,7 +613,7 @@ code {
   </div>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 10] 직접 출석 추가 키패드</div>
+    <div class="img-placeholder-label">[이미지 06] 직접 출석 추가 키패드</div>
     <div class="img-placeholder-desc">"직접 출석 추가" 버튼 클릭 시 뜨는 숫자 키패드 모달. 0~9 숫자 버튼과 학번 표시 영역이 있는 상태.</div>
   </div>
 
@@ -706,7 +622,7 @@ code {
   <p>QR 코드 유효 시간 20분이 지나면 자동으로 <strong>연장 안내 창</strong>이 뜹니다. 이 창이 뜨는 동안 학생은 임시로 출석을 할 수 없으며, 교사의 선택을 기다립니다.</p>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 11] 연장 안내 창</div>
+    <div class="img-placeholder-label">[이미지 07] 연장 안내 창</div>
     <div class="img-placeholder-desc">"QR 시간이 만료됐어요" 제목과 함께 중앙에 큰 카운트다운(5:00부터 감소), 아래에 "세션 마감" 과 "+ 10분 연장" 두 버튼이 있는 상태.</div>
   </div>
 
@@ -751,7 +667,7 @@ code {
   </div>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 12] 출석 마감 확인 창</div>
+    <div class="img-placeholder-label">[이미지 08] 출석 마감 확인 창</div>
     <div class="img-placeholder-desc">"출석 마감" 버튼 클릭 시 뜨는 확인 모달. "정말 마감할까요?" 같은 문구와 취소/마감 두 버튼이 있는 상태.</div>
   </div>
 
@@ -773,13 +689,97 @@ code {
   </div>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 13] 오늘 마감된 시간 카드</div>
+    <div class="img-placeholder-label">[이미지 09] 오늘 마감된 시간 카드</div>
     <div class="img-placeholder-desc">교사 화면 아래쪽 "오늘 마감된 시간 · 사후 출석" 섹션. 오늘 이미 끝난 출석 시간 카드 목록이 나오고 각 카드에 "사후 출석 추가" 버튼이 있는 상태.</div>
   </div>
 
   <div class="note note-good">
     <div class="note-title">✓ 사후 출석은 명단에 표시됩니다</div>
     사후로 추가된 학생은 출석 기록에서 <strong>"사후"</strong> 라벨로 구분됩니다. 정상 출석과 혼동되지 않게 관리됩니다.
+  </div>
+</section>
+
+<!-- ═══════════════════ 3. 학생용 ═══════════════════ -->
+<section id="student">
+  <div class="section-num">SECTION 03</div>
+  <h1>학생용 — 출석하기</h1>
+
+  <h2 id="stu-qr">QR 코드로 출석하기</h2>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body"><strong>교사가 보여주는 QR 코드를</strong> 휴대폰 카메라 앱으로 스캔합니다. 별도의 QR 스캐너 앱은 필요하지 않습니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">스캔 후 뜨는 링크를 눌러 <strong>출석 화면</strong>으로 이동합니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">화면에 본인의 <strong>학번 5자리</strong>를 입력합니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">"<strong>환영합니다, ○○○님</strong>" 화면이 뜨면 <strong>출석이 완료</strong>된 것입니다. 이 화면이 뜨지 않으면 출석이 처리되지 않은 것이니 교사에게 알려주세요.</div>
+  </div>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 10] 학생 출석 화면 — 학번 입력</div>
+    <div class="img-placeholder-desc">QR 스캔 직후 학생이 보는 화면. 상단에 프로그램명·장소·교사 이름이 보이고, 중앙에 5자리 학번을 입력하는 숫자 키패드가 있는 상태.</div>
+  </div>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 11] 학생 출석 완료 화면</div>
+    <div class="img-placeholder-desc">출석 처리된 후 뜨는 환영 메시지 화면. "환영합니다, ○○○님" 같은 문구와 출석 시각이 보이는 상태.</div>
+  </div>
+
+  <div class="note note-warn">
+    <div class="note-title">⚠ QR 코드 유효 시간</div>
+    QR 코드는 생성 후 <strong>20분 동안만</strong> 사용할 수 있습니다. 20분이 지나면 교사가 새 QR 코드를 만들거나 연장해야 합니다. 출석 화면에서 "이 시간은 이미 마감됐어요" 같은 메시지가 나오면 교사에게 알려 새 QR 코드를 받으세요.
+  </div>
+
+  <h2 id="stu-check">내 출석 기록 확인하기</h2>
+
+  <p>본인의 지난 출석 기록을 직접 확인할 수 있습니다.</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">접속 주소로 이동합니다. (<code>https://kyh0175-afk.github.io/attendance/v2/</code>)</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">메인 화면에서 "<strong>내 출석 확인</strong>" 버튼을 누릅니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body"><strong>학번 5자리</strong>를 입력하면 본인의 최근 출석 기록이 날짜별로 표시됩니다.</div>
+  </div>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 12] 학생 출석 조회 화면</div>
+    <div class="img-placeholder-desc">학번 입력 후 뜨는 본인의 출석 기록 목록. 날짜·프로그램·상태(출석/미출석)가 리스트로 보이는 상태.</div>
+  </div>
+
+  <h2 id="stu-fix">출석 기록이 이상할 때</h2>
+
+  <p>본인 출석 조회 화면에서 기록이 잘못되어 있으면 <strong>수정 요청</strong>을 보낼 수 있습니다.</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">내 출석 기록에서 수정을 원하는 날짜의 항목을 누릅니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">변경할 <strong>출석 상태</strong>(출석/결석/자율 등)를 고르고, <strong>사유</strong>를 간단히 적습니다.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">"요청 보내기"를 누르면 관리자에게 요청이 전달됩니다. 관리자가 승인해야 기록이 변경됩니다.</div>
+  </div>
+
+  <div class="img-placeholder">
+    <div class="img-placeholder-label">[이미지 13] 출석 수정 요청 화면</div>
+    <div class="img-placeholder-desc">특정 날짜 기록을 눌렀을 때 뜨는 수정 요청 폼. 상태 선택 옵션과 사유 입력란이 있는 상태.</div>
   </div>
 </section>
 
