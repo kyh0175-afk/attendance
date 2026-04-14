@@ -203,10 +203,13 @@ p + p { margin-top: -2px; }
 /* 실제 이미지로 교체할 때 사용할 클래스 */
 .guide-img {
   display: block;
-  max-width: 100%;
-  margin: 20px auto 28px;
+  max-width: 520px;
+  width: 100%;
+  margin: 20px auto 8px;
   border: 1px solid var(--border);
   border-radius: 4px;
+  page-break-inside: avoid;
+  break-inside: avoid;
 }
 .guide-img-caption {
   text-align: center;
@@ -214,8 +217,10 @@ p + p { margin-top: -2px; }
   font-style: italic;
   font-size: 13px;
   color: var(--ink-dim);
-  margin-top: -20px;
-  margin-bottom: 28px;
+  margin-top: 0;
+  margin-bottom: 24px;
+  page-break-before: avoid;
+  break-before: avoid;
 }
 
 /* ─── 단계 박스 ─── */
@@ -383,8 +388,19 @@ code {
   }
   .img-placeholder-label { color: #8b5a1e; }
   .img-placeholder-desc { color: #444; }
-  .guide-img { border-color: #c0b088; }
-  .guide-img-caption { color: #666; }
+  .guide-img {
+    max-width: 120mm;
+    border-color: #c0b088;
+    margin: 10px auto 4px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .guide-img-caption {
+    color: #666;
+    margin-bottom: 14px;
+    page-break-before: avoid;
+    break-before: avoid;
+  }
 
   .step {
     background: #faf6ec;
