@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>코스모스 출석 — 현장 참조 카드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --paper:     #ffffff;
+  --paper2:    #faf6ec;
+  --paper3:    #f4efdf;
+  --border:    #d0c4a6;
+  --border2:   #b8a882;
+  --ink:       #1a1a1a;
+  --ink-dim:   #4a4a4a;
+  --ink-faint: #7a7a7a;
+  --amber:     #b8843f;
+  --amber-d:   #8b5a1e;
+  --terra:     #a63e28;
+  --sage:      #3d7a52;
+  --info:      #2a6c9d;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 10.5pt;
+  line-height: 1.45;
+}
+
+/* ─── A4 페이지 ─── */
+.page {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 11mm 12mm 11mm 12mm;
+  background: var(--paper);
+  position: relative;
+}
+.page + .page {
+  page-break-before: always;
+}
+
+/* 화면에서만 페이지 구분선 */
+@media screen {
+  body {
+    background: #e4ddd0;
+    padding: 20px 0;
+  }
+  .page {
+    margin: 0 auto 20px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+  }
+}
+
+/* ─── 헤더 ─── */
+.card-head {
+  border-bottom: 1.5pt solid var(--amber);
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20pt;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.card-title .ko {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13pt;
+  font-weight: 600;
+  color: var(--amber-d);
+  margin-left: 8px;
+}
+.card-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 9pt;
+  color: var(--ink-faint);
+  letter-spacing: 0.05em;
+}
+
+/* ─── 섹션 블록 ─── */
+.block {
+  margin-bottom: 10px;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.block-title {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 11.5pt;
+  font-weight: 700;
+  color: var(--amber-d);
+  margin-bottom: 5px;
+  padding-bottom: 2px;
+  border-bottom: 0.5pt solid var(--border);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.block-title .num {
+  font-family: 'DM Mono', monospace;
+  font-size: 9pt;
+  color: var(--amber);
+  letter-spacing: 0.1em;
+}
+
+/* ─── 단계 리스트 ─── */
+ol.steps {
+  list-style: none;
+  counter-reset: step;
+  padding: 0;
+  margin: 0;
+}
+ol.steps li {
+  counter-increment: step;
+  padding: 2.5px 0 2.5px 20px;
+  position: relative;
+}
+ol.steps li::before {
+  content: counter(step) ".";
+  position: absolute;
+  left: 2px;
+  font-family: 'DM Mono', monospace;
+  font-weight: 500;
+  color: var(--amber);
+}
+
+/* ─── 불릿 리스트 ─── */
+ul.dot {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+ul.dot li {
+  padding: 2.5px 0 2.5px 16px;
+  position: relative;
+}
+ul.dot li::before {
+  content: "·";
+  position: absolute;
+  left: 4px;
+  font-weight: 700;
+  color: var(--amber);
+  font-size: 14pt;
+  line-height: 0.85;
+  top: 6px;
+}
+
+/* ─── 운영 시간표 ─── */
+.schedule {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10pt;
+  margin-top: 3px;
+}
+.schedule th, .schedule td {
+  padding: 4px 7px;
+  text-align: left;
+  border-bottom: 0.5pt solid var(--border);
+}
+.schedule th {
+  background: var(--paper3);
+  font-weight: 600;
+  color: var(--amber-d);
+  font-size: 9.5pt;
+}
+.schedule td:first-child {
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.schedule td:nth-child(2) {
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5pt;
+  white-space: nowrap;
+}
+
+/* ─── 강조 박스 ─── */
+.note {
+  background: var(--paper2);
+  border-left: 2.5pt solid var(--amber);
+  padding: 7px 11px;
+  margin: 6px 0;
+  font-size: 10pt;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.note.warn {
+  background: #fdf2ea;
+  border-left-color: var(--terra);
+}
+.note.info {
+  background: #eaf4fd;
+  border-left-color: var(--info);
+}
+.note-title {
+  font-weight: 700;
+  color: var(--amber-d);
+  display: block;
+  margin-bottom: 2px;
+  font-size: 10.5pt;
+}
+.note.warn .note-title { color: var(--terra); }
+.note.info .note-title { color: var(--info); }
+
+/* ─── 강조 ─── */
+strong { font-weight: 700; color: #000; }
+em {
+  font-style: italic;
+  font-family: 'Cormorant Garamond', serif;
+  color: var(--amber-d);
+  font-size: 1.05em;
+  font-weight: 500;
+}
+code {
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5pt;
+  background: var(--paper3);
+  color: var(--amber-d);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+
+/* ─── 접속 주소 박스 ─── */
+.url-box {
+  background: var(--paper2);
+  border: 1pt solid var(--border2);
+  padding: 8px 12px;
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 11pt;
+  color: var(--amber-d);
+  font-weight: 500;
+  margin: 5px 0 8px;
+  border-radius: 3px;
+}
+
+/* ─── 이미지 ─── */
+.ref-img {
+  display: block;
+  max-width: 100%;
+  width: 78mm;
+  margin: 5px auto 2px;
+  border: 0.5pt solid var(--border2);
+  border-radius: 2px;
+}
+.ref-img-caption {
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 9pt;
+  color: var(--ink-faint);
+  margin-bottom: 6px;
+}
+
+/* ─── 2단 레이아웃 ─── */
+.cols-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ─── 푸터 ─── */
+.card-foot {
+  position: absolute;
+  bottom: 6mm;
+  left: 12mm;
+  right: 12mm;
+  font-family: 'DM Mono', monospace;
+  font-size: 8pt;
+  color: var(--ink-faint);
+  text-align: center;
+  padding-top: 4px;
+  border-top: 0.5pt solid var(--border);
+  letter-spacing: 0.05em;
+}
+
+/* ─── 인쇄 설정 ─── */
+@page {
+  size: A4;
+  margin: 0;
+}
+@media print {
+  html, body { background: #fff; }
+  body { padding: 0; }
+  .page {
+    margin: 0;
+    box-shadow: none;
+    page-break-after: always;
+  }
+  .page:last-child {
+    page-break-after: auto;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- ════════════════  페이지 1  ═══════════════ -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page">
+
+  <header class="card-head">
+    <div class="card-title">Cosmos <span class="ko">코스모스 독서시간 · 교사 참조 카드</span></div>
+    <div class="card-meta">YUBONG · 2026</div>
+  </header>
+
+  <!-- ─── 접속 주소 ─── -->
+  <div class="block">
+    <div class="block-title"><span class="num">01</span>접속 주소</div>
+    <div class="url-box">kyh0175-afk.github.io/attendance/v2/</div>
+  </div>
+
+  <!-- ─── 출석 시작 절차 ─── -->
+  <div class="block">
+    <div class="block-title"><span class="num">02</span>출석 시작 절차</div>
+    <ol class="steps">
+      <li>위 주소 접속 → <strong>Attend(출석 체크)</strong> 카드 선택</li>
+      <li>본인 담당 <strong>장소 카드</strong> 선택 (아우름·교과1실·해오름·리케이온)</li>
+      <li><strong>프로그램</strong> 선택 (방과후/야간/심야/토요일/일요일 독서시간)</li>
+      <li><strong>담당 교사 이름</strong> 입력 (아우름+교과1실 통합일 땐 생략 가능)</li>
+      <li>"<strong>▶ QR 생성 및 출석 시작</strong>" 버튼 클릭 → 학생에게 QR 제시</li>
+    </ol>
+  </div>
+
+  <!-- ─── 운영 시간표 ─── -->
+  <div class="block">
+    <div class="block-title"><span class="num">03</span>운영 시간표</div>
+    <table class="schedule">
+      <thead>
+        <tr><th style="width:22%">프로그램</th><th style="width:22%">시간</th><th>장소</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>방과후</td><td>평일 16:30 ~ 18:20</td><td>아우름 / 교과1실 / 해오름</td></tr>
+        <tr><td>야간</td><td>평일 19:20 ~ 21:30</td><td>아우름 / 교과1실 / 해오름</td></tr>
+        <tr><td>심야</td><td>평일 21:30 ~ 23:00</td><td>리케이온</td></tr>
+        <tr><td>토요일 오전</td><td>토 08:30 ~ 12:30</td><td>리케이온</td></tr>
+        <tr><td>토요일 오후</td><td>토 13:30 ~ 17:30</td><td>리케이온</td></tr>
+        <tr><td>일요일</td><td>일 13:30 ~ 17:30</td><td>리케이온</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ─── 쌍둥이 장소 ─── -->
+  <div class="block">
+    <div class="block-title"><span class="num">04</span>쌍둥이 장소 — 아우름 ↔ 교과1실</div>
+    <div class="note info">
+      <span class="note-title">💡 통합 운영 방식</span>
+      아우름과 교과1실은 같은 공간처럼 통합 운영됩니다. 교사 한 분이 양쪽을 동시에 관리하며, 학생은 어느 쪽 QR을 스캔해도 같은 출석 시간에 기록됩니다. 교사 화면의 출석 명단에는 학생 이름 옆에 <strong>장소 배지</strong>(아우름 / 교과1실)가 붙어 학생이 어느 쪽에서 스캔했는지 구분할 수 있습니다.
+    </div>
+  </div>
+
+  <!-- ─── 심야 감독 자동 채움 ─── -->
+  <div class="block">
+    <div class="block-title"><span class="num">05</span>심야 감독 자동 채움</div>
+    <p>리케이온에서 <strong>심야 독서시간</strong>을 선택하면 그날의 감독 교사 이름이 자동 입력됩니다. 감독표 기준이라 <strong>실제 감독자와 다를 수 있으니</strong> 시작 버튼 전에 반드시 확인하고, 다르면 직접 지우고 올바른 이름을 입력하세요.</p>
+    <div class="note warn">
+      <span class="note-title">⚠ 이미 시작한 뒤 이름이 잘못됐다면</span>
+      관리자에게 연락하세요. 관리자 페이지 → <strong>출석 기록</strong> 탭에서 해당 세션 선택 → 교사 이름 옆 <strong>연필 아이콘</strong>으로 수정 가능합니다.
+    </div>
+  </div>
+
+  <!-- ─── 출석 마감 ─── -->
+  <div class="block">
+    <div class="block-title"><span class="num">06</span>출석 마감</div>
+    <ul class="dot">
+      <li>수업 끝나거나 모든 학생 출석 완료 시 <strong>출석 마감</strong> 버튼 클릭 → 확인 창에서 <strong>마감</strong> 선택</li>
+      <li>마감 후에는 학생이 더 이상 QR을 스캔할 수 없음</li>
+      <li>굳이 20분을 다 기다릴 필요 없음</li>
+    </ul>
+  </div>
+
+  <div class="card-foot">
+    P.1  ·  출석 시작 / 운영 / 기본 절차  ·  다음 면: 문제 대응
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- ════════════════  페이지 2  ═══════════════ -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page">
+
+  <header class="card-head">
+    <div class="card-title">Cosmos <span class="ko">문제가 생겼을 때</span></div>
+    <div class="card-meta">TROUBLESHOOTING</div>
+  </header>
+
+  <!-- ─── 연장 안내 창 ─── -->
+  <div class="block">
+    <div class="block-title"><span class="num">07</span>QR 시간이 끝났을 때 — 연장 안내 창</div>
+    <p>QR 코드 유효 시간 <strong>20분</strong>이 지나면 자동으로 <em>연장 안내 창</em>이 뜹니다. <strong>5분 카운트다운</strong> 안에 선택해야 합니다.</p>
+    <ul class="dot">
+      <li><strong>+ 10분 연장</strong> — 아직 올 학생이 있으면. QR이 다시 활성화됨. <strong>연장은 1회만</strong> 가능</li>
+      <li><strong>세션 마감</strong> — 더 받을 학생 없으면. 출석 시간 종료</li>
+      <li><strong>5분 안에 아무것도 안 누르면</strong> → 자동으로 마감 처리 (안전함)</li>
+    </ul>
+  </div>
+
+  <!-- ─── 수동 출석 추가 ─── -->
+  <div class="block">
+    <div class="block-title"><span class="num">08</span>학생이 QR을 스캔하지 못할 때 — 수동 출석 추가</div>
+    <p>학생 휴대폰이 없거나 인터넷 문제로 QR이 안 될 때:</p>
+    <ol class="steps">
+      <li>교사 화면 우측 상단 "<strong>√ 수동 출석</strong>" 버튼 클릭</li>
+      <li>숫자 키패드에 해당 학생의 <strong>학번 5자리</strong> 입력</li>
+      <li>"<strong>출석</strong>" 버튼 눌러 확정 → 명단에 즉시 추가됨</li>
+    </ol>
+  </div>
+
+  <!-- ─── 사후 출석 ─── -->
+  <div class="block">
+    <div class="block-title"><span class="num">09</span>뒤늦게 온 학생 — 사후 출석 추가</div>
+    <p>수업이 끝나거나 출석 시간이 이미 마감된 뒤 학생이 왔을 때. 마감된 세션에 나중에 학생을 추가하는 것을 <strong>사후 출석</strong>이라고 합니다.</p>
+
+    <img class="ref-img" src="assets/guide-09-closed-sessions.png" alt="오늘 마감된 세션 카드">
+    <div class="ref-img-caption">설정 화면 위쪽 — 오늘 마감된 세션 목록과 <em>+ 사후 출석 추가</em> 버튼</div>
+
+    <ol class="steps">
+      <li>메인 화면 → 본인 장소 카드 선택 → 교사 화면 진입</li>
+      <li>설정 화면 위쪽 "<strong>오늘 마감된 세션 · 사후 출석</strong>" 영역에서 해당 출석 시간 카드 찾기</li>
+      <li>카드 우측의 "<strong>+ 사후 출석 추가</strong>" 버튼 클릭</li>
+      <li>숫자 키패드에 학번 입력 → 확정</li>
+    </ol>
+    <div class="note">
+      <span class="note-title">✓ 사후 출석은 구분 표시됨</span>
+      사후로 추가한 학생은 기록에서 <strong>"사후"</strong> 라벨로 구분되므로 정상 출석과 혼동되지 않습니다.
+    </div>
+  </div>
+
+  <!-- ─── 학생 출석 누락 문의 ─── -->
+  <div class="block">
+    <div class="block-title"><span class="num">10</span>학생이 "출석 안 됐어요"라고 할 때</div>
+    <ol class="steps">
+      <li>먼저 <strong>교사 화면 출석 명단</strong>에서 해당 학생 학번·이름 확인 (이미 출석 처리됐을 수 있음)</li>
+      <li>명단에 없으면 → 위 <strong>08 수동 출석</strong>으로 직접 추가</li>
+      <li>해당 출석 시간이 이미 마감됐으면 → 위 <strong>09 사후 출석</strong>으로 추가</li>
+      <li>본인 기록은 모두 정상인데 학생이 못 봤다면 → <strong>관리자에게 연락</strong> (관리자가 실시간 탭에서 해당 학번 조회 가능)</li>
+    </ol>
+  </div>
+
+  <!-- ─── QR 스캔 자체 문제 ─── -->
+  <div class="block">
+    <div class="block-title"><span class="num">11</span>QR 코드를 스캔해도 연결 안 될 때</div>
+    <ul class="dot">
+      <li><strong>QR 만료</strong> — 20분 지났으면 교사가 연장하거나 새 QR 생성 필요</li>
+      <li><strong>학생 휴대폰 인터넷</strong> — 와이파이 불안정하면 LTE 데이터로 전환 권유</li>
+      <li><strong>교사 화면 새로고침</strong> — 드물게 교사 화면이 멈춰 있을 수 있음</li>
+      <li>위 방법 다 해도 안 되면 → <strong>수동 출석</strong>으로 대체</li>
+    </ul>
+  </div>
+
+  <!-- ─── 관리자 연락 ─── -->
+  <div class="block">
+    <div class="block-title"><span class="num">12</span>관리자에게 연락해야 할 때</div>
+    <ul class="dot">
+      <li>교사 이름이 잘못 들어간 채로 출석 시간을 이미 진행/마감한 경우</li>
+      <li>출석 기록 자체를 <strong>삭제</strong>하거나 <strong>수정</strong>해야 할 때 (교사 권한 밖)</li>
+      <li>같은 학생이 중복으로 출석 처리된 것 같을 때</li>
+      <li>학생 명단에 이름이 아예 없는 새 학생이 왔을 때</li>
+      <li>시스템이 이상하게 동작할 때 (화면 멈춤·에러 메시지 등)</li>
+    </ul>
+  </div>
+
+  <div class="card-foot">
+    P.2  ·  문제 대응  ·  코스모스 독서시간 출석 시스템 v2  ·  유봉여자고등학교
+  </div>
+</div>
+
+</body>
+</html>
