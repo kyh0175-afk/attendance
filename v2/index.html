@@ -4385,6 +4385,40 @@ input { font-family: inherit; }
 .live-recent-item .tm{font-family:'DM Mono',monospace;color:var(--sage);font-size:11px}
 .live-empty{padding:24px 0;text-align:center;color:var(--ink-faint);font-size:12px;font-family:'IBM Plex Sans KR',sans-serif}
 
+
+/* ─── View 카드 (For Teachers, readonly) ─── */
+.card-view .card-symbol {
+  color: var(--info);
+}
+.card-view:hover {
+  border-color: rgba(94, 184, 255, 0.4);
+}
+
+/* ─── View 모드 (body.admin-readonly) ─── */
+body.admin-readonly .admin-page-title::after {
+  content: 'READ ONLY';
+  display: inline-block;
+  margin-left: 12px;
+  padding: 3px 10px;
+  background: rgba(94, 184, 255, 0.12);
+  border: 1px solid rgba(94, 184, 255, 0.3);
+  border-radius: 12px;
+  font-size: 10px;
+  color: var(--info);
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.08em;
+  vertical-align: middle;
+  font-weight: 500;
+}
+
+/* View 모드에서는 허용되지 않은 탭 패널 자체를 숨김 (안전장치) */
+body.admin-readonly #admin-tab-students,
+body.admin-readonly #admin-tab-analysis,
+body.admin-readonly #admin-tab-requests,
+body.admin-readonly #admin-tab-diag {
+  display: none !important;
+}
+
 </style>
 </head>
 <body>
@@ -4425,6 +4459,21 @@ input { font-family: inherit; }
       </div>
       <div class="card-action">
         <span>장소 선택하기</span>
+        <span class="arrow">→</span>
+      </div>
+    </button>
+
+    <button class="card card-view" onclick="goView()">
+      <div class="card-symbol">V</div>
+      <div class="card-label">FOR TEACHERS</div>
+      <div class="card-title">View</div>
+      <div class="card-title-ko">출석 기록 조회</div>
+      <div class="card-desc">
+        오늘·지난 날의 출석 기록을 확인하고<br>
+        늦게 온 학생을 사후 출석으로 추가합니다.
+      </div>
+      <div class="card-action">
+        <span>기록 조회하기</span>
         <span class="arrow">→</span>
       </div>
     </button>
@@ -6268,8 +6317,12 @@ function route() {
   }
 
   if (params.get('mode') === 'check') { enterCheckScreen(); return; }
+  if (params.get('mode') === 'view') {
+    enterAdminScreen({ readOnly: true });
+    return;
+  }
   if (params.get('mode') === 'admin') {
-    enterAdminScreen();
+    enterAdminScreen({ readOnly: false });
     return;
   }
 
@@ -6287,6 +6340,10 @@ function goHome() {
 function goCheck(){history.pushState({},"",location.pathname+"?mode=check");route();}
 function goAttendance() {
   showScreen('screen-rooms');
+}
+function goView() {
+  history.pushState({}, '', location.pathname + '?mode=view');
+  route();
 }
 
 function enterRoom(room) {
@@ -7516,6 +7573,7 @@ async function doManualAttendFromNumpad() {
 // 관리자 상태
 const A = {
   currentTab: 'students',
+  readOnly: false,       // View 모드 플래그 — true면 편집 UI 숨김
   // 명단 관리
   students: [],          // 전체 학생 (활성 + 비활성)
   studentsLoaded: false,
@@ -7536,11 +7594,33 @@ const A = {
   analysisDates: [],      // 기간 내 모든 날짜 (YYYY-MM-DD 배열, 오름차순)
 };
 
-// 관리자 화면 진입
-async function enterAdminScreen() {
+// 관리자 화면 진입 (opts.readOnly === true면 View 모드)
+async function enterAdminScreen(opts) {
+  opts = opts || {};
+  A.readOnly = !!opts.readOnly;
+
+  // View 모드면 기본 탭을 history로, 관리자 전용 탭 접근을 차단
+  if (A.readOnly) {
+    if (A.currentTab !== 'history' && A.currentTab !== 'live') {
+      A.currentTab = 'history';
+    }
+  }
+
+  // body에 플래그 클래스 (CSS에서 숨김 처리용)
+  document.body.classList.toggle('admin-readonly', A.readOnly);
+
   showScreen('screen-admin');
 
-  // 첫 진입 시 학생 명단 로딩
+  // 사이드바 — View 모드면 2개만, 관리자 모드면 6개
+  applyAdminSidebar();
+
+  // 브랜드 서브 텍스트 갱신
+  var brandSub = document.querySelector('.admin-brand-sub');
+  if (brandSub) {
+    brandSub.textContent = A.readOnly ? '출석 기록 조회' : '관리자 페이지';
+  }
+
+  // 첫 진입 시 학생 명단 로딩 (사후 출석 학생 매칭에 필요)
   if (!A.studentsLoaded) {
     await loadAllStudents();
   }
@@ -7548,8 +7628,25 @@ async function enterAdminScreen() {
   switchAdminTab(A.currentTab);
 }
 
+// View 모드에서는 사이드바 2개 탭만, 관리자 모드에서는 6개 전부
+function applyAdminSidebar() {
+  var allowedInView = ['history', 'live'];
+  document.querySelectorAll('.admin-nav-item').forEach(function(btn) {
+    var tab = btn.dataset.tab;
+    if (A.readOnly && allowedInView.indexOf(tab) === -1) {
+      btn.style.display = 'none';
+    } else {
+      btn.style.display = '';
+    }
+  });
+}
+
 // 탭 전환
 function switchAdminTab(tab) {
+  // View 모드면 허용 탭만
+  if (A.readOnly && tab !== 'history' && tab !== 'live') {
+    tab = 'history';
+  }
   A.currentTab = tab;
   document.querySelectorAll('.admin-nav-item').forEach(btn => {
     btn.classList.toggle('on', btn.dataset.tab === tab);
@@ -8399,7 +8496,7 @@ function renderHistoryDetail() {
         ${escapeHtml(s.장소 || '')}
         <span class="sep">·</span>
         <span id="detail-teacher-name">${escapeHtml(s.교사 || '(미입력)')}</span> 선생님
-        <button class="teacher-edit-btn" onclick="openEditTeacherModal()" title="교사 이름 수정">✏️</button>
+        ${A.readOnly ? '' : `<button class="teacher-edit-btn" onclick="openEditTeacherModal()" title="교사 이름 수정">✏️</button>`}
         <br>
         <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-faint)">${startTime} ~ ${endTime}</span>
       </div>
@@ -8424,7 +8521,7 @@ function renderHistoryDetail() {
 
     <div class="detail-actions">
       <button class="admin-btn primary" onclick="openLateAttendModal()">+ 사후 출석 추가</button>
-      <button class="admin-btn danger" onclick="confirmDeleteSession()" style="margin-left:auto">🗑 세션 삭제</button>
+      ${A.readOnly ? '' : `<button class="admin-btn danger" onclick="confirmDeleteSession()" style="margin-left:auto">🗑 세션 삭제</button>`}
     </div>
 
     <div class="detail-list">
@@ -8448,7 +8545,9 @@ function renderHistoryDetail() {
         cls += 'attended '; statusIcon = '✓';
         timeText = (a.원래시각 || '').slice(0, 5);
       }
-      actionHtml = `<div class="detail-row-action"><button class="admin-btn admin-btn-sm danger" onclick="confirmDeleteAttendance(${a.id})">삭제</button></div>`;
+      if (!A.readOnly) {
+        actionHtml = `<div class="detail-row-action"><button class="admin-btn admin-btn-sm danger" onclick="confirmDeleteAttendance(${a.id})">삭제</button></div>`;
+      }
     } else {
       cls += 'absent ';
     }
