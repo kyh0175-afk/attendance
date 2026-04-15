@@ -616,10 +616,8 @@ code {
 
   <p>QR 코드 유효 시간 20분이 지나면 자동으로 <strong>연장 안내 창</strong>이 뜹니다. 이 창이 뜨는 동안 학생은 임시로 출석을 할 수 없으며, 교사의 선택을 기다립니다.</p>
 
-  <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 07] 연장 안내 창</div>
-    <div class="img-placeholder-desc">"QR 시간이 만료됐어요" 제목과 함께 중앙에 큰 카운트다운(5:00부터 감소), 아래에 "세션 마감" 과 "+ 10분 연장" 두 버튼이 있는 상태.</div>
-  </div>
+  <img class="guide-img" src="assets/guide-07-extend-modal.png" alt="연장 안내 창">
+  <div class="guide-img-caption">[이미지 07] QR 유효 시간 20분이 지나면 뜨는 연장 안내 창. <strong>QR 시간이 만료됐어요</strong> 제목과 5분 카운트다운, 그 아래에 <em>세션 마감</em> / <em>+ 10분 연장</em> 두 버튼이 있습니다. 창이 뜨는 동안 뒤쪽 QR 코드는 흐려진 상태로 임시 비활성화됩니다.</div>
 
   <div class="step">
     <div class="step-num">1</div>
@@ -734,19 +732,12 @@ code {
 
   <p>관리자 페이지는 명단·기록·분석·요청 등 전반적인 운영을 처리하는 곳입니다. 메인 화면 우측 상단의 <strong>관리자 페이지</strong> 버튼으로 이동할 수 있습니다. 왼쪽 사이드바에서 탭을 전환하며 사용합니다.</p>
 
-  <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 12] 관리자 페이지 전체 레이아웃</div>
-    <div class="img-placeholder-desc">좌측에 세로 사이드바(Cosmos 로고 + 6개 메뉴: S 명단 관리 / H 출석 기록 / A 분석 / R 요청 관리 / L 실시간 / D 진단)와 우측 메인 콘텐츠 영역이 있는 전체 화면.</div>
-  </div>
-
   <h2 id="adm-students">명단 관리</h2>
 
   <p>학생 명단을 추가·수정·삭제하고, 엑셀 파일로 일괄 업로드할 수 있습니다.</p>
 
-  <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 13] 명단 관리 탭</div>
-    <div class="img-placeholder-desc">프로그램·장소·학년·활성 상태 필터가 상단에 있고, 그 아래에 학번·이름·프로그램·장소·출석 요일·상태 열로 구성된 학생 목록 테이블이 있는 상태.</div>
-  </div>
+  <img class="guide-img" src="assets/guide-12-admin-students.png" alt="관리자 페이지 — 명단 관리 탭">
+  <div class="guide-img-caption">[이미지 12] 관리자 페이지 전체 레이아웃 + 명단 관리 탭. 좌측 사이드바에 Cosmos 로고와 6개 메뉴(<em>S 명단 관리 / H 출석 기록 / A 분석 / R 요청 관리 / L 실시간 / D 진단</em>), 하단에 <em>← 메인으로</em> 버튼이 있습니다. 우측은 상단 필터(검색·프로그램·장소·학년·활성 상태)와 학생 목록 테이블(학번·이름·프로그램·장소·출석 요일·상태), 우측 상단에 <strong>엑셀 업로드 / 양식 다운로드 / + 학생 추가</strong> 버튼이 있습니다.</div>
 
   <h3>학생 개별 추가 · 수정</h3>
   <ul class="plain">
@@ -778,7 +769,7 @@ code {
   <p>지난 출석 시간의 기록을 날짜별로 조회하고, 학생별 출석 상태를 확인할 수 있습니다.</p>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 14] 출석 기록 탭 전체</div>
+    <div class="img-placeholder-label">[이미지 13] 출석 기록 탭 전체</div>
     <div class="img-placeholder-desc">좌측에 날짜별 출석 시간 카드 목록(기간·프로그램·장소 필터), 우측에 선택된 출석 시간의 상세 정보(전체 학생 수, 출석/미출석 수, 출석률, 학생 명단)가 있는 2열 레이아웃.</div>
   </div>
 
@@ -795,7 +786,7 @@ code {
   <p>기간별 출석률, 프로그램별 통계, 학생별 출석 횟수 등을 한눈에 볼 수 있습니다.</p>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 15] 분석 탭</div>
+    <div class="img-placeholder-label">[이미지 14] 분석 탭</div>
     <div class="img-placeholder-desc">프로그램별·장소별 출석률 요약 카드와 기간별 출석 추이 그래프가 있는 상태.</div>
   </div>
 
@@ -804,7 +795,7 @@ code {
   <p>학생이 보낸 출석 수정 요청이나 출석 요일 변경 요청을 확인하고 승인·반려할 수 있습니다.</p>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 16] 요청 관리 탭</div>
+    <div class="img-placeholder-label">[이미지 15] 요청 관리 탭</div>
     <div class="img-placeholder-desc">대기 중 / 처리됨 탭으로 나뉘어 학생이 보낸 요청 목록이 표시되고, 각 요청에 "승인" / "반려" 버튼이 있는 상태.</div>
   </div>
 
@@ -822,7 +813,7 @@ code {
   <p>지금 이 순간 운영 중인 네 장소의 출석 현황을 한 화면에서 볼 수 있습니다. 학생 문의가 왔을 때 (<em>"저 출석이 안 됐어요"</em>) 빠르게 확인할 때 쓰세요.</p>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 17] 실시간 탭</div>
+    <div class="img-placeholder-label">[이미지 16] 실시간 탭</div>
     <div class="img-placeholder-desc">아우름 · 교과1실 · 해오름 · 리케이온 네 장소의 카드가 가로로 배치되고, 각 카드에 현재 출석 시간·출석 인원·학생 명단이 보이는 상태. 상단에 학번 검색 박스가 있음.</div>
   </div>
 
@@ -836,7 +827,7 @@ code {
   <p>오늘 예정된 출석 시간이 모두 정상적으로 생성됐는지 확인하고, 교사 기기에서 발생한 이벤트 로그를 조회할 수 있습니다. <strong>이 탭은 운영 중 문제가 생겼는지 조기에 발견하는 데 가장 중요합니다.</strong></p>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 18] 진단 탭</div>
+    <div class="img-placeholder-label">[이미지 17] 진단 탭</div>
     <div class="img-placeholder-desc">상단에 "오늘의 세션 현황" 카드 그리드(각 프로그램별로 녹색/amber/빨강/회색 상태 표시), 하단에 장소·이벤트 필터가 있는 최근 교사 기기 로그 테이블이 있는 상태.</div>
   </div>
 
