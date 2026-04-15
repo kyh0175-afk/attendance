@@ -462,7 +462,7 @@ code {
         <li><a href="#tch-start">출석 시간 시작하기</a></li>
         <li><a href="#tch-supervisor">심야 감독 교사 자동 채움</a></li>
         <li><a href="#tch-monitor">학생 출석 현황 보기</a></li>
-        <li><a href="#tch-manual">학번으로 직접 출석 추가</a></li>
+        <li><a href="#tch-manual">학번으로 수동 출석 추가</a></li>
         <li><a href="#tch-extend">QR 시간이 끝났을 때 (연장 안내 창)</a></li>
         <li><a href="#tch-end">출석 시간 마감하기</a></li>
         <li><a href="#tch-late">지난 시간에 나중에 출석 추가하기</a></li>
@@ -566,10 +566,8 @@ code {
 
   <p>리케이온에서 <strong>심야 독서시간</strong>을 선택하면 그날의 심야 감독 교사 이름이 자동으로 입력됩니다. 이 정보는 미리 등록해둔 감독표에서 가져옵니다.</p>
 
-  <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 04] 심야 감독 자동 채움 상태</div>
-    <div class="img-placeholder-desc">리케이온 + 심야 독서시간 선택 시 교사 이름 칸에 자동으로 이름이 들어가 있고, 그 아래에 "⚠️ 오늘의 심야 감독으로 자동 입력됨 — 다르면 직접 수정하세요" 안내가 보이는 상태.</div>
-  </div>
+  <img class="guide-img" src="assets/guide-04-supervisor-auto.png" alt="심야 감독 자동 채움 상태">
+  <div class="guide-img-caption">[이미지 04] 리케이온에서 <strong>심야 독서시간</strong>을 선택하면 담당 교사 칸에 감독표 기준 이름이 자동으로 들어가고, 아래에 <em>"오늘의 심야 감독으로 자동 입력됨 — 다르면 직접 수정하세요"</em> 안내가 보입니다.</div>
 
   <div class="note note-danger">
     <div class="note-title">⚠ 반드시 확인하세요</div>
@@ -581,23 +579,21 @@ code {
 
   <p>QR 코드가 표시된 화면에서 학생이 출석할 때마다 <strong>실시간으로 명단</strong>이 갱신됩니다. 전체 / 출석 / 미출석 탭으로 구분해 볼 수 있습니다.</p>
 
-  <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 05] 출석 명단 영역</div>
-    <div class="img-placeholder-desc">교사 화면 하단의 학생 명단. "전체 / 출석 / 미출석" 탭이 있고, 학생 한 명씩 체크 표시(출석) 또는 회색 점(미출석) 아이콘과 함께 학번·이름이 보이는 상태. 아우름+교과1실 통합일 때는 학생 이름 옆에 장소 태그가 붙은 상태.</div>
-  </div>
+  <img class="guide-img" src="assets/guide-05-attendance-list.png" alt="출석 명단 영역">
+  <div class="guide-img-caption">[이미지 05] 교사 화면 우측의 출석 현황. 상단 요약 카드(출석·미출석·출석률·자율)와 학생 명단이 있고, 이미 출석한 학생은 체크 표시(<strong>√</strong>)와 시각이, 아직 미출석인 학생은 회색 점과 <strong>출석</strong> 버튼이 표시됩니다. <em>전체 / 출석 / 미출석</em> 탭으로 필터할 수 있습니다.</div>
 
   <div class="note note-info">
     <div class="note-title">💡 실시간 갱신</div>
     학생이 QR을 스캔해 학번을 입력하면 교사 화면에 즉시 반영됩니다. 네트워크 문제로 반영이 늦어도 최대 3초 이내에 자동으로 새로고침됩니다. 수동 새로고침은 불필요합니다.
   </div>
 
-  <h2 id="tch-manual">학번으로 직접 출석 추가</h2>
+  <h2 id="tch-manual">학번으로 수동 출석 추가</h2>
 
   <p>학생의 휴대폰이 없거나 QR 스캔이 안 되는 경우, 교사가 직접 학번을 입력해 출석을 추가할 수 있습니다.</p>
 
   <div class="step">
     <div class="step-num">1</div>
-    <div class="step-body">QR 코드 화면 오른쪽의 "<strong>직접 출석 추가</strong>" 버튼을 누릅니다.</div>
+    <div class="step-body">교사 화면 우측 상단의 "<strong>√ 수동 출석</strong>" 버튼을 누릅니다.</div>
   </div>
   <div class="step">
     <div class="step-num">2</div>
@@ -605,13 +601,11 @@ code {
   </div>
   <div class="step">
     <div class="step-num">3</div>
-    <div class="step-body">입력이 완료되면 해당 학생이 명단에 추가됩니다.</div>
+    <div class="step-body">입력이 완료되면 <strong>출석</strong> 버튼을 눌러 확정합니다. 해당 학생이 명단에 추가됩니다.</div>
   </div>
 
-  <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 06] 직접 출석 추가 키패드</div>
-    <div class="img-placeholder-desc">"직접 출석 추가" 버튼 클릭 시 뜨는 숫자 키패드 모달. 0~9 숫자 버튼과 학번 표시 영역이 있는 상태.</div>
-  </div>
+  <img class="guide-img" src="assets/guide-06-manual-keypad.png" alt="수동 출석 키패드">
+  <div class="guide-img-caption">[이미지 06] <strong>수동 출석</strong> 버튼을 누르면 뜨는 학번 입력 키패드. 5자리 학번 입력란과 숫자 버튼, 삭제 버튼, 출석 확정 버튼이 있습니다.</div>
 
   <h2 id="tch-extend">QR 시간이 끝났을 때 — 연장 안내 창</h2>
 
@@ -930,7 +924,7 @@ code {
   </div>
   <div class="step">
     <div class="step-num">3</div>
-    <div class="step-body">운영 중: 출석 명단 확인 + 필요 시 직접 출석 추가</div>
+    <div class="step-body">운영 중: 출석 명단 확인 + 필요 시 수동 출석 추가</div>
   </div>
   <div class="step">
     <div class="step-num">4</div>
