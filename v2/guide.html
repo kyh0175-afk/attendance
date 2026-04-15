@@ -211,6 +211,10 @@ p + p { margin-top: -2px; }
   page-break-inside: avoid;
   break-inside: avoid;
 }
+/* 세로가 긴 모바일 스크린샷용 — 폭을 더 좁게 */
+.guide-img-tall {
+  max-width: 260px;
+}
 .guide-img-caption {
   text-align: center;
   font-family: 'Cormorant Garamond', serif;
@@ -409,6 +413,9 @@ code {
     page-break-inside: avoid;
     break-inside: avoid;
   }
+  .guide-img-tall {
+    max-width: 60mm;
+  }
   .guide-img-caption {
     color: #666;
     margin-bottom: 14px;
@@ -471,8 +478,6 @@ code {
     <li><a href="#student">학생용 — 출석하기</a>
       <ul>
         <li><a href="#stu-qr">QR 코드로 출석하기</a></li>
-        <li><a href="#stu-check">내 출석 기록 확인하기</a></li>
-        <li><a href="#stu-fix">출석 기록이 이상할 때</a></li>
       </ul>
     </li>
     <li><a href="#admin">관리자 페이지</a>
@@ -709,64 +714,17 @@ code {
     <div class="step-body">"<strong>환영합니다, ○○○님</strong>" 화면이 뜨면 <strong>출석이 완료</strong>된 것입니다. 이 화면이 뜨지 않으면 출석이 처리되지 않은 것이니 교사에게 알려주세요.</div>
   </div>
 
-  <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 10] 학생 출석 화면 — 학번 입력</div>
-    <div class="img-placeholder-desc">QR 스캔 직후 학생이 보는 화면. 상단에 프로그램명·장소·교사 이름이 보이고, 중앙에 5자리 학번을 입력하는 숫자 키패드가 있는 상태.</div>
-  </div>
+  <img class="guide-img guide-img-tall" src="assets/guide-10-student-input.png" alt="학생 학번 입력 화면">
+  <div class="guide-img-caption">[이미지 10] QR 스캔 직후 학생이 보는 화면. 상단에 <em>Now Reading</em> · 프로그램명 · 장소 · 담당 교사가 표시되고, 중앙에 학번 5자리 입력란과 숫자 키패드가 있습니다.</div>
 
-  <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 11] 학생 출석 완료 화면</div>
-    <div class="img-placeholder-desc">출석 처리된 후 뜨는 환영 메시지 화면. "환영합니다, ○○○님" 같은 문구와 출석 시각이 보이는 상태.</div>
-  </div>
+  <img class="guide-img guide-img-tall" src="assets/guide-11-student-welcome.png" alt="학생 출석 완료 환영 화면">
+  <div class="guide-img-caption">[이미지 11] 출석이 처리된 직후 뜨는 <em>Welcome</em> 화면. 학생 이름, 프로그램 · 장소, 출석 시각이 표시됩니다.</div>
 
   <div class="note note-warn">
     <div class="note-title">⚠ QR 코드 유효 시간</div>
     QR 코드는 생성 후 <strong>20분 동안만</strong> 사용할 수 있습니다. 20분이 지나면 교사가 새 QR 코드를 만들거나 연장해야 합니다. 출석 화면에서 "이 시간은 이미 마감됐어요" 같은 메시지가 나오면 교사에게 알려 새 QR 코드를 받으세요.
   </div>
 
-  <h2 id="stu-check">내 출석 기록 확인하기</h2>
-
-  <p>본인의 지난 출석 기록을 직접 확인할 수 있습니다.</p>
-
-  <div class="step">
-    <div class="step-num">1</div>
-    <div class="step-body">접속 주소로 이동합니다. (<code>https://kyh0175-afk.github.io/attendance/v2/</code>)</div>
-  </div>
-  <div class="step">
-    <div class="step-num">2</div>
-    <div class="step-body">메인 화면에서 "<strong>내 출석 확인</strong>" 버튼을 누릅니다.</div>
-  </div>
-  <div class="step">
-    <div class="step-num">3</div>
-    <div class="step-body"><strong>학번 5자리</strong>를 입력하면 본인의 최근 출석 기록이 날짜별로 표시됩니다.</div>
-  </div>
-
-  <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 12] 학생 출석 조회 화면</div>
-    <div class="img-placeholder-desc">학번 입력 후 뜨는 본인의 출석 기록 목록. 날짜·프로그램·상태(출석/미출석)가 리스트로 보이는 상태.</div>
-  </div>
-
-  <h2 id="stu-fix">출석 기록이 이상할 때</h2>
-
-  <p>본인 출석 조회 화면에서 기록이 잘못되어 있으면 <strong>수정 요청</strong>을 보낼 수 있습니다.</p>
-
-  <div class="step">
-    <div class="step-num">1</div>
-    <div class="step-body">내 출석 기록에서 수정을 원하는 날짜의 항목을 누릅니다.</div>
-  </div>
-  <div class="step">
-    <div class="step-num">2</div>
-    <div class="step-body">변경할 <strong>출석 상태</strong>(출석/결석/자율 등)를 고르고, <strong>사유</strong>를 간단히 적습니다.</div>
-  </div>
-  <div class="step">
-    <div class="step-num">3</div>
-    <div class="step-body">"요청 보내기"를 누르면 관리자에게 요청이 전달됩니다. 관리자가 승인해야 기록이 변경됩니다.</div>
-  </div>
-
-  <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 13] 출석 수정 요청 화면</div>
-    <div class="img-placeholder-desc">특정 날짜 기록을 눌렀을 때 뜨는 수정 요청 폼. 상태 선택 옵션과 사유 입력란이 있는 상태.</div>
-  </div>
 </section>
 
 <!-- ═══════════════════ 4. 관리자 페이지 ═══════════════════ -->
@@ -777,7 +735,7 @@ code {
   <p>관리자 페이지는 명단·기록·분석·요청 등 전반적인 운영을 처리하는 곳입니다. 메인 화면 우측 상단의 <strong>관리자 페이지</strong> 버튼으로 이동할 수 있습니다. 왼쪽 사이드바에서 탭을 전환하며 사용합니다.</p>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 14] 관리자 페이지 전체 레이아웃</div>
+    <div class="img-placeholder-label">[이미지 12] 관리자 페이지 전체 레이아웃</div>
     <div class="img-placeholder-desc">좌측에 세로 사이드바(Cosmos 로고 + 6개 메뉴: S 명단 관리 / H 출석 기록 / A 분석 / R 요청 관리 / L 실시간 / D 진단)와 우측 메인 콘텐츠 영역이 있는 전체 화면.</div>
   </div>
 
@@ -786,7 +744,7 @@ code {
   <p>학생 명단을 추가·수정·삭제하고, 엑셀 파일로 일괄 업로드할 수 있습니다.</p>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 15] 명단 관리 탭</div>
+    <div class="img-placeholder-label">[이미지 13] 명단 관리 탭</div>
     <div class="img-placeholder-desc">프로그램·장소·학년·활성 상태 필터가 상단에 있고, 그 아래에 학번·이름·프로그램·장소·출석 요일·상태 열로 구성된 학생 목록 테이블이 있는 상태.</div>
   </div>
 
@@ -820,7 +778,7 @@ code {
   <p>지난 출석 시간의 기록을 날짜별로 조회하고, 학생별 출석 상태를 확인할 수 있습니다.</p>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 16] 출석 기록 탭 전체</div>
+    <div class="img-placeholder-label">[이미지 14] 출석 기록 탭 전체</div>
     <div class="img-placeholder-desc">좌측에 날짜별 출석 시간 카드 목록(기간·프로그램·장소 필터), 우측에 선택된 출석 시간의 상세 정보(전체 학생 수, 출석/미출석 수, 출석률, 학생 명단)가 있는 2열 레이아웃.</div>
   </div>
 
@@ -837,7 +795,7 @@ code {
   <p>기간별 출석률, 프로그램별 통계, 학생별 출석 횟수 등을 한눈에 볼 수 있습니다.</p>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 17] 분석 탭</div>
+    <div class="img-placeholder-label">[이미지 15] 분석 탭</div>
     <div class="img-placeholder-desc">프로그램별·장소별 출석률 요약 카드와 기간별 출석 추이 그래프가 있는 상태.</div>
   </div>
 
@@ -846,7 +804,7 @@ code {
   <p>학생이 보낸 출석 수정 요청이나 출석 요일 변경 요청을 확인하고 승인·반려할 수 있습니다.</p>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 18] 요청 관리 탭</div>
+    <div class="img-placeholder-label">[이미지 16] 요청 관리 탭</div>
     <div class="img-placeholder-desc">대기 중 / 처리됨 탭으로 나뉘어 학생이 보낸 요청 목록이 표시되고, 각 요청에 "승인" / "반려" 버튼이 있는 상태.</div>
   </div>
 
@@ -864,7 +822,7 @@ code {
   <p>지금 이 순간 운영 중인 네 장소의 출석 현황을 한 화면에서 볼 수 있습니다. 학생 문의가 왔을 때 (<em>"저 출석이 안 됐어요"</em>) 빠르게 확인할 때 쓰세요.</p>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 19] 실시간 탭</div>
+    <div class="img-placeholder-label">[이미지 17] 실시간 탭</div>
     <div class="img-placeholder-desc">아우름 · 교과1실 · 해오름 · 리케이온 네 장소의 카드가 가로로 배치되고, 각 카드에 현재 출석 시간·출석 인원·학생 명단이 보이는 상태. 상단에 학번 검색 박스가 있음.</div>
   </div>
 
@@ -878,7 +836,7 @@ code {
   <p>오늘 예정된 출석 시간이 모두 정상적으로 생성됐는지 확인하고, 교사 기기에서 발생한 이벤트 로그를 조회할 수 있습니다. <strong>이 탭은 운영 중 문제가 생겼는지 조기에 발견하는 데 가장 중요합니다.</strong></p>
 
   <div class="img-placeholder">
-    <div class="img-placeholder-label">[이미지 20] 진단 탭</div>
+    <div class="img-placeholder-label">[이미지 18] 진단 탭</div>
     <div class="img-placeholder-desc">상단에 "오늘의 세션 현황" 카드 그리드(각 프로그램별로 녹색/amber/빨강/회색 상태 표시), 하단에 장소·이벤트 필터가 있는 최근 교사 기기 로그 테이블이 있는 상태.</div>
   </div>
 
