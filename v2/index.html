@@ -6614,6 +6614,12 @@ async function enterTeacherScreen(room) {
   }
 
   // 활성 세션 없음 → 설정 화면
+  // (이전 장소에서 진행 중이던 세션 상태 정리 — 다른 장소로 전환 시 잔존 상태 방지)
+  T.session = null;
+  T.attendedMap = {};
+  T.rosterStudents = [];
+  stopTeacherTimer();
+  unsubscribeRoster();
   document.getElementById('t-setup').style.display = 'block';
   document.getElementById('t-wrap').classList.remove('session-active');
   loadPastSessions();
