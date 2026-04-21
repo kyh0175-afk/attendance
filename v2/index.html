@@ -5195,6 +5195,12 @@ body.admin-readonly #admin-tab-diag {
             <option value="2">2학년</option>
             <option value="3">3학년</option>
           </select>
+          <select class="admin-filter-select" id="anal-sort" onchange="renderAnalysis()">
+            <option value="no_asc" selected>학번 오름차순</option>
+            <option value="rate_asc">출석률 낮은순</option>
+            <option value="rate_desc">출석률 높은순</option>
+            <option value="name_asc">이름 가나다순</option>
+          </select>
           <input type="text" class="admin-search" id="anal-search" placeholder="학번 또는 이름으로 검색..." oninput="renderAnalysis()">
         </div>
 
@@ -8830,12 +8836,7 @@ function renderAnalysis() {
     });
   }
 
-  // 학번 + 프로그램 정렬
-  students.sort((a, b) => {
-    const noCmp = String(a.학번).localeCompare(String(b.학번), undefined, { numeric: true });
-    if (noCmp !== 0) return noCmp;
-    return (a.프로그램 || '').localeCompare(b.프로그램 || '');
-  });
+  // (정렬은 studentStats 계산 후에 수행 — 출석률 기반 정렬을 지원하기 위해)
 
   // 출석 데이터 필터링 (필터에 맞는 학생들의 것만)
   let filteredAtt = A.analysisAttendance;
@@ -8895,6 +8896,30 @@ function renderAnalysis() {
       _absent: absent,
       _rate: rate,  // null이면 N/A (분모 0)
     };
+  });
+
+  // 사용자 선택 정렬 적용
+  const sortMode = (document.getElementById('anal-sort') || {}).value || 'no_asc';
+  studentStats.sort((a, b) => {
+    if (sortMode === 'rate_asc') {
+      // 출석률 낮은순 — _rate가 null(분모 0)인 학생은 뒤로
+      const aRate = (a._rate === null) ? 101 : a._rate;
+      const bRate = (b._rate === null) ? 101 : b._rate;
+      if (aRate !== bRate) return aRate - bRate;
+    } else if (sortMode === 'rate_desc') {
+      // 출석률 높은순 — _rate가 null인 학생은 뒤로
+      const aRate = (a._rate === null) ? -1 : a._rate;
+      const bRate = (b._rate === null) ? -1 : b._rate;
+      if (aRate !== bRate) return bRate - aRate;
+    } else if (sortMode === 'name_asc') {
+      // 이름 가나다순
+      const nameCmp = (a.이름 || '').localeCompare(b.이름 || '', 'ko');
+      if (nameCmp !== 0) return nameCmp;
+    }
+    // 공통 tiebreaker: 학번 + 프로그램 오름차순 (기본 정렬도 이 경로)
+    const noCmp = String(a.학번).localeCompare(String(b.학번), undefined, { numeric: true });
+    if (noCmp !== 0) return noCmp;
+    return (a.프로그램 || '').localeCompare(b.프로그램 || '');
   });
 
   if (studentStats.length === 0) {
