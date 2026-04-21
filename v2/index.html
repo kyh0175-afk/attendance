@@ -7587,6 +7587,7 @@ async function doManualAttendFromNumpad() {
 const A = {
   currentTab: 'students',
   readOnly: false,       // View 모드 플래그 — true면 편집 UI 숨김
+  firstAttDateMap: null, // 학생별 전체 기간 첫 출석 날짜 캐시 (loadAnalysis에서 초기화)
   // 명단 관리
   students: [],          // 전체 학생 (활성 + 비활성)
   studentsLoaded: false,
@@ -8804,6 +8805,30 @@ async function loadAnalysis() {
 
     A.analysisDates = Array.from(dateSet).sort(); // 오름차순
 
+    // 학생별 첫 출석 날짜 맵 (전체 기간 기준) — 한 번만 로드해서 캐시
+    // 신규 등록/비활성 재활성 학생의 "등록 이전 기간 결석" 왜곡 방지용
+    if (!A.firstAttDateMap) {
+      try {
+        const { data: allFirst, error: e2 } = await sb.client()
+          .from('attendance')
+          .select('학번, 프로그램, 날짜')
+          .order('날짜', { ascending: true });
+        if (!e2 && allFirst) {
+          const m = {};
+          allFirst.forEach(r => {
+            const k = `${r.학번}|${r.프로그램}`;
+            if (!m[k]) m[k] = r.날짜; // order asc라 첫 값이 최소
+          });
+          A.firstAttDateMap = m;
+        } else {
+          A.firstAttDateMap = {}; // 실패 시 빈 맵 (분모 왜곡 방지 로직만 스킵)
+        }
+      } catch (e) {
+        console.warn('첫 출석일 로드 실패 (분석은 계속):', e);
+        A.firstAttDateMap = {};
+      }
+    }
+
     A.analysisLoaded = true;
     renderAnalysis();
 
@@ -8859,17 +8884,28 @@ function renderAnalysis() {
     sessionDatesByPS[psKey].add(r.날짜);
   });
 
-  // 학생별 출석률 계산 (분모: 학생 (프로그램+장소)에 세션이 있었던 날 ∩ 학생 출석요일)
+  // ⭐ 신규/재활성화 학생의 "등록 이전 기간 결석" 왜곡 방지:
+  // 학생별 (학번+프로그램) 전체 기간 첫 출석 날짜를 구해서, 그 이전 날짜는 분모에서 제외
+  // 비활성→재활성, 학기 중 신규 등록 등 케이스에서 억울한 결석이 쌓이지 않도록
+  // A.firstAttDateMap은 loadAnalysis()에서 전체 기간 기준으로 한 번만 로드됨
+  const firstAttByStudent = A.firstAttDateMap || {};
+
+  // 학생별 출석률 계산 (분모: 학생 (프로그램+장소)에 세션이 있었던 날 ∩ 학생 출석요일 ∩ 학생 첫 출석일 이후)
   const studentStats = students.map(s => {
     const days = Array.isArray(s.출석요일) ? s.출석요일 : [];
     const psKey = `${s.프로그램}|${s.장소}`;
     const sessionDates = sessionDatesByPS[psKey] || new Set();
+    const firstDate = firstAttByStudent[`${s.학번}|${s.프로그램}`] || null;
 
     let target = 0;
     let attended = 0;
     let absentDates = []; // 결석한 날짜 목록 (디버깅/툴팁용)
 
     sessionDates.forEach(date => {
+      // 학생의 첫 출석 이전 날짜는 분모 제외 (등록 전 or 비활성 기간)
+      // 첫 출석 기록이 아예 없는 학생은 분모 0 → 출석률 N/A 로 처리
+      if (!firstDate || date < firstDate) return;
+
       const d = new Date(date + 'T00:00:00');
       const dayKr = DAY_KR_ANAL[d.getDay()];
 
