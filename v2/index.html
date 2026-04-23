@@ -6758,6 +6758,14 @@ async function startTeacherSession() {
     return;
   }
 
+  // 프로그램별 생성 가능 시간 검증 (방과후/야간/심야)
+  const startCheck = checkProgramStartAllowed(program);
+  if (!startCheck.ok) {
+    alert(program + ' 출석은 ' + startCheck.limitStr + '부터 시작할 수 있어요.');
+    TLOG.log('start_too_early', { program, limit: startCheck.limitStr });
+    return;
+  }
+
   btn.disabled = true;
   btn.textContent = '생성 중...';
 
@@ -10195,14 +10203,36 @@ document.getElementById('modal-reject').addEventListener('click',(e)=>{if(e.targ
 // ══════════════════════════════════════════════════════════════
 
 // 프로그램별 예정 운영 시간표 (KST 기준)
+// 프로그램별 세션 생성 가능 최소 시각 (HH:MM)
+// 너무 일찍 세션을 시작해서 학생들이 헷갈리는 일을 방지
+// 주말 프로그램(토요일/일요일)은 제한 없음
+const PROGRAM_START_LIMITS = {
+  '방과후 독서시간': '16:20',
+  '야간 독서시간':   '19:00',
+  '심야 독서시간':   '21:20',
+};
+
+// 시간 비교: 프로그램이 지금 생성 가능한지 확인
+// 반환: { ok: bool, limitStr?: 'HH:MM' }
+function checkProgramStartAllowed(program) {
+  const limit = PROGRAM_START_LIMITS[program];
+  if (!limit) return { ok: true }; // 제한 없는 프로그램 (주말 등)
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const parts = limit.split(':');
+  const limitMin = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+  if (nowMin < limitMin) return { ok: false, limitStr: limit };
+  return { ok: true };
+}
+
 const DIAG_SCHEDULE = [
   // 평일
   { 프로그램: '방과후 독서시간', 장소: '아우름', 시작: '16:30', 종료: '18:20' },
   { 프로그램: '방과후 독서시간', 장소: '교과1실', 시작: '16:30', 종료: '18:20' },
   { 프로그램: '방과후 독서시간', 장소: '해오름', 시작: '16:30', 종료: '18:20' },
-  { 프로그램: '야간 독서시간', 장소: '아우름', 시작: '19:20', 종료: '21:30' },
-  { 프로그램: '야간 독서시간', 장소: '교과1실', 시작: '19:20', 종료: '21:30' },
-  { 프로그램: '야간 독서시간', 장소: '해오름', 시작: '19:20', 종료: '21:30' },
+  { 프로그램: '야간 독서시간', 장소: '아우름', 시작: '19:10', 종료: '21:30' },
+  { 프로그램: '야간 독서시간', 장소: '교과1실', 시작: '19:10', 종료: '21:30' },
+  { 프로그램: '야간 독서시간', 장소: '해오름', 시작: '19:10', 종료: '21:30' },
   { 프로그램: '심야 독서시간', 장소: '리케이온', 시작: '21:30', 종료: '23:00' },
   // 주말 (오전/오후 분리 — sessionSlot로 구분)
   { 프로그램: '토요일 독서시간', 장소: '리케이온', 시작: '08:30', 종료: '12:30', 요일: 6, 슬롯: '오전' },
