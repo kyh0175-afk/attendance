@@ -3910,7 +3910,7 @@ input { font-family: inherit; }
 }
 .sidebar-backdrop.on { display: block; }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
   /* 햄버거 + 슬라이드 사이드바 */
   .mobile-hamburger { display: flex; }
 
@@ -10575,13 +10575,19 @@ function toggleSidebar(force){
   sb.classList.toggle('open',next);
   bd.classList.toggle('on',next);
 }
+// 모바일 레이아웃 판정: CSS 미디어 쿼리와 동기화 (세로 화면 + 1100px 이하 자동 인식)
+function isMobileLayout(){
+  const w=window.innerWidth, h=window.innerHeight;
+  return w<=768 || (h>w && w<=1100);
+}
+
 const _origSwitchAdminTab=switchAdminTab;
-switchAdminTab=function(tab){_origSwitchAdminTab(tab);if(window.innerWidth<=768)toggleSidebar(false);};
+switchAdminTab=function(tab){_origSwitchAdminTab(tab);if(isMobileLayout())toggleSidebar(false);};
 
 const _origSelectHistory=selectHistorySession;
 selectHistorySession=async function(sid){
   await _origSelectHistory(sid);
-  if(window.innerWidth<=768){
+  if(isMobileLayout()){
     const d=document.getElementById('history-detail');
     d.classList.add('mobile-open');
     d.onclick=(e)=>{
