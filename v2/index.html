@@ -224,7 +224,7 @@ input { font-family: inherit; }
   display: flex;
   gap: 28px;
   width: 100%;
-  max-width: 1080px;
+  max-width: 1400px;
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -3910,7 +3910,7 @@ input { font-family: inherit; }
 }
 .sidebar-backdrop.on { display: block; }
 
-@media (max-width: 768px), (orientation: portrait) and (max-width: 1100px) {
+@media (max-width: 768px) {
   /* 햄버거 + 슬라이드 사이드바 */
   .mobile-hamburger { display: flex; }
 
@@ -4395,6 +4395,14 @@ input { font-family: inherit; }
   border-color: rgba(94, 184, 255, 0.4);
 }
 
+/* ─── Seats 카드 (For All, 좌석 배치도) ─── */
+.card-seats .card-symbol {
+  color: var(--terra, #c87f5e);
+}
+.card-seats:hover {
+  border-color: rgba(200, 127, 94, 0.4);
+}
+
 /* ─── View 모드 (body.admin-readonly) ─── */
 body.admin-readonly .admin-page-title::after {
   content: 'READ ONLY';
@@ -4419,6 +4427,144 @@ body.admin-readonly #admin-tab-requests,
 body.admin-readonly #admin-tab-diag {
   display: none !important;
 }
+
+/* ══════════════════════════════════════════ */
+/*  좌석 신청 / 배치도 (Phase 4)                */
+/* ══════════════════════════════════════════ */
+.seat-wrap{width:100%;max-width:1100px;margin:0 auto;padding:48px 20px}
+.seat-login{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:48px 36px;text-align:center;position:relative;max-width:440px;margin:0 auto;box-shadow:0 30px 60px -20px rgba(0,0,0,.5)}
+.seat-login::before,.seat-login::after{content:'';position:absolute;width:18px;height:18px;border:1px solid var(--copper);opacity:.45}
+.seat-login::before{top:12px;left:12px;border-right:none;border-bottom:none}
+.seat-login::after{bottom:12px;right:12px;border-left:none;border-top:none}
+.seat-login-icon{font-family:'Cormorant Garamond',serif;font-size:56px;font-style:italic;color:var(--copper);line-height:1;margin-bottom:14px}
+.seat-login-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-style:italic;color:var(--cream);margin-bottom:4px;line-height:1}
+.seat-login-sub{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink-dim);margin-bottom:24px;line-height:1.7}
+.seat-login-input{width:100%;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;font-family:'IBM Plex Sans KR',sans-serif;font-size:16px;color:var(--cream);text-align:center;outline:none}
+.seat-login-input:focus{border-color:var(--copper);background:rgba(200,127,94,.05)}
+.seat-login-input::placeholder{color:var(--ink-faint)}
+.seat-login-err{color:var(--terra);font-size:12px;min-height:18px;margin:10px 0}
+.seat-login-btn{width:100%;padding:14px;background:var(--copper);color:#fff;border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;font-weight:600}
+.seat-login-btn:hover:not(:disabled){background:#d68b6a}
+.seat-login-btn:disabled{opacity:.4;cursor:not-allowed}
+
+.seat-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.seat-header-name{font-family:'IBM Plex Sans KR',sans-serif;font-size:17px;font-weight:600;color:var(--cream)}
+.seat-logout-btn,.seat-back-link{padding:8px 14px;background:transparent;border:1px solid var(--border);border-radius:var(--r);font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-dim);letter-spacing:.05em;cursor:pointer}
+.seat-logout-btn:hover,.seat-back-link:hover{border-color:var(--border2);color:var(--copper)}
+.seat-section-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;font-weight:600;color:var(--amber);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.seat-period-list{display:flex;flex-direction:column;gap:12px}
+.seat-period-card{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.seat-period-card::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:3px;background:var(--copper);opacity:.5;border-radius:0 2px 2px 0;transition:all .25s}
+.seat-period-card:hover{background:var(--paper2);border-color:var(--copper);transform:translateY(-2px)}
+.seat-period-card:hover::before{top:0;bottom:0;opacity:1;width:4px}
+.seat-period-room{font-family:'IBM Plex Sans KR',sans-serif;font-size:11px;font-weight:600;color:var(--copper);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.seat-period-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:17px;font-weight:600;color:var(--cream);margin-bottom:6px}
+.seat-period-time{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-dim);margin-bottom:8px}
+.seat-period-status{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:100px;font-family:'IBM Plex Sans KR',sans-serif;font-size:11px;font-weight:500}
+.seat-period-status.open{background:rgba(0,200,150,.12);border:1px solid rgba(0,200,150,.35);color:var(--ok)}
+.seat-period-status.closing{background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.4);color:var(--warn)}
+.seat-period-mine{margin-top:8px;padding:6px 10px;background:rgba(200,127,94,.1);border:1px solid rgba(200,127,94,.3);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--copper)}
+.seat-empty{text-align:center;padding:48px 20px;color:var(--ink-faint);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px}
+
+.seat-board-period-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:18px;font-weight:600;color:var(--cream);margin-bottom:2px}
+.seat-board-period-meta{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-dim)}
+.seat-mycurr{padding:12px 18px;background:rgba(200,127,94,.08);border:1px solid rgba(200,127,94,.3);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--copper);margin-bottom:14px;text-align:center}
+
+.seat-board-wrap{position:relative;width:100%;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+.seat-board-img{display:block;width:100%;height:auto;user-select:none;pointer-events:none}
+.seat-board-overlay{position:absolute;inset:0}
+.seat-marker{position:absolute;transform:translate(-50%,-50%);border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:700;border:2px solid transparent;transition:all .15s;box-sizing:border-box}
+.seat-marker.empty{background:rgba(255,255,255,0.92);color:#3a2c1d;border-color:rgba(200,127,94,.35)}
+.seat-marker.empty:hover{background:rgba(212,175,103,.95);transform:translate(-50%,-50%) scale(1.15);border-color:var(--copper);z-index:5}
+.seat-marker.taken{background:rgba(200,127,94,.65);color:#fff;border-color:rgba(200,127,94,.85);cursor:pointer}
+.seat-marker.taken:hover{transform:translate(-50%,-50%) scale(1.1);z-index:5}
+.seat-marker.mine{background:var(--copper);color:#fff;border-color:var(--cream);box-shadow:0 0 0 3px rgba(200,127,94,.4);z-index:4}
+.seat-marker.assigned{background:rgba(94,184,255,.75);color:#fff;border-color:rgba(94,184,255,.9);cursor:default}
+
+.seat-legend{display:flex;gap:18px;flex-wrap:wrap;padding:12px 18px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim)}
+.seat-leg-item{display:flex;align-items:center;gap:6px}
+.seat-leg-box{display:inline-block;width:16px;height:16px;border-radius:2px;border:2px solid}
+.seat-leg-box.empty{background:rgba(255,255,255,.92);border-color:rgba(200,127,94,.35)}
+.seat-leg-box.taken{background:rgba(200,127,94,.65);border-color:rgba(200,127,94,.85)}
+.seat-leg-box.mine{background:var(--copper);border-color:var(--cream)}
+.seat-leg-count{display:inline-block;padding:1px 8px;background:rgba(214,178,124,.15);border:1px solid var(--border2);border-radius:10px;font-family:'DM Mono',monospace;font-size:11px;color:var(--amber)}
+
+.seat-submit-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);flex-wrap:wrap}
+.seat-submit-info{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink-dim)}
+.seat-submit-info.has-pick{color:var(--copper);font-weight:500}
+.seat-submit-btn{padding:12px 28px;background:var(--copper);color:#fff;border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+.seat-submit-btn:hover:not(:disabled){background:#d68b6a}
+.seat-submit-btn:disabled{opacity:.4;cursor:not-allowed}
+
+.seat-done{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:48px 32px;text-align:center;max-width:480px;margin:0 auto;position:relative;box-shadow:0 30px 60px -20px rgba(0,0,0,.5)}
+.seat-done::before,.seat-done::after{content:'';position:absolute;width:18px;height:18px;border:1px solid var(--copper);opacity:.5}
+.seat-done::before{top:12px;left:12px;border-right:none;border-bottom:none}
+.seat-done::after{bottom:12px;right:12px;border-left:none;border-top:none}
+.seat-done .success-check{background:rgba(200,127,94,.12);border-color:rgba(200,127,94,.4);color:var(--copper)}
+.seat-done .success-name{color:var(--copper)}
+.seat-done-actions{display:flex;gap:10px;margin-top:24px}
+.seat-done-actions .btn{flex:1}
+
+.seat-tab-bar{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.seat-tab{padding:10px 20px;background:transparent;border:1px solid var(--border);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;font-weight:500;color:var(--ink-dim);cursor:pointer;transition:all .25s}
+.seat-tab:hover{border-color:var(--border2);color:var(--ink)}
+.seat-tab.on{background:rgba(200,127,94,.12);border-color:var(--copper);color:var(--copper)}
+.seat-tab .badge{display:inline-block;margin-left:6px;padding:1px 7px;background:rgba(214,178,124,.15);border-radius:10px;font-family:'DM Mono',monospace;font-size:10px;color:var(--amber)}
+
+/* 모바일 */
+@media (max-width:640px){
+  .seat-wrap{padding:24px 12px}
+  .seat-login{padding:36px 24px}
+  .seat-login-title{font-size:28px}
+  .seat-header{padding:14px 16px;flex-direction:column;align-items:stretch}
+  .seat-marker{font-size:10px}
+  .seat-submit-row{flex-direction:column;align-items:stretch}
+  .seat-submit-btn{width:100%}
+  .seat-done-actions{flex-direction:column}
+}
+
+/* 좌석 관리 (관리자) */
+.seat-admin-rooms{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:24px}
+.seat-admin-room-card{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.seat-admin-room-card.active{border-color:rgba(0,200,150,.4);background:rgba(0,200,150,.04)}
+.seat-admin-room-name{font-family:'IBM Plex Sans KR',sans-serif;font-size:15px;font-weight:600;color:var(--cream)}
+.seat-admin-room-sub{font-family:'IBM Plex Sans KR',sans-serif;font-size:11px;color:var(--ink-dim);margin-top:2px}
+.seat-toggle{position:relative;width:46px;height:24px;background:var(--paper2);border:1px solid var(--border);border-radius:14px;cursor:pointer;flex-shrink:0;transition:all .2s}
+.seat-toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;background:var(--ink-dim);border-radius:50%;transition:all .2s}
+.seat-toggle.on{background:rgba(0,200,150,.2);border-color:var(--ok)}
+.seat-toggle.on::after{left:24px;background:var(--ok)}
+.seat-admin-section{margin-bottom:24px}
+.seat-admin-section-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;font-weight:600;color:var(--amber);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.seat-admin-period{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;cursor:pointer;transition:all .2s}
+.seat-admin-period:hover{background:var(--paper2);border-color:var(--border2)}
+.seat-admin-period.on{background:rgba(200,127,94,.08);border-color:var(--copper)}
+.seat-admin-period-info{flex:1;min-width:200px}
+.seat-admin-period-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;font-weight:600;color:var(--cream);margin-bottom:3px}
+.seat-admin-period-meta{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-dim)}
+.seat-admin-period-status{padding:4px 10px;border-radius:100px;font-family:'IBM Plex Sans KR',sans-serif;font-size:11px;font-weight:600;flex-shrink:0}
+.seat-admin-period-status.open{background:rgba(0,200,150,.12);border:1px solid rgba(0,200,150,.35);color:var(--ok)}
+.seat-admin-period-status.closed{background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.35);color:var(--warn)}
+.seat-admin-period-status.confirmed{background:rgba(94,184,255,.12);border:1px solid rgba(94,184,255,.35);color:var(--info)}
+.seat-admin-period-status.draft{background:rgba(168,152,128,.1);border:1px solid var(--border);color:var(--ink-dim)}
+.seat-admin-period-count{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-dim);flex-shrink:0}
+
+.seat-admin-detail-card{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px;margin-top:14px}
+.seat-admin-detail-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap}
+.seat-admin-detail-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:16px;font-weight:600;color:var(--cream)}
+.seat-admin-detail-actions{display:flex;gap:8px;flex-wrap:wrap}
+.seat-admin-req-table{width:100%;border-collapse:collapse;font-family:'IBM Plex Sans KR',sans-serif}
+.seat-admin-req-table th{padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--amber);letter-spacing:.05em;text-transform:uppercase;background:rgba(0,0,0,.2);border-bottom:1px solid var(--border2)}
+.seat-admin-req-table td{padding:10px 12px;border-bottom:1px solid rgba(214,178,124,.05);font-size:13px;color:var(--ink)}
+.seat-admin-req-table tr:last-child td{border-bottom:none}
+.seat-admin-req-table tr.has-change td{background:rgba(245,166,35,.04)}
+.seat-admin-req-no{font-family:'DM Mono',monospace;color:var(--ink-dim);font-size:12px}
+.seat-admin-req-name{font-weight:500;color:var(--cream)}
+.seat-admin-req-seat{font-family:'DM Mono',monospace;font-weight:600;color:var(--copper);font-size:14px}
+.seat-admin-req-seat.changed{color:var(--warn)}
+.seat-admin-req-seat-input{width:80px;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:var(--r);padding:6px 10px;font-family:'DM Mono',monospace;font-size:13px;color:var(--cream);text-align:center;outline:none}
+.seat-admin-req-seat-input:focus{border-color:var(--copper);background:rgba(200,127,94,.05)}
+.seat-admin-req-seat-input.changed{border-color:var(--warn);background:rgba(245,166,35,.08);color:var(--warn)}
+.seat-admin-conflict{background:rgba(184,84,63,.08);border:1px solid rgba(184,84,63,.3);border-radius:var(--r);padding:10px 14px;margin-bottom:14px;font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--terra)}
 
 </style>
 </head>
@@ -4475,6 +4621,21 @@ body.admin-readonly #admin-tab-diag {
       </div>
       <div class="card-action">
         <span>기록 조회하기</span>
+        <span class="arrow">→</span>
+      </div>
+    </button>
+
+    <button class="card card-seats" onclick="goSeatBoard()">
+      <div class="card-symbol">S</div>
+      <div class="card-label">FOR ALL</div>
+      <div class="card-title">Seats</div>
+      <div class="card-title-ko">좌석 배치도</div>
+      <div class="card-desc">
+        확정된 좌석 배치를 확인합니다.<br>
+        학생·교사 모두 열람 가능합니다.
+      </div>
+      <div class="card-action">
+        <span>배치도 보기</span>
         <span class="arrow">→</span>
       </div>
     </button>
@@ -4967,6 +5128,105 @@ body.admin-readonly #admin-tab-diag {
 </div>
 
 <!-- ══════════════════════════════════════════ -->
+<!--  좌석 신청 화면 (학생용)                       -->
+<!-- ══════════════════════════════════════════ -->
+<div class="screen" id="screen-seat-request" style="display:none">
+  <button class="back-btn" onclick="goHome()"><span>←</span><span>BACK</span></button>
+  <div class="seat-wrap">
+    <!-- 1단계: 학번/이름 입력 -->
+    <div id="sr-login" class="seat-login">
+      <div class="seat-login-icon">S</div>
+      <div class="seat-login-title">Seat Request</div>
+      <div class="seat-login-sub">좌석을 신청하려면 학번과 이름을<br>입력해주세요.</div>
+      <input type="tel" id="sr-no" class="seat-login-input" placeholder="학번 5자리" maxlength="5" inputmode="numeric" oninput="srOnInput()" onkeydown="if(event.key==='Enter')document.getElementById('sr-name').focus()">
+      <input type="text" id="sr-name" class="seat-login-input" placeholder="이름" oninput="srOnInput()" onkeydown="if(event.key==='Enter')srLogin()" style="margin-top:10px">
+      <div class="seat-login-err" id="sr-err"></div>
+      <button id="sr-btn" class="seat-login-btn" onclick="srLogin()" disabled>다음</button>
+    </div>
+
+    <!-- 2단계: 신청 기간 선택 -->
+    <div id="sr-periods" style="display:none">
+      <div class="seat-header">
+        <div class="seat-header-name" id="sr-greet">—</div>
+        <button class="seat-logout-btn" onclick="srLogout()">처음으로</button>
+      </div>
+      <div class="seat-section-title">신청 가능한 좌석 배치</div>
+      <div id="sr-period-list" class="seat-period-list">
+        <div class="seat-empty">불러오는 중...</div>
+      </div>
+    </div>
+
+    <!-- 3단계: 좌석 선택 (배치도) -->
+    <div id="sr-board" style="display:none">
+      <div class="seat-header">
+        <div>
+          <div class="seat-board-period-title" id="sr-board-title">—</div>
+          <div class="seat-board-period-meta" id="sr-board-meta">—</div>
+        </div>
+        <button class="seat-back-link" onclick="srBackToPeriods()">← 다른 기간</button>
+      </div>
+
+      <div class="seat-mycurr" id="sr-mycurr" style="display:none"></div>
+
+      <div class="seat-board-wrap" id="sr-board-wrap">
+        <!-- 좌석 배치도가 여기에 렌더링됨 -->
+      </div>
+
+      <div class="seat-legend">
+        <div class="seat-leg-item"><span class="seat-leg-box empty"></span>빈 좌석</div>
+        <div class="seat-leg-item"><span class="seat-leg-box taken"></span>신청됨</div>
+        <div class="seat-leg-item"><span class="seat-leg-box mine"></span>내 선택</div>
+        <div class="seat-leg-item"><span class="seat-leg-count" id="sr-fill-count">—</span>신청 인원</div>
+      </div>
+
+      <div class="seat-submit-row">
+        <div class="seat-submit-info" id="sr-submit-info">좌석을 선택해주세요</div>
+        <button id="sr-submit-btn" class="seat-submit-btn" onclick="srSubmit()" disabled>신청하기</button>
+      </div>
+    </div>
+
+    <!-- 4단계: 완료 -->
+    <div id="sr-done" class="seat-done" style="display:none">
+      <div class="success-check">✓</div>
+      <div class="success-title">Done</div>
+      <div class="success-name" id="sr-done-name">—</div>
+      <div class="success-meta">
+        <strong id="sr-done-period">—</strong><br>
+        좌석 번호 <span class="success-time" id="sr-done-seat">—</span><br>
+        <span style="font-size:11px;color:var(--ink-faint);margin-top:8px;display:inline-block">신청 마감 전이면 다시 변경할 수 있어요</span>
+      </div>
+      <div class="seat-done-actions">
+        <button class="btn btn-ghost" onclick="srBackToPeriods()">다른 기간 보기</button>
+        <button class="btn btn-primary" onclick="srChangeSeat()">좌석 변경</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  좌석 배치도 조회 화면 (학생·교사 공통)        -->
+<!-- ══════════════════════════════════════════ -->
+<div class="screen" id="screen-seat-board" style="display:none">
+  <button class="back-btn" onclick="goHome()"><span>←</span><span>BACK</span></button>
+  <div class="seat-wrap">
+    <div class="seat-header">
+      <div>
+        <div class="seat-board-period-title">좌석 배치도</div>
+        <div class="seat-board-period-meta" id="sb-meta">확정된 배치를 확인합니다</div>
+      </div>
+    </div>
+
+    <div class="seat-tab-bar" id="sb-tabs">
+      <!-- 장소별 탭이 여기에 렌더링됨 -->
+    </div>
+
+    <div id="sb-content">
+      <div class="seat-empty">불러오는 중...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
 <!--  공사중 안내 화면                              -->
 <!-- ══════════════════════════════════════════ -->
 <div class="screen" id="screen-construction" style="display:none">
@@ -5022,6 +5282,10 @@ body.admin-readonly #admin-tab-diag {
         <button class="admin-nav-item" data-tab="live" onclick="switchAdminTab('live')">
           <span class="admin-nav-icon">L</span>
           <span>실시간</span>
+        </button>
+        <button class="admin-nav-item" data-tab="seats" onclick="switchAdminTab('seats')">
+          <span class="admin-nav-icon">S</span>
+          <span>좌석 관리</span>
         </button>
         <button class="admin-nav-item" data-tab="diag" onclick="switchAdminTab('diag')">
           <span class="admin-nav-icon">D</span>
@@ -5250,6 +5514,33 @@ body.admin-readonly #admin-tab-diag {
         <div class="live-grid" id="live-grid"><div class="live-empty">불러오는 중...</div></div>
       </div>
 
+      <!-- 탭 7: 좌석 관리 (Phase 4) -->
+      <div class="admin-tab-pane" id="admin-tab-seats">
+        <div class="admin-page-header">
+          <div class="admin-page-title">좌석 관리</div>
+          <div class="admin-page-actions">
+            <button class="admin-btn" onclick="SEAT_ADMIN.refresh()">🔄 새로고침</button>
+            <button class="admin-btn primary" onclick="SEAT_ADMIN.openNewPeriodModal()">+ 새 신청 기간</button>
+          </div>
+        </div>
+
+        <!-- 장소별 활성화 토글 -->
+        <div class="seat-admin-rooms" id="seat-admin-rooms">
+          <div class="seat-empty">불러오는 중...</div>
+        </div>
+
+        <!-- 신청 기간 목록 -->
+        <div class="seat-admin-section">
+          <div class="seat-admin-section-title">신청 기간</div>
+          <div id="seat-admin-period-list">
+            <div class="seat-empty">불러오는 중...</div>
+          </div>
+        </div>
+
+        <!-- 선택된 기간의 신청/배치 관리 -->
+        <div id="seat-admin-detail"></div>
+      </div>
+
       <!-- 탭 6: 진단 (오늘 대시보드 + 기기 로그) -->
       <div class="admin-tab-pane" id="admin-tab-diag">
         <div class="admin-page-header">
@@ -5403,6 +5694,65 @@ body.admin-readonly #admin-tab-diag {
 <div class="modal-err" id="reject-err"></div>
 <div class="modal-actions"><button class="btn btn-ghost" onclick="closeRejectModal()">취소</button><button class="btn btn-primary" id="reject-confirm-btn" style="background:var(--terra);color:white" onclick="confirmReject()">거절</button></div>
 </div></div>
+
+<!-- 좌석 신청 기간 생성/수정 모달 -->
+<div class="modal-bg" id="modal-seat-period">
+  <div class="modal student-modal">
+    <div class="student-modal-title" id="sp-modal-title">새 좌석 신청 기간</div>
+    <div class="student-modal-subtitle">학생들에게 좌석 신청을 받을 기간을 설정합니다</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>장소</label>
+        <select id="sp-room">
+          <option value="해오름">해오름</option>
+          <option value="리케이온">리케이온</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>제목</label>
+        <input type="text" id="sp-title" placeholder="예: 5월 2주차 좌석">
+      </div>
+      <div class="form-group">
+        <label>신청 시작</label>
+        <input type="datetime-local" id="sp-start">
+      </div>
+      <div class="form-group">
+        <label>신청 마감</label>
+        <input type="datetime-local" id="sp-end">
+      </div>
+    </div>
+    <div class="modal-err" id="sp-err"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="SEAT_ADMIN.closePeriodModal()">취소</button>
+      <button class="btn btn-primary" id="sp-save" onclick="SEAT_ADMIN.savePeriod()">만들기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 좌석 변경 사유 입력 모달 -->
+<div class="modal-bg" id="modal-seat-reason">
+  <div class="modal student-modal" style="max-width:440px">
+    <div class="student-modal-title">좌석 변경 사유</div>
+    <div class="student-modal-subtitle">
+      <span id="sr-modal-student">—</span>
+    </div>
+    <div class="form-grid" style="grid-template-columns:1fr">
+      <div class="form-group full">
+        <label>학생 신청 → 최종 배치</label>
+        <div id="sr-modal-change" style="padding:12px 16px;background:rgba(0,0,0,.2);border-radius:var(--r);font-family:'DM Mono',monospace;font-size:14px;color:var(--cream);text-align:center"></div>
+      </div>
+      <div class="form-group full">
+        <label>변경 사유 (필수)</label>
+        <input type="text" id="sr-modal-reason" placeholder="예: 동선 조정, 학습 환경 배려" maxlength="100">
+      </div>
+    </div>
+    <div class="modal-err" id="sr-modal-err"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="SEAT_ADMIN.closeReasonModal()">취소</button>
+      <button class="btn btn-primary" onclick="SEAT_ADMIN.confirmReason()">확인</button>
+    </div>
+  </div>
+</div>
 
 <!-- 토스트 알림 -->
 <div class="admin-toast" id="admin-toast"></div>
@@ -6324,6 +6674,14 @@ function route() {
   }
 
   if (params.get('mode') === 'check') { enterCheckScreen(); return; }
+  if (params.get('mode') === 'seat-request') {
+    enterSeatRequestScreen();
+    return;
+  }
+  if (params.get('mode') === 'seat-board') {
+    enterSeatBoardScreen();
+    return;
+  }
   if (params.get('mode') === 'view') {
     enterAdminScreen({ readOnly: true });
     return;
@@ -6345,6 +6703,8 @@ function goHome() {
 }
 
 function goCheck(){history.pushState({},"",location.pathname+"?mode=check");route();}
+function goSeatBoard(){history.pushState({},"",location.pathname+"?mode=seat-board");route();}
+function goSeatRequest(){history.pushState({},"",location.pathname+"?mode=seat-request");route();}
 function goAttendance() {
   showScreen('screen-rooms');
 }
@@ -7121,6 +7481,143 @@ document.addEventListener('touchend', (e) => {
 // ══════════════════════════════════════════════════════════════
 //  교사 화면 — 출석 명단 + Realtime (Phase 2E)
 // ══════════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════
+// 좌석 배치 신청 - 좌석 좌표 (비율 %)
+// ══════════════════════════════════════════════════════════════
+const SEAT_LAYOUTS = {
+  '해오름': {
+    image: 'assets/seats-haereum.png',
+    imgW: 1410, imgH: 905,
+    seats: [
+    {n:1,x:91.064,y:66.519,w:2.483,h:3.646},
+    {n:2,x:83.192,y:66.298,w:2.553,h:3.646},
+    {n:3,x:91.064,y:60.773,w:2.483,h:3.646},
+    {n:4,x:83.192,y:60.663,w:2.553,h:3.757},
+    {n:5,x:91.064,y:54.917,w:2.483,h:3.646},
+    {n:6,x:83.192,y:54.807,w:2.553,h:3.536},
+    {n:7,x:91.064,y:49.282,w:2.483,h:3.646},
+    {n:8,x:83.192,y:49.171,w:2.553,h:3.757},
+    {n:9,x:58.085,y:34.254,w:2.34,h:3.536},
+    {n:10,x:58.085,y:26.077,w:2.34,h:3.646},
+    {n:11,x:50.709,y:34.254,w:2.27,h:3.536},
+    {n:12,x:50.709,y:26.077,w:2.34,h:3.646},
+    {n:13,x:43.404,y:34.254,w:2.34,h:3.536},
+    {n:14,x:43.404,y:26.077,w:2.34,h:3.536},
+    {n:15,x:57.376,y:54.144,w:2.34,h:3.536},
+    {n:16,x:52.341,y:46.188,w:2.34,h:3.646},
+    {n:17,x:47.305,y:46.188,w:2.34,h:3.646},
+    {n:18,x:42.341,y:54.033,w:2.27,h:3.536},
+    {n:19,x:36.879,y:40.884,w:2.411,h:3.646},
+    {n:20,x:30.497,y:40.884,w:2.34,h:3.646},
+    {n:21,x:69.291,y:59.89,w:2.483,h:3.536},
+    {n:22,x:64.184,y:67.845,w:2.34,h:3.536},
+    {n:23,x:59.787,y:73.481,w:2.411,h:3.536},
+    {n:24,x:53.333,y:73.481,w:2.411,h:3.425},
+    {n:25,x:46.17,y:73.481,w:2.411,h:3.536},
+    {n:26,x:39.788,y:73.481,w:2.411,h:3.536},
+    {n:27,x:33.972,y:67.403,w:2.34,h:3.536},
+    {n:28,x:29.149,y:59.779,w:2.34,h:3.536},
+    {n:29,x:19.929,y:37.459,w:2.27,h:3.536},
+    {n:30,x:14.397,y:37.459,w:2.198,h:3.425},
+    {n:31,x:20.0,y:42.32,w:2.27,h:3.536},
+    {n:32,x:14.397,y:42.32,w:2.27,h:3.536},
+    {n:33,x:19.929,y:47.072,w:2.27,h:3.646},
+    {n:34,x:14.397,y:47.182,w:2.27,h:3.536},
+    {n:35,x:19.929,y:51.934,w:2.27,h:3.425},
+    {n:36,x:14.397,y:51.934,w:2.198,h:3.425},
+    {n:37,x:20.0,y:62.32,w:2.27,h:3.536},
+    {n:38,x:14.397,y:62.32,w:2.27,h:3.536},
+    {n:39,x:20.0,y:67.182,w:2.198,h:3.646},
+    {n:40,x:14.397,y:67.182,w:2.27,h:3.536},
+    {n:41,x:20.0,y:72.044,w:2.198,h:3.646},
+    {n:42,x:14.397,y:72.044,w:2.27,h:3.536},
+    {n:43,x:20.0,y:76.906,w:2.27,h:3.425},
+    {n:44,x:14.397,y:76.906,w:2.27,h:3.536}
+    ]
+  },
+  '리케이온': {
+    image: 'assets/seats-lykeion.png',
+    imgW: 1391, imgH: 924,
+    seats: [
+    {n:1,x:9.49,y:26.84,w:2.301,h:3.139},
+    {n:2,x:13.012,y:26.84,w:2.301,h:3.139},
+    {n:3,x:16.607,y:26.84,w:2.301,h:3.139},
+    {n:4,x:20.273,y:26.84,w:2.301,h:3.139},
+    {n:5,x:23.868,y:26.84,w:2.372,h:3.139},
+    {n:6,x:27.462,y:26.84,w:2.372,h:3.139},
+    {n:7,x:12.653,y:39.069,w:2.372,h:3.355},
+    {n:8,x:12.653,y:44.589,w:2.372,h:3.571},
+    {n:9,x:12.653,y:50.108,w:2.372,h:3.463},
+    {n:10,x:19.842,y:39.069,w:2.301,h:3.355},
+    {n:11,x:19.842,y:44.589,w:2.301,h:3.571},
+    {n:12,x:19.842,y:50.108,w:2.301,h:3.463},
+    {n:13,x:27.103,y:39.069,w:2.301,h:3.463},
+    {n:14,x:27.103,y:44.589,w:2.301,h:3.571},
+    {n:15,x:27.103,y:50.108,w:2.301,h:3.463},
+    {n:16,x:39.467,y:26.948,w:2.372,h:3.247},
+    {n:17,x:43.062,y:26.948,w:2.372,h:3.139},
+    {n:18,x:46.514,y:26.948,w:2.372,h:3.247},
+    {n:19,x:50.107,y:26.948,w:2.372,h:3.247},
+    {n:20,x:53.559,y:26.948,w:2.372,h:3.247},
+    {n:21,x:57.01,y:26.948,w:2.372,h:3.247},
+    {n:22,x:60.46,y:26.948,w:2.372,h:3.247},
+    {n:23,x:63.983,y:26.948,w:2.372,h:3.247},
+    {n:24,x:85.837,y:29.004,w:2.445,h:3.571},
+    {n:25,x:89.576,y:29.113,w:2.445,h:3.571},
+    {n:26,x:85.837,y:40.26,w:2.445,h:3.571},
+    {n:27,x:89.576,y:40.152,w:2.445,h:3.463},
+    {n:28,x:85.837,y:51.515,w:2.372,h:3.463},
+    {n:29,x:89.576,y:51.623,w:2.445,h:3.463},
+    {n:30,x:85.837,y:62.662,w:2.445,h:3.463},
+    {n:31,x:89.504,y:62.662,w:2.516,h:3.355},
+    {n:32,x:85.837,y:73.701,w:2.372,h:3.463},
+    {n:33,x:89.504,y:73.593,w:2.445,h:3.463},
+    {n:34,x:72.969,y:72.835,w:2.516,h:3.463},
+    {n:35,x:72.969,y:67.316,w:2.516,h:3.571},
+    {n:36,x:72.969,y:61.797,w:2.516,h:3.355},
+    {n:37,x:72.825,y:49.351,w:2.588,h:3.571},
+    {n:38,x:72.825,y:43.723,w:2.516,h:3.571},
+    {n:39,x:72.825,y:38.203,w:2.516,h:3.463},
+    {n:40,x:64.774,y:38.203,w:2.445,h:3.463},
+    {n:41,x:64.845,y:43.723,w:2.445,h:3.571},
+    {n:42,x:64.845,y:49.351,w:2.445,h:3.571},
+    {n:43,x:64.917,y:61.797,w:2.516,h:3.355},
+    {n:44,x:64.917,y:67.316,w:2.516,h:3.571},
+    {n:45,x:64.917,y:72.835,w:2.516,h:3.463},
+    {n:46,x:58.304,y:72.835,w:2.516,h:3.463},
+    {n:47,x:58.304,y:67.316,w:2.516,h:3.571},
+    {n:48,x:58.304,y:61.797,w:2.588,h:3.355},
+    {n:49,x:58.304,y:49.351,w:2.588,h:3.463},
+    {n:50,x:58.304,y:43.831,w:2.516,h:3.463},
+    {n:51,x:58.304,y:38.42,w:2.588,h:3.355},
+    {n:52,x:50.251,y:38.42,w:2.516,h:3.355},
+    {n:53,x:50.251,y:43.831,w:2.516,h:3.463},
+    {n:54,x:50.251,y:49.459,w:2.516,h:3.463},
+    {n:55,x:50.251,y:61.797,w:2.516,h:3.463},
+    {n:56,x:50.251,y:67.316,w:2.516,h:3.571},
+    {n:57,x:50.324,y:72.835,w:2.516,h:3.463},
+    {n:58,x:43.781,y:72.944,w:2.588,h:3.463},
+    {n:59,x:43.781,y:67.316,w:2.588,h:3.463},
+    {n:60,x:43.781,y:61.797,w:2.588,h:3.463},
+    {n:61,x:43.781,y:49.351,w:2.588,h:3.571},
+    {n:62,x:43.781,y:43.831,w:2.588,h:3.463},
+    {n:63,x:43.781,y:38.203,w:2.588,h:3.463},
+    {n:64,x:35.73,y:38.203,w:2.445,h:3.463},
+    {n:65,x:35.657,y:43.723,w:2.445,h:3.463},
+    {n:66,x:35.657,y:49.351,w:2.445,h:3.571},
+    {n:67,x:35.73,y:61.797,w:2.445,h:3.463},
+    {n:68,x:35.73,y:67.316,w:2.445,h:3.463},
+    {n:69,x:35.73,y:72.944,w:2.445,h:3.463},
+    {n:70,x:19.627,y:70.13,w:2.301,h:3.68},
+    {n:71,x:16.103,y:70.13,w:2.372,h:3.68},
+    {n:72,x:12.653,y:70.13,w:2.372,h:3.68},
+    {n:73,x:12.653,y:81.602,w:2.372,h:3.463},
+    {n:74,x:16.103,y:81.494,w:2.372,h:3.571},
+    {n:75,x:19.627,y:81.494,w:2.445,h:3.571}
+    ]
+  }
+};
 
 // 요일 한글 매핑 (0=일, 1=월, ...)
 // 쌍둥이 장소: 양쪽 모두 같은 세션ID 공유, 학생 명단 통합
@@ -10575,19 +11072,13 @@ function toggleSidebar(force){
   sb.classList.toggle('open',next);
   bd.classList.toggle('on',next);
 }
-// 모바일 레이아웃 판정: CSS 미디어 쿼리와 동기화 (세로 화면 + 1100px 이하 자동 인식)
-function isMobileLayout(){
-  const w=window.innerWidth, h=window.innerHeight;
-  return w<=768 || (h>w && w<=1100);
-}
-
 const _origSwitchAdminTab=switchAdminTab;
-switchAdminTab=function(tab){_origSwitchAdminTab(tab);if(isMobileLayout())toggleSidebar(false);};
+switchAdminTab=function(tab){_origSwitchAdminTab(tab);if(window.innerWidth<=768)toggleSidebar(false);};
 
 const _origSelectHistory=selectHistorySession;
 selectHistorySession=async function(sid){
   await _origSelectHistory(sid);
-  if(isMobileLayout()){
+  if(window.innerWidth<=768){
     const d=document.getElementById('history-detail');
     d.classList.add('mobile-open');
     d.onclick=(e)=>{
@@ -10642,6 +11133,895 @@ document.addEventListener('click',e=>{if(e.target.id==='ck-day-modal-bg')ckClose
 // ckSubmitReq 에서 alert → toast 로 변경
 const _origSubmitReq=ckSubmitReq;
 ckSubmitReq=async function(){const b=document.getElementById('ck-submit');if(!_ckReqCtx||!_ckReason)return;b.disabled=true;b.textContent='전송 중...';try{await sb.requests.createCorrection({no:CK.no,name:CK.name,date:_ckReqCtx.date,program:_ckReqCtx.prog,room:_ckReqCtx.loc,reason:_ckReason,detail:document.getElementById('ck-detail').value.trim()});ckCloseReq();b.textContent='요청 보내기';const{data:cr}=await sb.client().from('correction_requests').select('*').eq('학번',CK.no).order('요청일시',{ascending:false});CK.requests=cr||[];ckSwitch('requests');ckToast('요청이 전송됐어요','ok');}catch(e){document.getElementById('ck-merr').textContent='실패: '+(e.message||'오류');b.disabled=false;b.textContent='요청 보내기';}};
+
+// ══════════════════════════════════════════════════════════════
+//  좌석 신청 / 배치도 (Phase 4)
+// ══════════════════════════════════════════════════════════════
+
+// ── 상태 객체 ──
+const SR = {
+  no: '',
+  name: '',
+  periods: [],          // 활성/마감 임박 신청 기간 목록
+  currentPeriod: null,  // 선택한 기간
+  myRequest: null,      // 현재 기간 내 내 신청 ({좌석번호})
+  allRequests: [],      // 현재 기간의 모든 신청 (좌석 표시용)
+  myAssignment: null,   // 확정된 좌석 (있으면 표시만)
+  pickedSeat: null,     // 화면에서 선택한 좌석 번호
+};
+
+const SB_VIEW = {
+  enabledRooms: [],     // 활성화된 장소 목록
+  currentRoom: null,
+  periodByRoom: {},     // {장소: 최신 confirmed period}
+  assignmentsByRoom: {},
+};
+
+// ── 진입점: 좌석 신청 ──
+async function enterSeatRequestScreen() {
+  showScreen('screen-seat-request');
+  // 모든 단계 숨김
+  ['sr-login','sr-periods','sr-board','sr-done'].forEach(id =>
+    document.getElementById(id).style.display = 'none');
+  document.getElementById('sr-login').style.display = 'block';
+  document.getElementById('sr-err').textContent = '';
+
+  // 세션 복원
+  const savedNo = sessionStorage.getItem('sr_no');
+  const savedName = sessionStorage.getItem('sr_name');
+  if (savedNo && savedName) {
+    document.getElementById('sr-no').value = savedNo;
+    document.getElementById('sr-name').value = savedName;
+    SR.no = savedNo;
+    SR.name = savedName;
+    srShowPeriods();
+  } else {
+    document.getElementById('sr-no').value = '';
+    document.getElementById('sr-name').value = '';
+    srOnInput();
+    setTimeout(() => document.getElementById('sr-no').focus(), 200);
+  }
+}
+
+function srOnInput() {
+  const no = document.getElementById('sr-no').value.trim();
+  const name = document.getElementById('sr-name').value.trim();
+  document.getElementById('sr-btn').disabled = !(/^\d{5}$/.test(no) && name.length >= 2);
+  document.getElementById('sr-err').textContent = '';
+}
+
+async function srLogin() {
+  const no = document.getElementById('sr-no').value.trim();
+  const name = document.getElementById('sr-name').value.trim();
+  const errEl = document.getElementById('sr-err');
+  const btn = document.getElementById('sr-btn');
+  if (!/^\d{5}$/.test(no)) { errEl.textContent = '학번 5자리를 입력해주세요'; return; }
+  if (name.length < 2) { errEl.textContent = '이름을 입력해주세요'; return; }
+
+  btn.disabled = true;
+  btn.textContent = '확인 중...';
+
+  // 학생 명단 검증
+  try {
+    const stus = await sb.students.byNo(no);
+    if (!stus || stus.length === 0) {
+      errEl.textContent = '등록되지 않은 학번이에요';
+      btn.textContent = '다음';
+      srOnInput();
+      return;
+    }
+    // 이름 일치 확인 (공백 제거 후 비교)
+    const realName = (stus[0].이름 || '').replace(/\s/g, '');
+    if (realName !== name.replace(/\s/g, '')) {
+      errEl.textContent = '학번과 이름이 일치하지 않아요';
+      btn.textContent = '다음';
+      srOnInput();
+      return;
+    }
+    SR.no = no;
+    SR.name = stus[0].이름;
+    sessionStorage.setItem('sr_no', no);
+    sessionStorage.setItem('sr_name', SR.name);
+    btn.textContent = '다음';
+    srShowPeriods();
+  } catch (e) {
+    errEl.textContent = '조회 실패: ' + (e.message || '오류');
+    btn.disabled = false;
+    btn.textContent = '다음';
+  }
+}
+
+function srLogout() {
+  sessionStorage.removeItem('sr_no');
+  sessionStorage.removeItem('sr_name');
+  SR.no = ''; SR.name = '';
+  enterSeatRequestScreen();
+}
+
+async function srShowPeriods() {
+  document.getElementById('sr-login').style.display = 'none';
+  document.getElementById('sr-board').style.display = 'none';
+  document.getElementById('sr-done').style.display = 'none';
+  document.getElementById('sr-periods').style.display = 'block';
+  document.getElementById('sr-greet').textContent = SR.name + ' 학생';
+
+  const listEl = document.getElementById('sr-period-list');
+  listEl.innerHTML = '<div class="seat-empty">불러오는 중...</div>';
+
+  try {
+    // 신청 가능한 기간 조회: 상태 = open
+    const { data: periods, error } = await sb.client()
+      .from('seat_periods')
+      .select('*')
+      .in('상태', ['open'])
+      .order('신청마감', { ascending: true });
+    if (error) throw error;
+    SR.periods = periods || [];
+
+    // 내 기존 신청 조회 (각 기간별)
+    const periodIds = SR.periods.map(p => p.id);
+    let myReqs = [];
+    if (periodIds.length > 0) {
+      const { data: reqs } = await sb.client()
+        .from('seat_requests')
+        .select('*')
+        .in('period_id', periodIds)
+        .eq('학번', SR.no);
+      myReqs = reqs || [];
+    }
+    const myByPeriod = {};
+    myReqs.forEach(r => { myByPeriod[r.period_id] = r; });
+
+    if (SR.periods.length === 0) {
+      listEl.innerHTML = '<div class="seat-empty">현재 신청을 받는 좌석 배치가 없어요</div>';
+      return;
+    }
+
+    const now = Date.now();
+    const html = SR.periods.map(p => {
+      const start = new Date(p.신청시작).getTime();
+      const end = new Date(p.신청마감).getTime();
+      const isClosing = (end - now) < 60 * 60 * 1000; // 1시간 이내 마감
+      const stateText = isClosing ? '마감 임박' : '신청 중';
+      const stateCls = isClosing ? 'closing' : 'open';
+      const startStr = _srFmtDT(p.신청시작);
+      const endStr = _srFmtDT(p.신청마감);
+      const mine = myByPeriod[p.id];
+      const mineHtml = mine ? '<div class="seat-period-mine">내 신청: ' + mine.좌석번호 + '번 좌석 — 변경 가능</div>' : '';
+      return '<div class="seat-period-card" onclick="srSelectPeriod(' + p.id + ')">' +
+        '<div class="seat-period-room">' + escapeHtml(p.장소) + '</div>' +
+        '<div class="seat-period-title">' + escapeHtml(p.제목) + '</div>' +
+        '<div class="seat-period-time">' + startStr + ' ~ ' + endStr + '</div>' +
+        '<span class="seat-period-status ' + stateCls + '">' + stateText + '</span>' +
+        mineHtml +
+        '</div>';
+    }).join('');
+    listEl.innerHTML = html;
+  } catch (e) {
+    console.error('신청 기간 조회 실패:', e);
+    listEl.innerHTML = '<div class="seat-empty">불러오기 실패: ' + escapeHtml(e.message || '오류') + '</div>';
+  }
+}
+
+function _srFmtDT(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return (d.getMonth()+1) + '/' + d.getDate() + ' ' +
+    String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
+async function srSelectPeriod(periodId) {
+  const period = SR.periods.find(p => p.id === periodId);
+  if (!period) return;
+  SR.currentPeriod = period;
+  SR.pickedSeat = null;
+  document.getElementById('sr-periods').style.display = 'none';
+  document.getElementById('sr-board').style.display = 'block';
+  document.getElementById('sr-board-title').textContent = period.제목;
+  document.getElementById('sr-board-meta').textContent =
+    period.장소 + ' · 마감 ' + _srFmtDT(period.신청마감);
+
+  const wrap = document.getElementById('sr-board-wrap');
+  wrap.innerHTML = '<div class="seat-empty">불러오는 중...</div>';
+  document.getElementById('sr-fill-count').textContent = '—';
+  document.getElementById('sr-mycurr').style.display = 'none';
+  document.getElementById('sr-submit-btn').disabled = true;
+  document.getElementById('sr-submit-info').textContent = '좌석을 선택해주세요';
+
+  try {
+    // 모든 신청 조회
+    const { data: reqs, error } = await sb.client()
+      .from('seat_requests')
+      .select('학번, 좌석번호')
+      .eq('period_id', periodId);
+    if (error) throw error;
+    SR.allRequests = reqs || [];
+    SR.myRequest = SR.allRequests.find(r => r.학번 === SR.no) || null;
+
+    if (SR.myRequest) {
+      const el = document.getElementById('sr-mycurr');
+      el.textContent = '내 현재 신청: ' + SR.myRequest.좌석번호 + '번 좌석 (다른 좌석 선택 시 변경됩니다)';
+      el.style.display = 'block';
+      SR.pickedSeat = SR.myRequest.좌석번호;
+    }
+
+    srRenderBoard();
+    srUpdateSubmitState();
+  } catch (e) {
+    console.error('좌석 신청 조회 실패:', e);
+    wrap.innerHTML = '<div class="seat-empty">불러오기 실패: ' + escapeHtml(e.message || '오류') + '</div>';
+  }
+}
+
+function srBackToPeriods() {
+  document.getElementById('sr-board').style.display = 'none';
+  document.getElementById('sr-done').style.display = 'none';
+  SR.currentPeriod = null;
+  SR.pickedSeat = null;
+  srShowPeriods();
+}
+
+function srChangeSeat() {
+  document.getElementById('sr-done').style.display = 'none';
+  document.getElementById('sr-board').style.display = 'block';
+}
+
+// 좌석 도면 렌더링 (신청 모드)
+function srRenderBoard() {
+  const period = SR.currentPeriod;
+  const layout = SEAT_LAYOUTS[period.장소];
+  if (!layout) {
+    document.getElementById('sr-board-wrap').innerHTML =
+      '<div class="seat-empty">' + escapeHtml(period.장소) + ' 좌석 도면이 없어요</div>';
+    return;
+  }
+
+  // 좌석별 신청 카운트
+  const countBySeat = {};
+  const requesters = {}; // 좌석번호 → [학번, ...]
+  SR.allRequests.forEach(r => {
+    countBySeat[r.좌석번호] = (countBySeat[r.좌석번호] || 0) + 1;
+    if (!requesters[r.좌석번호]) requesters[r.좌석번호] = [];
+    requesters[r.좌석번호].push(r.학번);
+  });
+
+  const wrap = document.getElementById('sr-board-wrap');
+  // viewBox 비율로 SVG 오버레이 대신 % 좌표 사용
+  const ratio = layout.imgH / layout.imgW * 100;
+  let html = '<img class="seat-board-img" src="' + layout.image + '" alt="' + escapeHtml(period.장소) + '">';
+  html += '<div class="seat-board-overlay">';
+
+  layout.seats.forEach(s => {
+    const count = countBySeat[s.n] || 0;
+    const isMine = SR.pickedSeat === s.n;
+    const isOther = !isMine && count > 0;
+    let cls = 'seat-marker ';
+    if (isMine) cls += 'mine';
+    else if (isOther) cls += 'taken';
+    else cls += 'empty';
+
+    // 박스 크기를 약간 키워서 클릭 영역 확보 (모바일 고려)
+    const sizeMul = 1.15;
+    const w = s.w * sizeMul;
+    const h = s.h * sizeMul;
+    // 모바일 작은 화면에서도 최소 폰트 크기 확보
+    html += '<div class="' + cls + '" ' +
+      'style="left:' + s.x + '%;top:' + s.y + '%;width:' + w + '%;height:' + h + '%;font-size:clamp(8px, 1.3vw, 13px)" ' +
+      'onclick="srPickSeat(' + s.n + ')" ' +
+      'title="' + s.n + '번' + (count > 0 ? ' · ' + count + '명 신청' : '') + '">' +
+      s.n +
+      '</div>';
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+
+  // 신청 인원 카운트
+  const totalReqs = SR.allRequests.length;
+  document.getElementById('sr-fill-count').textContent = totalReqs + ' / ' + layout.seats.length;
+}
+
+function srPickSeat(seatNum) {
+  if (!SR.currentPeriod) return;
+  SR.pickedSeat = seatNum;
+  srRenderBoard();
+  srUpdateSubmitState();
+}
+
+function srUpdateSubmitState() {
+  const btn = document.getElementById('sr-submit-btn');
+  const info = document.getElementById('sr-submit-info');
+  if (!SR.pickedSeat) {
+    btn.disabled = true;
+    info.textContent = '좌석을 선택해주세요';
+    info.classList.remove('has-pick');
+    return;
+  }
+  const isChange = SR.myRequest && SR.myRequest.좌석번호 !== SR.pickedSeat;
+  const isSame = SR.myRequest && SR.myRequest.좌석번호 === SR.pickedSeat;
+  if (isSame) {
+    btn.disabled = true;
+    info.textContent = '현재 신청한 좌석입니다 (' + SR.pickedSeat + '번)';
+    info.classList.remove('has-pick');
+  } else {
+    btn.disabled = false;
+    info.textContent = (isChange ? '변경: ' : '선택: ') + SR.pickedSeat + '번 좌석';
+    info.classList.add('has-pick');
+  }
+}
+
+async function srSubmit() {
+  if (!SR.currentPeriod || !SR.pickedSeat) return;
+  const btn = document.getElementById('sr-submit-btn');
+  btn.disabled = true;
+  btn.textContent = '신청 중...';
+
+  try {
+    const { data, error } = await sb.client().rpc('submit_seat_request', {
+      p_period_id: SR.currentPeriod.id,
+      p_학번: SR.no,
+      p_이름: SR.name,
+      p_좌석번호: SR.pickedSeat,
+    });
+    if (error) throw error;
+
+    // 완료 화면
+    document.getElementById('sr-board').style.display = 'none';
+    document.getElementById('sr-done').style.display = 'block';
+    document.getElementById('sr-done-name').textContent = SR.name;
+    document.getElementById('sr-done-period').textContent = SR.currentPeriod.제목;
+    document.getElementById('sr-done-seat').textContent = SR.pickedSeat + '번';
+
+    // 다음 진입을 위해 상태 갱신
+    SR.myRequest = { 학번: SR.no, 좌석번호: SR.pickedSeat };
+  } catch (e) {
+    console.error('좌석 신청 실패:', e);
+    alert('신청 실패: ' + (e.message || '오류'));
+    btn.disabled = false;
+  }
+  btn.textContent = '신청하기';
+}
+
+// ── 진입점: 좌석 배치도 조회 ──
+async function enterSeatBoardScreen() {
+  showScreen('screen-seat-board');
+  const content = document.getElementById('sb-content');
+  content.innerHTML = '<div class="seat-empty">불러오는 중...</div>';
+  document.getElementById('sb-tabs').innerHTML = '';
+
+  try {
+    // 활성화된 장소 + 각 장소의 가장 최근 confirmed 배치
+    const { data: enabled } = await sb.client()
+      .from('seat_room_enabled')
+      .select('장소')
+      .eq('활성', true);
+    const activeRooms = (enabled || []).map(r => r.장소);
+
+    // 각 장소의 최신 confirmed 기간 + 그 배치
+    const { data: confirmed } = await sb.client()
+      .from('seat_periods')
+      .select('*')
+      .eq('상태', 'confirmed')
+      .order('수정일시', { ascending: false });
+    const latestByRoom = {};
+    (confirmed || []).forEach(p => {
+      if (!latestByRoom[p.장소]) latestByRoom[p.장소] = p;
+    });
+
+    SB_VIEW.enabledRooms = Object.keys(latestByRoom);
+    SB_VIEW.periodByRoom = latestByRoom;
+
+    if (SB_VIEW.enabledRooms.length === 0) {
+      content.innerHTML = '<div class="seat-empty">확정된 좌석 배치가 없어요</div>';
+      return;
+    }
+
+    // 모든 장소의 배치 조회
+    const periodIds = SB_VIEW.enabledRooms.map(r => latestByRoom[r].id);
+    const { data: assignments } = await sb.client()
+      .from('seat_assignments')
+      .select('*')
+      .in('period_id', periodIds);
+    const byRoom = {};
+    (assignments || []).forEach(a => {
+      const period = (confirmed || []).find(p => p.id === a.period_id);
+      if (!period) return;
+      if (!byRoom[period.장소]) byRoom[period.장소] = [];
+      byRoom[period.장소].push(a);
+    });
+    SB_VIEW.assignmentsByRoom = byRoom;
+
+    // 탭 렌더
+    const tabsEl = document.getElementById('sb-tabs');
+    tabsEl.innerHTML = SB_VIEW.enabledRooms.map((room, idx) => {
+      const cnt = (byRoom[room] || []).length;
+      return '<button class="seat-tab' + (idx === 0 ? ' on' : '') +
+        '" data-room="' + escapeAttr(room) + '" onclick="sbSwitchRoom(\'' + escapeAttr(room) + '\')">' +
+        escapeHtml(room) + '<span class="badge">' + cnt + '</span></button>';
+    }).join('');
+
+    sbSwitchRoom(SB_VIEW.enabledRooms[0]);
+  } catch (e) {
+    console.error('배치도 조회 실패:', e);
+    content.innerHTML = '<div class="seat-empty">불러오기 실패: ' + escapeHtml(e.message || '오류') + '</div>';
+  }
+}
+
+function sbSwitchRoom(room) {
+  SB_VIEW.currentRoom = room;
+  document.querySelectorAll('#sb-tabs .seat-tab').forEach(b => {
+    b.classList.toggle('on', b.dataset.room === room);
+  });
+
+  const period = SB_VIEW.periodByRoom[room];
+  const assignments = SB_VIEW.assignmentsByRoom[room] || [];
+  const layout = SEAT_LAYOUTS[room];
+  const content = document.getElementById('sb-content');
+  document.getElementById('sb-meta').textContent =
+    period.제목 + ' · 확정 ' + _srFmtDT(period.수정일시);
+
+  if (!layout) {
+    content.innerHTML = '<div class="seat-empty">' + escapeHtml(room) + ' 좌석 도면이 없어요</div>';
+    return;
+  }
+
+  // 학번 → 이름 매핑
+  const bySeat = {};
+  assignments.forEach(a => { bySeat[a.좌석번호] = a; });
+
+  let html = '<div class="seat-board-wrap">';
+  html += '<img class="seat-board-img" src="' + layout.image + '" alt="' + escapeHtml(room) + '">';
+  html += '<div class="seat-board-overlay">';
+  layout.seats.forEach(s => {
+    const a = bySeat[s.n];
+    const cls = 'seat-marker ' + (a ? 'assigned' : 'empty');
+    const label = a
+      ? a.이름 + ' (' + a.좌석번호 + ')'
+      : s.n + '번';
+    const sizeMul = 1.15;
+    html += '<div class="' + cls + '" ' +
+      'style="left:' + s.x + '%;top:' + s.y + '%;width:' + s.w*sizeMul + '%;height:' + s.h*sizeMul + '%;font-size:clamp(8px, 1.1vw, 11px);padding:2px" ' +
+      'title="' + escapeAttr(label) + '">' +
+      (a ? escapeHtml(a.이름) : s.n) +
+      '</div>';
+  });
+  html += '</div></div>';
+  content.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  좌석 관리 (관리자 탭, Phase 4)
+// ══════════════════════════════════════════════════════════════
+const SEAT_ADMIN = {
+  enabledRooms: {},        // {장소: bool}
+  periods: [],
+  selectedPeriodId: null,
+  requests: [],
+  assignments: [],         // 현재 편집 중인 배치 [{학번, 이름, 좌석번호, 학생신청좌석, 변경사유}]
+  pendingReasonCtx: null,  // 사유 입력 대기 컨텍스트
+
+  async refresh() {
+    await Promise.all([
+      this._loadEnabled(),
+      this._loadPeriods(),
+    ]);
+    this._renderRooms();
+    this._renderPeriodList();
+    if (this.selectedPeriodId) {
+      await this._loadDetail(this.selectedPeriodId);
+    }
+  },
+
+  async _loadEnabled() {
+    const { data, error } = await sb.client()
+      .from('seat_room_enabled')
+      .select('장소, 활성');
+    if (error) { console.error(error); return; }
+    const map = {};
+    (data || []).forEach(r => { map[r.장소] = r.활성; });
+    this.enabledRooms = map;
+  },
+
+  async _loadPeriods() {
+    const { data, error } = await sb.client()
+      .from('seat_periods')
+      .select('*')
+      .order('생성일시', { ascending: false })
+      .limit(50);
+    if (error) { console.error(error); return; }
+    this.periods = data || [];
+  },
+
+  async _loadDetail(periodId) {
+    const period = this.periods.find(p => p.id === periodId);
+    if (!period) return;
+
+    // 신청 + 기존 배치 동시 로드
+    const [reqRes, assignRes] = await Promise.all([
+      sb.client().from('seat_requests').select('*').eq('period_id', periodId).order('신청일시', { ascending: true }),
+      sb.client().from('seat_assignments').select('*').eq('period_id', periodId),
+    ]);
+    this.requests = reqRes.data || [];
+    const existing = assignRes.data || [];
+
+    // 편집용 assignments 초기화
+    // confirmed 상태면 기존 배치 사용, 아니면 학생 신청 그대로
+    if (existing.length > 0) {
+      this.assignments = existing.map(a => ({
+        학번: a.학번,
+        이름: a.이름,
+        좌석번호: a.좌석번호,
+        학생신청좌석: a.학생신청좌석,
+        변경사유: a.변경사유 || '',
+      }));
+    } else {
+      this.assignments = this.requests.map(r => ({
+        학번: r.학번,
+        이름: r.이름,
+        좌석번호: r.좌석번호,
+        학생신청좌석: r.좌석번호,
+        변경사유: '',
+      }));
+    }
+    this._renderDetail(period);
+  },
+
+  _renderRooms() {
+    const el = document.getElementById('seat-admin-rooms');
+    if (!el) return;
+    const rooms = ['아우름', '교과1실', '해오름', '리케이온'];
+    const hasLayout = (r) => !!SEAT_LAYOUTS[r];
+    el.innerHTML = rooms.map(r => {
+      const on = !!this.enabledRooms[r];
+      const layoutAvail = hasLayout(r);
+      const sub = layoutAvail ? (on ? '활성 · 학생 신청/조회 가능' : '비활성') : '도면 없음 (사용 불가)';
+      const disabledCls = layoutAvail ? '' : 'style="opacity:.5;pointer-events:none"';
+      return '<div class="seat-admin-room-card' + (on ? ' active' : '') + '" ' + disabledCls + '>' +
+        '<div><div class="seat-admin-room-name">' + r + '</div>' +
+        '<div class="seat-admin-room-sub">' + sub + '</div></div>' +
+        (layoutAvail ? '<div class="seat-toggle' + (on ? ' on' : '') + '" onclick="SEAT_ADMIN.toggleRoom(\'' + r + '\')"></div>' : '') +
+        '</div>';
+    }).join('');
+  },
+
+  async toggleRoom(room) {
+    const newVal = !this.enabledRooms[room];
+    try {
+      const { error } = await sb.client()
+        .from('seat_room_enabled')
+        .update({ 활성: newVal, 수정일시: new Date().toISOString() })
+        .eq('장소', room);
+      if (error) throw error;
+      this.enabledRooms[room] = newVal;
+      this._renderRooms();
+      showAdminToast(room + ' ' + (newVal ? '활성화' : '비활성화'), 'ok');
+    } catch (e) {
+      showAdminToast('실패: ' + (e.message || '오류'), 'err');
+    }
+  },
+
+  _renderPeriodList() {
+    const el = document.getElementById('seat-admin-period-list');
+    if (!el) return;
+    if (this.periods.length === 0) {
+      el.innerHTML = '<div class="seat-empty">아직 좌석 신청 기간이 없어요</div>';
+      return;
+    }
+    const statusKr = { draft: '작성중', open: '신청 중', closed: '마감', confirmed: '확정' };
+    el.innerHTML = this.periods.map(p => {
+      const sel = this.selectedPeriodId === p.id ? ' on' : '';
+      return '<div class="seat-admin-period' + sel + '" onclick="SEAT_ADMIN.selectPeriod(' + p.id + ')">' +
+        '<div class="seat-admin-period-info">' +
+        '<div class="seat-admin-period-title">' + escapeHtml(p.장소) + ' · ' + escapeHtml(p.제목) + '</div>' +
+        '<div class="seat-admin-period-meta">' + _srFmtDT(p.신청시작) + ' ~ ' + _srFmtDT(p.신청마감) + '</div>' +
+        '</div>' +
+        '<span class="seat-admin-period-status ' + p.상태 + '">' + (statusKr[p.상태] || p.상태) + '</span>' +
+        '</div>';
+    }).join('');
+  },
+
+  async selectPeriod(periodId) {
+    this.selectedPeriodId = periodId;
+    this._renderPeriodList();
+    await this._loadDetail(periodId);
+  },
+
+  _renderDetail(period) {
+    const el = document.getElementById('seat-admin-detail');
+    if (!el) return;
+    if (!period) { el.innerHTML = ''; return; }
+
+    const layout = SEAT_LAYOUTS[period.장소];
+    const totalSeats = layout ? layout.seats.length : 0;
+
+    // 중복 검사
+    const seatCount = {};
+    this.assignments.forEach(a => {
+      if (a.좌석번호) seatCount[a.좌석번호] = (seatCount[a.좌석번호] || 0) + 1;
+    });
+    const conflicts = Object.keys(seatCount).filter(s => seatCount[s] > 1);
+
+    const statusKr = { draft: '작성중', open: '신청 중', closed: '마감', confirmed: '확정' };
+    let actionsHtml = '';
+    if (period.상태 === 'open') {
+      actionsHtml += '<button class="admin-btn" onclick="SEAT_ADMIN.changeStatus(\'closed\')">신청 마감</button>';
+    }
+    if (period.상태 === 'open' || period.상태 === 'closed' || period.상태 === 'confirmed') {
+      const confirmLabel = period.상태 === 'confirmed' ? '재확정' : '배치 확정';
+      const conflictNote = conflicts.length > 0 ? ' (중복 해결 필요)' : '';
+      actionsHtml += '<button class="admin-btn primary" ' + (conflicts.length > 0 ? 'disabled' : '') +
+        ' onclick="SEAT_ADMIN.confirmAssignments()">' + confirmLabel + conflictNote + '</button>';
+    }
+    actionsHtml += '<button class="admin-btn danger" onclick="SEAT_ADMIN.deletePeriod()">기간 삭제</button>';
+
+    let conflictHtml = '';
+    if (conflicts.length > 0) {
+      conflictHtml = '<div class="seat-admin-conflict">⚠️ 좌석 번호 ' + conflicts.join(', ') + '번이 중복 배치되어 있어요. 수정 후 확정해주세요.</div>';
+    }
+
+    // 신청자 없음
+    if (this.assignments.length === 0) {
+      el.innerHTML = '<div class="seat-admin-detail-card">' +
+        '<div class="seat-admin-detail-head">' +
+        '<div class="seat-admin-detail-title">' + escapeHtml(period.제목) + ' · ' + escapeHtml(period.장소) + ' (' + statusKr[period.상태] + ')</div>' +
+        '<div class="seat-admin-detail-actions">' + actionsHtml + '</div>' +
+        '</div>' +
+        '<div class="seat-empty">아직 신청한 학생이 없어요</div>' +
+        '</div>';
+      return;
+    }
+
+    // 학번 순 정렬
+    const sorted = [...this.assignments].sort((a, b) =>
+      String(a.학번).localeCompare(String(b.학번), undefined, { numeric: true }));
+
+    let html = '<div class="seat-admin-detail-card">';
+    html += '<div class="seat-admin-detail-head">';
+    html += '<div class="seat-admin-detail-title">' + escapeHtml(period.제목) + ' · ' + escapeHtml(period.장소) +
+      ' <span style="font-size:12px;color:var(--ink-dim);font-weight:400">(' + statusKr[period.상태] + ' · ' + this.assignments.length + '명 / 좌석 ' + totalSeats + '개)</span></div>';
+    html += '<div class="seat-admin-detail-actions">' + actionsHtml + '</div>';
+    html += '</div>';
+    html += conflictHtml;
+
+    html += '<table class="seat-admin-req-table"><thead><tr>' +
+      '<th>학번</th><th>이름</th><th>학생 신청</th><th>최종 배치</th><th>변경 사유</th>' +
+      '</tr></thead><tbody>';
+    sorted.forEach((a, idx) => {
+      const isChanged = a.학생신청좌석 && a.학생신청좌석 !== a.좌석번호;
+      const isDup = a.좌석번호 && seatCount[a.좌석번호] > 1;
+      const inputCls = isChanged || isDup ? 'seat-admin-req-seat-input changed' : 'seat-admin-req-seat-input';
+      const reasonText = a.변경사유 || (isChanged ? '(사유 필요)' : '');
+      const reasonStyle = isChanged && !a.변경사유 ? 'color:var(--terra);font-style:italic' : 'color:var(--ink-dim)';
+      html += '<tr class="' + (isChanged ? 'has-change' : '') + '">' +
+        '<td class="seat-admin-req-no">' + escapeHtml(a.학번) + '</td>' +
+        '<td class="seat-admin-req-name">' + escapeHtml(a.이름) + '</td>' +
+        '<td><span class="seat-admin-req-seat">' + (a.학생신청좌석 || '—') + '</span></td>' +
+        '<td><input type="number" min="1" max="' + totalSeats + '" class="' + inputCls + '" value="' + (a.좌석번호 || '') +
+          '" onchange="SEAT_ADMIN.editSeat(\'' + a.학번 + '\', this.value)"></td>' +
+        '<td style="font-size:12px;' + reasonStyle + '">' + escapeHtml(reasonText) + '</td>' +
+        '</tr>';
+    });
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
+  },
+
+  editSeat(학번, newSeatStr) {
+    const a = this.assignments.find(x => x.학번 === 학번);
+    if (!a) return;
+    const oldSeat = a.좌석번호;
+    const newSeat = parseInt(newSeatStr, 10);
+    if (!newSeat || newSeat < 1) return;
+    if (newSeat === oldSeat) return;
+
+    // 학생 신청과 다른 변경이면 사유 모달 띄움
+    if (a.학생신청좌석 && newSeat !== a.학생신청좌석) {
+      this.pendingReasonCtx = { 학번, newSeat, oldSeat };
+      document.getElementById('sr-modal-student').textContent = a.이름 + ' (' + a.학번 + ')';
+      document.getElementById('sr-modal-change').textContent = a.학생신청좌석 + '번 → ' + newSeat + '번';
+      document.getElementById('sr-modal-reason').value = a.변경사유 || '';
+      document.getElementById('sr-modal-err').textContent = '';
+      document.getElementById('modal-seat-reason').classList.add('on');
+      setTimeout(() => document.getElementById('sr-modal-reason').focus(), 200);
+    } else {
+      // 학생 신청과 같은 좌석으로 복구하는 케이스
+      a.좌석번호 = newSeat;
+      a.변경사유 = '';
+      this._renderDetail(this.periods.find(p => p.id === this.selectedPeriodId));
+    }
+  },
+
+  confirmReason() {
+    const ctx = this.pendingReasonCtx;
+    if (!ctx) return;
+    const reason = document.getElementById('sr-modal-reason').value.trim();
+    if (!reason) {
+      document.getElementById('sr-modal-err').textContent = '변경 사유를 입력해주세요';
+      return;
+    }
+    const a = this.assignments.find(x => x.학번 === ctx.학번);
+    if (a) {
+      a.좌석번호 = ctx.newSeat;
+      a.변경사유 = reason;
+    }
+    this.closeReasonModal();
+    this._renderDetail(this.periods.find(p => p.id === this.selectedPeriodId));
+  },
+
+  closeReasonModal() {
+    document.getElementById('modal-seat-reason').classList.remove('on');
+    this.pendingReasonCtx = null;
+    // 입력을 취소했으면 input 값을 원래대로 (재렌더로 동기화)
+    this._renderDetail(this.periods.find(p => p.id === this.selectedPeriodId));
+  },
+
+  async changeStatus(newStatus) {
+    if (!this.selectedPeriodId) return;
+    try {
+      const { error } = await sb.client().rpc('update_seat_period_status', {
+        p_period_id: this.selectedPeriodId,
+        p_새상태: newStatus,
+      });
+      if (error) throw error;
+      showAdminToast('상태가 변경됐어요', 'ok');
+      await this.refresh();
+    } catch (e) {
+      showAdminToast('실패: ' + (e.message || '오류'), 'err');
+    }
+  },
+
+  async confirmAssignments() {
+    if (!this.selectedPeriodId) return;
+    if (this.assignments.length === 0) {
+      showAdminToast('배치할 학생이 없어요', 'err');
+      return;
+    }
+    // 중복 재검사
+    const seatCount = {};
+    this.assignments.forEach(a => {
+      seatCount[a.좌석번호] = (seatCount[a.좌석번호] || 0) + 1;
+    });
+    const dup = Object.keys(seatCount).filter(s => seatCount[s] > 1);
+    if (dup.length > 0) {
+      showAdminToast('좌석 ' + dup.join(', ') + '번 중복', 'err');
+      return;
+    }
+    // 변경된 학생인데 사유 미입력 체크
+    const missing = this.assignments.filter(a =>
+      a.학생신청좌석 && a.학생신청좌석 !== a.좌석번호 && !a.변경사유);
+    if (missing.length > 0) {
+      showAdminToast(missing.length + '명의 변경 사유가 비어있어요', 'err');
+      return;
+    }
+
+    if (!confirm('현재 ' + this.assignments.length + '명의 좌석 배치를 확정합니다.\n학생들은 배치도에서 결과를 확인할 수 있게 됩니다.')) return;
+
+    const teacherName = prompt('확정하는 교사 이름을 입력해주세요', '') || '';
+    try {
+      const { error } = await sb.client().rpc('confirm_seat_assignments', {
+        p_period_id: this.selectedPeriodId,
+        p_assignments: this.assignments.map(a => ({
+          학번: a.학번,
+          이름: a.이름,
+          좌석번호: a.좌석번호,
+          학생신청좌석: a.학생신청좌석 || null,
+          변경사유: a.변경사유 || null,
+        })),
+        p_확정자: teacherName,
+      });
+      if (error) throw error;
+      showAdminToast('좌석 배치가 확정됐어요', 'ok');
+      await this.refresh();
+    } catch (e) {
+      console.error(e);
+      showAdminToast('확정 실패: ' + (e.message || '오류'), 'err');
+    }
+  },
+
+  async deletePeriod() {
+    if (!this.selectedPeriodId) return;
+    const p = this.periods.find(x => x.id === this.selectedPeriodId);
+    if (!p) return;
+    if (!confirm(p.제목 + ' 기간과 모든 신청·배치를 삭제합니다.\n되돌릴 수 없어요.')) return;
+    try {
+      const { error } = await sb.client().from('seat_periods').delete().eq('id', this.selectedPeriodId);
+      if (error) throw error;
+      this.selectedPeriodId = null;
+      this.assignments = [];
+      document.getElementById('seat-admin-detail').innerHTML = '';
+      showAdminToast('삭제됐어요', 'ok');
+      await this.refresh();
+    } catch (e) {
+      showAdminToast('실패: ' + (e.message || '오류'), 'err');
+    }
+  },
+
+  openNewPeriodModal() {
+    document.getElementById('sp-room').value = '해오름';
+    document.getElementById('sp-title').value = '';
+    // 기본값: 지금 + 1시간 시작, +25시간 마감
+    const now = new Date();
+    const start = new Date(now.getTime() + 60*60*1000);
+    const end = new Date(now.getTime() + 25*60*60*1000);
+    document.getElementById('sp-start').value = this._toLocalInput(start);
+    document.getElementById('sp-end').value = this._toLocalInput(end);
+    document.getElementById('sp-err').textContent = '';
+    document.getElementById('modal-seat-period').classList.add('on');
+    setTimeout(() => document.getElementById('sp-title').focus(), 200);
+  },
+
+  closePeriodModal() {
+    document.getElementById('modal-seat-period').classList.remove('on');
+  },
+
+  _toLocalInput(d) {
+    const pad = (n) => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) +
+      'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  },
+
+  async savePeriod() {
+    const room = document.getElementById('sp-room').value;
+    const title = document.getElementById('sp-title').value.trim();
+    const startStr = document.getElementById('sp-start').value;
+    const endStr = document.getElementById('sp-end').value;
+    const errEl = document.getElementById('sp-err');
+    const btn = document.getElementById('sp-save');
+    errEl.textContent = '';
+
+    if (!title) { errEl.textContent = '제목을 입력해주세요'; return; }
+    if (!startStr || !endStr) { errEl.textContent = '시작/마감 시각을 입력해주세요'; return; }
+
+    btn.disabled = true;
+    btn.textContent = '생성 중...';
+    try {
+      // datetime-local 값은 로컬 시간대 (KST) — toISOString으로 UTC 변환
+      const startIso = new Date(startStr).toISOString();
+      const endIso = new Date(endStr).toISOString();
+      const teacherName = prompt('만드는 교사 이름을 입력해주세요', '') || '';
+
+      const { data, error } = await sb.client().rpc('create_seat_period', {
+        p_장소: room,
+        p_제목: title,
+        p_신청시작: startIso,
+        p_신청마감: endIso,
+        p_생성자: teacherName,
+      });
+      if (error) throw error;
+
+      // 자동으로 활성화
+      if (!this.enabledRooms[room]) {
+        await sb.client().from('seat_room_enabled').update({ 활성: true }).eq('장소', room);
+      }
+
+      this.closePeriodModal();
+      showAdminToast('신청 기간이 만들어졌어요', 'ok');
+      await this.refresh();
+      // 새로 만든 기간 자동 선택
+      if (data) this.selectPeriod(data);
+    } catch (e) {
+      errEl.textContent = e.message || '오류';
+      btn.disabled = false;
+      btn.textContent = '만들기';
+      return;
+    }
+    btn.disabled = false;
+    btn.textContent = '만들기';
+  },
+};
+
+// 좌석 관리 탭 진입 시 자동 로딩
+const _origSwitchAdminTab2 = switchAdminTab;
+switchAdminTab = function(tab) {
+  _origSwitchAdminTab2(tab);
+  if (tab === 'seats') {
+    SEAT_ADMIN.refresh();
+  }
+};
+
+// 모달 배경 클릭 닫기
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'modal-seat-period') SEAT_ADMIN.closePeriodModal();
+  if (e.target.id === 'modal-seat-reason') SEAT_ADMIN.closeReasonModal();
+});
 
 // ══════════════════════════════════════════════════════════════
 //  부팅
