@@ -5161,7 +5161,7 @@ body.admin-readonly #admin-tab-diag {
         <div class="seat-leg-item"><span class="seat-leg-box empty"></span>빈 좌석</div>
         <div class="seat-leg-item"><span class="seat-leg-box taken"></span>신청됨</div>
         <div class="seat-leg-item"><span class="seat-leg-box mine"></span>내 선택</div>
-        <div class="seat-leg-item"><span class="seat-leg-count" id="sr-fill-count">—</span>신청 인원</div>
+        
       </div>
 
       <div class="seat-submit-row">
@@ -11241,7 +11241,7 @@ async function srOpenBoard(period) {
 
   const wrap = document.getElementById('sr-board-wrap');
   wrap.innerHTML = '<div class="seat-empty">불러오는 중...</div>';
-  document.getElementById('sr-fill-count').textContent = '—';
+  // fill-count 초기화 제거됨
   document.getElementById('sr-submit-btn').disabled = true;
   document.getElementById('sr-submit-info').textContent = '좌석을 선택해주세요';
 
@@ -11301,8 +11301,8 @@ function srRenderBoard() {
   const tabsEl = document.getElementById('sr-room-tabs');
   if (tabsEl) {
     tabsEl.innerHTML =
-      '<button class="seat-tab' + (currentRoom === '해오름' ? ' on' : '') + '" onclick="srSwitchRoom(\'해오름\')">해오름<span class="badge">' + cntHae + '/' + totalHae + '</span></button>' +
-      '<button class="seat-tab' + (currentRoom === '리케이온' ? ' on' : '') + '" onclick="srSwitchRoom(\'리케이온\')">리케이온<span class="badge">' + cntLyk + '/' + totalLyk + '</span></button>';
+      '<button class="seat-tab' + (currentRoom === '해오름' ? ' on' : '') + '" onclick="srSwitchRoom(\'해오름\')">해오름</button>' +
+      '<button class="seat-tab' + (currentRoom === '리케이온' ? ' on' : '') + '" onclick="srSwitchRoom(\'리케이온\')">리케이온</button>';
   }
 
   let html = '<img class="seat-board-img" src="' + layout.image + '" alt="' + escapeHtml(currentRoom) + '">';
@@ -11335,7 +11335,7 @@ function srRenderBoard() {
   html += '</div>';
   wrap.innerHTML = html;
 
-  document.getElementById('sr-fill-count').textContent = (cntHae + cntLyk) + ' / ' + (totalHae + totalLyk);
+  // fill-count 제거됨
 }
 
 function srPickSeat(seatNum) {
