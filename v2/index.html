@@ -4474,8 +4474,8 @@ body.admin-readonly #admin-tab-diag {
 .seat-board-img{display:block;width:100%;height:auto;user-select:none;pointer-events:none}
 .seat-board-overlay{position:absolute;inset:0}
 .seat-marker{position:absolute;transform:translate(-50%,-50%);border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:700;border:2px solid transparent;transition:all .15s;box-sizing:border-box}
-.seat-marker.empty{background:rgba(255,255,255,0.92);color:#3a2c1d;border-color:rgba(200,127,94,.35)}
-.seat-marker.empty:hover{background:rgba(212,175,103,.95);transform:translate(-50%,-50%) scale(1.15);border-color:var(--copper);z-index:5}
+.seat-marker.empty{background:transparent;color:#3a2c1d;border-color:rgba(200,127,94,.5);border-width:1.5px;font-weight:600}
+.seat-marker.empty:hover{background:rgba(123,160,135,.4);transform:translate(-50%,-50%) scale(1.18);border-color:var(--sage);border-width:2.5px;color:#1a130c;z-index:5}
 .seat-marker.taken{background:rgba(200,127,94,.65);color:#fff;border-color:rgba(200,127,94,.85);cursor:pointer}
 .seat-marker.taken:hover{transform:translate(-50%,-50%) scale(1.1);z-index:5}
 .seat-marker.mine{background:var(--copper);color:#fff;border-color:var(--cream);box-shadow:0 0 0 3px rgba(200,127,94,.4);z-index:4}
@@ -4484,7 +4484,7 @@ body.admin-readonly #admin-tab-diag {
 .seat-legend{display:flex;gap:18px;flex-wrap:wrap;padding:12px 18px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim)}
 .seat-leg-item{display:flex;align-items:center;gap:6px}
 .seat-leg-box{display:inline-block;width:16px;height:16px;border-radius:2px;border:2px solid}
-.seat-leg-box.empty{background:rgba(255,255,255,.92);border-color:rgba(200,127,94,.35)}
+.seat-leg-box.empty{background:transparent;border-color:rgba(200,127,94,.5)}
 .seat-leg-box.taken{background:rgba(200,127,94,.65);border-color:rgba(200,127,94,.85)}
 .seat-leg-box.mine{background:var(--copper);border-color:var(--cream)}
 .seat-leg-count{display:inline-block;padding:1px 8px;background:rgba(214,178,124,.15);border:1px solid var(--border2);border-radius:10px;font-family:'DM Mono',monospace;font-size:11px;color:var(--amber)}
