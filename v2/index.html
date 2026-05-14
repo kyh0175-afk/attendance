@@ -2888,6 +2888,8 @@ input { font-family: inherit; }
 .form-group select {
   width: 100%;
   min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid var(--border);
   border-radius: var(--r);
@@ -2900,7 +2902,8 @@ input { font-family: inherit; }
 }
 .form-group input[type="datetime-local"] {
   font-family: 'DM Mono', monospace;
-  font-size: 13px;
+  font-size: 12px;
+  padding: 11px 8px;
 }
 .form-group input:focus,
 .form-group select:focus {
