@@ -11930,7 +11930,9 @@ const SEAT_ADMIN = {
     if (!p) return;
     if (!confirm(p.제목 + ' 기간과 모든 신청·배치를 삭제합니다.\n되돌릴 수 없어요.')) return;
     try {
-      const { error } = await sb.client().from('seat_periods').delete().eq('id', this.selectedPeriodId);
+      const { error } = await sb.client().rpc('delete_seat_period', {
+        p_period_id: this.selectedPeriodId,
+      });
       if (error) throw error;
       this.selectedPeriodId = null;
       this.assignments = [];
