@@ -5133,46 +5133,19 @@ body.admin-readonly #admin-tab-diag {
 <div class="screen" id="screen-seat-request" style="display:none">
   <button class="back-btn" onclick="goHome()"><span>←</span><span>BACK</span></button>
   <div class="seat-wrap">
-    <!-- 1단계: 학번/이름 입력 -->
-    <div id="sr-login" class="seat-login">
-      <div class="seat-login-icon">S</div>
-      <div class="seat-login-title">Seat Request</div>
-      <div class="seat-login-sub">좌석을 신청하려면 학번과 이름을<br>입력해주세요.</div>
-      <input type="tel" id="sr-no" class="seat-login-input" placeholder="학번 5자리" maxlength="5" inputmode="numeric" oninput="srOnInput()" onkeydown="if(event.key==='Enter')document.getElementById('sr-name').focus()">
-      <input type="text" id="sr-name" class="seat-login-input" placeholder="이름" oninput="srOnInput()" onkeydown="if(event.key==='Enter')srLogin()" style="margin-top:10px">
-      <div class="seat-login-err" id="sr-err"></div>
-      <button id="sr-btn" class="seat-login-btn" onclick="srLogin()" disabled>다음</button>
-    </div>
 
-    <!-- 2단계: 신청 기간 선택 -->
-    <div id="sr-periods" style="display:none">
-      <div class="seat-header">
-        <div class="seat-header-name" id="sr-greet">—</div>
-        <button class="seat-logout-btn" onclick="srLogout()">처음으로</button>
-      </div>
-      <div class="seat-section-title">신청 가능한 좌석 배치</div>
-      <div id="sr-period-list" class="seat-period-list">
-        <div class="seat-empty">불러오는 중...</div>
-      </div>
-    </div>
-
-    <!-- 3단계: 좌석 선택 (배치도) -->
+    <!-- 좌석 선택 (메인) -->
     <div id="sr-board" style="display:none">
       <div class="seat-header">
         <div>
           <div class="seat-board-period-title" id="sr-board-title">—</div>
           <div class="seat-board-period-meta" id="sr-board-meta">—</div>
         </div>
-        <button class="seat-back-link" onclick="srBackToPeriods()">← 다른 기간</button>
       </div>
-
-      <div class="seat-mycurr" id="sr-mycurr" style="display:none"></div>
 
       <div class="seat-tab-bar" id="sr-room-tabs"></div>
 
-      <div class="seat-board-wrap" id="sr-board-wrap">
-        <!-- 좌석 배치도가 여기에 렌더링됨 -->
-      </div>
+      <div class="seat-board-wrap" id="sr-board-wrap"></div>
 
       <div class="seat-legend">
         <div class="seat-leg-item"><span class="seat-leg-box empty"></span>빈 좌석</div>
@@ -5183,24 +5156,63 @@ body.admin-readonly #admin-tab-diag {
 
       <div class="seat-submit-row">
         <div class="seat-submit-info" id="sr-submit-info">좌석을 선택해주세요</div>
-        <button id="sr-submit-btn" class="seat-submit-btn" onclick="srSubmit()" disabled>신청하기</button>
+        <button id="sr-submit-btn" class="seat-submit-btn" onclick="srOpenLoginModal()" disabled>신청하기</button>
       </div>
     </div>
 
-    <!-- 4단계: 완료 -->
+    <!-- 신청 기간이 여러 개일 때만 보임 (보통은 1개) -->
+    <div id="sr-periods" style="display:none">
+      <div class="seat-section-title">신청 가능한 좌석 배치</div>
+      <div id="sr-period-list" class="seat-period-list"></div>
+    </div>
+
+    <!-- 신청 기간 없음 -->
+    <div id="sr-noperiod" style="display:none">
+      <div class="seat-login" style="max-width:480px">
+        <div class="seat-login-icon">—</div>
+        <div class="seat-login-title">No Active Period</div>
+        <div class="seat-login-sub">현재 신청을 받는 좌석 배치가 없어요.<br>관리 프로그램 안내를 확인해주세요.</div>
+      </div>
+    </div>
+
+    <!-- 완료 -->
     <div id="sr-done" class="seat-done" style="display:none">
       <div class="success-check">✓</div>
       <div class="success-title">Done</div>
       <div class="success-name" id="sr-done-name">—</div>
       <div class="success-meta">
         <strong id="sr-done-period">—</strong><br>
-        좌석 번호 <span class="success-time" id="sr-done-seat">—</span><br>
+        좌석 <span class="success-time" id="sr-done-seat">—</span><br>
         <span style="font-size:11px;color:var(--ink-faint);margin-top:8px;display:inline-block">신청 마감 전이면 다시 변경할 수 있어요</span>
       </div>
       <div class="seat-done-actions">
-        <button class="btn btn-ghost" onclick="srBackToPeriods()">다른 기간 보기</button>
-        <button class="btn btn-primary" onclick="srChangeSeat()">좌석 변경</button>
+        <button class="btn btn-primary" onclick="srChangeSeat()">좌석 변경하기</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- 신청 확인 모달 (학번+이름 입력) -->
+<div class="modal-bg" id="modal-sr-login">
+  <div class="modal student-modal" style="max-width:420px">
+    <div class="student-modal-title">좌석 신청 확인</div>
+    <div class="student-modal-subtitle">
+      <span id="sr-login-pick" style="color:var(--copper);font-weight:600">—</span>
+    </div>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group">
+        <label>학번</label>
+        <input type="tel" id="sr-login-no" placeholder="10101" maxlength="5" inputmode="numeric" oninput="srLoginOnInput()">
+      </div>
+      <div class="form-group">
+        <label>이름</label>
+        <input type="text" id="sr-login-name" placeholder="홍길동" oninput="srLoginOnInput()" onkeydown="if(event.key==='Enter')srLoginSubmit()">
+      </div>
+    </div>
+    <div class="modal-err" id="sr-login-err"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="srCloseLoginModal()">취소</button>
+      <button class="btn btn-primary" id="sr-login-btn" onclick="srLoginSubmit()" disabled>신청 완료</button>
     </div>
   </div>
 </div>
@@ -11150,156 +11162,68 @@ const SB_VIEW = {
 // ── 진입점: 좌석 신청 ──
 async function enterSeatRequestScreen() {
   showScreen('screen-seat-request');
-  ['sr-login','sr-periods','sr-board','sr-done'].forEach(id =>
+  ['sr-board','sr-periods','sr-noperiod','sr-done'].forEach(id =>
     document.getElementById(id).style.display = 'none');
-  document.getElementById('sr-login').style.display = 'block';
-  document.getElementById('sr-err').textContent = '';
 
-  const savedNo = sessionStorage.getItem('sr_no');
-  const savedName = sessionStorage.getItem('sr_name');
-  if (savedNo && savedName) {
-    document.getElementById('sr-no').value = savedNo;
-    document.getElementById('sr-name').value = savedName;
-    SR.no = savedNo;
-    SR.name = savedName;
-    srShowPeriods();
-  } else {
-    document.getElementById('sr-no').value = '';
-    document.getElementById('sr-name').value = '';
-    srOnInput();
-    setTimeout(() => document.getElementById('sr-no').focus(), 200);
-  }
-}
-
-function srOnInput() {
-  const no = document.getElementById('sr-no').value.trim();
-  const name = document.getElementById('sr-name').value.trim();
-  document.getElementById('sr-btn').disabled = !(/^\d{5}$/.test(no) && name.length >= 2);
-  document.getElementById('sr-err').textContent = '';
-}
-
-async function srLogin() {
-  const no = document.getElementById('sr-no').value.trim();
-  const name = document.getElementById('sr-name').value.trim();
-  const errEl = document.getElementById('sr-err');
-  const btn = document.getElementById('sr-btn');
-  if (!/^\d{5}$/.test(no)) { errEl.textContent = '학번 5자리를 입력해주세요'; return; }
-  if (name.length < 2) { errEl.textContent = '이름을 입력해주세요'; return; }
-
-  btn.disabled = true;
-  btn.textContent = '확인 중...';
-
-  try {
-    const stus = await sb.students.byNo(no);
-    if (!stus || stus.length === 0) {
-      errEl.textContent = '등록되지 않은 학번이에요';
-      btn.textContent = '다음';
-      srOnInput();
-      return;
-    }
-    const realName = (stus[0].이름 || '').replace(/\s/g, '');
-    if (realName !== name.replace(/\s/g, '')) {
-      errEl.textContent = '학번과 이름이 일치하지 않아요';
-      btn.textContent = '다음';
-      srOnInput();
-      return;
-    }
-    SR.no = no;
-    SR.name = stus[0].이름;
-    sessionStorage.setItem('sr_no', no);
-    sessionStorage.setItem('sr_name', SR.name);
-    btn.textContent = '다음';
-    srShowPeriods();
-  } catch (e) {
-    errEl.textContent = '조회 실패: ' + (e.message || '오류');
-    btn.disabled = false;
-    btn.textContent = '다음';
-  }
-}
-
-function srLogout() {
-  sessionStorage.removeItem('sr_no');
-  sessionStorage.removeItem('sr_name');
-  SR.no = ''; SR.name = '';
-  enterSeatRequestScreen();
-}
-
-async function srShowPeriods() {
-  document.getElementById('sr-login').style.display = 'none';
-  document.getElementById('sr-board').style.display = 'none';
-  document.getElementById('sr-done').style.display = 'none';
-  document.getElementById('sr-periods').style.display = 'block';
-  document.getElementById('sr-greet').textContent = SR.name + ' 학생';
-
-  const listEl = document.getElementById('sr-period-list');
-  listEl.innerHTML = '<div class="seat-empty">불러오는 중...</div>';
-
+  // 활성 기간 조회
   try {
     const { data: periods, error } = await sb.client()
       .from('seat_periods')
       .select('*')
-      .in('상태', ['open'])
+      .eq('상태', 'open')
       .order('신청마감', { ascending: true });
     if (error) throw error;
-    SR.periods = periods || [];
 
-    const periodIds = SR.periods.map(p => p.id);
-    let myReqs = [];
-    if (periodIds.length > 0) {
-      const { data: reqs } = await sb.client()
-        .from('seat_requests')
-        .select('*')
-        .in('period_id', periodIds)
-        .eq('학번', SR.no);
-      myReqs = reqs || [];
-    }
-    const myByPeriod = {};
-    myReqs.forEach(r => { myByPeriod[r.period_id] = r; });
-
-    if (SR.periods.length === 0) {
-      listEl.innerHTML = '<div class="seat-empty">현재 신청을 받는 좌석 배치가 없어요</div>';
+    if (!periods || periods.length === 0) {
+      document.getElementById('sr-noperiod').style.display = 'block';
       return;
     }
+    SR.periods = periods;
 
-    const now = Date.now();
-    const html = SR.periods.map(p => {
-      const end = new Date(p.신청마감).getTime();
-      const isClosing = (end - now) < 60 * 60 * 1000;
-      const stateText = isClosing ? '마감 임박' : '신청 중';
-      const stateCls = isClosing ? 'closing' : 'open';
-      const startStr = _srFmtDT(p.신청시작);
-      const endStr = _srFmtDT(p.신청마감);
-      const mine = myByPeriod[p.id];
-      const mineHtml = mine ? '<div class="seat-period-mine">내 신청: ' + escapeHtml(mine.장소) + ' ' + mine.좌석번호 + '번 — 변경 가능</div>' : '';
-      return '<div class="seat-period-card" onclick="srSelectPeriod(' + p.id + ')">' +
-        '<div class="seat-period-room">해오름 + 리케이온 통합</div>' +
-        '<div class="seat-period-title">' + escapeHtml(p.제목) + '</div>' +
-        '<div class="seat-period-time">' + startStr + ' ~ ' + endStr + '</div>' +
-        '<span class="seat-period-status ' + stateCls + '">' + stateText + '</span>' +
-        mineHtml +
-        '</div>';
-    }).join('');
-    listEl.innerHTML = html;
+    // 보통 1개 (스키마 제약상). 여러 개면 선택 화면, 1개면 바로 좌석표
+    if (periods.length === 1) {
+      srOpenBoard(periods[0]);
+    } else {
+      srShowPeriods();
+    }
   } catch (e) {
     console.error('신청 기간 조회 실패:', e);
-    listEl.innerHTML = '<div class="seat-empty">불러오기 실패: ' + escapeHtml(e.message || '오류') + '</div>';
+    document.getElementById('sr-noperiod').style.display = 'block';
   }
 }
 
-function _srFmtDT(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return (d.getMonth()+1) + '/' + d.getDate() + ' ' +
-    String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+function srShowPeriods() {
+  ['sr-board','sr-noperiod','sr-done'].forEach(id =>
+    document.getElementById(id).style.display = 'none');
+  document.getElementById('sr-periods').style.display = 'block';
+  const listEl = document.getElementById('sr-period-list');
+  const now = Date.now();
+  listEl.innerHTML = SR.periods.map(p => {
+    const end = new Date(p.신청마감).getTime();
+    const isClosing = (end - now) < 60 * 60 * 1000;
+    const stateText = isClosing ? '마감 임박' : '신청 중';
+    const stateCls = isClosing ? 'closing' : 'open';
+    return '<div class="seat-period-card" onclick="srOpenBoard(' +
+      'SR.periods.find(p=>p.id===' + p.id + '))">' +
+      '<div class="seat-period-room">해오름 + 리케이온 통합</div>' +
+      '<div class="seat-period-title">' + escapeHtml(p.제목) + '</div>' +
+      '<div class="seat-period-time">' + _srFmtDT(p.신청시작) + ' ~ ' + _srFmtDT(p.신청마감) + '</div>' +
+      '<span class="seat-period-status ' + stateCls + '">' + stateText + '</span>' +
+      '</div>';
+  }).join('');
 }
 
-async function srSelectPeriod(periodId) {
-  const period = SR.periods.find(p => p.id === periodId);
+async function srOpenBoard(period) {
   if (!period) return;
   SR.currentPeriod = period;
   SR.pickedRoom = '해오름';
   SR.pickedSeat = null;
-  document.getElementById('sr-periods').style.display = 'none';
+  SR.myRequest = null;
+  SR.no = '';
+  SR.name = '';
+
+  ['sr-periods','sr-noperiod','sr-done'].forEach(id =>
+    document.getElementById(id).style.display = 'none');
   document.getElementById('sr-board').style.display = 'block';
   document.getElementById('sr-board-title').textContent = period.제목;
   document.getElementById('sr-board-meta').textContent = '마감 ' + _srFmtDT(period.신청마감);
@@ -11307,7 +11231,6 @@ async function srSelectPeriod(periodId) {
   const wrap = document.getElementById('sr-board-wrap');
   wrap.innerHTML = '<div class="seat-empty">불러오는 중...</div>';
   document.getElementById('sr-fill-count').textContent = '—';
-  document.getElementById('sr-mycurr').style.display = 'none';
   document.getElementById('sr-submit-btn').disabled = true;
   document.getElementById('sr-submit-info').textContent = '좌석을 선택해주세요';
 
@@ -11315,33 +11238,15 @@ async function srSelectPeriod(periodId) {
     const { data: reqs, error } = await sb.client()
       .from('seat_requests')
       .select('학번, 장소, 좌석번호')
-      .eq('period_id', periodId);
+      .eq('period_id', period.id);
     if (error) throw error;
     SR.allRequests = reqs || [];
-    SR.myRequest = SR.allRequests.find(r => r.학번 === SR.no) || null;
-
-    if (SR.myRequest) {
-      const el = document.getElementById('sr-mycurr');
-      el.textContent = '내 현재 신청: ' + SR.myRequest.장소 + ' ' + SR.myRequest.좌석번호 + '번 (다른 좌석 선택 시 변경됩니다)';
-      el.style.display = 'block';
-      SR.pickedRoom = SR.myRequest.장소;
-      SR.pickedSeat = SR.myRequest.좌석번호;
-    }
-
     srRenderBoard();
     srUpdateSubmitState();
   } catch (e) {
     console.error('좌석 신청 조회 실패:', e);
     wrap.innerHTML = '<div class="seat-empty">불러오기 실패: ' + escapeHtml(e.message || '오류') + '</div>';
   }
-}
-
-function srBackToPeriods() {
-  document.getElementById('sr-board').style.display = 'none';
-  document.getElementById('sr-done').style.display = 'none';
-  SR.currentPeriod = null;
-  SR.pickedSeat = null;
-  srShowPeriods();
 }
 
 function srChangeSeat() {
@@ -11351,16 +11256,21 @@ function srChangeSeat() {
 
 function srSwitchRoom(room) {
   SR.pickedRoom = room;
+  // 탭 전환 시 좌석 선택 초기화 (다른 방의 좌석 번호는 의미가 다름)
+  // 단, 내가 이미 신청한 방으로 돌아가면 그 좌석 표시
+  if (SR.myRequest && SR.myRequest.장소 === room) {
+    SR.pickedSeat = SR.myRequest.좌석번호;
+  } else {
+    SR.pickedSeat = null;
+  }
   srRenderBoard();
+  srUpdateSubmitState();
 }
 
-// 좌석 도면 렌더링 (신청 모드, 통합 119석 풀)
 function srRenderBoard() {
-  const period = SR.currentPeriod;
   const currentRoom = SR.pickedRoom || '해오름';
   const layout = SEAT_LAYOUTS[currentRoom];
 
-  // 장소별 신청 카운트
   const cntHae = SR.allRequests.filter(r => r.장소 === '해오름').length;
   const cntLyk = SR.allRequests.filter(r => r.장소 === '리케이온').length;
   const totalHae = (SEAT_LAYOUTS['해오름'] && SEAT_LAYOUTS['해오름'].seats.length) || 0;
@@ -11372,13 +11282,11 @@ function srRenderBoard() {
     return;
   }
 
-  // 현재 탭 좌석별 신청 카운트
   const countBySeat = {};
   SR.allRequests.filter(r => r.장소 === currentRoom).forEach(r => {
     countBySeat[r.좌석번호] = (countBySeat[r.좌석번호] || 0) + 1;
   });
 
-  // 탭은 별도 영역에 렌더
   const tabsEl = document.getElementById('sr-room-tabs');
   if (tabsEl) {
     tabsEl.innerHTML =
@@ -11411,14 +11319,12 @@ function srRenderBoard() {
   html += '</div>';
   wrap.innerHTML = html;
 
-  // 도면 위 탭은 절대 위치가 아니므로 wrap 안에 들어가도 OK
   document.getElementById('sr-fill-count').textContent = (cntHae + cntLyk) + ' / ' + (totalHae + totalLyk);
 }
 
 function srPickSeat(seatNum) {
   if (!SR.currentPeriod) return;
   SR.pickedSeat = seatNum;
-  // pickedRoom은 현재 탭으로 이미 설정됨
   srRenderBoard();
   srUpdateSubmitState();
 }
@@ -11432,30 +11338,77 @@ function srUpdateSubmitState() {
     info.classList.remove('has-pick');
     return;
   }
-  const isSame = SR.myRequest &&
-                 SR.myRequest.장소 === SR.pickedRoom &&
-                 SR.myRequest.좌석번호 === SR.pickedSeat;
-  const isChange = SR.myRequest && !isSame;
-  const label = SR.pickedRoom + ' ' + SR.pickedSeat + '번';
-  if (isSame) {
-    btn.disabled = true;
-    info.textContent = '현재 신청한 좌석입니다 (' + label + ')';
-    info.classList.remove('has-pick');
-  } else {
-    btn.disabled = false;
-    info.textContent = (isChange ? '변경: ' : '선택: ') + label;
-    info.classList.add('has-pick');
-  }
+  btn.disabled = false;
+  info.textContent = '선택: ' + SR.pickedRoom + ' ' + SR.pickedSeat + '번';
+  info.classList.add('has-pick');
 }
 
-async function srSubmit() {
-  if (!SR.currentPeriod || !SR.pickedSeat || !SR.pickedRoom) return;
-  const btn = document.getElementById('sr-submit-btn');
+// ── 신청 확인 모달 (학번+이름 입력) ──
+function srOpenLoginModal() {
+  if (!SR.pickedSeat) return;
+  document.getElementById('sr-login-pick').textContent =
+    SR.pickedRoom + ' ' + SR.pickedSeat + '번 좌석 신청';
+  // 세션 복원
+  const savedNo = sessionStorage.getItem('sr_no');
+  const savedName = sessionStorage.getItem('sr_name');
+  document.getElementById('sr-login-no').value = savedNo || '';
+  document.getElementById('sr-login-name').value = savedName || '';
+  document.getElementById('sr-login-err').textContent = '';
+  srLoginOnInput();
+  document.getElementById('modal-sr-login').classList.add('on');
+  setTimeout(() => {
+    const el = savedNo ? document.getElementById('sr-login-name') : document.getElementById('sr-login-no');
+    el.focus();
+  }, 200);
+}
+
+function srCloseLoginModal() {
+  document.getElementById('modal-sr-login').classList.remove('on');
+}
+
+function srLoginOnInput() {
+  const no = document.getElementById('sr-login-no').value.trim();
+  const name = document.getElementById('sr-login-name').value.trim();
+  document.getElementById('sr-login-btn').disabled = !(/^\d{5}$/.test(no) && name.length >= 2);
+  document.getElementById('sr-login-err').textContent = '';
+}
+
+async function srLoginSubmit() {
+  const no = document.getElementById('sr-login-no').value.trim();
+  const name = document.getElementById('sr-login-name').value.trim();
+  const errEl = document.getElementById('sr-login-err');
+  const btn = document.getElementById('sr-login-btn');
+
+  if (!/^\d{5}$/.test(no)) { errEl.textContent = '학번 5자리를 입력해주세요'; return; }
+  if (name.length < 2) { errEl.textContent = '이름을 입력해주세요'; return; }
+  if (!SR.currentPeriod || !SR.pickedSeat) return;
+
   btn.disabled = true;
-  btn.textContent = '신청 중...';
+  btn.textContent = '확인 중...';
 
   try {
-    const { data, error } = await sb.client().rpc('submit_seat_request', {
+    // 1. 학생 검증
+    const stus = await sb.students.byNo(no);
+    if (!stus || stus.length === 0) {
+      errEl.textContent = '등록되지 않은 학번이에요';
+      btn.disabled = false;
+      btn.textContent = '신청 완료';
+      return;
+    }
+    const realName = (stus[0].이름 || '').replace(/\s/g, '');
+    if (realName !== name.replace(/\s/g, '')) {
+      errEl.textContent = '학번과 이름이 일치하지 않아요';
+      btn.disabled = false;
+      btn.textContent = '신청 완료';
+      return;
+    }
+    SR.no = no;
+    SR.name = stus[0].이름;
+    sessionStorage.setItem('sr_no', no);
+    sessionStorage.setItem('sr_name', SR.name);
+
+    // 2. RPC로 신청 제출
+    const { error } = await sb.client().rpc('submit_seat_request', {
       p_period_id: SR.currentPeriod.id,
       p_학번: SR.no,
       p_이름: SR.name,
@@ -11464,20 +11417,33 @@ async function srSubmit() {
     });
     if (error) throw error;
 
+    // 완료 화면
+    srCloseLoginModal();
     document.getElementById('sr-board').style.display = 'none';
     document.getElementById('sr-done').style.display = 'block';
     document.getElementById('sr-done-name').textContent = SR.name;
     document.getElementById('sr-done-period').textContent = SR.currentPeriod.제목;
     document.getElementById('sr-done-seat').textContent = SR.pickedRoom + ' ' + SR.pickedSeat + '번';
-
     SR.myRequest = { 학번: SR.no, 장소: SR.pickedRoom, 좌석번호: SR.pickedSeat };
   } catch (e) {
     console.error('좌석 신청 실패:', e);
-    alert('신청 실패: ' + (e.message || '오류'));
+    errEl.textContent = '신청 실패: ' + (e.message || '오류');
     btn.disabled = false;
+    btn.textContent = '신청 완료';
   }
-  btn.textContent = '신청하기';
 }
+
+function _srFmtDT(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return (d.getMonth()+1) + '/' + d.getDate() + ' ' +
+    String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
+// 모달 배경 클릭 닫기
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'modal-sr-login') srCloseLoginModal();
+});
 
 // ── 진입점: 좌석 배치도 조회 ──
 async function enterSeatBoardScreen() {
