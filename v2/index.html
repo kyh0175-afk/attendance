@@ -4475,6 +4475,7 @@ body.admin-readonly #admin-tab-diag {
 .seat-board-overlay{position:absolute;inset:0}
 .seat-marker{position:absolute;transform:translate(-50%,-50%);border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:700;border:2px solid transparent;transition:all .15s;box-sizing:border-box}
 .seat-marker.empty{background:rgba(212,175,103,1);color:#1a130c;border-color:rgba(80,55,15,.8);border-width:1px;font-weight:700}
+.seat-marker.disabled{background:rgba(60,55,50,.85);color:rgba(255,255,255,.4);border-color:rgba(80,75,70,.6);border-width:1px;font-weight:600;cursor:not-allowed;text-decoration:line-through}
 .seat-marker.empty:hover{background:rgba(123,160,135,1);transform:translate(-50%,-50%) scale(1.2);border-color:var(--sage);border-width:2px;color:#fff;z-index:5}
 .seat-marker.taken{background:rgba(200,127,94,.65);color:#fff;border-color:rgba(200,127,94,.85);cursor:pointer}
 .seat-marker.taken:hover{transform:translate(-50%,-50%) scale(1.1);z-index:5}
@@ -11297,22 +11298,27 @@ function srRenderBoard() {
   let html = '<img class="seat-board-img" src="' + layout.image + '" alt="' + escapeHtml(currentRoom) + '">';
   html += '<div class="seat-board-overlay">';
 
+  const disabledSet = new Set(layout.disabled || []);
   layout.seats.forEach(s => {
+    const isDisabled = disabledSet.has(s.n);
     const count = countBySeat[s.n] || 0;
     const isMine = SR.pickedRoom === currentRoom && SR.pickedSeat === s.n;
     const isOther = !isMine && count > 0;
     let cls = 'seat-marker ';
-    if (isMine) cls += 'mine';
+    if (isDisabled) cls += 'disabled';
+    else if (isMine) cls += 'mine';
     else if (isOther) cls += 'taken';
     else cls += 'empty';
 
     const sizeMul = 1.4;
     const w = s.w * sizeMul;
     const h = s.h * sizeMul;
+    const onclickAttr = isDisabled ? '' : 'onclick="srPickSeat(' + s.n + ')" ';
+    const titleText = isDisabled ? s.n + '번 (신청 불가)' : (s.n + '번' + (count > 0 ? ' · ' + count + '명 신청' : ''));
     html += '<div class="' + cls + '" ' +
       'style="left:' + s.x + '%;top:' + s.y + '%;width:' + w + '%;height:' + h + '%;font-size:clamp(9px, 1.4vw, 14px)" ' +
-      'onclick="srPickSeat(' + s.n + ')" ' +
-      'title="' + s.n + '번' + (count > 0 ? ' · ' + count + '명 신청' : '') + '">' +
+      onclickAttr +
+      'title="' + titleText + '">' +
       s.n +
       '</div>';
   });
