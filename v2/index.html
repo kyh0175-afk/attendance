@@ -7502,6 +7502,7 @@ const SEAT_LAYOUTS = {
   '해오름': {
     image: 'assets/seats-haereum.png',
     imgW: 1410, imgH: 905,
+    disabled: [2,3,6,7,9,11,13,16,17,19,21,23,25,27,29,32,33,36,37,40,41,44],
     seats: [
     {n:1,x:91.064,y:66.519,w:2.483,h:3.646},
     {n:2,x:83.192,y:66.298,w:2.553,h:3.646},
@@ -11339,6 +11340,11 @@ function srRenderBoard() {
 
 function srPickSeat(seatNum) {
   if (!SR.currentPeriod) return;
+  // disabled 좌석 체크 (이중 안전장치)
+  const layout = SEAT_LAYOUTS[SR.pickedRoom];
+  if (layout && layout.disabled && layout.disabled.indexOf(seatNum) >= 0) {
+    return;
+  }
   SR.pickedSeat = seatNum;
   srRenderBoard();
   srUpdateSubmitState();
@@ -11353,16 +11359,25 @@ function srUpdateSubmitState() {
     info.classList.remove('has-pick');
     return;
   }
+  // 현재 선택 좌석의 신청 인원 수 계산
+  const count = SR.allRequests.filter(r =>
+    r.장소 === SR.pickedRoom && r.좌석번호 === SR.pickedSeat
+  ).length;
   btn.disabled = false;
-  info.textContent = '선택: ' + SR.pickedRoom + ' ' + SR.pickedSeat + '번';
+  info.innerHTML = '선택: <strong>' + SR.pickedRoom + ' ' + SR.pickedSeat + '번</strong> · 현재 신청 ' +
+    '<strong style="color:' + (count > 0 ? 'var(--copper)' : 'var(--sage)') + '">' + count + '명</strong>';
   info.classList.add('has-pick');
 }
 
 // ── 신청 확인 모달 (학번+이름 입력) ──
 function srOpenLoginModal() {
   if (!SR.pickedSeat) return;
-  document.getElementById('sr-login-pick').textContent =
-    SR.pickedRoom + ' ' + SR.pickedSeat + '번 좌석 신청';
+  const count = SR.allRequests.filter(r =>
+    r.장소 === SR.pickedRoom && r.좌석번호 === SR.pickedSeat
+  ).length;
+  document.getElementById('sr-login-pick').innerHTML =
+    SR.pickedRoom + ' ' + SR.pickedSeat + '번 좌석 신청' +
+    '<div style="font-size:11px;color:var(--ink-dim);margin-top:4px;font-weight:400">현재 ' + count + '명 신청 중</div>';
   // 세션 복원
   const savedNo = sessionStorage.getItem('sr_no');
   const savedName = sessionStorage.getItem('sr_name');
@@ -11397,6 +11412,13 @@ async function srLoginSubmit() {
   if (!/^\d{5}$/.test(no)) { errEl.textContent = '학번 5자리를 입력해주세요'; return; }
   if (name.length < 2) { errEl.textContent = '이름을 입력해주세요'; return; }
   if (!SR.currentPeriod || !SR.pickedSeat) return;
+
+  // 최종 안전장치: disabled 좌석 차단
+  const layout = SEAT_LAYOUTS[SR.pickedRoom];
+  if (layout && layout.disabled && layout.disabled.indexOf(SR.pickedSeat) >= 0) {
+    errEl.textContent = '신청할 수 없는 좌석이에요. 다른 좌석을 선택해주세요.';
+    return;
+  }
 
   btn.disabled = true;
   btn.textContent = '확인 중...';
