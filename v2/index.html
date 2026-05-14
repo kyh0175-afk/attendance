@@ -4474,8 +4474,8 @@ body.admin-readonly #admin-tab-diag {
 .seat-board-img{display:block;width:100%;height:auto;user-select:none;pointer-events:none}
 .seat-board-overlay{position:absolute;inset:0}
 .seat-marker{position:absolute;transform:translate(-50%,-50%);border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:700;border:2px solid transparent;transition:all .15s;box-sizing:border-box}
-.seat-marker.empty{background:transparent;color:#3a2c1d;border-color:rgba(200,127,94,.5);border-width:1.5px;font-weight:600}
-.seat-marker.empty:hover{background:rgba(123,160,135,.4);transform:translate(-50%,-50%) scale(1.18);border-color:var(--sage);border-width:2.5px;color:#1a130c;z-index:5}
+.seat-marker.empty{background:rgba(212,175,103,1);color:#1a130c;border-color:rgba(80,55,15,.8);border-width:1px;font-weight:700}
+.seat-marker.empty:hover{background:rgba(123,160,135,1);transform:translate(-50%,-50%) scale(1.2);border-color:var(--sage);border-width:2px;color:#fff;z-index:5}
 .seat-marker.taken{background:rgba(200,127,94,.65);color:#fff;border-color:rgba(200,127,94,.85);cursor:pointer}
 .seat-marker.taken:hover{transform:translate(-50%,-50%) scale(1.1);z-index:5}
 .seat-marker.mine{background:var(--copper);color:#fff;border-color:var(--cream);box-shadow:0 0 0 3px rgba(200,127,94,.4);z-index:4}
@@ -11306,11 +11306,11 @@ function srRenderBoard() {
     else if (isOther) cls += 'taken';
     else cls += 'empty';
 
-    const sizeMul = 1.15;
+    const sizeMul = 1.4;
     const w = s.w * sizeMul;
     const h = s.h * sizeMul;
     html += '<div class="' + cls + '" ' +
-      'style="left:' + s.x + '%;top:' + s.y + '%;width:' + w + '%;height:' + h + '%;font-size:clamp(8px, 1.3vw, 13px)" ' +
+      'style="left:' + s.x + '%;top:' + s.y + '%;width:' + w + '%;height:' + h + '%;font-size:clamp(9px, 1.4vw, 14px)" ' +
       'onclick="srPickSeat(' + s.n + ')" ' +
       'title="' + s.n + '번' + (count > 0 ? ' · ' + count + '명 신청' : '') + '">' +
       s.n +
@@ -11528,9 +11528,9 @@ function sbSwitchRoom(room) {
     const a = bySeat[s.n];
     const cls = 'seat-marker ' + (a ? 'assigned' : 'empty');
     const label = a ? a.이름 + ' (' + a.좌석번호 + '번)' : s.n + '번';
-    const sizeMul = 1.15;
+    const sizeMul = 1.4;
     html += '<div class="' + cls + '" ' +
-      'style="left:' + s.x + '%;top:' + s.y + '%;width:' + s.w*sizeMul + '%;height:' + s.h*sizeMul + '%;font-size:clamp(8px, 1.1vw, 11px);padding:2px" ' +
+      'style="left:' + s.x + '%;top:' + s.y + '%;width:' + s.w*sizeMul + '%;height:' + s.h*sizeMul + '%;font-size:clamp(9px, 1.2vw, 12px);padding:2px" ' +
       'title="' + escapeAttr(label) + '">' +
       (a ? escapeHtml(a.이름) : s.n) +
       '</div>';
