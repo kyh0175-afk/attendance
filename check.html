@@ -2,84 +2,342 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>코스모스 독서시간 — 내 출석 확인</title>
+<title>코스모스 독서시간 — 학생용</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="refresh" content="0; url=./v2/?mode=check">
-<link rel="canonical" href="./v2/?mode=check">
-<script>
-  location.replace('./v2/?mode=check');
-</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&family=DM+Mono:wght@400&display=swap">
+
 <style>
-  body {
-    font-family: 'IBM Plex Sans KR', -apple-system, system-ui, sans-serif;
-    background: #2a1f15;
-    color: #f4e8d0;
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #1a130c;
+    --paper:     #2a1f15;
+    --paper2:    #322619;
+    --border:    rgba(214, 178, 124, 0.12);
+    --border2:   rgba(214, 178, 124, 0.22);
+    --amber:     #d6b27c;
+    --copper:    #c87f5e;
+    --cream:     #f4e8d0;
+    --ink:       #e8dcc4;
+    --ink-dim:   #a89880;
+    --ink-faint: #6b5d4a;
+    --info:      #5eb8ff;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans KR', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  body { overflow-x: hidden; }
+
+  .bg-texture {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(ellipse 100% 60% at 50% 0%, rgba(214, 178, 124, 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 80% 50% at 50% 100%, rgba(184, 84, 63, 0.04) 0%, transparent 60%),
+      var(--bg);
+    pointer-events: none;
+  }
+  .bg-noise {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.03;
+    background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0);
+    background-size: 3px 3px;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeIn 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .deco-top {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
-    margin: 0;
-    padding: 20px;
-    text-align: center;
+    gap: 14px;
+    margin-bottom: 22px;
+    color: var(--amber);
+    opacity: 0.6;
   }
-  .box {
-    max-width: 420px;
+  .deco-top .line {
+    width: 50px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--amber));
   }
+  .deco-top .line.right {
+    background: linear-gradient(to left, transparent, var(--amber));
+  }
+  .deco-top .ornament {
+    font-size: 12px;
+    letter-spacing: 0.3em;
+  }
+
   h1 {
     font-family: 'Cormorant Garamond', serif;
-    font-style: italic;
-    font-size: 48px;
+    font-size: clamp(48px, 8vw, 72px);
     font-weight: 500;
-    color: #f4e8d0;
-    margin: 0 0 8px;
+    font-style: italic;
+    color: var(--cream);
     letter-spacing: -0.01em;
+    line-height: 1;
+    margin-bottom: 8px;
   }
-  .sub {
-    font-size: 14px;
-    color: #a89880;
-    margin-bottom: 32px;
-    letter-spacing: 0.02em;
-  }
-  .msg {
-    font-size: 15px;
-    color: #e8dcc4;
-    margin-bottom: 20px;
-    line-height: 1.7;
-  }
-  a {
-    display: inline-block;
-    padding: 12px 24px;
-    background: transparent;
-    color: #d6b27c;
-    border: 1px solid #d6b27c;
-    border-radius: 2px;
-    text-decoration: none;
-    font-size: 14px;
-    letter-spacing: 0.08em;
-    transition: all 0.2s;
-  }
-  a:hover {
-    background: rgba(214, 178, 124, 0.1);
-  }
-  .note {
-    margin-top: 24px;
-    font-size: 12px;
-    color: #6b5d4a;
-    font-family: 'DM Mono', monospace;
+  .title-ko {
+    font-family: 'IBM Plex Sans KR', sans-serif;
+    font-size: clamp(16px, 2.5vw, 20px);
+    font-weight: 400;
+    color: var(--amber);
     letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+  .title-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-dim);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .cards {
+    display: flex;
+    gap: 22px;
+    width: 100%;
+    max-width: 720px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .card {
+    flex: 1;
+    min-width: 280px;
+    position: relative;
+    padding: 40px 32px;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.03) inset,
+      0 30px 60px -20px rgba(0, 0, 0, 0.5);
+    animation: cardIn 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+    text-align: left;
+    display: block;
+    width: 100%;
+    color: inherit;
+    text-decoration: none;
+    font-family: inherit;
+  }
+  .card:nth-child(1) { animation-delay: 0.2s; }
+  .card:nth-child(2) { animation-delay: 0.35s; }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card::before,
+  .card::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--amber);
+    opacity: 0.4;
+    transition: all 0.45s;
+  }
+  .card::before {
+    top: 12px;
+    left: 12px;
+    border-right: none;
+    border-bottom: none;
+  }
+  .card::after {
+    bottom: 12px;
+    right: 12px;
+    border-left: none;
+    border-top: none;
+  }
+
+  .card:hover {
+    background: var(--paper2);
+    border-color: var(--border2);
+    transform: translateY(-3px);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.05) inset,
+      0 50px 100px -30px rgba(0, 0, 0, 0.7);
+  }
+  .card:hover::before,
+  .card:hover::after {
+    opacity: 1;
+    width: 22px;
+    height: 22px;
+  }
+
+  .card-symbol {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 56px;
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1;
+    margin-bottom: 20px;
+    display: inline-block;
+  }
+  .card-check .card-symbol { color: var(--info); }
+  .card-seat .card-symbol  { color: var(--copper); }
+
+  .card-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+  }
+  .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 34px;
+    font-weight: 500;
+    font-style: italic;
+    color: var(--cream);
+    margin-bottom: 4px;
+    line-height: 1;
+  }
+  .card-title-ko {
+    font-family: 'IBM Plex Sans KR', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--amber);
+    margin-bottom: 20px;
+    letter-spacing: 0.05em;
+  }
+  .card-desc {
+    font-family: 'IBM Plex Sans KR', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--ink-dim);
+    line-height: 1.8;
+    margin-bottom: 24px;
+  }
+  .card-action {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--amber);
+    text-transform: uppercase;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    transition: all 0.4s;
+  }
+  .card:hover .card-action { border-top-color: var(--border2); }
+  .card-action .arrow {
+    display: inline-block;
+    transition: transform 0.4s;
+  }
+  .card:hover .card-action .arrow { transform: translateX(6px); }
+
+  .footer {
+    margin-top: 48px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.15em;
+    opacity: 0.5;
+    text-align: center;
+  }
+
+  @media (max-width: 560px) {
+    .wrap { padding: 40px 16px; }
+    .header { margin-bottom: 32px; }
+    .card { padding: 32px 24px; min-width: 0; }
+    .card-symbol { font-size: 44px; margin-bottom: 14px; }
+    .card-title { font-size: 28px; }
+    .card-desc { font-size: 12px; }
   }
 </style>
 </head>
 <body>
-<div class="box">
-  <h1>Cosmos</h1>
-  <div class="sub">내 출석 확인</div>
-  <div class="msg">
-    새 주소로 이동 중입니다.<br>
-    자동으로 이동되지 않으면 아래 버튼을 눌러주세요.
+
+<div class="bg-texture"></div>
+<div class="bg-noise"></div>
+
+<div class="wrap">
+  <div class="header">
+    <div class="deco-top">
+      <span class="line"></span>
+      <span class="ornament">❦</span>
+      <span class="line right"></span>
+    </div>
+    <h1>Cosmos</h1>
+    <div class="title-ko">코스모스 독서시간</div>
+    <div class="title-sub">FOR STUDENTS</div>
   </div>
-  <a href="./v2/?mode=check">내 출석 확인하기 →</a>
-  <div class="note">REDIRECT · v1 → v2</div>
+
+  <div class="cards">
+    <a class="card card-check" href="./v2/?mode=check">
+      <div class="card-symbol">C</div>
+      <div class="card-label">FOR STUDENTS</div>
+      <div class="card-title">Check</div>
+      <div class="card-title-ko">내 출석 확인</div>
+      <div class="card-desc">
+        내 출석 현황을 주간/월간으로 확인하고,<br>
+        결석 처리된 날 수정 요청을 보냅니다.
+      </div>
+      <div class="card-action">
+        <span>출석 확인하기</span>
+        <span class="arrow">→</span>
+      </div>
+    </a>
+
+    <a class="card card-seat" href="./v2/?mode=seat-request">
+      <div class="card-symbol">S</div>
+      <div class="card-label">FOR STUDENTS</div>
+      <div class="card-title">Seats</div>
+      <div class="card-title-ko">좌석 신청</div>
+      <div class="card-desc">
+        해오름·리케이온 좌석을 선택합니다.<br>
+        관리 프로그램 신청자 대상이에요.
+      </div>
+      <div class="card-action">
+        <span>좌석 신청하기</span>
+        <span class="arrow">→</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="footer">YUBONG · COSMOS READING · 2026</div>
 </div>
+
 </body>
 </html>
