@@ -4485,6 +4485,10 @@ body.admin-readonly #admin-tab-diag {
 .seat-marker{position:absolute;transform:translate(-50%,-50%);border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:700;border:2px solid transparent;transition:all .15s;box-sizing:border-box}
 .seat-marker.empty{background:rgba(212,175,103,1);color:#1a130c;border-color:rgba(80,55,15,.8);border-width:1px;font-weight:700}
 .seat-marker.disabled{background:rgba(60,55,50,.85);color:rgba(255,255,255,.4);border-color:rgba(80,75,70,.6);border-width:1px;font-weight:600;cursor:not-allowed;text-decoration:line-through}
+.sp-grade-chip{display:flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--cream);cursor:pointer;transition:all .15s}
+.sp-grade-chip:has(input:checked){background:rgba(214,178,124,.12);border-color:var(--amber);color:var(--amber)}
+.sp-grade-chip input{width:16px;height:16px;cursor:pointer;accent-color:var(--amber)}
+.sr-grade-label{display:inline-block;margin-left:8px;padding:2px 8px;background:rgba(214,178,124,.12);border:1px solid rgba(214,178,124,.3);border-radius:10px;font-size:11px;color:var(--amber);font-weight:600;vertical-align:middle}
 .seat-marker.empty:hover{background:rgba(123,160,135,1);transform:translate(-50%,-50%) scale(1.2);border-color:var(--sage);border-width:2px;color:#fff;z-index:5}
 .seat-marker.taken{background:rgba(200,127,94,.65);color:#fff;border-color:rgba(200,127,94,.85);cursor:pointer}
 .seat-marker.taken:hover{transform:translate(-50%,-50%) scale(1.1);z-index:5}
@@ -5732,8 +5736,16 @@ body.admin-readonly #admin-tab-diag {
         <label>신청 마감</label>
         <input type="datetime-local" id="sp-end">
       </div>
+      <div class="form-group full">
+        <label>신청 가능 학년</label>
+        <div id="sp-grades" style="display:flex;gap:8px;flex-wrap:wrap">
+          <label class="sp-grade-chip"><input type="checkbox" value="1" checked> 1학년</label>
+          <label class="sp-grade-chip"><input type="checkbox" value="2" checked> 2학년</label>
+          <label class="sp-grade-chip"><input type="checkbox" value="3" checked> 3학년</label>
+        </div>
+      </div>
     </div>
-    <div style="padding:10px 14px;background:rgba(214,178,124,.06);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);margin-bottom:12px">학생은 해오름·리케이온 전체 좌석 중에서 자유롭게 선택할 수 있어요.</div>
+    <div style="padding:10px 14px;background:rgba(214,178,124,.06);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);margin-bottom:12px">학생은 해오름·리케이온 전체 좌석 중에서 자유롭게 선택할 수 있어요. 선택한 학년의 학생만 신청할 수 있습니다.</div>
     <div class="modal-err" id="sp-err"></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="SEAT_ADMIN.closePeriodModal()">취소</button>
@@ -11203,6 +11215,13 @@ async function enterSeatRequestScreen() {
   }
 }
 
+function _srGradeLabel(grades) {
+  if (!grades || grades.length === 0) return '';
+  if (grades.length === 3) return '';  // 전 학년이면 라벨 생략
+  const sorted = [...grades].sort();
+  return '<span class="sr-grade-label">' + sorted.join('·') + '학년 대상</span>';
+}
+
 function srShowPeriods() {
   ['sr-board','sr-noperiod','sr-done'].forEach(id =>
     document.getElementById(id).style.display = 'none');
@@ -11217,7 +11236,7 @@ function srShowPeriods() {
     return '<div class="seat-period-card" onclick="srOpenBoard(' +
       'SR.periods.find(p=>p.id===' + p.id + '))">' +
       '<div class="seat-period-room">해오름 + 리케이온 통합</div>' +
-      '<div class="seat-period-title">' + escapeHtml(p.제목) + '</div>' +
+      '<div class="seat-period-title">' + escapeHtml(p.제목) + _srGradeLabel(p.허용학년) + '</div>' +
       '<div class="seat-period-time">' + _srFmtDT(p.신청시작) + ' ~ ' + _srFmtDT(p.신청마감) + '</div>' +
       '<span class="seat-period-status ' + stateCls + '">' + stateText + '</span>' +
       '</div>';
@@ -11237,7 +11256,10 @@ async function srOpenBoard(period) {
     document.getElementById(id).style.display = 'none');
   document.getElementById('sr-board').style.display = 'block';
   document.getElementById('sr-board-title').textContent = period.제목;
-  document.getElementById('sr-board-meta').textContent = '마감 ' + _srFmtDT(period.신청마감);
+  const gradeText = (period.허용학년 && period.허용학년.length > 0 && period.허용학년.length < 3)
+    ? ' · ' + [...period.허용학년].sort().join('·') + '학년 대상'
+    : '';
+  document.getElementById('sr-board-meta').textContent = '마감 ' + _srFmtDT(period.신청마감) + gradeText;
 
   const wrap = document.getElementById('sr-board-wrap');
   wrap.innerHTML = '<div class="seat-empty">불러오는 중...</div>';
@@ -11418,6 +11440,16 @@ async function srLoginSubmit() {
   if (layout && layout.disabled && layout.disabled.indexOf(SR.pickedSeat) >= 0) {
     errEl.textContent = '신청할 수 없는 좌석이에요. 다른 좌석을 선택해주세요.';
     return;
+  }
+
+  // 학년 제한 사전 검증 (학번 첫 자리)
+  const allowed = SR.currentPeriod.허용학년;
+  if (allowed && allowed.length > 0 && allowed.length < 3) {
+    const grade = parseInt(no.charAt(0), 10);
+    if (allowed.indexOf(grade) < 0) {
+      errEl.textContent = '이 신청 기간은 ' + [...allowed].sort().join('·') + '학년만 신청할 수 있어요.';
+      return;
+    }
   }
 
   btn.disabled = true;
@@ -11650,10 +11682,13 @@ const SEAT_ADMIN = {
     const statusKr = { draft: '작성중', open: '신청 중', closed: '마감', confirmed: '확정' };
     el.innerHTML = this.periods.map(p => {
       const sel = this.selectedPeriodId === p.id ? ' on' : '';
+      const gradeText = (p.허용학년 && p.허용학년.length > 0 && p.허용학년.length < 3)
+        ? '  ·  ' + [...p.허용학년].sort().join('·') + '학년'
+        : '';
       return '<div class="seat-admin-period' + sel + '" onclick="SEAT_ADMIN.selectPeriod(' + p.id + ')">' +
         '<div class="seat-admin-period-info">' +
         '<div class="seat-admin-period-title">' + escapeHtml(p.제목) + '</div>' +
-        '<div class="seat-admin-period-meta">' + _srFmtDT(p.신청시작) + ' ~ ' + _srFmtDT(p.신청마감) + '</div>' +
+        '<div class="seat-admin-period-meta">' + _srFmtDT(p.신청시작) + ' ~ ' + _srFmtDT(p.신청마감) + gradeText + '</div>' +
         '</div>' +
         '<span class="seat-admin-period-status ' + p.상태 + '">' + (statusKr[p.상태] || p.상태) + '</span>' +
         '</div>';
@@ -11977,6 +12012,8 @@ const SEAT_ADMIN = {
     document.getElementById('sp-start').value = this._toLocalInput(start);
     document.getElementById('sp-end').value = this._toLocalInput(end);
     document.getElementById('sp-err').textContent = '';
+    // 학년 체크박스 전부 체크로 리셋
+    document.querySelectorAll('#sp-grades input[type="checkbox"]').forEach(cb => { cb.checked = true; });
     document.getElementById('modal-seat-period').classList.add('on');
     setTimeout(() => document.getElementById('sp-title').focus(), 200);
   },
@@ -12002,6 +12039,11 @@ const SEAT_ADMIN = {
     if (!title) { errEl.textContent = '제목을 입력해주세요'; return; }
     if (!startStr || !endStr) { errEl.textContent = '시작/마감 시각을 입력해주세요'; return; }
 
+    // 학년 체크박스 수집
+    const grades = Array.from(document.querySelectorAll('#sp-grades input[type="checkbox"]:checked'))
+      .map(cb => parseInt(cb.value, 10));
+    if (grades.length === 0) { errEl.textContent = '신청 가능 학년을 1개 이상 선택해주세요'; return; }
+
     btn.disabled = true;
     btn.textContent = '생성 중...';
     try {
@@ -12014,6 +12056,7 @@ const SEAT_ADMIN = {
         p_신청시작: startIso,
         p_신청마감: endIso,
         p_생성자: teacherName,
+        p_허용학년: grades,
       });
       if (error) throw error;
 
