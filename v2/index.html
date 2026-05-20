@@ -4485,6 +4485,7 @@ body.admin-readonly #admin-tab-diag {
 .seat-marker{position:absolute;transform:translate(-50%,-50%);border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:700;border:2px solid transparent;transition:all .15s;box-sizing:border-box}
 .seat-marker.empty{background:rgba(212,175,103,1);color:#1a130c;border-color:rgba(80,55,15,.8);border-width:1px;font-weight:700}
 .seat-marker.disabled{background:rgba(60,55,50,.85);color:rgba(255,255,255,.4);border-color:rgba(80,75,70,.6);border-width:1px;font-weight:600;cursor:not-allowed;text-decoration:line-through}
+.seat-marker.cross-taken{background:rgba(94,184,255,.6);color:#1a130c;border-color:rgba(94,184,255,.8);border-width:1px;font-weight:700;cursor:not-allowed}
 .sp-grade-chip{display:flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--cream);cursor:pointer;transition:all .15s}
 .sp-grade-chip:has(input:checked){background:rgba(214,178,124,.12);border-color:var(--amber);color:var(--amber)}
 .sp-grade-chip input{width:16px;height:16px;cursor:pointer;accent-color:var(--amber)}
@@ -4501,6 +4502,7 @@ body.admin-readonly #admin-tab-diag {
 .seat-leg-box.empty{background:rgba(212,175,103,.95);border-color:rgba(140,100,40,.6)}
 .seat-leg-box.taken{background:rgba(200,127,94,.65);border-color:rgba(200,127,94,.85)}
 .seat-leg-box.mine{background:var(--copper);border-color:var(--cream)}
+.seat-leg-box.cross{background:rgba(94,184,255,.6);border-color:rgba(94,184,255,.8)}
 .seat-leg-count{display:inline-block;padding:1px 8px;background:rgba(214,178,124,.15);border:1px solid var(--border2);border-radius:10px;font-family:'DM Mono',monospace;font-size:11px;color:var(--amber)}
 
 .seat-submit-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);flex-wrap:wrap}
@@ -5193,6 +5195,7 @@ body.admin-readonly #admin-tab-diag {
         <div class="seat-leg-item"><span class="seat-leg-box empty"></span>빈 좌석</div>
         <div class="seat-leg-item"><span class="seat-leg-box taken"></span>신청됨</div>
         <div class="seat-leg-item"><span class="seat-leg-box mine"></span>내 선택</div>
+        <div class="seat-leg-item" id="sr-leg-cross" style="display:none"><span class="seat-leg-box cross"></span>다른 학년 배정</div>
         
       </div>
 
@@ -5772,12 +5775,51 @@ body.admin-readonly #admin-tab-diag {
           <label class="sp-grade-chip"><input type="checkbox" value="3" checked> 3학년</label>
         </div>
       </div>
+      <div class="form-group full">
+        <label>좌석 배치 월 (그룹)</label>
+        <input type="month" id="sp-month">
+      </div>
     </div>
-    <div style="padding:10px 14px;background:rgba(214,178,124,.06);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);margin-bottom:12px">학생은 해오름·리케이온 전체 좌석 중에서 자유롭게 선택할 수 있어요. 선택한 학년의 학생만 신청할 수 있습니다.</div>
+    <div style="padding:10px 14px;background:rgba(214,178,124,.06);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);margin-bottom:12px">같은 월의 다른 기간(예: 3학년 → 2학년)에서 이미 신청된 자리는 자동으로 차단됩니다. 학생은 해오름·리케이온 전체 좌석 중에서 자유롭게 선택할 수 있어요.</div>
     <div class="modal-err" id="sp-err"></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="SEAT_ADMIN.closePeriodModal()">취소</button>
       <button class="btn btn-primary" id="sp-save" onclick="SEAT_ADMIN.savePeriod()">만들기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 관리자 수동 추가 모달 -->
+<div class="modal-bg" id="modal-seat-manual">
+  <div class="modal student-modal">
+    <div class="student-modal-title">학생 수동 추가</div>
+    <div class="student-modal-subtitle">신청하지 못한 학생의 좌석을 직접 추가합니다</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>학번 (5자리)</label>
+        <input type="tel" id="sm-no" placeholder="10101" maxlength="5" inputmode="numeric" oninput="SEAT_ADMIN.onManualInput()">
+      </div>
+      <div class="form-group">
+        <label>이름</label>
+        <input type="text" id="sm-name" placeholder="자동 채움" oninput="SEAT_ADMIN.onManualInput()">
+      </div>
+      <div class="form-group">
+        <label>장소</label>
+        <select id="sm-room">
+          <option value="해오름">해오름</option>
+          <option value="리케이온">리케이온</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>좌석 번호</label>
+        <input type="number" id="sm-seat" min="1" max="75" placeholder="1~75">
+      </div>
+    </div>
+    <div style="padding:10px 14px;background:rgba(214,178,124,.06);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);margin-bottom:12px">학년 제한과 마감 시각을 무시하고 추가합니다. 같은 월의 다른 학생이 이미 신청한 자리는 차단됩니다.</div>
+    <div class="modal-err" id="sm-err"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="SEAT_ADMIN.closeManualModal()">취소</button>
+      <button class="btn btn-primary" id="sm-save" onclick="SEAT_ADMIN.saveManual()">추가</button>
     </div>
   </div>
 </div>
@@ -11200,6 +11242,7 @@ const SR = {
   currentPeriod: null,
   myRequest: null,      // {장소, 좌석번호}
   allRequests: [],
+  crossMonthOccupied: [],  // 같은 월의 타 기간이 점유한 좌석들
   pickedRoom: '해오름', // 현재 탭
   pickedSeat: null,
 };
@@ -11377,12 +11420,27 @@ async function srOpenBoard(period) {
   document.getElementById('sr-submit-info').textContent = '좌석을 선택해주세요';
 
   try {
+    // 현재 기간의 신청 자료
     const { data: reqs, error } = await sb.client()
       .from('seat_requests')
       .select('학번, 이름, 장소, 좌석번호')
       .eq('period_id', period.id);
     if (error) throw error;
     SR.allRequests = reqs || [];
+
+    // 같은 월의 타 기간 점유 자료 로드 (allRequests에 추가 — 본인 신청 외에는 모두 taken으로 처리)
+    SR.crossMonthOccupied = [];
+    if (period.좌석배치월) {
+      try {
+        const { data: monthData, error: mErr } = await sb.client().rpc('get_month_occupied_seats', {
+          p_month: period.좌석배치월,
+        });
+        if (!mErr && monthData) {
+          // 현재 기간이 아닌 자료만 따로
+          SR.crossMonthOccupied = monthData.filter(r => r.period_id !== period.id);
+        }
+      } catch (_) { /* 무시 — 그룹 미지정 또는 함수 호출 실패 시 점유 체크 생략 */ }
+    }
 
     // 본인의 기존 신청 찾기
     const mine = SR.allRequests.find(r => r.학번 === SR.no);
@@ -11491,13 +11549,22 @@ function srRenderBoard() {
   html += '<div class="seat-board-overlay">';
 
   const disabledSet = new Set(layout.disabled || []);
+  // 같은 월의 타 기간이 점유한 좌석 (현재 방 기준)
+  const crossOccupiedMap = {};
+  (SR.crossMonthOccupied || []).filter(r => r.장소 === currentRoom).forEach(r => {
+    crossOccupiedMap[r.좌석번호] = r;
+  });
+
   layout.seats.forEach(s => {
     const isDisabled = disabledSet.has(s.n);
+    const crossR = crossOccupiedMap[s.n];
+    const isCrossTaken = !!crossR;
     const count = countBySeat[s.n] || 0;
     const isMine = SR.pickedRoom === currentRoom && SR.pickedSeat === s.n;
     const isOther = !isMine && count > 0;
     let cls = 'seat-marker ';
     if (isDisabled) cls += 'disabled';
+    else if (isCrossTaken) cls += 'cross-taken';
     else if (isMine) cls += 'mine';
     else if (isOther) cls += 'taken';
     else cls += 'empty';
@@ -11505,8 +11572,17 @@ function srRenderBoard() {
     const sizeMul = 1.4;
     const w = s.w * sizeMul;
     const h = s.h * sizeMul;
-    const onclickAttr = isDisabled ? '' : 'onclick="srPickSeat(' + s.n + ')" ';
-    const titleText = isDisabled ? s.n + '번 (신청 불가)' : (s.n + '번' + (count > 0 ? ' · ' + count + '명 신청' : ''));
+    const clickable = !isDisabled && !isCrossTaken;
+    const onclickAttr = clickable ? 'onclick="srPickSeat(' + s.n + ')" ' : '';
+    let titleText;
+    if (isDisabled) titleText = s.n + '번 (신청 불가)';
+    else if (isCrossTaken) {
+      const gradeLabel = (crossR.허용학년 && crossR.허용학년.length > 0 && crossR.허용학년.length < 3)
+        ? [...crossR.허용학년].sort().join('·') + '학년'
+        : '다른 학년';
+      titleText = s.n + '번 (' + gradeLabel + ' 배정)';
+    }
+    else titleText = s.n + '번' + (count > 0 ? ' · ' + count + '명 신청' : '');
     html += '<div class="' + cls + '" ' +
       'style="left:' + s.x + '%;top:' + s.y + '%;width:' + w + '%;height:' + h + '%;font-size:clamp(9px, 1.4vw, 14px)" ' +
       onclickAttr +
@@ -11517,6 +11593,11 @@ function srRenderBoard() {
   html += '</div>';
   wrap.innerHTML = html;
 
+  // cross 점유가 있으면 범례 표시
+  const legCross = document.getElementById('sr-leg-cross');
+  if (legCross) {
+    legCross.style.display = (SR.crossMonthOccupied && SR.crossMonthOccupied.length > 0) ? '' : 'none';
+  }
   // fill-count 제거됨
 }
 
@@ -11527,6 +11608,11 @@ function srPickSeat(seatNum) {
   if (layout && layout.disabled && layout.disabled.indexOf(seatNum) >= 0) {
     return;
   }
+  // cross-month 점유 체크
+  const isCrossTaken = (SR.crossMonthOccupied || []).some(r =>
+    r.장소 === SR.pickedRoom && r.좌석번호 === seatNum
+  );
+  if (isCrossTaken) return;
   SR.pickedSeat = seatNum;
   srRenderBoard();
   srUpdateSubmitState();
@@ -11697,13 +11783,34 @@ async function enterSeatBoardScreen() {
       return;
     }
 
-    const period = confirmed[0];
-    SB_VIEW.period = period;
+    const latestPeriod = confirmed[0];
+    SB_VIEW.period = latestPeriod;
 
+    // 같은 좌석배치월의 모든 confirmed 기간 (월이 없으면 latestPeriod 단독)
+    let allPeriods = [latestPeriod];
+    let metaText = '';
+    if (latestPeriod.좌석배치월) {
+      const { data: monthPeriods } = await sb.client()
+        .from('seat_periods')
+        .select('*')
+        .eq('상태', 'confirmed')
+        .eq('좌석배치월', latestPeriod.좌석배치월)
+        .order('수정일시', { ascending: true });
+      if (monthPeriods && monthPeriods.length > 0) {
+        allPeriods = monthPeriods;
+      }
+      metaText = latestPeriod.좌석배치월.replace('-', '년 ') + '월 배치 · ' +
+        allPeriods.length + '개 기간 통합';
+    } else {
+      metaText = latestPeriod.제목 + ' · 확정 ' + _srFmtDT(latestPeriod.수정일시);
+    }
+
+    // 모든 기간의 assignments 합치기
+    const periodIds = allPeriods.map(p => p.id);
     const { data: assignments } = await sb.client()
       .from('seat_assignments')
       .select('*')
-      .eq('period_id', period.id);
+      .in('period_id', periodIds);
 
     SB_VIEW.assignmentsByRoom = { '해오름': [], '리케이온': [] };
     (assignments || []).forEach(a => {
@@ -11712,8 +11819,7 @@ async function enterSeatBoardScreen() {
       }
     });
 
-    document.getElementById('sb-meta').textContent =
-      period.제목 + ' · 확정 ' + _srFmtDT(period.수정일시);
+    document.getElementById('sb-meta').textContent = metaText;
 
     // 장소 탭
     const tabsEl = document.getElementById('sb-tabs');
@@ -11845,10 +11951,11 @@ const SEAT_ADMIN = {
       const gradeText = (p.허용학년 && p.허용학년.length > 0 && p.허용학년.length < 3)
         ? '  ·  ' + [...p.허용학년].sort().join('·') + '학년'
         : '';
+      const monthText = p.좌석배치월 ? '  ·  ' + p.좌석배치월 + ' 그룹' : '';
       return '<div class="seat-admin-period' + sel + '" onclick="SEAT_ADMIN.selectPeriod(' + p.id + ')">' +
         '<div class="seat-admin-period-info">' +
         '<div class="seat-admin-period-title">' + escapeHtml(p.제목) + '</div>' +
-        '<div class="seat-admin-period-meta">' + _srFmtDT(p.신청시작) + ' ~ ' + _srFmtDT(p.신청마감) + gradeText + '</div>' +
+        '<div class="seat-admin-period-meta">' + _srFmtDT(p.신청시작) + ' ~ ' + _srFmtDT(p.신청마감) + gradeText + monthText + '</div>' +
         '</div>' +
         '<span class="seat-admin-period-status ' + p.상태 + '">' + (statusKr[p.상태] || p.상태) + '</span>' +
         '</div>';
@@ -11893,6 +12000,7 @@ const SEAT_ADMIN = {
       actionsHtml += '<button class="admin-btn primary" ' + (conflicts.length > 0 ? 'disabled' : '') +
         ' onclick="SEAT_ADMIN.confirmAssignments()">' + confirmLabel + conflictNote + '</button>';
     }
+    actionsHtml += '<button class="admin-btn" onclick="SEAT_ADMIN.openManualModal()">+ 학생 수동 추가</button>';
     actionsHtml += '<button class="admin-btn danger" onclick="SEAT_ADMIN.deletePeriod()">기간 삭제</button>';
 
     let conflictHtml = '';
@@ -11980,6 +12088,80 @@ const SEAT_ADMIN = {
     }
     html += '</div>';
     el.innerHTML = html;
+  },
+
+  openManualModal() {
+    if (!this.selectedPeriodId) return;
+    document.getElementById('sm-no').value = '';
+    document.getElementById('sm-name').value = '';
+    document.getElementById('sm-seat').value = '';
+    document.getElementById('sm-room').value = '해오름';
+    document.getElementById('sm-err').textContent = '';
+    document.getElementById('modal-seat-manual').classList.add('on');
+    setTimeout(() => document.getElementById('sm-no').focus(), 200);
+  },
+
+  closeManualModal() {
+    document.getElementById('modal-seat-manual').classList.remove('on');
+  },
+
+  async onManualInput() {
+    const no = document.getElementById('sm-no').value.trim();
+    const errEl = document.getElementById('sm-err');
+    errEl.textContent = '';
+    // 5자리 학번이면 학생 검색해서 이름 자동 채움
+    if (/^\d{5}$/.test(no)) {
+      try {
+        const stus = await sb.students.byNo(no);
+        if (stus && stus.length > 0) {
+          const nameInput = document.getElementById('sm-name');
+          if (!nameInput.value.trim()) {
+            nameInput.value = stus[0].이름;
+          }
+        }
+      } catch (_) {}
+    }
+  },
+
+  async saveManual() {
+    const no = document.getElementById('sm-no').value.trim();
+    const name = document.getElementById('sm-name').value.trim();
+    const room = document.getElementById('sm-room').value;
+    const seatNum = parseInt(document.getElementById('sm-seat').value, 10);
+    const errEl = document.getElementById('sm-err');
+    const btn = document.getElementById('sm-save');
+    errEl.textContent = '';
+
+    if (!/^\d{5}$/.test(no)) { errEl.textContent = '학번 5자리를 입력해주세요'; return; }
+    if (!name || name.length < 2) { errEl.textContent = '이름을 입력해주세요'; return; }
+    if (!seatNum || seatNum < 1) { errEl.textContent = '좌석 번호를 입력해주세요'; return; }
+
+    // disabled 좌석 체크 (UI에서만, RPC는 막지 않음)
+    const layout = SEAT_LAYOUTS[room];
+    if (layout && layout.disabled && layout.disabled.indexOf(seatNum) >= 0) {
+      if (!confirm(room + ' ' + seatNum + '번은 일반 신청이 차단된 좌석이에요. 그래도 배치할까요?')) return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '추가 중...';
+    try {
+      const { error } = await sb.client().rpc('admin_add_seat_request', {
+        p_period_id: this.selectedPeriodId,
+        p_학번: no,
+        p_이름: name,
+        p_장소: room,
+        p_좌석번호: seatNum,
+      });
+      if (error) throw error;
+      this.closeManualModal();
+      showAdminToast(name + ' 추가됨 (' + room + ' ' + seatNum + '번)', 'ok');
+      await this.selectPeriod(this.selectedPeriodId);
+    } catch (e) {
+      errEl.textContent = e.message || '오류';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '추가';
+    }
   },
 
   async removeRequest(학번) {
@@ -12174,6 +12356,10 @@ const SEAT_ADMIN = {
     document.getElementById('sp-err').textContent = '';
     // 학년 체크박스 전부 체크로 리셋
     document.querySelectorAll('#sp-grades input[type="checkbox"]').forEach(cb => { cb.checked = true; });
+    // 좌석 배치 월 기본값: 신청 시작의 년-월
+    const pad = (n) => String(n).padStart(2, '0');
+    const monthStr = start.getFullYear() + '-' + pad(start.getMonth() + 1);
+    document.getElementById('sp-month').value = monthStr;
     document.getElementById('modal-seat-period').classList.add('on');
     setTimeout(() => document.getElementById('sp-title').focus(), 200);
   },
@@ -12217,6 +12403,7 @@ const SEAT_ADMIN = {
         p_신청마감: endIso,
         p_생성자: teacherName,
         p_허용학년: grades,
+        p_좌석배치월: document.getElementById('sp-month').value || null,
       });
       if (error) throw error;
 
@@ -12248,6 +12435,7 @@ switchAdminTab = function(tab) {
 document.addEventListener('click', (e) => {
   if (e.target.id === 'modal-seat-period') SEAT_ADMIN.closePeriodModal();
   if (e.target.id === 'modal-seat-reason') SEAT_ADMIN.closeReasonModal();
+  if (e.target.id === 'modal-seat-manual') SEAT_ADMIN.closeManualModal();
 });
 
 // ══════════════════════════════════════════════════════════════
