@@ -4570,6 +4570,8 @@ body.admin-readonly #admin-tab-diag {
 .seat-admin-detail-actions{display:flex;gap:8px;flex-wrap:wrap}
 .seat-admin-req-table{width:100%;border-collapse:collapse;font-family:'IBM Plex Sans KR',sans-serif}
 .seat-admin-req-table th{padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--amber);letter-spacing:.05em;text-transform:uppercase;background:rgba(0,0,0,.2);border-bottom:1px solid var(--border2)}
+.seat-admin-req-table th.sortable{cursor:pointer;user-select:none;transition:background .15s}
+.seat-admin-req-table th.sortable:hover{background:rgba(214,178,124,.15)}
 .seat-admin-req-table td{padding:10px 12px;border-bottom:1px solid rgba(214,178,124,.05);font-size:13px;color:var(--ink)}
 .seat-admin-req-table tr:last-child td{border-bottom:none}
 .seat-admin-req-table tr.has-change td{background:rgba(245,166,35,.04)}
@@ -11884,6 +11886,8 @@ const SEAT_ADMIN = {
   assignments: [],         // [{학번, 이름, 장소, 좌석번호, 학생신청장소, 학생신청좌석, 변경사유}]
   pendingReasonCtx: null,
   detailTab: '해오름',     // 상세 화면의 현재 탭
+  sortKey: '학번',         // 정렬 기준: '학번' | '이름' | '학생신청'
+  sortDir: 'asc',          // 'asc' | 'desc'
 
   async refresh() {
     await this._loadPeriods();
@@ -12000,6 +12004,7 @@ const SEAT_ADMIN = {
       actionsHtml += '<button class="admin-btn primary" ' + (conflicts.length > 0 ? 'disabled' : '') +
         ' onclick="SEAT_ADMIN.confirmAssignments()">' + confirmLabel + conflictNote + '</button>';
     }
+    actionsHtml += '<button class="admin-btn" onclick="SEAT_ADMIN.downloadXlsx()">📥 xlsx 다운로드</button>';
     actionsHtml += '<button class="admin-btn" onclick="SEAT_ADMIN.openManualModal()">+ 학생 수동 추가</button>';
     actionsHtml += '<button class="admin-btn danger" onclick="SEAT_ADMIN.deletePeriod()">기간 삭제</button>';
 
@@ -12046,15 +12051,37 @@ const SEAT_ADMIN = {
 
     // 현재 탭에 해당하는 학생만 표시
     const filtered = this.assignments.filter(a => a.장소 === this.detailTab);
-    const sorted = [...filtered].sort((a, b) =>
-      String(a.학번).localeCompare(String(b.학번), undefined, { numeric: true }));
+    // 정렬 적용
+    const sortKey = this.sortKey || '학번';
+    const sortDir = this.sortDir || 'asc';
+    const sorted = [...filtered].sort((a, b) => {
+      let va, vb;
+      if (sortKey === '학번') { va = String(a.학번); vb = String(b.학번); }
+      else if (sortKey === '이름') { va = String(a.이름 || ''); vb = String(b.이름 || ''); }
+      else if (sortKey === '학생신청') {
+        const ra = (a.학생신청장소 || '') + ':' + (a.학생신청좌석 || 0).toString().padStart(3, '0');
+        const rb = (b.학생신청장소 || '') + ':' + (b.학생신청좌석 || 0).toString().padStart(3, '0');
+        va = ra; vb = rb;
+      }
+      else { va = String(a.학번); vb = String(b.학번); }
+      const cmp = va.localeCompare(vb, undefined, { numeric: true });
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+
+    const arrow = (key) => {
+      if (this.sortKey !== key) return '<span style="opacity:.3">↕</span>';
+      return this.sortDir === 'asc' ? '↑' : '↓';
+    };
 
     if (sorted.length === 0) {
       html += '<div class="seat-empty">' + this.detailTab + ' 좌석을 신청한 학생이 없어요</div>';
     } else {
       const totalSeats = (SEAT_LAYOUTS[this.detailTab] && SEAT_LAYOUTS[this.detailTab].seats.length) || 0;
       html += '<table class="seat-admin-req-table"><thead><tr>' +
-        '<th>학번</th><th>이름</th><th>학생 신청</th><th>최종 배치</th><th>변경 사유</th><th></th>' +
+        '<th class="sortable" onclick="SEAT_ADMIN.toggleSort(\'학번\')">학번 ' + arrow('학번') + '</th>' +
+        '<th class="sortable" onclick="SEAT_ADMIN.toggleSort(\'이름\')">이름 ' + arrow('이름') + '</th>' +
+        '<th class="sortable" onclick="SEAT_ADMIN.toggleSort(\'학생신청\')">학생 신청 ' + arrow('학생신청') + '</th>' +
+        '<th>최종 배치</th><th>변경 사유</th><th></th>' +
         '</tr></thead><tbody>';
       sorted.forEach(a => {
         const isLocationChanged = a.학생신청장소 && a.학생신청장소 !== a.장소;
@@ -12162,6 +12189,73 @@ const SEAT_ADMIN = {
       btn.disabled = false;
       btn.textContent = '추가';
     }
+  },
+
+  toggleSort(key) {
+    if (this.sortKey === key) {
+      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortKey = key;
+      this.sortDir = 'asc';
+    }
+    const p = this.periods.find(x => x.id === this.selectedPeriodId);
+    if (p) this._renderDetail(p);
+  },
+
+  async downloadXlsx() {
+    if (!this.selectedPeriodId) return;
+    if (typeof XLSX === 'undefined') {
+      showAdminToast('xlsx 라이브러리 로드 실패', 'err');
+      return;
+    }
+    const period = this.periods.find(p => p.id === this.selectedPeriodId);
+    if (!period) return;
+
+    // 학번 오름차순 + 장소(해오름 → 리케이온) + 좌석 순서
+    const data = [...this.assignments].sort((a, b) => {
+      const roomOrder = { '해오름': 0, '리케이온': 1 };
+      const ra = roomOrder[a.장소] !== undefined ? roomOrder[a.장소] : 9;
+      const rb = roomOrder[b.장소] !== undefined ? roomOrder[b.장소] : 9;
+      if (ra !== rb) return ra - rb;
+      const sa = a.좌석번호 || 999;
+      const sb_ = b.좌석번호 || 999;
+      if (sa !== sb_) return sa - sb_;
+      return String(a.학번).localeCompare(String(b.학번), undefined, { numeric: true });
+    });
+
+    const rows = [['학번', '이름', '학년', '학생 신청 장소', '학생 신청 좌석', '최종 배치 장소', '최종 배치 좌석', '변경 사유']];
+    data.forEach(a => {
+      const grade = a.학번 ? parseInt(String(a.학번).charAt(0), 10) : '';
+      rows.push([
+        a.학번 || '',
+        a.이름 || '',
+        grade,
+        a.학생신청장소 || '',
+        a.학생신청좌석 || '',
+        a.장소 || '',
+        a.좌석번호 || '',
+        a.변경사유 || '',
+      ]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    // 열 너비
+    ws['!cols'] = [
+      { wch: 9 }, { wch: 10 }, { wch: 6 },
+      { wch: 14 }, { wch: 14 },
+      { wch: 14 }, { wch: 14 },
+      { wch: 30 },
+    ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '좌석 신청');
+
+    // 파일명: 좌석신청_제목_YYYY-MM-DD.xlsx
+    const safeName = (period.제목 || '좌석신청').replace(/[\\/:*?"<>|]/g, '_');
+    const today = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const dateStr = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
+    XLSX.writeFile(wb, '좌석신청_' + safeName + '_' + dateStr + '.xlsx');
+    showAdminToast('xlsx 다운로드됨', 'ok');
   },
 
   async removeRequest(학번) {
