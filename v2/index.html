@@ -5945,10 +5945,11 @@ body.admin-readonly #admin-tab-diag {
 
     <div style="padding:12px 14px;background:rgba(214,178,124,.06);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);margin-bottom:14px;line-height:1.7">
       <strong style="color:var(--amber)">엑셀 형식:</strong> 첫 행은 컬럼명, 두 번째 행부터 데이터<br>
-      <strong>학번</strong>(5자리 텍스트), <strong>이름</strong>, <strong>프로그램</strong>(방과후/야간/심야/주말),
-      <strong>장소</strong>(해오름/리케이온/아우름/교과1실), <strong>좌석번호</strong>(자유석은 빈칸),
-      <strong>월</strong>, <strong>화</strong>, <strong>수</strong>, <strong>목</strong>, <strong>금</strong>, <strong>토</strong>, <strong>일</strong> (참여 요일은 1·O·예 등 비어있지 않은 값)<br><br>
-      이미 있는 학생/스케줄은 <strong>업데이트</strong>되고, 새 학생은 <strong>추가</strong>됩니다. 엑셀에 없는 학생은 명단에서 삭제되지 않습니다.
+      <strong>학번</strong>(5자리), <strong>이름</strong>, <strong>프로그램</strong>(방과후/야간/심야/주말),
+      <strong>장소</strong>(해오름/리케이온/아우름/교과1실), <strong>좌석번호</strong>,
+      <strong>월·화·수·목·금·토·일</strong> (참여 요일은 1·O·예 등 비어있지 않은 값)<br><br>
+      <strong style="color:var(--sage)">부분 업데이트:</strong> 좌석번호가 비어있으면 <strong>기존 좌석번호 유지</strong>, 장소가 비어있으면 같은 학번+프로그램의 기존 행 자동 매칭. 요일은 항상 엑셀 값으로 덮어씁니다.<br>
+      이미 있는 학생/스케줄은 업데이트, 새 학생은 추가, 엑셀에 없는 학생은 삭제되지 않습니다.
     </div>
 
     <div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap">
@@ -5981,16 +5982,16 @@ body.admin-readonly #admin-tab-diag {
         <input type="month" id="ci-month">
       </div>
       <div class="form-group full">
-        <label>등록할 프로그램</label>
-        <select id="ci-program">
-          <option value="야간">야간</option>
-          <option value="방과후">방과후</option>
-          <option value="심야">심야</option>
-          <option value="주말">주말</option>
-        </select>
+        <label>등록할 프로그램 (복수 선택 가능)</label>
+        <div id="ci-programs" style="display:flex;gap:8px;flex-wrap:wrap">
+          <label class="sp-grade-chip"><input type="checkbox" value="방과후" checked> 방과후</label>
+          <label class="sp-grade-chip"><input type="checkbox" value="야간" checked> 야간</label>
+          <label class="sp-grade-chip"><input type="checkbox" value="심야"> 심야</label>
+          <label class="sp-grade-chip"><input type="checkbox" value="주말"> 주말</label>
+        </div>
       </div>
     </div>
-    <div style="padding:10px 14px;background:rgba(214,178,124,.06);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);margin-bottom:12px">선택한 월의 <strong>확정된</strong> 좌석 배치(해오름·리케이온)를 가져와서 위 프로그램의 코스모스 명단에 등록합니다. 이미 등록된 학생/스케줄은 건너뜁니다 (덮어쓰지 않음).</div>
+    <div style="padding:10px 14px;background:rgba(214,178,124,.06);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);margin-bottom:12px">선택한 월의 <strong>확정된</strong> 좌석 배치(해오름·리케이온)를 가져와서 <strong>선택한 모든 프로그램</strong>의 코스모스 명단에 등록합니다. 같은 좌석번호가 양쪽(방과후+야간)에 동일하게 들어가고, 요일은 빈 상태로 시작합니다. 이미 등록된 행은 건너뜁니다.</div>
     <div class="modal-err" id="ci-err"></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="COSMOS.closeImportModal()">취소</button>
@@ -11188,7 +11189,10 @@ const COSMOS = {
       return t.getFullYear() + '-' + pad(t.getMonth() + 1);
     })();
     document.getElementById('ci-month').value = month;
-    document.getElementById('ci-program').value = '야간';
+    // 기본값: 방과후+야간 체크, 심야·주말 해제
+    document.querySelectorAll('#ci-programs input[type="checkbox"]').forEach(cb => {
+      cb.checked = (cb.value === '방과후' || cb.value === '야간');
+    });
     document.getElementById('ci-err').textContent = '';
     document.getElementById('modal-cosmos-import').classList.add('on');
   },
@@ -11199,7 +11203,8 @@ const COSMOS = {
 
   async runImport() {
     const month = document.getElementById('ci-month').value;
-    const program = document.getElementById('ci-program').value;
+    const programs = Array.from(document.querySelectorAll('#ci-programs input[type="checkbox"]:checked'))
+      .map(cb => cb.value);
     const errEl = document.getElementById('ci-err');
     const btn = document.getElementById('ci-save');
     errEl.textContent = '';
@@ -11208,13 +11213,17 @@ const COSMOS = {
       errEl.textContent = '월을 올바른 형식으로 선택해주세요 (예: 2026-05)';
       return;
     }
+    if (programs.length === 0) {
+      errEl.textContent = '등록할 프로그램을 1개 이상 선택해주세요';
+      return;
+    }
 
     btn.disabled = true;
     btn.textContent = '가져오는 중...';
     try {
       const { data, error } = await sb.client().rpc('import_cosmos_from_seats', {
         p_좌석배치월: month,
-        p_프로그램: program,
+        p_프로그램들: programs,
       });
       if (error) throw error;
       if (data && data.success === false) {
@@ -11615,13 +11624,17 @@ const COSMOS = {
     }
     const headers = ['학번','이름','프로그램','장소','좌석번호','월','화','수','목','금','토','일'];
     const sample = [
-      ['10101', '강정미', '방과후', '교과1실', '', '1', '1', '', '1', '1', '', ''],
-      ['30103', '김경주', '야간', '리케이온', '1', '1', '1', '1', '1', '1', '', ''],
-      ['30103', '김경주', '심야', '리케이온', '1', '1', '1', '', '', '', '', ''],
+      // 2·3학년 — 좌석 가져오기로 이미 등록된 학생의 요일만 채우는 케이스 (좌석번호 빈칸)
+      ['30103', '김경주', '야간',   '리케이온', '', '1', '1', '1', '1', '1', '', ''],
+      ['30103', '김경주', '방과후', '리케이온', '', '1', '1', '',  '1', '1', '', ''],
+      ['30103', '김경주', '심야',   '리케이온', '1', '1', '1', '', '', '', '', ''],
+      // 1학년 자유석 — 장소만 입력, 좌석번호 비움
+      ['10101', '강정미', '방과후', '교과1실', '', '1', '1', '',  '1', '1', '', ''],
+      ['10101', '강정미', '야간',   '아우름', '',  '1', '',  '1', '1', '',  '', ''],
     ];
     const ws = XLSX.utils.aoa_to_sheet([headers, ...sample]);
     ws['!cols'] = [
-      { wch: 8 }, { wch: 10 }, { wch: 8 }, { wch: 9 }, { wch: 7 },
+      { wch: 8 }, { wch: 10 }, { wch: 8 }, { wch: 9 }, { wch: 8 },
       ...Array(7).fill({ wch: 4 }),
     ];
     const wb = XLSX.utils.book_new();
