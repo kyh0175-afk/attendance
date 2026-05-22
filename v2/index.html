@@ -4541,6 +4541,47 @@ body.admin-readonly #admin-tab-diag {
 
 /* 좌석 관리 (관리자) */
 .seat-admin-rooms{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:24px}
+
+/* 코스모스 명단 관리 */
+.cosmos-control-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;padding:14px 18px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px}
+.cosmos-month-picker{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink-dim)}
+.cosmos-month-picker label{font-weight:500}
+.cosmos-month-picker select,.cosmos-month-picker input[type="month"]{background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:var(--r);padding:7px 12px;font-family:'DM Mono',monospace;font-size:13px;color:var(--cream);min-width:130px;outline:none}
+.cosmos-actions{display:flex;flex-wrap:wrap;gap:8px}
+.cosmos-filter-bar{display:flex;flex-wrap:wrap;gap:18px;padding:12px 18px;background:rgba(0,0,0,.15);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px}
+.cosmos-filter-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cosmos-filter-label{font-family:'IBM Plex Sans KR',sans-serif;font-size:11px;color:var(--amber);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-right:4px}
+.cosmos-chip{padding:5px 12px;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:14px;font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);cursor:pointer;transition:all .15s}
+.cosmos-chip:hover{border-color:var(--amber);color:var(--cream)}
+.cosmos-chip.on{background:rgba(214,178,124,.18);border-color:var(--amber);color:var(--amber);font-weight:600}
+.cosmos-conflicts{padding:12px 16px;background:rgba(184,84,63,.1);border:1px solid rgba(184,84,63,.4);border-radius:var(--r);margin-bottom:14px;font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--terra);line-height:1.6}
+.cosmos-conflicts-title{font-weight:700;margin-bottom:6px}
+.cosmos-conflict-item{font-size:12px;color:var(--cream);margin-left:8px}
+.cosmos-summary{display:flex;gap:18px;flex-wrap:wrap;padding:10px 18px;font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);margin-bottom:8px}
+.cosmos-summary strong{color:var(--amber);font-weight:600}
+.cosmos-matrix{width:100%;border-collapse:collapse;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.cosmos-matrix th{padding:10px 8px;background:rgba(0,0,0,.25);font-family:'IBM Plex Sans KR',sans-serif;font-size:11px;font-weight:600;color:var(--amber);letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--border2);text-align:center;white-space:nowrap}
+.cosmos-matrix td{padding:6px 8px;border-bottom:1px solid var(--border);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--cream);text-align:center;vertical-align:middle}
+.cosmos-matrix tr:hover{background:rgba(214,178,124,.04)}
+.cosmos-matrix td.no{font-family:'DM Mono',monospace;color:var(--ink-dim);text-align:left;padding-left:14px}
+.cosmos-matrix td.name{text-align:left;font-weight:500}
+.cosmos-matrix select,.cosmos-matrix input[type="number"]{background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--cream);outline:none;width:90px}
+.cosmos-matrix input[type="number"]{width:60px;text-align:center;font-family:'DM Mono',monospace}
+.cosmos-day-cell{width:34px;cursor:pointer;user-select:none}
+.cosmos-day-toggle{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:rgba(0,0,0,.25);border:1px solid var(--border);font-size:12px;font-weight:600;color:var(--ink-dim);transition:all .15s}
+.cosmos-day-toggle.on{background:rgba(123,160,135,.7);border-color:var(--sage);color:#fff}
+.cosmos-day-toggle.conflict{background:rgba(184,84,63,.7);border-color:var(--terra);color:#fff}
+.cosmos-day-cell:hover .cosmos-day-toggle:not(.on){background:rgba(214,178,124,.15);border-color:var(--amber)}
+.cosmos-matrix .actions{white-space:nowrap}
+.cosmos-empty{padding:60px 20px;text-align:center;color:var(--ink-faint);font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r)}
+@media (max-width: 768px) {
+  .cosmos-control-bar{flex-direction:column;align-items:stretch}
+  .cosmos-actions{justify-content:flex-start}
+  .cosmos-matrix{font-size:11px}
+  .cosmos-matrix select,.cosmos-matrix input[type="number"]{font-size:11px;padding:4px 6px}
+}
+
+
 .seat-admin-room-card{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .seat-admin-room-card.active{border-color:rgba(0,200,150,.4);background:rgba(0,200,150,.04)}
 .seat-admin-room-name{font-family:'IBM Plex Sans KR',sans-serif;font-size:15px;font-weight:600;color:var(--cream)}
@@ -5348,6 +5389,10 @@ body.admin-readonly #admin-tab-diag {
           <span class="admin-nav-icon">S</span>
           <span>좌석 관리</span>
         </button>
+        <button class="admin-nav-item" data-tab="cosmos" onclick="switchAdminTab('cosmos')">
+          <span class="admin-nav-icon">C</span>
+          <span>코스모스</span>
+        </button>
         <button class="admin-nav-item" data-tab="diag" onclick="switchAdminTab('diag')">
           <span class="admin-nav-icon">D</span>
           <span>진단</span>
@@ -5595,6 +5640,72 @@ body.admin-readonly #admin-tab-diag {
 
         <!-- 선택된 기간의 신청/배치 관리 -->
         <div id="seat-admin-detail"></div>
+      </div>
+
+      <!-- 탭 8: 코스모스 명단 관리 (Phase 5) -->
+      <div class="admin-tab-pane" id="admin-tab-cosmos">
+        <div class="admin-page-header">
+          <div class="admin-page-title">코스모스 명단</div>
+          <div class="admin-page-actions">
+            <button class="admin-btn" onclick="COSMOS.refresh()">🔄 새로고침</button>
+          </div>
+        </div>
+
+        <!-- 컨트롤 바: 월 선택 + 액션 -->
+        <div class="cosmos-control-bar">
+          <div class="cosmos-month-picker">
+            <label>좌석 배치 월:</label>
+            <select id="cosmos-month-select" onchange="COSMOS.onMonthChange()">
+              <option value="">불러오는 중...</option>
+            </select>
+            <input type="month" id="cosmos-month-input" style="display:none">
+            <button class="admin-btn admin-btn-sm" onclick="COSMOS.newMonth()">+ 새 월</button>
+          </div>
+          <div class="cosmos-actions">
+            <button class="admin-btn" onclick="COSMOS.openImportModal()">📥 좌석 배치 가져오기</button>
+            <button class="admin-btn" onclick="COSMOS.openAddStudentModal()">+ 학생 직접 추가</button>
+            <button class="admin-btn" disabled title="2단계 이후">📤 명단 xlsx 업로드</button>
+            <button class="admin-btn" disabled title="5단계 이후">📥 출석부 xlsx 다운로드</button>
+          </div>
+        </div>
+
+        <!-- 필터 바 -->
+        <div class="cosmos-filter-bar">
+          <div class="cosmos-filter-group">
+            <span class="cosmos-filter-label">학년</span>
+            <button class="cosmos-chip on" data-filter="grade" data-value="all" onclick="COSMOS.setFilter('grade','all')">전체</button>
+            <button class="cosmos-chip" data-filter="grade" data-value="1" onclick="COSMOS.setFilter('grade','1')">1학년</button>
+            <button class="cosmos-chip" data-filter="grade" data-value="2" onclick="COSMOS.setFilter('grade','2')">2학년</button>
+            <button class="cosmos-chip" data-filter="grade" data-value="3" onclick="COSMOS.setFilter('grade','3')">3학년</button>
+          </div>
+          <div class="cosmos-filter-group">
+            <span class="cosmos-filter-label">프로그램</span>
+            <button class="cosmos-chip on" data-filter="program" data-value="all" onclick="COSMOS.setFilter('program','all')">전체</button>
+            <button class="cosmos-chip" data-filter="program" data-value="방과후" onclick="COSMOS.setFilter('program','방과후')">방과후</button>
+            <button class="cosmos-chip" data-filter="program" data-value="야간" onclick="COSMOS.setFilter('program','야간')">야간</button>
+            <button class="cosmos-chip" data-filter="program" data-value="심야" onclick="COSMOS.setFilter('program','심야')">심야</button>
+            <button class="cosmos-chip" data-filter="program" data-value="주말" onclick="COSMOS.setFilter('program','주말')">주말</button>
+          </div>
+          <div class="cosmos-filter-group">
+            <span class="cosmos-filter-label">장소</span>
+            <button class="cosmos-chip on" data-filter="room" data-value="all" onclick="COSMOS.setFilter('room','all')">전체</button>
+            <button class="cosmos-chip" data-filter="room" data-value="해오름" onclick="COSMOS.setFilter('room','해오름')">해오름</button>
+            <button class="cosmos-chip" data-filter="room" data-value="리케이온" onclick="COSMOS.setFilter('room','리케이온')">리케이온</button>
+            <button class="cosmos-chip" data-filter="room" data-value="아우름" onclick="COSMOS.setFilter('room','아우름')">아우름</button>
+            <button class="cosmos-chip" data-filter="room" data-value="교과1실" onclick="COSMOS.setFilter('room','교과1실')">교과1실</button>
+          </div>
+        </div>
+
+        <!-- 충돌 알림 -->
+        <div id="cosmos-conflicts" class="cosmos-conflicts" style="display:none"></div>
+
+        <!-- 요약 카운트 -->
+        <div id="cosmos-summary" class="cosmos-summary"></div>
+
+        <!-- 매트릭스 테이블 -->
+        <div id="cosmos-matrix-wrap">
+          <div class="seat-empty">월을 선택해주세요</div>
+        </div>
       </div>
 
       <!-- 탭 6: 진단 (오늘 대시보드 + 기기 로그) -->
@@ -8285,6 +8396,8 @@ function switchAdminTab(tab) {
     if (!A.analysisLoaded) { loadAnalysis(); } else { renderAnalysis(); }
   } else if (tab === 'requests') {
     if (!RQ.loaded) { loadRequests(); } else { renderRequests(); }
+  } else if (tab === 'cosmos') {
+    COSMOS.enter();
   }
 }
 
@@ -10819,6 +10932,266 @@ function checkProgramStartAllowed(program) {
   if (nowMin < limitMin) return { ok: false, limitStr: limit };
   return { ok: true };
 }
+
+// ══════════════════════════════════════════════════════════════
+//  코스모스 명단 관리 (Phase 5)
+//  - cosmos_members + cosmos_schedule 테이블 기반
+//  - 좌석 배치 가져오기, 학생 수동 추가, 명단 xlsx 입출력
+// ══════════════════════════════════════════════════════════════
+const COSMOS = {
+  months: [],            // 사용 가능한 좌석배치월 목록
+  currentMonth: null,
+  members: [],           // [{학번, 이름, 출처, 좌석배치월, 비고, ...}]
+  schedules: [],         // [{id, 학번, 프로그램, 장소, 좌석번호, 요일, 좌석배치월}]
+  conflicts: [],         // [{프로그램, 장소, 좌석번호, 요일, 학번들, 이름들}]
+  filters: { grade: 'all', program: 'all', room: 'all' },
+  sortKey: '학번',
+  sortDir: 'asc',
+  loaded: false,
+
+  // ── 진입 (탭 전환 시 호출) ──
+  async enter() {
+    if (this.loaded) return;
+    await this.refresh();
+    this.loaded = true;
+  },
+
+  async refresh() {
+    try {
+      // 사용 가능한 월 목록
+      const { data: months, error: mErr } = await sb.client().rpc('get_cosmos_months');
+      if (mErr) throw mErr;
+      this.months = (months || []).map(r => r.좌석배치월).filter(Boolean);
+
+      // 현재 월 기본값: 가장 최근 월 (없으면 이번 달)
+      if (!this.currentMonth) {
+        if (this.months.length > 0) {
+          this.currentMonth = this.months[0];
+        } else {
+          const now = new Date();
+          const pad = (n) => String(n).padStart(2, '0');
+          this.currentMonth = now.getFullYear() + '-' + pad(now.getMonth() + 1);
+        }
+      }
+
+      this._renderMonthSelect();
+      await this._loadMonthData();
+      this._renderAll();
+    } catch (e) {
+      console.error('COSMOS refresh 실패:', e);
+      showAdminToast('코스모스 명단 로드 실패: ' + (e.message || '오류'), 'err');
+    }
+  },
+
+  async _loadMonthData() {
+    const month = this.currentMonth;
+    if (!month) {
+      this.members = [];
+      this.schedules = [];
+      this.conflicts = [];
+      return;
+    }
+    // members 전체 (학번 PK라 월별 필터 안 함 — 모든 학생 명단 항상 표시)
+    const { data: members, error: e1 } = await sb.client()
+      .from('cosmos_members')
+      .select('*')
+      .order('학번', { ascending: true });
+    if (e1) throw e1;
+    this.members = members || [];
+
+    // schedules: 현재 월만
+    const { data: schedules, error: e2 } = await sb.client()
+      .from('cosmos_schedule')
+      .select('*')
+      .eq('좌석배치월', month)
+      .order('학번', { ascending: true });
+    if (e2) throw e2;
+    this.schedules = schedules || [];
+
+    // 충돌 자료
+    const { data: conflicts } = await sb.client().rpc('get_cosmos_conflicts', { p_month: month });
+    this.conflicts = conflicts || [];
+  },
+
+  _renderMonthSelect() {
+    const sel = document.getElementById('cosmos-month-select');
+    if (!sel) return;
+    if (this.months.length === 0) {
+      sel.innerHTML = '<option value="">(월 없음)</option>';
+      return;
+    }
+    sel.innerHTML = this.months.map(m =>
+      '<option value="' + m + '"' + (m === this.currentMonth ? ' selected' : '') + '>' + m + '</option>'
+    ).join('');
+  },
+
+  async onMonthChange() {
+    const sel = document.getElementById('cosmos-month-select');
+    this.currentMonth = sel.value || null;
+    await this._loadMonthData();
+    this._renderAll();
+  },
+
+  newMonth() {
+    // 임시: prompt로 입력 받음 (좌석 배치 가져오기와 연동될 때 모달로 교체)
+    const today = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const def = today.getFullYear() + '-' + pad(today.getMonth() + 1);
+    const m = prompt('새로 작업할 좌석 배치 월을 입력해주세요 (YYYY-MM)', def);
+    if (!m || !/^\d{4}-\d{2}$/.test(m)) {
+      if (m) showAdminToast('형식이 올바르지 않아요 (예: 2026-05)', 'err');
+      return;
+    }
+    // 목록에 없으면 임시로 추가
+    if (this.months.indexOf(m) < 0) {
+      this.months.unshift(m);
+    }
+    this.currentMonth = m;
+    this._renderMonthSelect();
+    this._loadMonthData().then(() => this._renderAll());
+  },
+
+  setFilter(key, value) {
+    this.filters[key] = value;
+    // 칩 UI 갱신
+    document.querySelectorAll('[data-filter="' + key + '"]').forEach(el => {
+      el.classList.toggle('on', el.getAttribute('data-value') === value);
+    });
+    this._renderMatrix();
+  },
+
+  // ── 임시 (2단계에서 구현) ──
+  openImportModal() {
+    showAdminToast('2단계에서 구현 예정', 'err');
+  },
+  openAddStudentModal() {
+    showAdminToast('2단계에서 구현 예정', 'err');
+  },
+
+  // ── 렌더링 ──
+  _renderAll() {
+    this._renderConflicts();
+    this._renderSummary();
+    this._renderMatrix();
+  },
+
+  _renderConflicts() {
+    const el = document.getElementById('cosmos-conflicts');
+    if (!el) return;
+    if (!this.conflicts || this.conflicts.length === 0) {
+      el.style.display = 'none';
+      return;
+    }
+    let html = '<div class="cosmos-conflicts-title">⚠ 좌석 점유 충돌 ' + this.conflicts.length + '건</div>';
+    this.conflicts.forEach(c => {
+      const names = (c.이름들 || []).join(', ');
+      html += '<div class="cosmos-conflict-item">· ' + c.프로그램 + ' / ' + c.장소 + ' ' + c.좌석번호 + '번 / ' + c.요일 + '요일 → ' + names + '</div>';
+    });
+    el.innerHTML = html;
+    el.style.display = 'block';
+  },
+
+  _renderSummary() {
+    const el = document.getElementById('cosmos-summary');
+    if (!el) return;
+    const totalStudents = new Set(this.schedules.map(s => s.학번)).size;
+    const totalRows = this.schedules.length;
+    const byGrade = { 1: 0, 2: 0, 3: 0 };
+    new Set(this.schedules.map(s => s.학번)).forEach(no => {
+      const g = parseInt(String(no).charAt(0), 10);
+      if (byGrade[g] !== undefined) byGrade[g]++;
+    });
+    el.innerHTML =
+      '<div>전체 <strong>' + totalStudents + '명</strong> · ' + totalRows + '개 등록</div>' +
+      '<div>1학년 <strong>' + byGrade[1] + '명</strong></div>' +
+      '<div>2학년 <strong>' + byGrade[2] + '명</strong></div>' +
+      '<div>3학년 <strong>' + byGrade[3] + '명</strong></div>';
+  },
+
+  _renderMatrix() {
+    const wrap = document.getElementById('cosmos-matrix-wrap');
+    if (!wrap) return;
+
+    if (!this.currentMonth) {
+      wrap.innerHTML = '<div class="cosmos-empty">월을 선택해주세요</div>';
+      return;
+    }
+
+    // 학번별 이름 매핑
+    const nameByNo = {};
+    this.members.forEach(m => { nameByNo[m.학번] = m.이름; });
+
+    // 필터 적용
+    const f = this.filters;
+    let rows = this.schedules.filter(s => {
+      const grade = parseInt(String(s.학번).charAt(0), 10);
+      if (f.grade !== 'all' && grade !== parseInt(f.grade, 10)) return false;
+      if (f.program !== 'all' && s.프로그램 !== f.program) return false;
+      if (f.room !== 'all' && s.장소 !== f.room) return false;
+      return true;
+    });
+
+    // 정렬
+    rows.sort((a, b) => {
+      const k = this.sortKey;
+      let va, vb;
+      if (k === '학번') { va = String(a.학번); vb = String(b.학번); }
+      else if (k === '이름') { va = nameByNo[a.학번] || ''; vb = nameByNo[b.학번] || ''; }
+      else { va = String(a.학번); vb = String(b.학번); }
+      const cmp = va.localeCompare(vb, undefined, { numeric: true });
+      return this.sortDir === 'asc' ? cmp : -cmp;
+    });
+
+    if (rows.length === 0) {
+      wrap.innerHTML = '<div class="cosmos-empty">' +
+        (this.schedules.length === 0
+          ? '이 월에 등록된 학생이 없어요. "좌석 배치 가져오기" 또는 "학생 직접 추가"로 시작하세요.'
+          : '필터 조건에 맞는 학생이 없어요.') +
+        '</div>';
+      return;
+    }
+
+    // 충돌 빠르게 lookup 할 수 있는 set
+    const conflictKey = new Set();  // "프로그램|장소|좌석번호|요일"
+    (this.conflicts || []).forEach(c => {
+      conflictKey.add(c.프로그램 + '|' + c.장소 + '|' + c.좌석번호 + '|' + c.요일);
+    });
+
+    const days = ['월','화','수','목','금','토','일'];
+    let html = '<table class="cosmos-matrix"><thead><tr>' +
+      '<th>학번</th><th>이름</th><th>학년</th>' +
+      '<th>프로그램</th><th>장소</th><th>좌석</th>' +
+      days.map(d => '<th>' + d + '</th>').join('') +
+      '<th></th>' +
+      '</tr></thead><tbody>';
+
+    rows.forEach(r => {
+      const name = nameByNo[r.학번] || '?';
+      const grade = parseInt(String(r.학번).charAt(0), 10);
+      html += '<tr>' +
+        '<td class="no">' + escapeHtml(r.학번) + '</td>' +
+        '<td class="name">' + escapeHtml(name) + '</td>' +
+        '<td>' + grade + '</td>' +
+        '<td>' + escapeHtml(r.프로그램) + '</td>' +
+        '<td>' + escapeHtml(r.장소) + '</td>' +
+        '<td>' + (r.좌석번호 != null ? r.좌석번호 : '—') + '</td>';
+      days.forEach(d => {
+        const isOn = (r.요일 || []).indexOf(d) >= 0;
+        const isConflict = isOn && r.좌석번호 != null &&
+          conflictKey.has(r.프로그램 + '|' + r.장소 + '|' + r.좌석번호 + '|' + d);
+        const cls = 'cosmos-day-toggle' + (isOn ? ' on' : '') + (isConflict ? ' conflict' : '');
+        html += '<td class="cosmos-day-cell">' +
+          '<span class="' + cls + '">' + d + '</span>' +
+          '</td>';
+      });
+      html += '<td class="actions"><button class="admin-btn admin-btn-sm" disabled title="3단계">편집</button></td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+  },
+};
+
 
 const DIAG_SCHEDULE = [
   // 평일
