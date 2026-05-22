@@ -5937,6 +5937,93 @@ body.admin-readonly #admin-tab-diag {
   </div>
 </div>
 
+<!-- 코스모스: 좌석 배치 가져오기 모달 -->
+<div class="modal-bg" id="modal-cosmos-import">
+  <div class="modal student-modal" style="max-width:480px">
+    <div class="student-modal-title">좌석 배치 가져오기</div>
+    <div class="student-modal-subtitle">확정된 좌석 배치 결과를 코스모스 명단으로 가져옵니다</div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>좌석 배치 월</label>
+        <input type="month" id="ci-month">
+      </div>
+      <div class="form-group full">
+        <label>등록할 프로그램</label>
+        <select id="ci-program">
+          <option value="야간">야간</option>
+          <option value="방과후">방과후</option>
+          <option value="심야">심야</option>
+          <option value="주말">주말</option>
+        </select>
+      </div>
+    </div>
+    <div style="padding:10px 14px;background:rgba(214,178,124,.06);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);margin-bottom:12px">선택한 월의 <strong>확정된</strong> 좌석 배치(해오름·리케이온)를 가져와서 위 프로그램의 코스모스 명단에 등록합니다. 이미 등록된 학생/스케줄은 건너뜁니다 (덮어쓰지 않음).</div>
+    <div class="modal-err" id="ci-err"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="COSMOS.closeImportModal()">취소</button>
+      <button class="btn btn-primary" id="ci-save" onclick="COSMOS.runImport()">가져오기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 코스모스: 학생 직접 추가 모달 -->
+<div class="modal-bg" id="modal-cosmos-add">
+  <div class="modal student-modal" style="max-width:520px">
+    <div class="student-modal-title">학생 직접 추가</div>
+    <div class="student-modal-subtitle">현재 작업 중인 월에 코스모스 학생을 추가합니다</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>학번 (5자리)</label>
+        <input type="tel" id="ca-no" placeholder="10101" maxlength="5" inputmode="numeric" oninput="COSMOS.onAddInput()">
+      </div>
+      <div class="form-group">
+        <label>이름</label>
+        <input type="text" id="ca-name" placeholder="자동 채움" oninput="COSMOS.onAddInput()">
+      </div>
+      <div class="form-group">
+        <label>프로그램</label>
+        <select id="ca-program">
+          <option value="방과후">방과후</option>
+          <option value="야간" selected>야간</option>
+          <option value="심야">심야</option>
+          <option value="주말">주말</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>장소</label>
+        <select id="ca-room">
+          <option value="해오름">해오름</option>
+          <option value="리케이온">리케이온</option>
+          <option value="아우름">아우름</option>
+          <option value="교과1실">교과1실</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>좌석 번호 (선택)</label>
+        <input type="number" id="ca-seat" min="1" max="75" placeholder="자유석은 비워두세요">
+      </div>
+      <div class="form-group">
+        <label>참여 요일</label>
+        <div id="ca-days" style="display:flex;gap:6px;flex-wrap:wrap">
+          <label class="sp-grade-chip"><input type="checkbox" value="월"> 월</label>
+          <label class="sp-grade-chip"><input type="checkbox" value="화"> 화</label>
+          <label class="sp-grade-chip"><input type="checkbox" value="수"> 수</label>
+          <label class="sp-grade-chip"><input type="checkbox" value="목"> 목</label>
+          <label class="sp-grade-chip"><input type="checkbox" value="금"> 금</label>
+          <label class="sp-grade-chip"><input type="checkbox" value="토"> 토</label>
+          <label class="sp-grade-chip"><input type="checkbox" value="일"> 일</label>
+        </div>
+      </div>
+    </div>
+    <div style="padding:10px 14px;background:rgba(214,178,124,.06);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);margin-bottom:12px">같은 학번에 같은 프로그램·장소가 이미 있으면 좌석/요일이 새 값으로 덮어쓰여집니다. 다른 프로그램(예: 방과후+야간)은 별도 행으로 추가됩니다.</div>
+    <div class="modal-err" id="ca-err"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="COSMOS.closeAddStudentModal()">취소</button>
+      <button class="btn btn-primary" id="ca-save" onclick="COSMOS.saveAddStudent()">추가</button>
+    </div>
+  </div>
+</div>
+
 <!-- 좌석 변경 사유 입력 모달 -->
 <div class="modal-bg" id="modal-seat-reason">
   <div class="modal student-modal" style="max-width:440px">
@@ -11060,12 +11147,145 @@ const COSMOS = {
     this._renderMatrix();
   },
 
-  // ── 임시 (2단계에서 구현) ──
+  // ── 좌석 배치 가져오기 ──
   openImportModal() {
-    showAdminToast('2단계에서 구현 예정', 'err');
+    const month = this.currentMonth || (() => {
+      const t = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      return t.getFullYear() + '-' + pad(t.getMonth() + 1);
+    })();
+    document.getElementById('ci-month').value = month;
+    document.getElementById('ci-program').value = '야간';
+    document.getElementById('ci-err').textContent = '';
+    document.getElementById('modal-cosmos-import').classList.add('on');
   },
+
+  closeImportModal() {
+    document.getElementById('modal-cosmos-import').classList.remove('on');
+  },
+
+  async runImport() {
+    const month = document.getElementById('ci-month').value;
+    const program = document.getElementById('ci-program').value;
+    const errEl = document.getElementById('ci-err');
+    const btn = document.getElementById('ci-save');
+    errEl.textContent = '';
+
+    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+      errEl.textContent = '월을 올바른 형식으로 선택해주세요 (예: 2026-05)';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '가져오는 중...';
+    try {
+      const { data, error } = await sb.client().rpc('import_cosmos_from_seats', {
+        p_좌석배치월: month,
+        p_프로그램: program,
+      });
+      if (error) throw error;
+      if (data && data.success === false) {
+        errEl.textContent = data.message || '가져오기 실패';
+        return;
+      }
+      this.closeImportModal();
+      showAdminToast(data.message || '완료', 'ok');
+      // 가져온 월로 자동 전환
+      this.currentMonth = month;
+      if (this.months.indexOf(month) < 0) this.months.unshift(month);
+      this._renderMonthSelect();
+      await this._loadMonthData();
+      this._renderAll();
+    } catch (e) {
+      errEl.textContent = e.message || '오류';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '가져오기';
+    }
+  },
+
+  // ── 학생 직접 추가 ──
   openAddStudentModal() {
-    showAdminToast('2단계에서 구현 예정', 'err');
+    if (!this.currentMonth) {
+      showAdminToast('먼저 좌석 배치 월을 선택해주세요', 'err');
+      return;
+    }
+    document.getElementById('ca-no').value = '';
+    document.getElementById('ca-name').value = '';
+    document.getElementById('ca-program').value = '야간';
+    document.getElementById('ca-room').value = '해오름';
+    document.getElementById('ca-seat').value = '';
+    document.querySelectorAll('#ca-days input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+    document.getElementById('ca-err').textContent = '';
+    document.getElementById('modal-cosmos-add').classList.add('on');
+    setTimeout(() => document.getElementById('ca-no').focus(), 100);
+  },
+
+  closeAddStudentModal() {
+    document.getElementById('modal-cosmos-add').classList.remove('on');
+  },
+
+  async onAddInput() {
+    const no = document.getElementById('ca-no').value.trim();
+    const errEl = document.getElementById('ca-err');
+    errEl.textContent = '';
+    // 5자리 학번이면 학생 검색해서 이름 자동 채움
+    if (/^\d{5}$/.test(no)) {
+      try {
+        const stus = await sb.students.byNo(no);
+        if (stus && stus.length > 0) {
+          const nameInput = document.getElementById('ca-name');
+          if (!nameInput.value.trim()) {
+            nameInput.value = stus[0].이름;
+          }
+        }
+      } catch (_) {}
+    }
+  },
+
+  async saveAddStudent() {
+    const no = document.getElementById('ca-no').value.trim();
+    const name = document.getElementById('ca-name').value.trim();
+    const program = document.getElementById('ca-program').value;
+    const room = document.getElementById('ca-room').value;
+    const seatRaw = document.getElementById('ca-seat').value.trim();
+    const seat = seatRaw ? parseInt(seatRaw, 10) : null;
+    const days = Array.from(document.querySelectorAll('#ca-days input[type="checkbox"]:checked'))
+      .map(cb => cb.value);
+    const errEl = document.getElementById('ca-err');
+    const btn = document.getElementById('ca-save');
+    errEl.textContent = '';
+
+    if (!/^\d{5}$/.test(no)) { errEl.textContent = '학번 5자리를 입력해주세요'; return; }
+    if (!name || name.length < 2) { errEl.textContent = '이름을 입력해주세요'; return; }
+    if (seatRaw && (isNaN(seat) || seat < 1)) {
+      errEl.textContent = '좌석 번호가 올바르지 않아요 (1 이상)';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '추가 중...';
+    try {
+      const { data, error } = await sb.client().rpc('add_cosmos_student', {
+        p_학번: no,
+        p_이름: name,
+        p_프로그램: program,
+        p_장소: room,
+        p_좌석번호: seat,
+        p_요일: days,
+        p_좌석배치월: this.currentMonth,
+      });
+      if (error) throw error;
+      this.closeAddStudentModal();
+      showAdminToast(name + ' (' + no + ') 추가됨', 'ok');
+      await this._loadMonthData();
+      this._renderAll();
+    } catch (e) {
+      errEl.textContent = e.message || '오류';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '추가';
+    }
   },
 
   // ── 렌더링 ──
@@ -13035,6 +13255,8 @@ document.addEventListener('click', (e) => {
   if (e.target.id === 'modal-seat-period') SEAT_ADMIN.closePeriodModal();
   if (e.target.id === 'modal-seat-reason') SEAT_ADMIN.closeReasonModal();
   if (e.target.id === 'modal-seat-manual') SEAT_ADMIN.closeManualModal();
+  if (e.target.id === 'modal-cosmos-import') COSMOS.closeImportModal();
+  if (e.target.id === 'modal-cosmos-add') COSMOS.closeAddStudentModal();
 });
 
 // ══════════════════════════════════════════════════════════════
