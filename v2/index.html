@@ -5665,7 +5665,7 @@ body.admin-readonly #admin-tab-diag {
             <button class="admin-btn" onclick="COSMOS.openImportModal()">📥 좌석 배치 가져오기</button>
             <button class="admin-btn" onclick="COSMOS.openAddStudentModal()">+ 학생 직접 추가</button>
             <button class="admin-btn" onclick="COSMOS.openUploadModal()">📤 명단 xlsx 업로드</button>
-            <button class="admin-btn" disabled title="5단계 이후">📥 출석부 xlsx 다운로드</button>
+            <button class="admin-btn" onclick="COSMOS.downloadAttendanceXlsx()">📥 출석부 xlsx 다운로드</button>
           </div>
         </div>
 
@@ -11816,6 +11816,233 @@ const COSMOS = {
       // 검사 실패해도 진행 (서버 RPC가 최종 안전망)
       return true;
     }
+  },
+
+  // ── 출석부 xlsx 다운로드 ──
+  //   첨부 양식 그대로 재현: 좌측(인적사항+좌석+요일) + 우측(좌석별 출석부 빈칸)
+  //   시트 구성: 학년·프로그램·장소 조합 — 해오름/리케이온은 통합+학년별 3종, 아우름/교과1실은 1학년만
+  _ROOM_TOTAL_SEATS: {
+    '해오름': 44,
+    '리케이온': 75,
+    '아우름': 50,    // 1학년 자유석 가정 (실제 좌석수 모르면 N행 분량)
+    '교과1실': 50,
+  },
+  _ROOM_FLOOR_PREFIX: {
+    '해오름': '2층',
+    '리케이온': '3층',
+    '아우름': '',
+    '교과1실': '',
+  },
+
+  _formatSeatCode(room, num) {
+    if (num == null) return '';
+    const prefix = this._ROOM_FLOOR_PREFIX[room] || '';
+    const padded = String(num).padStart(2, '0');
+    return prefix ? prefix + padded : String(num);
+  },
+
+  async downloadAttendanceXlsx() {
+    if (typeof XLSX === 'undefined') {
+      showAdminToast('xlsx 라이브러리 로드 실패', 'err');
+      return;
+    }
+    if (!this.currentMonth) {
+      showAdminToast('먼저 좌석 배치 월을 선택해주세요', 'err');
+      return;
+    }
+    if (this.schedules.length === 0) {
+      showAdminToast('등록된 학생이 없어요', 'err');
+      return;
+    }
+
+    showAdminToast('출석부 생성 중...', 'ok');
+
+    // 학번→이름 매핑
+    const nameByNo = {};
+    this.members.forEach(m => { nameByNo[m.학번] = m.이름; });
+
+    // 시트 생성 대상 목록
+    //   기본: 1학년 × (방과후·야간) × (아우름·교과1실) = 4시트
+    //         2·3학년 통합 × (방과후·야간) × (해오름·리케이온) = 4시트
+    //         2학년 단독 × (방과후·야간) × (해오름·리케이온) = 4시트
+    //         3학년 단독 × (방과후·야간) × (해오름·리케이온) = 4시트
+    //   총 16시트 (해당 학년+장소+프로그램에 학생이 1명이라도 있을 때만 생성)
+    const targets = [];
+
+    [['방과후','방과후 독서시간'], ['야간','야간 독서시간']].forEach(([progKey, progLabel]) => {
+      // 1학년
+      ['아우름','교과1실'].forEach(room => {
+        targets.push({ key: '1학년('+progKey+'_'+room+')', grades: [1], program: progKey, room: room, progLabel: progLabel });
+      });
+      // 2·3학년
+      ['해오름','리케이온'].forEach(room => {
+        targets.push({ key: '2,3학년('+progKey+'_'+room+')', grades: [2,3], program: progKey, room: room, progLabel: progLabel });
+        targets.push({ key: '2학년('+progKey+'_'+room+')',  grades: [2],   program: progKey, room: room, progLabel: progLabel });
+        targets.push({ key: '3학년('+progKey+'_'+room+')',  grades: [3],   program: progKey, room: room, progLabel: progLabel });
+      });
+    });
+
+    const wb = XLSX.utils.book_new();
+    let createdCount = 0;
+
+    targets.forEach(t => {
+      // 매칭되는 학생 추리기
+      const list = this.schedules.filter(s => {
+        if (s.프로그램 !== t.program) return false;
+        if (s.장소 !== t.room) return false;
+        const g = parseInt(String(s.학번).charAt(0), 10);
+        return t.grades.indexOf(g) >= 0;
+      });
+      if (list.length === 0) return;  // 빈 시트는 만들지 않음
+
+      // 좌측 데이터 (학번 오름차순)
+      const leftRows = [...list].sort((a, b) => {
+        return String(a.학번).localeCompare(String(b.학번), undefined, { numeric: true });
+      });
+
+      // 우측: 모든 좌석 (1 ~ total). 매칭되는 학생이 있으면 학번/이름 채움, 없으면 좌석코드만
+      const totalSeats = this._ROOM_TOTAL_SEATS[t.room] || 50;
+      // 좌석번호 → 학생 정보 (지정좌석)
+      const seatToStudent = {};
+      list.forEach(s => {
+        if (s.좌석번호 != null) seatToStudent[s.좌석번호] = s;
+      });
+
+      const sheetData = this._buildSheetData({
+        title: '2026 - ' + t.key.replace(/_/g, ' ') + ' 코스모스 프로그램 ' + t.progLabel + ' 출석부',
+        leftRows: leftRows,
+        totalSeats: totalSeats,
+        seatToStudent: seatToStudent,
+        nameByNo: nameByNo,
+        room: t.room,
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(sheetData.aoa);
+      // 병합
+      ws['!merges'] = sheetData.merges;
+      // 열 너비
+      ws['!cols'] = sheetData.cols;
+      // 시트명 (Excel은 31자 제한)
+      const sheetName = t.key.length > 31 ? t.key.substring(0, 31) : t.key;
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      createdCount++;
+    });
+
+    if (createdCount === 0) {
+      showAdminToast('생성할 시트가 없어요 (등록 데이터 확인)', 'err');
+      return;
+    }
+
+    const fileName = '코스모스_출석부_' + this.currentMonth + '.xlsx';
+    XLSX.writeFile(wb, fileName);
+    showAdminToast(createdCount + '개 시트 출석부 다운로드됨', 'ok');
+  },
+
+  // 한 시트의 데이터 구성 — aoa, merges, cols 반환
+  _buildSheetData({ title, leftRows, totalSeats, seatToStudent, nameByNo, room }) {
+    // 컬럼 구조 (1-indexed):
+    //   A: 연번  B: 학번  C: 이름  D: 좌석번호  E~I: 월화수목금 (요일 토글)
+    //   J: 빈칸 (구분)
+    //   K: 연번  L: 좌석번호  M: 반번호  N: 성명  O~S: 월화수목금 (출석)  T: 비고
+    const aoa = [];
+    const merges = [];
+
+    // Row 1: 헤더 그룹
+    aoa.push(['인적사항', null, null, null, '야자 참여 요일', null, null, null, null, null, title, null, null, null, null, null, null, null, null, null]);
+    merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } });   // A1:D1 인적사항
+    merges.push({ s: { r: 0, c: 4 }, e: { r: 0, c: 8 } });   // E1:I1 야자 참여 요일
+    merges.push({ s: { r: 0, c: 10 }, e: { r: 0, c: 19 } }); // K1:T1 제목
+
+    // Row 2: 좌측 컬럼 헤더 (우측 헤더는 Row 4에 따로)
+    aoa.push(['연번', '학번', '이름', '좌석', '월', '화', '수', '목', '금', null, null, null, null, null, null, null, null, null, null, null]);
+
+    // Row 3 ~ : 좌측 데이터 채우기 (먼저)
+    // 일단 행을 충분히 만들어 둠 (좌측+우측 중 큰 쪽 길이만큼)
+    const leftLen = leftRows.length;
+    // 우측 좌석 데이터 (좌석번호 1 ~ totalSeats)
+    const rightSeats = [];
+    for (let i = 1; i <= totalSeats; i++) {
+      const stu = seatToStudent[i];
+      rightSeats.push({
+        seatNum: i,
+        seatCode: this._formatSeatCode(room, i),
+        학번: stu ? stu.학번 : '',
+        이름: stu ? (nameByNo[stu.학번] || '') : '',
+      });
+    }
+    const rightLen = rightSeats.length;
+
+    // 우측 헤더는 row index 3 (= Row 4)에 들어감
+    // 우측 데이터는 row index 4 (= Row 5)부터
+    const rightHeaderRow = 3;          // 0-indexed
+    const rightDataStart = rightHeaderRow + 1;
+    const totalRows = Math.max(leftLen + 2, rightDataStart + rightLen);  // 좌측은 row 2부터 (0-idx)
+
+    for (let r = 2; r < totalRows; r++) {
+      const arr = new Array(20).fill(null);
+      // 좌측 (row 2부터 leftLen만큼)
+      const li = r - 2;
+      if (li < leftLen) {
+        const s = leftRows[li];
+        arr[0] = li + 1;                       // 연번
+        arr[1] = s.학번;                       // 학번
+        arr[2] = nameByNo[s.학번] || '';        // 이름
+        arr[3] = s.좌석번호 != null ? this._formatSeatCode(room, s.좌석번호) : '';
+        ['월','화','수','목','금'].forEach((d, idx) => {
+          arr[4 + idx] = (s.요일 || []).indexOf(d) >= 0 ? 'O' : '';
+        });
+      }
+      // 우측 헤더
+      if (r === rightHeaderRow) {
+        arr[10] = '연번';
+        arr[11] = '좌석번호';
+        arr[12] = '반번호';
+        arr[13] = '성명';
+        arr[14] = '월';
+        arr[15] = '화';
+        arr[16] = '수';
+        arr[17] = '목';
+        arr[18] = '금';
+        arr[19] = '비고';
+      } else if (r >= rightDataStart) {
+        const ri = r - rightDataStart;
+        if (ri < rightLen) {
+          const rs = rightSeats[ri];
+          arr[10] = ri + 1;
+          arr[11] = rs.seatCode;
+          arr[12] = rs.학번;
+          arr[13] = rs.이름;
+          // 출석칸은 빈칸
+        }
+      }
+      aoa.push(arr);
+    }
+
+    // 열 너비
+    const cols = [
+      { wch: 5 },   // A 연번
+      { wch: 8 },   // B 학번
+      { wch: 9 },   // C 이름
+      { wch: 7 },   // D 좌석
+      { wch: 4 },   // E 월
+      { wch: 4 },   // F 화
+      { wch: 4 },   // G 수
+      { wch: 4 },   // H 목
+      { wch: 4 },   // I 금
+      { wch: 2 },   // J (구분)
+      { wch: 5 },   // K 연번
+      { wch: 8 },   // L 좌석번호
+      { wch: 8 },   // M 반번호
+      { wch: 10 },  // N 성명
+      { wch: 11 },  // O 월
+      { wch: 11 },  // P 화
+      { wch: 11 },  // Q 수
+      { wch: 11 },  // R 목
+      { wch: 11 },  // S 금
+      { wch: 18 },  // T 비고
+    ];
+
+    return { aoa, merges, cols };
   },
 };
 
