@@ -11388,27 +11388,133 @@ const COSMOS = {
     rows.forEach(r => {
       const name = nameByNo[r.학번] || '?';
       const grade = parseInt(String(r.학번).charAt(0), 10);
-      html += '<tr>' +
+      const seatVal = r.좌석번호 != null ? r.좌석번호 : '';
+      html += '<tr data-sid="' + r.id + '">' +
         '<td class="no">' + escapeHtml(r.학번) + '</td>' +
         '<td class="name">' + escapeHtml(name) + '</td>' +
         '<td>' + grade + '</td>' +
-        '<td>' + escapeHtml(r.프로그램) + '</td>' +
-        '<td>' + escapeHtml(r.장소) + '</td>' +
-        '<td>' + (r.좌석번호 != null ? r.좌석번호 : '—') + '</td>';
+        '<td>' +
+          '<select onchange="COSMOS.editField(' + r.id + ', \'프로그램\', this.value)">' +
+            ['방과후','야간','심야','주말'].map(p =>
+              '<option value="' + p + '"' + (r.프로그램 === p ? ' selected' : '') + '>' + p + '</option>'
+            ).join('') +
+          '</select>' +
+        '</td>' +
+        '<td>' +
+          '<select onchange="COSMOS.editField(' + r.id + ', \'장소\', this.value)">' +
+            ['해오름','리케이온','아우름','교과1실'].map(rm =>
+              '<option value="' + rm + '"' + (r.장소 === rm ? ' selected' : '') + '>' + rm + '</option>'
+            ).join('') +
+          '</select>' +
+        '</td>' +
+        '<td><input type="number" min="1" max="75" value="' + seatVal +
+          '" placeholder="자유석" ' +
+          'onchange="COSMOS.editField(' + r.id + ', \'좌석번호\', this.value)"></td>';
       days.forEach(d => {
         const isOn = (r.요일 || []).indexOf(d) >= 0;
         const isConflict = isOn && r.좌석번호 != null &&
           conflictKey.has(r.프로그램 + '|' + r.장소 + '|' + r.좌석번호 + '|' + d);
         const cls = 'cosmos-day-toggle' + (isOn ? ' on' : '') + (isConflict ? ' conflict' : '');
-        html += '<td class="cosmos-day-cell">' +
+        html += '<td class="cosmos-day-cell" onclick="COSMOS.toggleDay(' + r.id + ', \'' + d + '\')">' +
           '<span class="' + cls + '">' + d + '</span>' +
           '</td>';
       });
-      html += '<td class="actions"><button class="admin-btn admin-btn-sm" disabled title="3단계">편집</button></td>';
+      html += '<td class="actions">' +
+        '<button class="admin-btn admin-btn-sm danger" onclick="COSMOS.deleteSchedule(' + r.id + ')" title="삭제">삭제</button>' +
+        '</td>';
       html += '</tr>';
     });
     html += '</tbody></table>';
     wrap.innerHTML = html;
+  },
+
+  // ── 인라인 편집 ──
+  async editField(scheduleId, field, value) {
+    const row = this.schedules.find(s => s.id === scheduleId);
+    if (!row) return;
+
+    const payload = { p_id: scheduleId, p_프로그램: null, p_장소: null, p_좌석번호: null, p_요일: null };
+    if (field === '프로그램') payload.p_프로그램 = value;
+    else if (field === '장소') payload.p_장소 = value;
+    else if (field === '좌석번호') {
+      const trimmed = String(value || '').trim();
+      if (trimmed === '') {
+        payload.p_좌석번호 = -1;  // -1 = NULL로 설정 (자유석)
+      } else {
+        const n = parseInt(trimmed, 10);
+        if (isNaN(n) || n < 1) {
+          showAdminToast('좌석 번호는 1 이상의 숫자여야 해요', 'err');
+          this._renderMatrix();  // 원복
+          return;
+        }
+        payload.p_좌석번호 = n;
+      }
+    } else if (field === '요일') payload.p_요일 = value;
+    else return;
+
+    try {
+      const { error } = await sb.client().rpc('update_cosmos_schedule', payload);
+      if (error) throw error;
+      // 로컬 상태 갱신
+      if (field === '프로그램') row.프로그램 = value;
+      else if (field === '장소') row.장소 = value;
+      else if (field === '좌석번호') {
+        row.좌석번호 = payload.p_좌석번호 === -1 ? null : payload.p_좌석번호;
+      } else if (field === '요일') row.요일 = value;
+      // 충돌 자료 재계산 후 다시 렌더
+      await this._reloadConflicts();
+      this._renderAll();
+    } catch (e) {
+      showAdminToast('수정 실패: ' + (e.message || '오류'), 'err');
+      this._renderMatrix();  // 실패 시 화면 원복
+    }
+  },
+
+  async toggleDay(scheduleId, day) {
+    const row = this.schedules.find(s => s.id === scheduleId);
+    if (!row) return;
+    const current = row.요일 || [];
+    const isOn = current.indexOf(day) >= 0;
+    const newDays = isOn ? current.filter(d => d !== day) : [...current, day];
+    // 요일 순서: 월화수목금토일
+    const order = { '월':1,'화':2,'수':3,'목':4,'금':5,'토':6,'일':7 };
+    newDays.sort((a, b) => (order[a] || 99) - (order[b] || 99));
+    await this.editField(scheduleId, '요일', newDays);
+  },
+
+  async deleteSchedule(scheduleId) {
+    const row = this.schedules.find(s => s.id === scheduleId);
+    if (!row) return;
+    const name = (this.members.find(m => m.학번 === row.학번) || {}).이름 || row.학번;
+    if (!confirm(name + ' (' + row.학번 + ') 의 ' + row.프로그램 + '/' + row.장소 +
+      ' 등록을 삭제할까요?\n해당 학생의 다른 등록이 없으면 명단에서도 제거돼요.')) return;
+    try {
+      const { data, error } = await sb.client().rpc('delete_cosmos_schedule', { p_id: scheduleId });
+      if (error) throw error;
+      const msg = data && data.member_deleted
+        ? name + ' 명단에서 완전 삭제됨'
+        : name + ' 등록 삭제됨 (' + (data && data.remaining_schedules) + '개 등록 남음)';
+      showAdminToast(msg, 'ok');
+      // 로컬 상태 갱신
+      this.schedules = this.schedules.filter(s => s.id !== scheduleId);
+      if (data && data.member_deleted) {
+        this.members = this.members.filter(m => m.학번 !== row.학번);
+      }
+      await this._reloadConflicts();
+      this._renderAll();
+    } catch (e) {
+      showAdminToast('삭제 실패: ' + (e.message || '오류'), 'err');
+    }
+  },
+
+  async _reloadConflicts() {
+    if (!this.currentMonth) { this.conflicts = []; return; }
+    try {
+      const { data } = await sb.client().rpc('get_cosmos_conflicts', { p_month: this.currentMonth });
+      this.conflicts = data || [];
+    } catch (_) {
+      this.conflicts = [];
+    }
   },
 };
 
