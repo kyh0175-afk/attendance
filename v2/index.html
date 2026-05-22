@@ -5664,7 +5664,7 @@ body.admin-readonly #admin-tab-diag {
           <div class="cosmos-actions">
             <button class="admin-btn" onclick="COSMOS.openImportModal()">📥 좌석 배치 가져오기</button>
             <button class="admin-btn" onclick="COSMOS.openAddStudentModal()">+ 학생 직접 추가</button>
-            <button class="admin-btn" disabled title="2단계 이후">📤 명단 xlsx 업로드</button>
+            <button class="admin-btn" onclick="COSMOS.openUploadModal()">📤 명단 xlsx 업로드</button>
             <button class="admin-btn" disabled title="5단계 이후">📥 출석부 xlsx 다운로드</button>
           </div>
         </div>
@@ -5933,6 +5933,39 @@ body.admin-readonly #admin-tab-diag {
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="SEAT_ADMIN.closeManualModal()">취소</button>
       <button class="btn btn-primary" id="sm-save" onclick="SEAT_ADMIN.saveManual()">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- 코스모스: 명단 xlsx 업로드 모달 -->
+<div class="modal-bg" id="modal-cosmos-upload">
+  <div class="modal student-modal" style="max-width:560px">
+    <div class="student-modal-title">명단 xlsx 업로드</div>
+    <div class="student-modal-subtitle" id="cu-subtitle">현재 작업 중인 월에 학생 명단을 일괄 등록합니다</div>
+
+    <div style="padding:12px 14px;background:rgba(214,178,124,.06);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);margin-bottom:14px;line-height:1.7">
+      <strong style="color:var(--amber)">엑셀 형식:</strong> 첫 행은 컬럼명, 두 번째 행부터 데이터<br>
+      <strong>학번</strong>(5자리 텍스트), <strong>이름</strong>, <strong>프로그램</strong>(방과후/야간/심야/주말),
+      <strong>장소</strong>(해오름/리케이온/아우름/교과1실), <strong>좌석번호</strong>(자유석은 빈칸),
+      <strong>월</strong>, <strong>화</strong>, <strong>수</strong>, <strong>목</strong>, <strong>금</strong>, <strong>토</strong>, <strong>일</strong> (참여 요일은 1·O·예 등 비어있지 않은 값)<br><br>
+      이미 있는 학생/스케줄은 <strong>업데이트</strong>되고, 새 학생은 <strong>추가</strong>됩니다. 엑셀에 없는 학생은 명단에서 삭제되지 않습니다.
+    </div>
+
+    <div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="admin-btn admin-btn-sm" onclick="COSMOS.downloadTemplate()">📥 빈 양식 다운로드</button>
+      <label class="admin-btn admin-btn-sm primary" style="cursor:pointer;margin:0">
+        📤 파일 선택
+        <input type="file" id="cu-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="COSMOS.onFilePick(event)">
+      </label>
+      <span id="cu-filename" style="font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim);align-self:center"></span>
+    </div>
+
+    <div id="cu-preview" style="display:none;max-height:300px;overflow:auto;border:1px solid var(--border);border-radius:var(--r);background:rgba(0,0,0,.15);padding:10px;margin-bottom:14px"></div>
+
+    <div class="modal-err" id="cu-err"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="COSMOS.closeUploadModal()">취소</button>
+      <button class="btn btn-primary" id="cu-save" onclick="COSMOS.runUpload()" disabled>업로드</button>
     </div>
   </div>
 </div>
@@ -11263,6 +11296,15 @@ const COSMOS = {
       return;
     }
 
+    // 충돌 사전 검사 (좌석번호 + 요일 둘 다 있을 때만)
+    const ok = await this._checkConflictAndConfirm({
+      프로그램: program,
+      장소: room,
+      좌석번호: seat,
+      요일: days,
+    }, null);
+    if (!ok) return;
+
     btn.disabled = true;
     btn.textContent = '추가 중...';
     try {
@@ -11433,13 +11475,22 @@ const COSMOS = {
     const row = this.schedules.find(s => s.id === scheduleId);
     if (!row) return;
 
-    const payload = { p_id: scheduleId, p_프로그램: null, p_장소: null, p_좌석번호: null, p_요일: null };
-    if (field === '프로그램') payload.p_프로그램 = value;
-    else if (field === '장소') payload.p_장소 = value;
+    // 변경 후 최종 상태 시뮬레이션
+    const next = {
+      프로그램: row.프로그램,
+      장소: row.장소,
+      좌석번호: row.좌석번호,
+      요일: row.요일 || [],
+    };
+    let payloadSeat = null;  // RPC에 보낼 좌석번호 인자 (null=미변경, -1=NULL설정)
+
+    if (field === '프로그램') next.프로그램 = value;
+    else if (field === '장소') next.장소 = value;
     else if (field === '좌석번호') {
       const trimmed = String(value || '').trim();
       if (trimmed === '') {
-        payload.p_좌석번호 = -1;  // -1 = NULL로 설정 (자유석)
+        next.좌석번호 = null;
+        payloadSeat = -1;
       } else {
         const n = parseInt(trimmed, 10);
         if (isNaN(n) || n < 1) {
@@ -11447,20 +11498,36 @@ const COSMOS = {
           this._renderMatrix();  // 원복
           return;
         }
-        payload.p_좌석번호 = n;
+        next.좌석번호 = n;
+        payloadSeat = n;
       }
-    } else if (field === '요일') payload.p_요일 = value;
-    else return;
+    } else if (field === '요일') {
+      next.요일 = value;
+    } else return;
+
+    // 충돌 사전 검사 — 본인은 제외
+    const ok = await this._checkConflictAndConfirm(next, scheduleId);
+    if (!ok) {
+      this._renderMatrix();  // 사용자가 취소 → 원복
+      return;
+    }
+
+    const payload = {
+      p_id: scheduleId,
+      p_프로그램: field === '프로그램' ? value : null,
+      p_장소: field === '장소' ? value : null,
+      p_좌석번호: field === '좌석번호' ? payloadSeat : null,
+      p_요일: field === '요일' ? value : null,
+    };
 
     try {
       const { error } = await sb.client().rpc('update_cosmos_schedule', payload);
       if (error) throw error;
       // 로컬 상태 갱신
-      if (field === '프로그램') row.프로그램 = value;
-      else if (field === '장소') row.장소 = value;
-      else if (field === '좌석번호') {
-        row.좌석번호 = payload.p_좌석번호 === -1 ? null : payload.p_좌석번호;
-      } else if (field === '요일') row.요일 = value;
+      row.프로그램 = next.프로그램;
+      row.장소 = next.장소;
+      row.좌석번호 = next.좌석번호;
+      row.요일 = next.요일;
       // 충돌 자료 재계산 후 다시 렌더
       await this._reloadConflicts();
       this._renderAll();
@@ -11514,6 +11581,240 @@ const COSMOS = {
       this.conflicts = data || [];
     } catch (_) {
       this.conflicts = [];
+    }
+  },
+
+  // ── 명단 xlsx 업로드 ──
+  _uploadRows: null,  // 파싱된 데이터
+
+  openUploadModal() {
+    if (!this.currentMonth) {
+      showAdminToast('먼저 좌석 배치 월을 선택해주세요', 'err');
+      return;
+    }
+    document.getElementById('cu-subtitle').textContent =
+      this.currentMonth + ' 월에 학생 명단을 일괄 등록합니다';
+    document.getElementById('cu-file').value = '';
+    document.getElementById('cu-filename').textContent = '';
+    document.getElementById('cu-preview').style.display = 'none';
+    document.getElementById('cu-preview').innerHTML = '';
+    document.getElementById('cu-err').textContent = '';
+    document.getElementById('cu-save').disabled = true;
+    this._uploadRows = null;
+    document.getElementById('modal-cosmos-upload').classList.add('on');
+  },
+
+  closeUploadModal() {
+    document.getElementById('modal-cosmos-upload').classList.remove('on');
+  },
+
+  downloadTemplate() {
+    if (typeof XLSX === 'undefined') {
+      showAdminToast('xlsx 라이브러리 로드 실패', 'err');
+      return;
+    }
+    const headers = ['학번','이름','프로그램','장소','좌석번호','월','화','수','목','금','토','일'];
+    const sample = [
+      ['10101', '강정미', '방과후', '교과1실', '', '1', '1', '', '1', '1', '', ''],
+      ['30103', '김경주', '야간', '리케이온', '1', '1', '1', '1', '1', '1', '', ''],
+      ['30103', '김경주', '심야', '리케이온', '1', '1', '1', '', '', '', '', ''],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...sample]);
+    ws['!cols'] = [
+      { wch: 8 }, { wch: 10 }, { wch: 8 }, { wch: 9 }, { wch: 7 },
+      ...Array(7).fill({ wch: 4 }),
+    ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '명단 양식');
+    XLSX.writeFile(wb, '코스모스_명단양식.xlsx');
+  },
+
+  onFilePick(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    document.getElementById('cu-filename').textContent = file.name;
+    document.getElementById('cu-err').textContent = '';
+
+    if (typeof XLSX === 'undefined') {
+      document.getElementById('cu-err').textContent = 'xlsx 라이브러리 로드 실패';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+        if (aoa.length < 2) {
+          document.getElementById('cu-err').textContent = '데이터가 없어요 (헤더 + 최소 1행 필요)';
+          return;
+        }
+        const headers = aoa[0].map(h => String(h || '').trim());
+        const required = ['학번','이름','프로그램','장소'];
+        const missing = required.filter(h => headers.indexOf(h) < 0);
+        if (missing.length > 0) {
+          document.getElementById('cu-err').textContent = '필수 컬럼 누락: ' + missing.join(', ');
+          return;
+        }
+
+        const idx = {};
+        ['학번','이름','프로그램','장소','좌석번호','월','화','수','목','금','토','일'].forEach(h => {
+          idx[h] = headers.indexOf(h);
+        });
+
+        const rows = [];
+        const errors = [];
+        for (let i = 1; i < aoa.length; i++) {
+          const r = aoa[i];
+          if (!r || r.every(c => String(c || '').trim() === '')) continue;
+          const no = String(r[idx.학번] || '').trim();
+          const name = String(r[idx.이름] || '').trim();
+          const program = String(r[idx.프로그램] || '').trim();
+          const room = String(r[idx.장소] || '').trim();
+          if (!no) { errors.push((i+1) + '행: 학번 누락'); continue; }
+          if (!name) { errors.push((i+1) + '행: 이름 누락'); continue; }
+          if (['방과후','야간','심야','주말'].indexOf(program) < 0) {
+            errors.push((i+1) + '행: 프로그램 값 오류 (' + program + ')'); continue;
+          }
+          if (['해오름','리케이온','아우름','교과1실'].indexOf(room) < 0) {
+            errors.push((i+1) + '행: 장소 값 오류 (' + room + ')'); continue;
+          }
+          const seatRaw = idx.좌석번호 >= 0 ? String(r[idx.좌석번호] || '').trim() : '';
+          const seat = seatRaw === '' ? null : parseInt(seatRaw, 10);
+          if (seatRaw !== '' && (isNaN(seat) || seat < 1)) {
+            errors.push((i+1) + '행: 좌석번호 오류 (' + seatRaw + ')'); continue;
+          }
+          // 요일: 비어있지 않은 셀이면 활성
+          const days = [];
+          ['월','화','수','목','금','토','일'].forEach(d => {
+            if (idx[d] >= 0) {
+              const v = String(r[idx[d]] || '').trim();
+              if (v !== '' && v !== '0' && v.toLowerCase() !== 'false' && v !== '아니오' && v !== 'X' && v !== 'x') {
+                days.push(d);
+              }
+            }
+          });
+          rows.push({ 학번: no, 이름: name, 프로그램: program, 장소: room, 좌석번호: seat, 요일: days });
+        }
+
+        if (rows.length === 0) {
+          document.getElementById('cu-err').textContent = '유효한 데이터가 없어요.\n' + errors.slice(0, 5).join('\n');
+          return;
+        }
+
+        this._uploadRows = rows;
+        // 미리보기
+        const preview = document.getElementById('cu-preview');
+        let html = '<div style="font-family:\'IBM Plex Sans KR\',sans-serif;font-size:12px;color:var(--cream);margin-bottom:8px">' +
+          '<strong style="color:var(--amber)">' + rows.length + '개 행</strong>' +
+          (errors.length > 0 ? ', <span style="color:var(--terra)">' + errors.length + '개 오류 (건너뜀)</span>' : '') +
+          '</div>';
+        html += '<table style="width:100%;font-family:\'IBM Plex Sans KR\',sans-serif;font-size:11px;color:var(--cream);border-collapse:collapse">';
+        html += '<thead><tr style="background:rgba(0,0,0,.2);color:var(--amber)">';
+        ['학번','이름','프로그램','장소','좌석','요일'].forEach(h => {
+          html += '<th style="padding:4px 6px;text-align:left">' + h + '</th>';
+        });
+        html += '</tr></thead><tbody>';
+        rows.slice(0, 50).forEach(r => {
+          html += '<tr style="border-bottom:1px solid var(--border)">' +
+            '<td style="padding:4px 6px">' + r.학번 + '</td>' +
+            '<td style="padding:4px 6px">' + r.이름 + '</td>' +
+            '<td style="padding:4px 6px">' + r.프로그램 + '</td>' +
+            '<td style="padding:4px 6px">' + r.장소 + '</td>' +
+            '<td style="padding:4px 6px">' + (r.좌석번호 != null ? r.좌석번호 : '—') + '</td>' +
+            '<td style="padding:4px 6px;color:var(--sage)">' + r.요일.join('·') + '</td>' +
+            '</tr>';
+        });
+        html += '</tbody></table>';
+        if (rows.length > 50) {
+          html += '<div style="font-size:11px;color:var(--ink-faint);margin-top:6px">… 외 ' + (rows.length - 50) + '행</div>';
+        }
+        if (errors.length > 0) {
+          html += '<div style="margin-top:10px;padding:8px;background:rgba(184,84,63,.1);border:1px solid rgba(184,84,63,.3);border-radius:4px;font-size:11px;color:var(--terra);max-height:100px;overflow:auto">' +
+            errors.slice(0, 20).map(e => '· ' + e).join('<br>') +
+            (errors.length > 20 ? '<br>…' : '') +
+            '</div>';
+        }
+        preview.innerHTML = html;
+        preview.style.display = 'block';
+        document.getElementById('cu-save').disabled = false;
+      } catch (e) {
+        document.getElementById('cu-err').textContent = '파일 읽기 실패: ' + (e.message || '오류');
+      }
+    };
+    reader.onerror = () => {
+      document.getElementById('cu-err').textContent = '파일 읽기 실패';
+    };
+    reader.readAsArrayBuffer(file);
+  },
+
+  async runUpload() {
+    if (!this._uploadRows || this._uploadRows.length === 0) return;
+    const btn = document.getElementById('cu-save');
+    const errEl = document.getElementById('cu-err');
+    errEl.textContent = '';
+    btn.disabled = true;
+    btn.textContent = '업로드 중...';
+
+    try {
+      const { data, error } = await sb.client().rpc('bulk_upsert_cosmos', {
+        p_좌석배치월: this.currentMonth,
+        p_rows: this._uploadRows,
+      });
+      if (error) throw error;
+
+      const msg =
+        '✓ 학생 ' + (data.members_added || 0) + '명 추가, ' + (data.members_updated || 0) + '명 갱신\n' +
+        '✓ 스케줄 ' + (data.rows_added || 0) + '개 추가, ' + (data.rows_updated || 0) + '개 갱신' +
+        (data.error_count > 0 ? '\n⚠ 오류 ' + data.error_count + '건 — 콘솔 확인' : '');
+      if (data.error_count > 0) {
+        console.warn('bulk_upsert_cosmos 오류:', data.errors);
+      }
+      this.closeUploadModal();
+      showAdminToast(msg.replace(/\n/g, ' / '), 'ok');
+      await this._loadMonthData();
+      this._renderAll();
+    } catch (e) {
+      errEl.textContent = e.message || '오류';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '업로드';
+    }
+  },
+
+  // 충돌 사전 검사 + confirm
+  //   targetState: { 프로그램, 장소, 좌석번호, 요일[] } — 변경 후의 최종 상태
+  //   excludeId: 본인 스케줄 id (자기 자신은 제외)
+  //   리턴: true = 진행 OK, false = 사용자가 취소
+  async _checkConflictAndConfirm(targetState, excludeId) {
+    // 좌석번호 없으면 충돌 체크 안 함 (자유석)
+    if (targetState.좌석번호 == null) return true;
+    if (!targetState.요일 || targetState.요일.length === 0) return true;
+
+    try {
+      const { data, error } = await sb.client().rpc('check_cosmos_conflict', {
+        p_좌석배치월: this.currentMonth,
+        p_프로그램: targetState.프로그램,
+        p_장소: targetState.장소,
+        p_좌석번호: targetState.좌석번호,
+        p_요일: targetState.요일,
+        p_exclude_id: excludeId || null,
+      });
+      if (error) throw error;
+      if (!data || data.length === 0) return true;
+
+      // 충돌 발생 — confirm 메시지 구성
+      const lines = data.map(c => '  · ' + c.요일 + '요일 → ' + c.이름 + ' (' + c.학번 + ')');
+      const msg = '이미 같은 자리·요일에 배정된 학생이 있어요.\n\n' +
+        targetState.프로그램 + ' / ' + targetState.장소 + ' ' + targetState.좌석번호 + '번\n' +
+        lines.join('\n') + '\n\n그래도 등록할까요?';
+      return confirm(msg);
+    } catch (e) {
+      console.error('충돌 검사 실패:', e);
+      // 검사 실패해도 진행 (서버 RPC가 최종 안전망)
+      return true;
     }
   },
 };
@@ -13363,6 +13664,7 @@ document.addEventListener('click', (e) => {
   if (e.target.id === 'modal-seat-manual') SEAT_ADMIN.closeManualModal();
   if (e.target.id === 'modal-cosmos-import') COSMOS.closeImportModal();
   if (e.target.id === 'modal-cosmos-add') COSMOS.closeAddStudentModal();
+  if (e.target.id === 'modal-cosmos-upload') COSMOS.closeUploadModal();
 });
 
 // ══════════════════════════════════════════════════════════════
