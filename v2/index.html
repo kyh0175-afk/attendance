@@ -21,10 +21,10 @@
   if(!isLight)url+='&family=DM+Mono:wght@400;500';
   url+='&display=swap';
   var l=document.createElement('link');l.rel='stylesheet';l.href=url;document.head.appendChild(l);
-  // 관리자 모드: xlsx 동적 로딩
+  // 관리자 모드: xlsx-js-style 동적 로딩 (SheetJS 호환 + 셀 스타일 지원)
   if(!isLight && mode!=='student' && mode!=='check'){
     var s=document.createElement('script');
-    s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s.src='https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js';
     s.async=true;document.head.appendChild(s);
   }
 })();
@@ -11922,6 +11922,16 @@ const COSMOS = {
       ws['!merges'] = sheetData.merges;
       // 열 너비
       ws['!cols'] = sheetData.cols;
+      // 행 높이
+      if (sheetData.rows) ws['!rows'] = sheetData.rows;
+      // 셀 스타일 적용 (xlsx-js-style)
+      if (sheetData.styles) {
+        sheetData.styles.forEach(({ r, c, style }) => {
+          const addr = XLSX.utils.encode_cell({ r: r, c: c });
+          if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+          ws[addr].s = style;
+        });
+      }
       // 시트명 (Excel은 31자 제한)
       const sheetName = t.key.length > 31 ? t.key.substring(0, 31) : t.key;
       XLSX.utils.book_append_sheet(wb, ws, sheetName);
@@ -11938,7 +11948,7 @@ const COSMOS = {
     showAdminToast(createdCount + '개 시트 출석부 다운로드됨', 'ok');
   },
 
-  // 한 시트의 데이터 구성 — aoa, merges, cols 반환
+  // 한 시트의 데이터 구성 — aoa, merges, cols, styles 반환
   _buildSheetData({ title, leftRows, totalSeats, seatToStudent, nameByNo, room }) {
     // 컬럼 구조 (1-indexed):
     //   A: 연번  B: 학번  C: 이름  D: 좌석번호  E~I: 월화수목금 (요일 토글)
@@ -11946,20 +11956,69 @@ const COSMOS = {
     //   K: 연번  L: 좌석번호  M: 반번호  N: 성명  O~S: 월화수목금 (출석)  T: 비고
     const aoa = [];
     const merges = [];
+    const styles = [];  // [{r, c, style}]
 
-    // Row 1: 헤더 그룹
+    // 공통 스타일 정의
+    const border = {
+      top:    { style: 'thin', color: { rgb: '888888' } },
+      bottom: { style: 'thin', color: { rgb: '888888' } },
+      left:   { style: 'thin', color: { rgb: '888888' } },
+      right:  { style: 'thin', color: { rgb: '888888' } },
+    };
+    const headerGroup = {
+      font: { name: 'IBM Plex Sans KR', sz: 12, bold: true, color: { rgb: '4A2C18' } },
+      fill: { fgColor: { rgb: 'E8D9B8' } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: border,
+    };
+    const headerCol = {
+      font: { name: 'IBM Plex Sans KR', sz: 10, bold: true, color: { rgb: '4A2C18' } },
+      fill: { fgColor: { rgb: 'F5EAD3' } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: border,
+    };
+    const titleStyle = {
+      font: { name: 'IBM Plex Sans KR', sz: 14, bold: true, color: { rgb: '4A2C18' } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: border,
+    };
+    const cellCenter = {
+      font: { name: 'IBM Plex Sans KR', sz: 10 },
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: border,
+    };
+    const cellLeft = {
+      font: { name: 'IBM Plex Sans KR', sz: 10 },
+      alignment: { horizontal: 'left', vertical: 'center', indent: 1 },
+      border: border,
+    };
+    const cellOn = {
+      font: { name: 'IBM Plex Sans KR', sz: 10, bold: true, color: { rgb: '4A2C18' } },
+      fill: { fgColor: { rgb: 'C9E0CC' } },  // 옅은 sage
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: border,
+    };
+
+    // Row 0 (Excel row 1): 헤더 그룹
     aoa.push(['인적사항', null, null, null, '야자 참여 요일', null, null, null, null, null, title, null, null, null, null, null, null, null, null, null]);
-    merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } });   // A1:D1 인적사항
-    merges.push({ s: { r: 0, c: 4 }, e: { r: 0, c: 8 } });   // E1:I1 야자 참여 요일
-    merges.push({ s: { r: 0, c: 10 }, e: { r: 0, c: 19 } }); // K1:T1 제목
+    merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } });
+    merges.push({ s: { r: 0, c: 4 }, e: { r: 0, c: 8 } });
+    merges.push({ s: { r: 0, c: 10 }, e: { r: 0, c: 19 } });
+    styles.push({ r: 0, c: 0, style: headerGroup });
+    styles.push({ r: 0, c: 4, style: headerGroup });
+    styles.push({ r: 0, c: 10, style: titleStyle });
 
-    // Row 2: 좌측 컬럼 헤더 (우측 헤더는 Row 4에 따로)
+    // Row 1 (Excel row 2): 좌측 컬럼 헤더
     aoa.push(['연번', '학번', '이름', '좌석', '월', '화', '수', '목', '금', null, null, null, null, null, null, null, null, null, null, null]);
+    for (let c = 0; c < 9; c++) {
+      styles.push({ r: 1, c: c, style: headerCol });
+    }
 
-    // Row 3 ~ : 좌측 데이터 채우기 (먼저)
-    // 일단 행을 충분히 만들어 둠 (좌측+우측 중 큰 쪽 길이만큼)
-    const leftLen = leftRows.length;
-    // 우측 좌석 데이터 (좌석번호 1 ~ totalSeats)
+    // 우측 헤더는 row index 3 (Excel row 4)에 들어감
+    const rightHeaderRow = 3;
+    const rightDataStart = rightHeaderRow + 1;
+
+    // 우측 좌석 데이터
     const rightSeats = [];
     for (let i = 1; i <= totalSeats; i++) {
       const stu = seatToStudent[i];
@@ -11970,40 +12029,44 @@ const COSMOS = {
         이름: stu ? (nameByNo[stu.학번] || '') : '',
       });
     }
-    const rightLen = rightSeats.length;
 
-    // 우측 헤더는 row index 3 (= Row 4)에 들어감
-    // 우측 데이터는 row index 4 (= Row 5)부터
-    const rightHeaderRow = 3;          // 0-indexed
-    const rightDataStart = rightHeaderRow + 1;
-    const totalRows = Math.max(leftLen + 2, rightDataStart + rightLen);  // 좌측은 row 2부터 (0-idx)
+    const leftLen = leftRows.length;
+    const rightLen = rightSeats.length;
+    const totalRows = Math.max(leftLen + 2, rightDataStart + rightLen);
 
     for (let r = 2; r < totalRows; r++) {
       const arr = new Array(20).fill(null);
+
       // 좌측 (row 2부터 leftLen만큼)
       const li = r - 2;
       if (li < leftLen) {
         const s = leftRows[li];
-        arr[0] = li + 1;                       // 연번
-        arr[1] = s.학번;                       // 학번
-        arr[2] = nameByNo[s.학번] || '';        // 이름
+        arr[0] = li + 1;
+        arr[1] = s.학번;
+        arr[2] = nameByNo[s.학번] || '';
         arr[3] = s.좌석번호 != null ? this._formatSeatCode(room, s.좌석번호) : '';
         ['월','화','수','목','금'].forEach((d, idx) => {
-          arr[4 + idx] = (s.요일 || []).indexOf(d) >= 0 ? 'O' : '';
+          const isOn = (s.요일 || []).indexOf(d) >= 0;
+          arr[4 + idx] = isOn ? 'O' : '';
+        });
+        // 스타일
+        styles.push({ r: r, c: 0, style: cellCenter });  // 연번
+        styles.push({ r: r, c: 1, style: cellCenter });  // 학번
+        styles.push({ r: r, c: 2, style: cellLeft });    // 이름
+        styles.push({ r: r, c: 3, style: cellCenter });  // 좌석
+        ['월','화','수','목','금'].forEach((d, idx) => {
+          const isOn = (s.요일 || []).indexOf(d) >= 0;
+          styles.push({ r: r, c: 4 + idx, style: isOn ? cellOn : cellCenter });
         });
       }
+
       // 우측 헤더
       if (r === rightHeaderRow) {
-        arr[10] = '연번';
-        arr[11] = '좌석번호';
-        arr[12] = '반번호';
-        arr[13] = '성명';
-        arr[14] = '월';
-        arr[15] = '화';
-        arr[16] = '수';
-        arr[17] = '목';
-        arr[18] = '금';
-        arr[19] = '비고';
+        const rightHeaders = ['연번', '좌석번호', '반번호', '성명', '월', '화', '수', '목', '금', '비고'];
+        rightHeaders.forEach((h, idx) => {
+          arr[10 + idx] = h;
+          styles.push({ r: r, c: 10 + idx, style: headerCol });
+        });
       } else if (r >= rightDataStart) {
         const ri = r - rightDataStart;
         if (ri < rightLen) {
@@ -12012,7 +12075,14 @@ const COSMOS = {
           arr[11] = rs.seatCode;
           arr[12] = rs.학번;
           arr[13] = rs.이름;
-          // 출석칸은 빈칸
+          // 스타일 (출석칸은 빈칸이지만 테두리 적용)
+          styles.push({ r: r, c: 10, style: cellCenter });  // 연번
+          styles.push({ r: r, c: 11, style: cellCenter });  // 좌석번호
+          styles.push({ r: r, c: 12, style: cellCenter });  // 반번호
+          styles.push({ r: r, c: 13, style: cellLeft });    // 성명
+          for (let c = 14; c <= 19; c++) {
+            styles.push({ r: r, c: c, style: cellCenter });  // 출석칸 + 비고
+          }
         }
       }
       aoa.push(arr);
@@ -12023,26 +12093,32 @@ const COSMOS = {
       { wch: 5 },   // A 연번
       { wch: 8 },   // B 학번
       { wch: 9 },   // C 이름
-      { wch: 7 },   // D 좌석
-      { wch: 4 },   // E 월
-      { wch: 4 },   // F 화
-      { wch: 4 },   // G 수
-      { wch: 4 },   // H 목
-      { wch: 4 },   // I 금
+      { wch: 8 },   // D 좌석
+      { wch: 5 },   // E 월
+      { wch: 5 },   // F 화
+      { wch: 5 },   // G 수
+      { wch: 5 },   // H 목
+      { wch: 5 },   // I 금
       { wch: 2 },   // J (구분)
       { wch: 5 },   // K 연번
       { wch: 8 },   // L 좌석번호
       { wch: 8 },   // M 반번호
       { wch: 10 },  // N 성명
-      { wch: 11 },  // O 월
-      { wch: 11 },  // P 화
-      { wch: 11 },  // Q 수
-      { wch: 11 },  // R 목
-      { wch: 11 },  // S 금
+      { wch: 10 },  // O 월
+      { wch: 10 },  // P 화
+      { wch: 10 },  // Q 수
+      { wch: 10 },  // R 목
+      { wch: 10 },  // S 금
       { wch: 18 },  // T 비고
     ];
 
-    return { aoa, merges, cols };
+    // 행 높이
+    const rows = [];
+    rows[0] = { hpt: 26 };
+    rows[1] = { hpt: 22 };
+    rows[3] = { hpt: 22 };
+
+    return { aoa, merges, cols, rows, styles };
   },
 };
 
