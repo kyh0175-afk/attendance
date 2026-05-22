@@ -11422,13 +11422,17 @@ async function srOpenBoard(period) {
   document.getElementById('sr-submit-info').textContent = '좌석을 선택해주세요';
 
   try {
-    // 현재 기간의 신청 자료
+    // 현재 기간의 신청 자료 (개인정보 보호: 본인 외에는 학번/이름 마스킹)
     const { data: reqs, error } = await sb.client()
       .from('seat_requests')
       .select('학번, 이름, 장소, 좌석번호')
       .eq('period_id', period.id);
     if (error) throw error;
-    SR.allRequests = reqs || [];
+    // 본인 외의 학번/이름은 클라이언트에서 즉시 마스킹
+    SR.allRequests = (reqs || []).map(r => {
+      if (r.학번 === SR.no) return r;
+      return { 학번: '___', 이름: '___', 장소: r.장소, 좌석번호: r.좌석번호 };
+    });
 
     // 같은 월의 타 기간 점유 자료 로드 (allRequests에 추가 — 본인 신청 외에는 모두 taken으로 처리)
     SR.crossMonthOccupied = [];
@@ -11438,8 +11442,15 @@ async function srOpenBoard(period) {
           p_month: period.좌석배치월,
         });
         if (!mErr && monthData) {
-          // 현재 기간이 아닌 자료만 따로
-          SR.crossMonthOccupied = monthData.filter(r => r.period_id !== period.id);
+          // 현재 기간이 아닌 자료만 따로 + 학번/이름 마스킹 (학년 정보만 유지)
+          SR.crossMonthOccupied = monthData
+            .filter(r => r.period_id !== period.id)
+            .map(r => ({
+              장소: r.장소,
+              좌석번호: r.좌석번호,
+              period_id: r.period_id,
+              허용학년: r.허용학년,
+            }));
         }
       } catch (_) { /* 무시 — 그룹 미지정 또는 함수 호출 실패 시 점유 체크 생략 */ }
     }
