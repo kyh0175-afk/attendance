@@ -12016,6 +12016,9 @@ const SEAT_ADMIN = {
         ' onclick="SEAT_ADMIN.confirmAssignments()">' + confirmLabel + conflictNote + '</button>';
     }
     actionsHtml += '<button class="admin-btn" onclick="SEAT_ADMIN.downloadXlsx()">📥 xlsx 다운로드</button>';
+    if (period.좌석배치월) {
+      actionsHtml += '<button class="admin-btn" onclick="SEAT_ADMIN.downloadXlsxMonth()">📥 ' + period.좌석배치월 + ' 통합 xlsx</button>';
+    }
     actionsHtml += '<button class="admin-btn" onclick="SEAT_ADMIN.openManualModal()">+ 학생 수동 추가</button>';
     actionsHtml += '<button class="admin-btn danger" onclick="SEAT_ADMIN.deletePeriod()">기간 삭제</button>';
 
@@ -12211,6 +12214,124 @@ const SEAT_ADMIN = {
     }
     const p = this.periods.find(x => x.id === this.selectedPeriodId);
     if (p) this._renderDetail(p);
+  },
+
+  async downloadXlsxMonth() {
+    if (!this.selectedPeriodId) return;
+    if (typeof XLSX === 'undefined') {
+      showAdminToast('xlsx 라이브러리 로드 실패', 'err');
+      return;
+    }
+    const period = this.periods.find(p => p.id === this.selectedPeriodId);
+    if (!period || !period.좌석배치월) {
+      showAdminToast('좌석 배치 월이 지정되지 않은 기간이에요', 'err');
+      return;
+    }
+
+    try {
+      // 같은 월의 모든 기간 조회
+      const { data: monthPeriods, error: pErr } = await sb.client()
+        .from('seat_periods')
+        .select('*')
+        .eq('좌석배치월', period.좌석배치월)
+        .order('신청시작', { ascending: true });
+      if (pErr) throw pErr;
+      if (!monthPeriods || monthPeriods.length === 0) {
+        showAdminToast('해당 월의 기간이 없어요', 'err');
+        return;
+      }
+      const periodIds = monthPeriods.map(p => p.id);
+      const periodMap = {};
+      monthPeriods.forEach(p => { periodMap[p.id] = p; });
+
+      // 모든 기간의 신청 + 배치 자료 조회
+      const [{ data: requests }, { data: assignments }] = await Promise.all([
+        sb.client().from('seat_requests').select('*').in('period_id', periodIds),
+        sb.client().from('seat_assignments').select('*').in('period_id', periodIds),
+      ]);
+
+      // 배치가 확정된 학생은 배치 자료 기준, 아니면 신청 자료 기준으로 통합
+      // 키: (period_id, 학번)
+      const rowMap = new Map();
+      (requests || []).forEach(r => {
+        const key = r.period_id + ':' + r.학번;
+        rowMap.set(key, {
+          period_id: r.period_id,
+          학번: r.학번,
+          이름: r.이름,
+          학생신청장소: r.장소,
+          학생신청좌석: r.좌석번호,
+          장소: r.장소,
+          좌석번호: r.좌석번호,
+          변경사유: null,
+        });
+      });
+      (assignments || []).forEach(a => {
+        const key = a.period_id + ':' + a.학번;
+        const existing = rowMap.get(key) || {
+          period_id: a.period_id,
+          학번: a.학번,
+          이름: a.이름,
+          학생신청장소: a.학생신청장소,
+          학생신청좌석: a.학생신청좌석,
+        };
+        existing.장소 = a.장소;
+        existing.좌석번호 = a.좌석번호;
+        existing.학생신청장소 = a.학생신청장소 || existing.학생신청장소;
+        existing.학생신청좌석 = a.학생신청좌석 || existing.학생신청좌석;
+        existing.변경사유 = a.변경사유;
+        rowMap.set(key, existing);
+      });
+
+      // 정렬: 장소 → 좌석번호 → 학번
+      const allRows = [...rowMap.values()].sort((a, b) => {
+        const roomOrder = { '해오름': 0, '리케이온': 1 };
+        const ra = roomOrder[a.장소] !== undefined ? roomOrder[a.장소] : 9;
+        const rb = roomOrder[b.장소] !== undefined ? roomOrder[b.장소] : 9;
+        if (ra !== rb) return ra - rb;
+        const sa = a.좌석번호 || 999;
+        const sb_ = b.좌석번호 || 999;
+        if (sa !== sb_) return sa - sb_;
+        return String(a.학번).localeCompare(String(b.학번), undefined, { numeric: true });
+      });
+
+      const headers = ['학번', '이름', '학년', '신청 기간', '학생 신청 장소', '학생 신청 좌석', '최종 배치 장소', '최종 배치 좌석', '변경 사유'];
+      const rows = [headers];
+      allRows.forEach(r => {
+        const p = periodMap[r.period_id] || {};
+        const grade = r.학번 ? parseInt(String(r.학번).charAt(0), 10) : '';
+        rows.push([
+          r.학번 || '',
+          r.이름 || '',
+          grade,
+          p.제목 || '',
+          r.학생신청장소 || '',
+          r.학생신청좌석 || '',
+          r.장소 || '',
+          r.좌석번호 || '',
+          r.변경사유 || '',
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [
+        { wch: 9 }, { wch: 10 }, { wch: 6 },
+        { wch: 28 },
+        { wch: 14 }, { wch: 14 },
+        { wch: 14 }, { wch: 14 },
+        { wch: 30 },
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, period.좌석배치월 + ' 통합');
+
+      const today = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      const dateStr = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
+      XLSX.writeFile(wb, '좌석신청_' + period.좌석배치월 + '통합_' + dateStr + '.xlsx');
+      showAdminToast(period.좌석배치월 + ' 통합 xlsx 다운로드됨 (' + allRows.length + '명)', 'ok');
+    } catch (e) {
+      showAdminToast('다운로드 실패: ' + (e.message || '오류'), 'err');
+    }
   },
 
   async downloadXlsx() {
