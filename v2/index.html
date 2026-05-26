@@ -4559,42 +4559,50 @@ body.admin-readonly #admin-tab-diag {
     color-adjust: exact !important;
   }
 
-  /* 페이지 1을 만들지 않게: 모든 부모를 평탄하게 */
+  /* body/html: 인쇄 영역 외 공간 완전 제거 */
   html, body {
     background: var(--bg) !important;
     margin: 0 !important;
     padding: 0 !important;
     height: auto !important;
     min-height: 0 !important;
-    overflow: visible !important;
+    max-height: none !important;
+    overflow: hidden !important;
   }
-  body * { visibility: hidden; }
-  #screen-seat-board, #screen-seat-board * { visibility: visible; }
 
-  /* 다른 모든 screen 강제 숨김 (display:none이 아니면 페이지 공간 차지함) */
-  .screen:not(#screen-seat-board) { display: none !important; }
+  /* body의 모든 직계 자식을 일단 숨김 — 그 다음 좌석 배치만 노출 */
+  body > * { display: none !important; }
+  body > #screen-seat-board { display: block !important; }
 
+  /* screen-seat-board 안의 다른 screen 흔적 제거 */
   #screen-seat-board {
     position: static !important;
     display: block !important;
-    width: auto !important;
+    width: 100% !important;
     height: auto !important;
     padding: 0 !important;
     margin: 0 !important;
     background: var(--bg) !important;
-    overflow: visible !important;
+    overflow: hidden !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
   #screen-seat-board .seat-wrap {
     max-width: none !important;
     padding: 0 !important;
     margin: 0 !important;
+    height: auto !important;
+    overflow: hidden !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   /* 숨길 요소 */
-  .back-btn, .sb-print-btn, #sb-tabs { display: none !important; visibility: hidden !important; }
+  .back-btn, .sb-print-btn, #sb-tabs { display: none !important; }
 
   /* 헤더 컴팩트 */
   #screen-seat-board .seat-header {
+    display: flex !important;
     background: var(--bg) !important;
     border: none !important;
     padding: 2mm 4mm !important;
@@ -4611,23 +4619,35 @@ body.admin-readonly #admin-tab-diag {
   }
 
   /* 좌석 배치 도면 — 페이지에 딱 맞게 */
-  #screen-seat-board #sb-content,
-  #screen-seat-board .seat-board-wrap {
-    page-break-before: avoid !important;
-    break-before: avoid !important;
+  #screen-seat-board #sb-content {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
     margin: 0 !important;
     padding: 0 !important;
+    overflow: hidden !important;
   }
-  /* 도면 자체 크기 제한 — A4 가로 약 297mm - 여백 - 헤더 = 약 170mm */
   #screen-seat-board .seat-board-wrap {
     max-width: 280mm !important;
     width: 100% !important;
     max-height: 170mm !important;
     margin: 0 auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    overflow: hidden !important;
   }
-  /* 좌석 마커 글자도 작게 (학생 이름이 큰 게 보이니까) */
+  /* 도면 이미지 크기 제한 */
+  #screen-seat-board .seat-board-img {
+    max-height: 168mm !important;
+    width: auto !important;
+    max-width: 100% !important;
+    display: block !important;
+    margin: 0 auto !important;
+  }
+  /* 좌석 마커 글자 */
   #screen-seat-board .seat-board-marker,
   #screen-seat-board .seat-marker {
     font-size: 8pt !important;
