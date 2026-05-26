@@ -4548,38 +4548,54 @@ body.admin-readonly #admin-tab-diag {
 /* 좌석 배치도 출력 버튼 */
 .sb-print-btn{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;padding:9px 16px}
 
-/* 인쇄: 좌석 배치도만 가로로 출력 */
+/* 인쇄: 좌석 배치도만 가로로 출력, 화면 색상 그대로 */
 @media print {
-  @page { size: A4 landscape; margin: 10mm; }
-  body { background: #fff !important; color: #000 !important; }
+  @page { size: A4 landscape; margin: 6mm; }
+
+  /* 색상 강제 유지 (배경/이미지 인쇄) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
   /* 기본: 모든 것을 숨김 */
+  html, body { background: var(--bg) !important; margin: 0 !important; padding: 0 !important; }
   body * { visibility: hidden; }
   /* 좌석 배치 화면만 보이게 */
   #screen-seat-board, #screen-seat-board * { visibility: visible; }
   /* 배치 화면을 페이지 전체로 펼침 */
   #screen-seat-board {
     position: absolute !important;
-    left: 0; top: 0; width: 100%; height: auto;
+    left: 0 !important; top: 0 !important;
+    width: 100% !important;
+    padding: 4mm 6mm !important;
+    margin: 0 !important;
+    background: var(--bg) !important;
+  }
+  /* seat-wrap 패딩 제거 */
+  #screen-seat-board .seat-wrap {
+    max-width: none !important;
     padding: 0 !important;
-    background: #fff !important;
-    color: #000 !important;
+    margin: 0 !important;
   }
-  /* 인쇄 시 숨길 요소: 뒤로가기 버튼, 출력 버튼, 탭, 배경 박스 테두리 */
-  .back-btn, .sb-print-btn, #sb-tabs { display: none !important; }
-  /* 헤더 텍스트 검정 */
-  .seat-board-period-title, .seat-board-period-meta { color: #000 !important; }
-  .seat-header {
-    background: #fff !important;
-    border: none !important;
-    padding: 0 0 8px 0 !important;
-    margin-bottom: 12px !important;
+  /* 인쇄 시 숨길 요소: 뒤로가기·출력 버튼·탭 */
+  .back-btn, .sb-print-btn, #sb-tabs { display: none !important; visibility: hidden !important; }
+  /* 헤더 컴팩트 */
+  #screen-seat-board .seat-header {
+    padding: 6px 10px !important;
+    margin-bottom: 6mm !important;
   }
-  /* 좌석 마커 글자 색은 검정 */
-  .seat-board-marker, .seat-board-mark-num, .seat-board-mark-name { color: #000 !important; }
-  /* 좌석 배치 wrap 흰 배경 */
-  .seat-board-wrap { background: #fff !important; border: 1px solid #ccc !important; }
-  /* 페이지 나눠지지 않게 */
-  .seat-board-wrap, .seat-wrap { page-break-inside: avoid; }
+  /* 좌석 배치 도면 한 페이지에 맞춤 */
+  #screen-seat-board .seat-board-wrap {
+    max-width: 100% !important;
+    max-height: 175mm !important;  /* A4 가로 - 헤더 - 여백 */
+    margin: 0 auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  /* 배치 도면 자체가 페이지 안에 들어가도록 */
+  #screen-seat-board { page-break-after: avoid !important; }
 }
 .cosmos-month-picker{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink-dim)}
 .cosmos-month-picker label{font-weight:500}
