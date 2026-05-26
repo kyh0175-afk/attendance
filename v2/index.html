@@ -4550,52 +4550,88 @@ body.admin-readonly #admin-tab-diag {
 
 /* 인쇄: 좌석 배치도만 가로로 출력, 화면 색상 그대로 */
 @media print {
-  @page { size: A4 landscape; margin: 6mm; }
+  @page { size: A4 landscape; margin: 4mm; }
 
-  /* 색상 강제 유지 (배경/이미지 인쇄) */
+  /* 색상 강제 유지 */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
 
-  /* 기본: 모든 것을 숨김 */
-  html, body { background: var(--bg) !important; margin: 0 !important; padding: 0 !important; }
+  /* 페이지 1을 만들지 않게: 모든 부모를 평탄하게 */
+  html, body {
+    background: var(--bg) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
   body * { visibility: hidden; }
-  /* 좌석 배치 화면만 보이게 */
   #screen-seat-board, #screen-seat-board * { visibility: visible; }
-  /* 배치 화면을 페이지 전체로 펼침 */
+
+  /* 다른 모든 screen 강제 숨김 (display:none이 아니면 페이지 공간 차지함) */
+  .screen:not(#screen-seat-board) { display: none !important; }
+
   #screen-seat-board {
-    position: absolute !important;
-    left: 0 !important; top: 0 !important;
-    width: 100% !important;
-    padding: 4mm 6mm !important;
+    position: static !important;
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
+    padding: 0 !important;
     margin: 0 !important;
     background: var(--bg) !important;
+    overflow: visible !important;
   }
-  /* seat-wrap 패딩 제거 */
   #screen-seat-board .seat-wrap {
     max-width: none !important;
     padding: 0 !important;
     margin: 0 !important;
   }
-  /* 인쇄 시 숨길 요소: 뒤로가기·출력 버튼·탭 */
+
+  /* 숨길 요소 */
   .back-btn, .sb-print-btn, #sb-tabs { display: none !important; visibility: hidden !important; }
+
   /* 헤더 컴팩트 */
   #screen-seat-board .seat-header {
-    padding: 6px 10px !important;
-    margin-bottom: 6mm !important;
+    background: var(--bg) !important;
+    border: none !important;
+    padding: 2mm 4mm !important;
+    margin: 0 !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
-  /* 좌석 배치 도면 한 페이지에 맞춤 */
+  #screen-seat-board .seat-board-period-title {
+    font-size: 14pt !important;
+  }
+  #screen-seat-board .seat-board-period-meta {
+    font-size: 9pt !important;
+    margin-top: 2px !important;
+  }
+
+  /* 좌석 배치 도면 — 페이지에 딱 맞게 */
+  #screen-seat-board #sb-content,
   #screen-seat-board .seat-board-wrap {
-    max-width: 100% !important;
-    max-height: 175mm !important;  /* A4 가로 - 헤더 - 여백 */
-    margin: 0 auto !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
-  /* 배치 도면 자체가 페이지 안에 들어가도록 */
-  #screen-seat-board { page-break-after: avoid !important; }
+  /* 도면 자체 크기 제한 — A4 가로 약 297mm - 여백 - 헤더 = 약 170mm */
+  #screen-seat-board .seat-board-wrap {
+    max-width: 280mm !important;
+    width: 100% !important;
+    max-height: 170mm !important;
+    margin: 0 auto !important;
+  }
+  /* 좌석 마커 글자도 작게 (학생 이름이 큰 게 보이니까) */
+  #screen-seat-board .seat-board-marker,
+  #screen-seat-board .seat-marker {
+    font-size: 8pt !important;
+  }
 }
 .cosmos-month-picker{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink-dim)}
 .cosmos-month-picker label{font-weight:500}
