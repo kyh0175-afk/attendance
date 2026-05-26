@@ -4483,8 +4483,8 @@ body.admin-readonly #admin-tab-diag {
 .seat-board-wrap{position:relative;width:100%;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
 .seat-board-img{display:block;width:100%;height:auto;user-select:none;pointer-events:none}
 .seat-board-overlay{position:absolute;inset:0}
-.seat-marker{position:absolute;transform:translate(-50%,-50%);border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:700;border:2px solid transparent;transition:all .15s;box-sizing:border-box}
-.seat-marker.empty{background:rgba(212,175,103,1);color:#1a130c;border-color:rgba(80,55,15,.8);border-width:1px;font-weight:700}
+.seat-marker{position:absolute;transform:translate(-50%,-50%);border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:700;border:2px solid transparent;transition:all .15s;box-sizing:border-box;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;backface-visibility:hidden}
+.seat-marker.empty{background:rgba(212,175,103,1);color:#1a130c;border-color:rgba(80,55,15,.8);border-width:1px;font-weight:800;font-family:'Pretendard Variable',Pretendard,'IBM Plex Sans KR',sans-serif;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
 .seat-marker.disabled{background:rgba(60,55,50,.85);color:rgba(255,255,255,.4);border-color:rgba(80,75,70,.6);border-width:1px;font-weight:600;cursor:not-allowed;text-decoration:line-through}
 .seat-marker.cross-taken{background:rgba(94,184,255,.6);color:#1a130c;border-color:rgba(94,184,255,.8);border-width:1px;font-weight:700;cursor:not-allowed}
 .sp-grade-chip{display:flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--cream);cursor:pointer;transition:all .15s}
@@ -4495,7 +4495,7 @@ body.admin-readonly #admin-tab-diag {
 .seat-marker.taken{background:rgba(200,127,94,.65);color:#fff;border-color:rgba(200,127,94,.85);cursor:pointer}
 .seat-marker.taken:hover{transform:translate(-50%,-50%) scale(1.1);z-index:5}
 .seat-marker.mine{background:var(--copper);color:#fff;border-color:var(--cream);box-shadow:0 0 0 3px rgba(200,127,94,.4);z-index:4}
-.seat-marker.assigned{background:rgba(94,184,255,.9);color:#fff;border-color:rgba(50,140,210,1);cursor:default;flex-direction:column;line-height:1.05;text-align:center;padding:1px 2px;font-family:'Pretendard Variable',Pretendard,'IBM Plex Sans KR',sans-serif;font-weight:700;text-shadow:0 1px 1px rgba(0,0,0,.3);overflow:hidden}
+.seat-marker.assigned{background:rgba(94,184,255,.92);color:#fff;border-color:rgba(50,140,210,1);cursor:default;flex-direction:column;line-height:1.05;text-align:center;padding:1px 2px;font-family:'Pretendard Variable',Pretendard,'IBM Plex Sans KR',sans-serif;font-weight:700;text-shadow:0 1px 1px rgba(0,0,0,.3);overflow:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:geometricPrecision}
 .seat-marker.assigned .sm-no{font-family:'DM Mono',monospace;font-size:.72em;font-weight:600;opacity:.85;line-height:1;margin-bottom:2px}
 .seat-marker.assigned .sm-name{font-size:.95em;font-weight:800;line-height:1.05;letter-spacing:-.02em;display:block;overflow:hidden;text-overflow:ellipsis}
 
@@ -7883,7 +7883,7 @@ document.addEventListener('touchend', (e) => {
 // ══════════════════════════════════════════════════════════════
 const SEAT_LAYOUTS = {
   '해오름': {
-    image: 'assets/seats-haereum.png',
+    image: 'assets/seats-haereum.jpg',
     imgW: 1410, imgH: 905,
     disabled: [9,11,13,16,17,19,21,23,25,27],
     seats: [
@@ -7934,7 +7934,7 @@ const SEAT_LAYOUTS = {
     ]
   },
   '리케이온': {
-    image: 'assets/seats-lykeion.png',
+    image: 'assets/seats-lykeion.jpg',
     imgW: 1391, imgH: 924,
     seats: [
     {n:1,x:9.49,y:26.84,w:2.301,h:3.139},
