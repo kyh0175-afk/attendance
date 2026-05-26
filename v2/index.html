@@ -12,6 +12,7 @@
 <!-- ══ 폰트 ══ -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
 <script>
 (function(){
   var p=new URLSearchParams(location.search);
@@ -4494,7 +4495,9 @@ body.admin-readonly #admin-tab-diag {
 .seat-marker.taken{background:rgba(200,127,94,.65);color:#fff;border-color:rgba(200,127,94,.85);cursor:pointer}
 .seat-marker.taken:hover{transform:translate(-50%,-50%) scale(1.1);z-index:5}
 .seat-marker.mine{background:var(--copper);color:#fff;border-color:var(--cream);box-shadow:0 0 0 3px rgba(200,127,94,.4);z-index:4}
-.seat-marker.assigned{background:rgba(94,184,255,.9);color:#fff;border-color:rgba(50,140,210,1);cursor:default;white-space:nowrap;overflow:visible;text-shadow:0 1px 2px rgba(0,0,0,.4);font-weight:800;letter-spacing:-.02em}
+.seat-marker.assigned{background:rgba(94,184,255,.9);color:#fff;border-color:rgba(50,140,210,1);cursor:default;flex-direction:column;line-height:1.05;text-align:center;padding:1px 2px;font-family:'Pretendard Variable',Pretendard,'IBM Plex Sans KR',sans-serif;font-weight:700;text-shadow:0 1px 1px rgba(0,0,0,.3);overflow:hidden}
+.seat-marker.assigned .sm-no{font-family:'DM Mono',monospace;font-size:.72em;font-weight:600;opacity:.85;line-height:1}
+.seat-marker.assigned .sm-name{font-size:.95em;font-weight:800;line-height:1.05;letter-spacing:-.02em;display:block;overflow:hidden;text-overflow:ellipsis}
 
 .seat-legend{display:flex;gap:18px;flex-wrap:wrap;padding:12px 18px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;font-family:'IBM Plex Sans KR',sans-serif;font-size:12px;color:var(--ink-dim)}
 .seat-leg-item{display:flex;align-items:center;gap:6px}
@@ -13261,17 +13264,20 @@ function sbSwitchRoom(room) {
     const a = bySeat[s.n];
     const cls = 'seat-marker ' + (a ? 'assigned' : 'empty');
     const label = a ? a.이름 + ' (' + a.좌석번호 + '번)' : s.n + '번';
-    const sizeMul = 1.4;
-    // assigned는 폭이 자동 확장되어야 하므로 min-width 사용 + width 미지정
     let styleAttr;
+    let inner;
     if (a) {
-      styleAttr = 'left:' + s.x + '%;top:' + s.y + '%;min-width:' + s.w*sizeMul + '%;height:' + s.h*sizeMul + '%;padding:2px 6px;font-size:11px';
+      // 정사각형 마커 — 가로 폭을 세로 높이와 비슷하게
+      const sizeMul = 1.6;
+      const w = s.w * sizeMul;
+      const h = s.h * sizeMul;
+      styleAttr = 'left:' + s.x + '%;top:' + s.y + '%;width:' + w + '%;height:' + h + '%;font-size:clamp(8px, 1vw, 11px)';
+      inner = '<span class="sm-no">' + a.좌석번호 + '</span><span class="sm-name">' + escapeHtml(a.이름) + '</span>';
     } else {
+      const sizeMul = 1.4;
       styleAttr = 'left:' + s.x + '%;top:' + s.y + '%;width:' + s.w*sizeMul + '%;height:' + s.h*sizeMul + '%;font-size:clamp(9px, 1.2vw, 12px);padding:2px';
+      inner = s.n;
     }
-    const inner = a
-      ? escapeHtml(a.이름) + '<span style="opacity:.75;font-size:9px;margin-left:3px">' + a.좌석번호 + '</span>'
-      : s.n;
     html += '<div class="' + cls + '" ' +
       'style="' + styleAttr + '" ' +
       'title="' + escapeAttr(label) + '">' +
