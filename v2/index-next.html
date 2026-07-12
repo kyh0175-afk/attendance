@@ -8191,7 +8191,7 @@ async function loadRosterAndSubscribe() {
 
   try {
     // 1. 분모 학생 조회 (오늘 요일 대상자만)
-    const allStudents = await sb.students.byRoom(program, room);
+    const allStudents = await sb._retry(() => sb.students.byRoom(program, room));   // 학교망 블립 자동 재시도
     const todayKr = DAY_KR[new Date().getDay()];
     T.rosterStudents = allStudents.filter(s => {
       // 출석요일이 NULL이면 매번 대상 (v1 동작 보존)
@@ -8206,7 +8206,7 @@ async function loadRosterAndSubscribe() {
 
     // 2. 이미 출석한 학생 조회 (세션 복원 케이스)
     T.attendedMap = {};
-    const existing = await sb.attendance.bySession(sessionId);
+    const existing = await sb._retry(() => sb.attendance.bySession(sessionId));   // 학교망 블립 자동 재시도
     existing.forEach(rec => {
       // 분모 학생 안에 있는지 확인 → 자율 여부 결정
       const isInRoster = T.rosterStudents.some(s => s.학번 === rec.학번);
@@ -8321,9 +8321,12 @@ function renderRoster() {
   document.getElementById('t-stat-abs').textContent = absentCount;
   document.getElementById('t-stat-rate').textContent = rate;
 
+  // 분모(로스터) 학번 집합 — O(1) 조회로 자율출석 판정(기존 O(출석×로스터) 제거)
+  const rosterNoSet = new Set(T.rosterStudents.map(s => String(s.학번)));
+
   // 자율 출석 카운트 (분모 밖 학생)
   const selfCount = Object.entries(T.attendedMap).filter(([no, _]) =>
-    !T.rosterStudents.some(s => s.학번 === no)
+    !rosterNoSet.has(String(no))
   ).length;
   const selfEl = document.getElementById('t-stat-self');
   if (selfEl) selfEl.textContent = selfCount;
@@ -8336,7 +8339,7 @@ function renderRoster() {
 
   // 자율 출석 학생 (분모에 없지만 출석한 학생)
   const selfStudents = Object.entries(T.attendedMap)
-    .filter(([no, _]) => !T.rosterStudents.some(s => s.학번 === no))
+    .filter(([no, _]) => !rosterNoSet.has(String(no)))
     .map(([no, data]) => ({
       학번: no,
       이름: data.name,
@@ -10161,25 +10164,23 @@ async function loadAnalysis() {
 
     // 학생별 첫 출석 날짜 맵 (전체 기간 기준) — 한 번만 로드해서 캐시
     // 신규 등록/비활성 재활성 학생의 "등록 이전 기간 결석" 왜곡 방지용
+    // ⚠️ 전량 조회라 1000행 캡을 반드시 넘는다 → fetchAllRows로 페이지네이션(캡 유실 시 중도등록 학생이 통째로 사라짐).
     if (!A.firstAttDateMap) {
       try {
-        const { data: allFirst, error: e2 } = await sb.client()
+        const allFirst = await fetchAllRows(() => sb.client()
           .from('attendance')
           .select('학번, 프로그램, 날짜')
-          .order('날짜', { ascending: true });
-        if (!e2 && allFirst) {
-          const m = {};
-          allFirst.forEach(r => {
-            const k = `${r.학번}|${r.프로그램}`;
-            if (!m[k]) m[k] = r.날짜; // order asc라 첫 값이 최소
-          });
-          A.firstAttDateMap = m;
-        } else {
-          A.firstAttDateMap = {}; // 실패 시 빈 맵 (분모 왜곡 방지 로직만 스킵)
-        }
+          .order('날짜', { ascending: true })
+          .order('id', { ascending: true }));   // 페이지 경계 안정용(같은 날짜 tiebreaker)
+        const m = {};
+        (allFirst || []).forEach(r => {
+          const k = `${r.학번}|${r.프로그램}`;
+          if (!m[k]) m[k] = r.날짜; // order asc라 첫 값이 최소(=첫 출석일)
+        });
+        A.firstAttDateMap = m;
       } catch (e) {
         console.warn('첫 출석일 로드 실패 (분석은 계속):', e);
-        A.firstAttDateMap = {};
+        A.firstAttDateMap = {}; // 실패 시 빈 맵 (분모 왜곡 방지 로직만 스킵)
       }
     }
 
@@ -10190,6 +10191,53 @@ async function loadAnalysis() {
     console.error('분석 데이터 로딩 실패:', e);
     container.innerHTML = `<div class="student-table-empty">불러오기 실패: ${e.message || '오류'}</div>`;
   }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  분석 집계 단일화 — 화면 통계·매트릭스·엑셀이 동일 규칙을 쓰게 하는 공용 판정
+//  규칙(하나): ①그날 (프로그램+장소)에 세션이 없으면 제외 → ②학생 출석요일이 아니면 제외
+//            → ③학생 첫 출석일 이전(또는 첫 출석 기록 없음)이면 분모 제외(중도 등록·재활성 보호)
+//            → ④나머지에서 출석 기록 있으면 출석(사후=late), 없으면 결석.
+//  이전에는 매트릭스·엑셀이 ③을 적용하지 않아 화면 출석률과 어긋났다(중도 등록 학생에 거짓 X).
+// ══════════════════════════════════════════════════════════════
+function buildAnalysisContext(filteredAtt) {
+  const attMap = {};
+  const sessionDatesByPS = {};
+  filteredAtt.forEach(r => {
+    attMap[`${r.학번}|${r.프로그램}|${r.날짜}`] = r;
+    const psKey = `${r.프로그램}|${r.장소}`;
+    if (!sessionDatesByPS[psKey]) sessionDatesByPS[psKey] = new Set();
+    sessionDatesByPS[psKey].add(r.날짜);
+  });
+  return { attMap, sessionDatesByPS, firstAttByStudent: A.firstAttDateMap || {} };
+}
+
+// 한 학생·한 날짜의 판정. state: 'none'|'notTarget'|'preStart'|'attended'|'absent'
+function analysisDayCell(s, date, ctx) {
+  const sessionDates = ctx.sessionDatesByPS[`${s.프로그램}|${s.장소}`];
+  if (!sessionDates || !sessionDates.has(date)) return { state: 'none' };
+  const sDays = Array.isArray(s.출석요일) ? s.출석요일 : [];
+  const dayKr = DAY_KR_ANAL[new Date(date + 'T00:00:00').getDay()];
+  if (!(sDays.length === 0 || sDays.includes(dayKr))) return { state: 'notTarget' };
+  const firstDate = ctx.firstAttByStudent[`${s.학번}|${s.프로그램}`] || null;
+  if (!firstDate || date < firstDate) return { state: 'preStart' };
+  const rec = ctx.attMap[`${s.학번}|${s.프로그램}|${date}`];
+  if (rec) return { state: 'attended', late: !!rec.사후여부, rec: rec };
+  return { state: 'absent' };
+}
+
+// 학생 배열 → 기간 집계(_target/_attended/_absent/_rate). dates는 A.analysisDates.
+function computeAnalysisStats(students, ctx, dates) {
+  return students.map(s => {
+    let target = 0, attended = 0;
+    dates.forEach(date => {
+      const st = analysisDayCell(s, date, ctx).state;
+      if (st === 'attended') { target++; attended++; }
+      else if (st === 'absent') { target++; }
+    });
+    return { ...s, _target: target, _attended: attended, _absent: target - attended,
+             _rate: target > 0 ? Math.round(attended / target * 100) : null };
+  });
 }
 
 // 분석 렌더링 (필터 적용)
@@ -10222,71 +10270,9 @@ function renderAnalysis() {
   if (filterProg) filteredAtt = filteredAtt.filter(a => a.프로그램 === filterProg);
   if (filterRoom) filteredAtt = filteredAtt.filter(a => a.장소 === filterRoom);
 
-  // 출석 맵 만들기: { "학번|프로그램|날짜": record }
-  const attMap = {};
-  filteredAtt.forEach(r => {
-    const key = `${r.학번}|${r.프로그램}|${r.날짜}`;
-    attMap[key] = r;
-  });
-
-  // ⭐ 핵심 변경: (프로그램+장소)별로 실제 세션이 있었던 날짜들 수집
-  // 이걸 통해 학생별 분모를 "실제 운영된 날 중 학생의 출석요일에 맞는 날"로 계산
-  const sessionDatesByPS = {};
-  filteredAtt.forEach(r => {
-    const psKey = `${r.프로그램}|${r.장소}`;
-    if (!sessionDatesByPS[psKey]) sessionDatesByPS[psKey] = new Set();
-    sessionDatesByPS[psKey].add(r.날짜);
-  });
-
-  // ⭐ 신규/재활성화 학생의 "등록 이전 기간 결석" 왜곡 방지:
-  // 학생별 (학번+프로그램) 전체 기간 첫 출석 날짜를 구해서, 그 이전 날짜는 분모에서 제외
-  // 비활성→재활성, 학기 중 신규 등록 등 케이스에서 억울한 결석이 쌓이지 않도록
-  // A.firstAttDateMap은 loadAnalysis()에서 전체 기간 기준으로 한 번만 로드됨
-  const firstAttByStudent = A.firstAttDateMap || {};
-
-  // 학생별 출석률 계산 (분모: 학생 (프로그램+장소)에 세션이 있었던 날 ∩ 학생 출석요일 ∩ 학생 첫 출석일 이후)
-  const studentStats = students.map(s => {
-    const days = Array.isArray(s.출석요일) ? s.출석요일 : [];
-    const psKey = `${s.프로그램}|${s.장소}`;
-    const sessionDates = sessionDatesByPS[psKey] || new Set();
-    const firstDate = firstAttByStudent[`${s.학번}|${s.프로그램}`] || null;
-
-    let target = 0;
-    let attended = 0;
-    let absentDates = []; // 결석한 날짜 목록 (디버깅/툴팁용)
-
-    sessionDates.forEach(date => {
-      // 학생의 첫 출석 이전 날짜는 분모 제외 (등록 전 or 비활성 기간)
-      // 첫 출석 기록이 아예 없는 학생은 분모 0 → 출석률 N/A 로 처리
-      if (!firstDate || date < firstDate) return;
-
-      const d = new Date(date + 'T00:00:00');
-      const dayKr = DAY_KR_ANAL[d.getDay()];
-
-      // 학생의 출석요일에 해당하지 않으면 분모에서 제외
-      // 단, 출석요일이 비어있으면 모든 세션 날 포함
-      const isTarget = days.length === 0 || days.includes(dayKr);
-      if (!isTarget) return;
-
-      target++;
-      const key = `${s.학번}|${s.프로그램}|${date}`;
-      if (attMap[key]) {
-        attended++;
-      } else {
-        absentDates.push(date);
-      }
-    });
-
-    const rate = target > 0 ? Math.round(attended / target * 100) : null;
-    const absent = target - attended;
-    return {
-      ...s,
-      _target: target,
-      _attended: attended,
-      _absent: absent,
-      _rate: rate,  // null이면 N/A (분모 0)
-    };
-  });
+  // 집계 컨텍스트(출석맵·세션날짜·첫출석일) + 학생별 통계 — 매트릭스·엑셀과 동일한 공용 규칙 사용
+  const ctx = buildAnalysisContext(filteredAtt);
+  const studentStats = computeAnalysisStats(students, ctx, A.analysisDates);
 
   // 사용자 선택 정렬 적용
   const sortMode = (document.getElementById('anal-sort') || {}).value || 'no_asc';
@@ -10418,34 +10404,27 @@ function renderAnalysis() {
     // 행 (학생) — 너무 많으면 잘라내기 (최대 200명)
     const displayStats = studentStats.slice(0, 200);
     displayStats.forEach(s => {
-      const sDays = Array.isArray(s.출석요일) ? s.출석요일 : [];
-      const psKey = `${s.프로그램}|${s.장소}`;
-      const sessionDates = sessionDatesByPS[psKey] || new Set();
-
       html += `<tr>
         <td class="matrix-td-fixed matrix-td-no">${s.학번}</td>
         <td class="matrix-td-fixed matrix-td-name">${escapeHtml(s.이름 || '')}</td>
       `;
 
       A.analysisDates.forEach(date => {
-        const d = new Date(date + 'T00:00:00');
-        const dayKr = DAY_KR_ANAL[d.getDay()];
-        const hasSession = sessionDates.has(date);
-        const isTarget = sDays.length === 0 || sDays.includes(dayKr);
-        const key = `${s.학번}|${s.프로그램}|${date}`;
-        const rec = attMap[key];
-
-        if (!hasSession) {
+        const cell = analysisDayCell(s, date, ctx);  // 화면 통계·엑셀과 동일 규칙
+        if (cell.state === 'none') {
           // 그날 (프로그램+장소)에 세션 자체가 없었음
           html += `<td><span class="matrix-cell no-session" title="세션 없음">·</span></td>`;
-        } else if (!isTarget) {
+        } else if (cell.state === 'notTarget') {
           // 세션은 있었지만 학생 출석요일이 아님
           html += `<td><span class="matrix-cell no-target" title="출석 대상 아님">·</span></td>`;
-        } else if (rec) {
+        } else if (cell.state === 'preStart') {
+          // 학생 첫 출석일 이전(등록 전/비활성 기간) — 분모 제외, 결석 아님
+          html += `<td><span class="matrix-cell no-target" title="등록 전 (분모 제외)">·</span></td>`;
+        } else if (cell.state === 'attended') {
           // 출석 (정상 또는 사후)
-          const time = (rec.원래시각 || '').slice(0, 5);
-          const cls = rec.사후여부 ? 'late' : 'attended';
-          html += `<td><span class="matrix-cell ${cls}" title="${time} 출석${rec.사후여부 ? ' (사후)' : ''}">✓</span></td>`;
+          const time = (cell.rec && cell.rec.원래시각 || '').slice(0, 5);
+          const cls = cell.late ? 'late' : 'attended';
+          html += `<td><span class="matrix-cell ${cls}" title="${time} 출석${cell.late ? ' (사후)' : ''}">✓</span></td>`;
         } else {
           // 결석 (세션 있었고 학생 출석요일이었는데 안 옴)
           html += `<td><span class="matrix-cell absent" title="결석">X</span></td>`;
@@ -10517,24 +10496,11 @@ function exportAnalysisXlsx() {
     return (a.프로그램 || '').localeCompare(b.프로그램 || '');
   });
 
-  // 출석 맵
+  // 출석 데이터 필터 → 공용 집계 컨텍스트(화면과 동일 규칙)
   let filteredAtt = A.analysisAttendance;
   if (filterProg) filteredAtt = filteredAtt.filter(a => a.프로그램 === filterProg);
   if (filterRoom) filteredAtt = filteredAtt.filter(a => a.장소 === filterRoom);
-
-  const attMap = {};
-  filteredAtt.forEach(r => {
-    const key = `${r.학번}|${r.프로그램}|${r.날짜}`;
-    attMap[key] = r;
-  });
-
-  // (프로그램+장소)별 실제 세션 날짜
-  const sessionDatesByPS = {};
-  filteredAtt.forEach(r => {
-    const psKey = `${r.프로그램}|${r.장소}`;
-    if (!sessionDatesByPS[psKey]) sessionDatesByPS[psKey] = new Set();
-    sessionDatesByPS[psKey].add(r.날짜);
-  });
+  const ctx = buildAnalysisContext(filteredAtt);
 
   // 헤더 행
   const header = ['학번', '이름', '프로그램', '장소'];
@@ -10545,40 +10511,25 @@ function exportAnalysisXlsx() {
   });
   header.push('출석', '대상', '출석률');
 
-  // 데이터 행
+  // 데이터 행 — 셀 표기: O 출석 / ◎ 사후 / X 결석 / - 대상아님·등록전(분모제외) / (빈칸) 세션없음
   const rows = [header];
   students.forEach(s => {
-    const sDays = Array.isArray(s.출석요일) ? s.출석요일 : [];
-    const psKey = `${s.프로그램}|${s.장소}`;
-    const sessionDates = sessionDatesByPS[psKey] || new Set();
-
     let target = 0;
     let attended = 0;
-
     const row = [s.학번, s.이름 || '', s.프로그램 || '', s.장소 || ''];
 
     A.analysisDates.forEach(date => {
-      const d = new Date(date + 'T00:00:00');
-      const dayKr = DAY_KR_ANAL[d.getDay()];
-      const hasSession = sessionDates.has(date);
-      const isTarget = sDays.length === 0 || sDays.includes(dayKr);
-      const key = `${s.학번}|${s.프로그램}|${date}`;
-      const rec = attMap[key];
-
-      if (!hasSession) {
-        // 그날 세션이 없었음
-        row.push('');
-      } else if (!isTarget) {
-        // 세션은 있었지만 학생 출석요일 아님
-        row.push('-');
+      const cell = analysisDayCell(s, date, ctx);
+      if (cell.state === 'none') {
+        row.push('');            // 세션 없음
+      } else if (cell.state === 'notTarget' || cell.state === 'preStart') {
+        row.push('-');           // 대상 아님 / 등록 전 → 분모 제외
+      } else if (cell.state === 'attended') {
+        target++; attended++;
+        row.push(cell.late ? '◎' : 'O');
       } else {
         target++;
-        if (rec) {
-          attended++;
-          row.push(rec.사후여부 ? '◎' : 'O');
-        } else {
-          row.push('X');
-        }
+        row.push('X');           // 결석
       }
     });
 
@@ -10782,8 +10733,75 @@ const ST = {
   studentsCache: null,   // 사전 캐싱: 해당 세션의 학생 명단 (학번 → 학생정보)
 };
 
+// ══════════════════════════════════════════════════════════════
+//  학생 출석 내구성 큐 (약신호 '거짓 성공' 방지) ⭐
+//  전송이 일반 네트워크 오류로 실패한 출석을 localStorage에 저장해
+//  화면 재진입·온라인 복귀 시 능동 재시도한다. sendBeacon(페이지 종료 대비)과 병행.
+//  unique 제약(세션id,학번) 덕분에 중복 insert는 무해(alreadyAttended로 처리).
+// ══════════════════════════════════════════════════════════════
+const ATTEND_QUEUE = {
+  KEY: 'cosmos_attend_queue',
+  MAX: 50,
+  MAX_AGE_MS: 2 * 24 * 60 * 60 * 1000,  // 2일 지난 항목 폐기(마감 세션은 서버가 어차피 거부)
+  _flushing: false,
+
+  load() {
+    try { return JSON.parse(localStorage.getItem(this.KEY) || '[]') || []; }
+    catch (e) { return []; }
+  },
+  save(items) {
+    try { localStorage.setItem(this.KEY, JSON.stringify(items.slice(-this.MAX))); } catch (e) {}
+  },
+  _key(p) { return (p && (p.sessionId || p.세션id) || '') + '|' + (p && (p.no || p.학번) || ''); },
+
+  enqueue(payload) {
+    try {
+      const items = this.load();
+      const k = this._key(payload);
+      if (items.some(it => this._key(it.payload) === k)) return;  // 동일 (세션,학번) 중복 방지
+      items.push({ payload: payload, ts: Date.now() });
+      this.save(items);
+    } catch (e) { console.warn('[출석큐] 적재 실패:', e); }
+  },
+
+  async flush() {
+    if (this._flushing) return;
+    const items = this.load();
+    if (items.length === 0) return;
+    this._flushing = true;
+    try {
+      const now = Date.now();
+      const resolved = new Set();   // 제거 확정된 _key(성공·이미출석·종결오류·만료)
+      for (const it of items) {
+        const k = this._key(it.payload);
+        if (it.ts && (now - it.ts) > this.MAX_AGE_MS) { resolved.add(k); continue; }  // 오래된 항목 폐기
+        try {
+          const r = await sb.attendance.add(it.payload);
+          if (r && r.ok) { resolved.add(k); continue; }            // 성공/이미출석 → 제거
+          const msg = (r && r.msg) || '';
+          if (/마감|만료|찾을 수 없/.test(msg)) { resolved.add(k); continue; } // 종결 오류 → 폐기
+          // 그 외(일시 오류) → 보존(resolved에 넣지 않음)
+        } catch (e) {
+          // throw(네트워크 등) → 보존
+        }
+      }
+      // ⚠️ await 사이 다른 전송이 enqueue했을 수 있으므로, 스냅샷을 덮어쓰지 않고
+      //    지금 큐를 다시 읽어 '확정 제거분'만 걸러 저장(동시 적재분 보존).
+      this.save(this.load().filter(it => !resolved.has(this._key(it.payload))));
+    } finally {
+      this._flushing = false;
+    }
+  },
+};
+
+// 온라인 복귀 시 대기 큐 재전송
+window.addEventListener('online', () => { try { ATTEND_QUEUE.flush(); } catch (e) {} });
+
 async function enterStudentScreen(sessionId, scanRoom) {
   showScreen('screen-student');
+
+  // 이전에 약신호로 밀린 출석이 있으면 이 기회에 재전송(fire-and-forget)
+  try { ATTEND_QUEUE.flush(); } catch (e) {}
 
   // 모든 하위 상태 숨김 + 로딩 표시
   document.getElementById('st-loading').style.display = 'block';
@@ -10800,7 +10818,7 @@ async function enterStudentScreen(sessionId, scanRoom) {
   // 세션 조회
   let session;
   try {
-    session = await sb.sessions.byKey(sessionId);
+    session = await sb._retry(() => sb.sessions.byKey(sessionId));   // 학교망 블립 자동 재시도
   } catch (e) {
     console.error('세션 조회 실패:', e);
     showStudentError('세션 정보를 불러올 수 없어요. 잠시 후 다시 시도해주세요.');
@@ -11018,6 +11036,8 @@ async function doStudentAttend() {
         const titleEl = successEl && successEl.querySelector('.success-title');
         if (titleEl) { titleEl.textContent = '이미 출석했어요'; successEl.classList.add('already'); }
       }
+      // 신호가 살아있는 지금, 이전에 밀렸던 출석 큐도 함께 비운다
+      try { ATTEND_QUEUE.flush(); } catch (e) {}
     } else {
       // ⭐ 세션 만료/마감 거부 → 즉시 학생에게 알림 (낙관적 UI 되돌리기)
       const msg = result.msg || '';
@@ -11034,8 +11054,10 @@ async function doStudentAttend() {
         }
         console.warn('[출석 거부]', msg);
       } else {
-        // 일반 네트워크 오류: sendBeacon 백업이 남아있음. 학생 화면은 성공 상태 유지.
-        console.warn('출석 전송 2회 실패, sendBeacon 백업에 의존:', msg);
+        // 일반 네트워크 오류: 내구성 큐에 적재(재진입·온라인 복귀 시 능동 재시도) + sendBeacon 백업 유지.
+        // 학생 화면은 성공 상태 유지(둘 중 하나로 반드시 도달, unique 제약으로 중복 무해).
+        ATTEND_QUEUE.enqueue(payload);
+        console.warn('출석 전송 2회 실패 → 내구성 큐 적재 + sendBeacon 백업:', msg);
       }
     }
   })();
