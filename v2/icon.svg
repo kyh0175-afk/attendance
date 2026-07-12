@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="코스모스 독서시간 출석">
+  <rect width="512" height="512" rx="112" fill="#1a130c"/>
+  <!-- 펼친 책 -->
+  <g fill="none" stroke="#d6b27c" stroke-width="18" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M256 168 C 222 146, 176 140, 140 148 L140 340 C 176 332, 222 338, 256 360" fill="rgba(214,178,124,0.10)"/>
+    <path d="M256 168 C 290 146, 336 140, 372 148 L372 340 C 336 332, 290 338, 256 360" fill="rgba(214,178,124,0.10)"/>
+    <line x1="256" y1="168" x2="256" y2="360"/>
+  </g>
+  <!-- 별 (코스모스) -->
+  <path d="M256 60 l14 34 37 3 -28 24 9 36 -32 -20 -32 20 9 -36 -28 -24 37 -3 z" fill="#e8c88a"/>
+  <!-- 작은 점별 -->
+  <circle cx="112" cy="110" r="6" fill="#7ba087"/>
+  <circle cx="410" cy="118" r="5" fill="#7ba087"/>
+  <circle cx="428" cy="404" r="6" fill="#b8543f"/>
+  <circle cx="96"  cy="400" r="5" fill="#b8543f"/>
+</svg>
