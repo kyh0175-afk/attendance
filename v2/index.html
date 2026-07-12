@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>코스모스 독서시간 출석 v2</title>
 
+<!-- ══ 홈 화면 설치(PWA) · 모바일 ══ -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1a130c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="코스모스 출석">
+<link rel="apple-touch-icon" href="icon-180.png"><!-- iOS는 SVG 미지원 → PNG -->
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+
 <!-- ══ 외부 라이브러리 ══ -->
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1845,6 +1856,27 @@ input { font-family: inherit; }
 .row-manual:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 수동 출석 취소 버튼 (교사가 직접 처리한 건만) */
+.row-undo {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.row-undo:hover {
+  background: rgba(184, 84, 63, 0.12);
+  border-color: rgba(184, 84, 63, 0.5);
+  color: var(--terra);
 }
 
 /* 새로 들어온 학생 강조 */
@@ -4709,6 +4741,20 @@ body.admin-readonly #admin-tab-diag {
 .seat-admin-conflict{background:rgba(184,84,63,.08);border:1px solid rgba(184,84,63,.3);border-radius:var(--r);padding:10px 14px;margin-bottom:14px;font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--terra)}
 
 
+/* ══ 명단 일괄 관리 ══ */
+.stu-bulk-bar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 10px 14px; margin: 0 0 12px;
+  background: var(--paper2); border: 1px solid var(--border2); border-radius: var(--r-md);
+}
+.stu-bulk-count { font-size: 13px; color: var(--amber); font-weight: 600; }
+.stu-bulk-count b { color: var(--cream); }
+.stu-bulk-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.st-check-th, .st-cell-check { width: 40px; text-align: center; }
+.stu-row-check, #students-select-all { width: 17px; height: 17px; accent-color: var(--amber); cursor: pointer; }
+.bulk-desc { font-size: 13px; color: var(--ink-dim); line-height: 1.6; margin: 0 0 12px; }
+.bulk-days { display: flex; gap: 6px; flex-wrap: wrap; }
+
 /* ══ 3단계 폴리시 (색상 무변경·안전본) ══ */
 /* 키보드 포커스 링 — 버튼·링크·탭요소만(입력류는 자체 포커스 있음) */
 a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
@@ -5523,8 +5569,8 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
         </div>
 
         <div class="admin-filters">
-          <input type="text" class="admin-search" id="students-search" placeholder="학번 또는 이름으로 검색..." oninput="renderStudentsTable()">
-          <select class="admin-filter-select" id="students-filter-prog" onchange="renderStudentsTable()">
+          <input type="text" class="admin-search" id="students-search" placeholder="학번 또는 이름으로 검색..." oninput="onStudentsSearch()">
+          <select class="admin-filter-select" id="students-filter-prog" onchange="onStudentsFilterChange()">
             <option value="">전체 프로그램</option>
             <option>심야 독서시간</option>
             <option>야간 독서시간</option>
@@ -5532,20 +5578,20 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
             <option>토요일 독서시간</option>
             <option>일요일 독서시간</option>
           </select>
-          <select class="admin-filter-select" id="students-filter-room" onchange="renderStudentsTable()">
+          <select class="admin-filter-select" id="students-filter-room" onchange="onStudentsFilterChange()">
             <option value="">전체 장소</option>
             <option>아우름</option>
             <option>교과1실</option>
             <option>해오름</option>
             <option>리케이온</option>
           </select>
-          <select class="admin-filter-select" id="students-filter-grade" onchange="renderStudentsTable()">
+          <select class="admin-filter-select" id="students-filter-grade" onchange="onStudentsFilterChange()">
             <option value="">전체 학년</option>
             <option value="1">1학년</option>
             <option value="2">2학년</option>
             <option value="3">3학년</option>
           </select>
-          <select class="admin-filter-select" id="students-filter-active" onchange="renderStudentsTable()">
+          <select class="admin-filter-select" id="students-filter-active" onchange="onStudentsFilterChange()">
             <option value="active">활성만</option>
             <option value="all">전체 (비활성 포함)</option>
             <option value="inactive">비활성만</option>
@@ -5553,10 +5599,24 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
           <span class="admin-result-count" id="students-count">—</span>
         </div>
 
+        <!-- 명단 일괄 관리 액션 바 (선택 시 표시) -->
+        <div class="stu-bulk-bar" id="students-bulk-bar" style="display:none">
+          <span class="stu-bulk-count"><b id="stu-bulk-count">0</b>명 선택됨</span>
+          <div class="stu-bulk-actions">
+            <button class="admin-btn admin-btn-sm" onclick="openBulkStudentModal('days')">출석요일 변경</button>
+            <button class="admin-btn admin-btn-sm" onclick="openBulkStudentModal('room')">장소 변경</button>
+            <button class="admin-btn admin-btn-sm" onclick="openBulkStudentModal('program')">프로그램 이동</button>
+            <button class="admin-btn admin-btn-sm success" onclick="bulkSetStudentsActive(true)">활성화</button>
+            <button class="admin-btn admin-btn-sm danger" onclick="bulkSetStudentsActive(false)">비활성화</button>
+            <button class="admin-btn admin-btn-sm" onclick="clearStudentSelection()">선택 해제</button>
+          </div>
+        </div>
+
         <div class="student-table-wrap">
           <table class="student-table">
             <thead>
               <tr>
+                <th class="st-check-th"><input type="checkbox" id="students-select-all" onchange="toggleSelectAllStudents(this)" title="현재 필터 전체 선택"></th>
                 <th>학번</th>
                 <th>이름</th>
                 <th>프로그램</th>
@@ -5567,7 +5627,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
               </tr>
             </thead>
             <tbody id="students-tbody">
-              <tr><td colspan="7" class="student-table-empty">불러오는 중...</td></tr>
+              <tr><td colspan="8" class="student-table-empty">불러오는 중...</td></tr>
             </tbody>
           </table>
         </div>
@@ -5643,6 +5703,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
             <option value="14">최근 14일</option>
             <option value="30" selected>최근 30일</option>
             <option value="90">최근 3개월</option>
+            <option value="semester">이번 학기</option>
             <option value="0">전체</option>
           </select>
           <select class="admin-filter-select" id="anal-filter-prog" onchange="renderAnalysis()">
@@ -5837,6 +5898,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
             </select>
             <select id="diag-log-event" onchange="DIAG.renderLogs()">
               <option value="">모든 이벤트</option>
+              <option value="audit">변경·삭제 (감사)</option>
               <option value="errors">에러만 (fail)</option>
               <option value="session">세션 관련</option>
               <option value="supervisor">감독 자동채움</option>
@@ -5918,6 +5980,19 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeConfirmModal()">취소</button>
       <button class="btn btn-primary" id="confirm-ok-btn" onclick="executeConfirm()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 명단 일괄 변경 모달 -->
+<div class="modal-bg" id="bulk-student-modal">
+  <div class="modal">
+    <div class="modal-title" id="bulk-student-title">일괄 변경</div>
+    <div id="bulk-student-body" style="margin:14px 0"></div>
+    <p id="bulk-student-err" class="modal-err"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeBulkStudentModal()">취소</button>
+      <button class="btn btn-primary" id="bulk-student-apply" onclick="applyBulkStudent()">적용</button>
     </div>
   </div>
 </div>
@@ -6362,6 +6437,17 @@ function nowTimeStr() {
 }
 
 // ══════════════════════════════════════════════════════════════
+//  DOM 마이크로 헬퍼 (null-안전) — 신규 코드용 축약 유틸
+//  ※ 기존 getElementById 호출부는 회귀 위험이 있어 일괄 치환하지 않음.
+//     새로 추가하는 코드에서만 사용해 본문을 줄이고 null 접근을 방지한다.
+// ══════════════════════════════════════════════════════════════
+function $(id) { return document.getElementById(id); }
+function setText(id, text) { const el = $(id); if (el) el.textContent = text; }
+function show(id, display) { const el = $(id); if (el) el.style.display = (display === undefined ? '' : display); }
+function hide(id) { const el = $(id); if (el) el.style.display = 'none'; }
+function focusLater(id, ms) { setTimeout(() => { const el = $(id); if (el) { try { el.focus(); } catch (_) {} } }, ms || 50); }
+
+// ══════════════════════════════════════════════════════════════
 //  ┌─────────────────────────────────────────────────────────┐
 //  │  sb 헬퍼 — Supabase 호출 래퍼                             │
 //  │  v2 코드 전체에서 이 객체를 통해서만 DB와 통신             │
@@ -6637,6 +6723,27 @@ const sb = {
       const { error } = await sb.client()
         .from('students')
         .update({ 활성: false, 수정일시: new Date().toISOString() })
+        .eq('학번', String(no))
+        .eq('프로그램', program);
+      if (error) throw error;
+      sb.invalidateCache('students');
+    },
+
+    async reactivate(no, program) {
+      const { error } = await sb.client()
+        .from('students')
+        .update({ 활성: true, 수정일시: new Date().toISOString() })
+        .eq('학번', String(no))
+        .eq('프로그램', program);
+      if (error) throw error;
+      sb.invalidateCache('students');
+    },
+
+    // 임의 필드 부분 업데이트(일괄 장소 변경 등). 학번+프로그램 키.
+    async updateFields(no, program, fields) {
+      const { error } = await sb.client()
+        .from('students')
+        .update({ ...fields, 수정일시: new Date().toISOString() })
         .eq('학번', String(no))
         .eq('프로그램', program);
       if (error) throw error;
@@ -7413,6 +7520,7 @@ async function enterTeacherScreen(room) {
   // (이전 장소에서 진행 중이던 세션 상태 정리 — 다른 장소로 전환 시 잔존 상태 방지)
   T.session = null;
   T.attendedMap = {};
+  if (T.undoneKeys) T.undoneKeys.clear();   // 세션 전환 시 취소 억제 키 정리
   T.rosterStudents = [];
   stopTeacherTimer();
   unsubscribeRoster();
@@ -7628,6 +7736,15 @@ function buildTeacherQR() {
   // 학생이 스캔할 URL: 학생 화면 + 세션ID + 장소 (sibling 세션 구분용)
   const url = `${location.origin}${location.pathname}?mode=student&s=${T.session.sessionId}&r=${encodeURIComponent(T.session.room)}`;
 
+  // QR 라이브러리 미로딩 가드 — 조용히 죽지 않고 원인·재시도를 노출(학교망/CDN 차단 대비)
+  if (typeof QRCode === 'undefined') {
+    box.innerHTML = '<div style="padding:24px;color:var(--terra);font-size:13px;line-height:1.6;text-align:center">'
+      + 'QR 생성 라이브러리를 불러오지 못했습니다.<br>학교 네트워크가 외부 접속을 막았을 수 있어요.<br>'
+      + '<button onclick="location.reload()" style="margin-top:12px;padding:8px 16px;border:1px solid var(--border2);'
+      + 'border-radius:6px;background:var(--paper2);color:var(--cream);cursor:pointer">새로고침</button></div>';
+    return;
+  }
+
   // qrcode.js로 그림
   T.qrInstance = new QRCode(box, {
     text: url,
@@ -7821,6 +7938,7 @@ async function confirmExtendEnd() {
   T.session = null;
   T.rosterStudents = [];
   T.attendedMap = {};
+  if (T.undoneKeys) T.undoneKeys.clear();   // 세션 종료 시 취소 억제 키 정리
 
   // 메인 화면으로
   document.getElementById('t-wrap').classList.remove('session-active');
@@ -7860,6 +7978,7 @@ async function confirmEndSession() {
   T.session = null;
   T.rosterStudents = [];
   T.attendedMap = {};
+  if (T.undoneKeys) T.undoneKeys.clear();   // 세션 마감 시 취소 억제 키 정리
 
   // 설정 화면으로 복귀
   document.getElementById('t-setup').style.display = 'block';
@@ -8072,7 +8191,7 @@ async function loadRosterAndSubscribe() {
 
   try {
     // 1. 분모 학생 조회 (오늘 요일 대상자만)
-    const allStudents = await sb.students.byRoom(program, room);
+    const allStudents = await sb._retry(() => sb.students.byRoom(program, room));   // 학교망 블립 자동 재시도
     const todayKr = DAY_KR[new Date().getDay()];
     T.rosterStudents = allStudents.filter(s => {
       // 출석요일이 NULL이면 매번 대상 (v1 동작 보존)
@@ -8087,7 +8206,7 @@ async function loadRosterAndSubscribe() {
 
     // 2. 이미 출석한 학생 조회 (세션 복원 케이스)
     T.attendedMap = {};
-    const existing = await sb.attendance.bySession(sessionId);
+    const existing = await sb._retry(() => sb.attendance.bySession(sessionId));   // 학교망 블립 자동 재시도
     existing.forEach(rec => {
       // 분모 학생 안에 있는지 확인 → 자율 여부 결정
       const isInRoster = T.rosterStudents.some(s => s.학번 === rec.학번);
@@ -8125,6 +8244,8 @@ function subscribeRoster() {
       const records = await sb.attendance.bySession(T.session.sessionId);
       let changed = false;
       records.forEach(rec => {
+        // 방금 취소(undo)한 학번은 DB 삭제가 전파되는 동안 되살리지 않는다(유령 출석 방지)
+        if (T.undoneKeys && T.undoneKeys.has(rec.학번)) return;
         if (!T.attendedMap[rec.학번]) {
           const isInRoster = T.rosterStudents.some(s => s.학번 === rec.학번);
           T.attendedMap[rec.학번] = {
@@ -8159,6 +8280,8 @@ function unsubscribeRoster() {
 function handleRealtimeAttendance(rec) {
   // 이미 명단에 있으면 무시 (낙관적 업데이트 또는 중복)
   if (T.attendedMap[rec.학번]) return;
+  // 방금 취소(undo)한 학번은 DB 삭제가 전파되는 동안 되살리지 않는다(유령 출석 방지)
+  if (T.undoneKeys && T.undoneKeys.has(rec.학번)) return;
 
   // 분모 안에 있는지 확인 (자율 여부)
   const isInRoster = T.rosterStudents.some(s => s.학번 === rec.학번);
@@ -8198,9 +8321,12 @@ function renderRoster() {
   document.getElementById('t-stat-abs').textContent = absentCount;
   document.getElementById('t-stat-rate').textContent = rate;
 
+  // 분모(로스터) 학번 집합 — O(1) 조회로 자율출석 판정(기존 O(출석×로스터) 제거)
+  const rosterNoSet = new Set(T.rosterStudents.map(s => String(s.학번)));
+
   // 자율 출석 카운트 (분모 밖 학생)
   const selfCount = Object.entries(T.attendedMap).filter(([no, _]) =>
-    !T.rosterStudents.some(s => s.학번 === no)
+    !rosterNoSet.has(String(no))
   ).length;
   const selfEl = document.getElementById('t-stat-self');
   if (selfEl) selfEl.textContent = selfCount;
@@ -8213,7 +8339,7 @@ function renderRoster() {
 
   // 자율 출석 학생 (분모에 없지만 출석한 학생)
   const selfStudents = Object.entries(T.attendedMap)
-    .filter(([no, _]) => !T.rosterStudents.some(s => s.학번 === no))
+    .filter(([no, _]) => !rosterNoSet.has(String(no)))
     .map(([no, data]) => ({
       학번: no,
       이름: data.name,
@@ -8270,20 +8396,24 @@ function renderRoster() {
         timeText = att.time;
       }
       if (att.fresh) cls += 'fresh ';
+      // 교사가 직접 처리한 수동 출석만 이 화면에서 취소 가능
+      if (att.manual && att.id) {
+        actionHtml = `<button class="row-undo" onclick="undoManualAttend('${escapeAttr(s.학번)}')" title="수동 출석 취소" aria-label="${escapeAttr(s.이름)} 수동 출석 취소">취소</button>`;
+      }
     } else {
       cls += 'absent ';
       statusIcon = '·';
       timeText = '—';
       // 수동 출석 버튼 (미출석만)
-      actionHtml = `<button class="row-manual" onclick="manualAttend('${s.학번}', '${(s.이름 || '').replace(/'/g, "\&#39;")}')">출석</button>`;
+      actionHtml = `<button class="row-manual" onclick="manualAttend('${escapeAttr(s.학번)}', '${escapeAttr(s.이름)}')">출석</button>`;
     }
 
-    const _roomLabel = getSiblingRoom(T.session.room) && s.장소 ? `<span class="row-room-tag">${s.장소}</span>` : '';
+    const _roomLabel = getSiblingRoom(T.session.room) && s.장소 ? `<span class="row-room-tag">${escapeHtml(s.장소)}</span>` : '';
     return `
       <div class="${cls.trim()}">
         <div class="row-status">${statusIcon}</div>
-        <div class="row-no">${s.학번}</div>
-        <div class="row-name">${s.이름}${_roomLabel}</div>
+        <div class="row-no">${escapeHtml(s.학번)}</div>
+        <div class="row-name">${escapeHtml(s.이름)}${_roomLabel}</div>
         <div class="row-time">${timeText}</div>
         ${actionHtml}
       </div>
@@ -8336,18 +8466,20 @@ function switchListTab(tab) {
 async function manualAttend(no, name) {
   if (!T.session) return;
   if (T.attendedMap[no]) return; // 이미 출석함
+  if (T.undoneKeys) T.undoneKeys.delete(no); // 방금 취소한 학생을 다시 넣는 경우 억제 해제
 
   // 즉시 낙관적 업데이트
   const now = new Date();
   const timeStr = now.toTimeString().slice(0, 8);
   const timeShort = timeStr.slice(0, 5);
 
-  // 임시로 표시
+  // 임시로 표시 (manual: 교사가 직접 처리 → 취소(undo) 가능 대상)
   T.attendedMap[no] = {
     name: name,
     time: timeShort,
     isSelf: false,
     fresh: true,
+    manual: true,
   };
   renderRoster();
 
@@ -8368,6 +8500,19 @@ async function manualAttend(no, name) {
       throw new Error(result.msg || '저장 실패');
     }
 
+    // 저장된 레코드 id 확보 → 취소(undo) 가능하도록 기억
+    if (T.attendedMap[no]) {
+      if (result.data && result.data.id) {
+        T.attendedMap[no].id = result.data.id;
+      } else if (result.alreadyAttended) {
+        // 이미(학생 QR 등으로) 출석돼 있던 경우: 교사가 만든 게 아니므로 수동 취소 대상에서 제외.
+        // 표시 시각은 낙관적으로 넣은 교사 클릭 시각으로 남을 수 있으나(분 단위 경미),
+        // 명단 새로고침(loadRoster) 시 실제 원래시각으로 교정된다.
+        T.attendedMap[no].manual = false;
+      }
+    }
+    try { TLOG.log('audit_manual_attend', { no: no, sessionId: T.session.sessionId, id: (result.data && result.data.id) || null }); } catch (_) {}
+
     // 강조 효과 2.5초 후 제거
     setTimeout(() => {
       if (T.attendedMap[no]) {
@@ -8382,6 +8527,42 @@ async function manualAttend(no, name) {
     delete T.attendedMap[no];
     renderRoster();
     alert('출석 처리 실패: ' + (e.message || '오류'));
+  }
+}
+
+// 수동 출석 취소 (교사가 잘못 눌렀을 때 되돌리기)
+//   - 이 세션에서 교사가 '출석' 버튼/넘버패드로 직접 처리한 건만 대상(att.manual && att.id).
+//   - 학생 본인 QR 출석은 여기서 지우지 않는다(관리자 페이지의 삭제를 사용).
+async function undoManualAttend(no) {
+  if (!T.session) return;
+  const att = T.attendedMap[no];
+  if (!att || !att.manual || !att.id) return;
+
+  if (!confirm(`${att.name || no} 학생의 수동 출석을 취소할까요?`)) return;
+
+  const attId = att.id;
+  const sid = T.session.sessionId;   // 세션 동일성 확인용(await 중 세션 전환 방지)
+  // 폴링/realtime이 DB 삭제 전파 전의 잔존 행을 되살리지 못하도록 억제 키 등록
+  if (!T.undoneKeys) T.undoneKeys = new Set();
+  T.undoneKeys.add(no);
+  // 낙관적 제거
+  delete T.attendedMap[no];
+  renderRoster();
+
+  try {
+    await sb.attendance.delete(attId);
+    try { TLOG.log('audit_manual_undo', { no: no, sessionId: sid, id: attId }); } catch (_) {}
+    // 삭제 확정 후에도 진행 중이던 폴링 SELECT가 잔존 행을 되살릴 수 있어 잠시 더 억제
+    setTimeout(() => { if (T.undoneKeys) T.undoneKeys.delete(no); }, 6000);
+  } catch (e) {
+    console.error('수동 출석 취소 실패:', e);
+    if (T.undoneKeys) T.undoneKeys.delete(no);   // 억제 해제(실제 출석이 다시 표시될 수 있도록)
+    // await 사이 세션이 바뀌었으면 이전 세션 항목을 새 명단에 주입하지 않는다
+    if (!T.session || T.session.sessionId !== sid) return;
+    // 실패 시 복원
+    T.attendedMap[no] = att;
+    renderRoster();
+    alert('취소 실패: ' + (e.message || '오류') + '\n잠시 후 다시 시도해주세요.');
   }
 }
 
@@ -8650,6 +8831,199 @@ async function loadAllStudents() {
 //  명단 관리 — 테이블 렌더링
 // ════════════════════════════════════════
 
+// 입력 디바운스 유틸
+function debounce(fn, ms) {
+  let t;
+  return function (...a) { clearTimeout(t); t = setTimeout(() => fn.apply(this, a), ms); };
+}
+
+// Supabase 기본 1000행 캡 우회 — 쿼리를 페이지로 끊어 전량을 가져온다.
+// buildQuery: 매 호출마다 '새' 쿼리 빌더를 반환하는 함수(빌더는 1회용이라 재생성 필요).
+async function fetchAllRows(buildQuery, pageSize = 1000) {
+  let all = [], from = 0;
+  for (;;) {
+    const { data, error } = await buildQuery().range(from, from + pageSize - 1);
+    if (error) throw error;
+    const batch = data || [];
+    all = all.concat(batch);
+    if (batch.length < pageSize) break;   // 마지막 페이지
+    from += pageSize;
+    if (from > 200000) break;             // 안전 상한(무한루프 방지)
+  }
+  return all;
+}
+// 명단 검색: 매 키입력 전체 재렌더 방지(200ms) + 첫 페이지 리셋 + 선택 초기화(숨은 선택 오적용 방지)
+const onStudentsSearch = debounce(() => { selectedStudents.clear(); A.studentsPage = 1; renderStudentsTable(); }, 200);
+// 필터 변경: 대상 집합이 바뀌므로 선택을 초기화(다른 필터의 숨은 선택에 일괄 적용되는 사고 방지)
+function onStudentsFilterChange() { selectedStudents.clear(); A.studentsPage = 1; renderStudentsTable(); }
+
+// ══════════════════════════════════════════
+//  명단 일괄 관리 (선택 → 요일/장소/프로그램/활성 일괄 변경)
+// ══════════════════════════════════════════
+let selectedStudents = new Set();   // key: 학번|프로그램
+let lastFilteredStudents = [];       // 현재 필터 결과(전체 선택용)
+
+function _stuKey(no, prog) { return no + '|' + (prog || ''); }
+
+function toggleStudentSelect(no, prog, checked) {
+  const k = _stuKey(no, prog);
+  if (checked) selectedStudents.add(k); else selectedStudents.delete(k);
+  updateStudentBulkBar();
+}
+
+function toggleSelectAllStudents(cb) {
+  lastFilteredStudents.forEach(s => {
+    const k = _stuKey(s.학번, s.프로그램);
+    if (cb.checked) selectedStudents.add(k); else selectedStudents.delete(k);
+  });
+  renderStudentsTable();   // 행 체크 상태 반영
+}
+
+function clearStudentSelection() {
+  selectedStudents.clear();
+  renderStudentsTable();
+}
+
+function updateStudentBulkBar() {
+  const bar = document.getElementById('students-bulk-bar');
+  if (!bar) return;
+  const n = selectedStudents.size;
+  bar.style.display = n > 0 ? '' : 'none';
+  const cnt = document.getElementById('stu-bulk-count');
+  if (cnt) cnt.textContent = n;
+  const all = document.getElementById('students-select-all');
+  if (all) {
+    const keys = lastFilteredStudents.map(s => _stuKey(s.학번, s.프로그램));
+    const allSel = keys.length > 0 && keys.every(k => selectedStudents.has(k));
+    all.checked = allSel;
+    all.indeterminate = !allSel && keys.some(k => selectedStudents.has(k));
+  }
+}
+
+function _selectedStudentPairs() {
+  return Array.from(selectedStudents).map(k => {
+    const i = k.indexOf('|');   // 학번엔 파이프가 없으므로 첫 '|'가 구분자(프로그램명에 '|' 있어도 안전)
+    return { 학번: k.slice(0, i), 프로그램: k.slice(i + 1) };
+  });
+}
+
+function openBulkStudentModal(kind) {
+  const pairs = _selectedStudentPairs();
+  if (pairs.length === 0) return;
+  const modal = document.getElementById('bulk-student-modal');
+  const title = document.getElementById('bulk-student-title');
+  const body = document.getElementById('bulk-student-body');
+  document.getElementById('bulk-student-err').textContent = '';
+  modal.dataset.kind = kind;
+  const n = pairs.length;
+  if (kind === 'days') {
+    title.textContent = `출석요일 일괄 변경 (${n}명)`;
+    body.innerHTML = `<p class="bulk-desc">선택한 <b>${n}명</b>의 출석요일을 아래 선택값으로 <b>덮어씁니다</b>.</p>`
+      + `<div class="bulk-days" id="bulk-days">`
+      + ['월','화','수','목','금','토','일'].map(d =>
+          `<button type="button" class="day-toggle-btn ${d==='토'||d==='일'?'weekend':''}" data-day="${d}" onclick="this.classList.toggle('on')">${d}</button>`).join('')
+      + `</div>`;
+  } else if (kind === 'room') {
+    title.textContent = `장소 일괄 변경 (${n}명)`;
+    const rooms = Array.from(new Set(A.students.map(s => s.장소).filter(Boolean))).sort();
+    body.innerHTML = `<p class="bulk-desc">선택한 <b>${n}명</b>의 장소를 변경합니다.</p>`
+      + `<input type="text" id="bulk-room-input" class="admin-search" list="bulk-room-list" placeholder="장소 입력 또는 선택" style="width:100%">`
+      + `<datalist id="bulk-room-list">` + rooms.map(r => `<option value="${escapeAttr(r)}">`).join('') + `</datalist>`;
+  } else if (kind === 'program') {
+    title.textContent = `프로그램 이동 (${n}명)`;
+    const progs = Array.from(new Set(A.students.map(s => s.프로그램).filter(Boolean))).sort();
+    body.innerHTML = `<p class="bulk-desc">선택한 <b>${n}명</b>을 다른 프로그램으로 이동합니다. 이름·장소·요일은 유지되며, `
+      + `<b>기존 프로그램 등록은 비활성 처리</b>됩니다(데이터 보존·복구 가능).</p>`
+      + `<input type="text" id="bulk-prog-input" class="admin-search" list="bulk-prog-list" placeholder="이동할 프로그램" style="width:100%">`
+      + `<datalist id="bulk-prog-list">` + progs.map(p => `<option value="${escapeAttr(p)}">`).join('') + `</datalist>`;
+  }
+  modal.classList.add('on');
+}
+
+function closeBulkStudentModal() {
+  document.getElementById('bulk-student-modal').classList.remove('on');
+}
+
+async function applyBulkStudent() {
+  const modal = document.getElementById('bulk-student-modal');
+  const kind = modal.dataset.kind;
+  const err = document.getElementById('bulk-student-err');
+  const btn = document.getElementById('bulk-student-apply');
+  const pairs = _selectedStudentPairs();
+  err.textContent = '';
+
+  let val;
+  if (kind === 'days') {
+    val = Array.from(document.querySelectorAll('#bulk-days .day-toggle-btn.on')).map(b => b.dataset.day);
+    if (val.length === 0) { err.textContent = '요일을 1개 이상 선택해주세요'; return; }
+  } else if (kind === 'room') {
+    val = document.getElementById('bulk-room-input').value.trim();
+    if (!val) { err.textContent = '장소를 입력해주세요'; return; }
+  } else if (kind === 'program') {
+    val = document.getElementById('bulk-prog-input').value.trim();
+    if (!val) { err.textContent = '이동할 프로그램을 입력해주세요'; return; }
+  }
+
+  btn.disabled = true; btn.textContent = '적용 중...';
+  let done = 0, fail = 0, skipped = 0;
+  for (const p of pairs) {
+    try {
+      const stu = A.students.find(s => String(s.학번) === String(p.학번) && (s.프로그램 || '') === p.프로그램);
+      if (kind === 'days') {
+        await sb.students.updateDays(p.학번, p.프로그램, val);
+      } else if (kind === 'room') {
+        await sb.students.updateFields(p.학번, p.프로그램, { 장소: val });
+      } else if (kind === 'program') {
+        if (val === p.프로그램) { skipped++; continue; }
+        // 대상 프로그램에 이 학번이 이미 등록돼 있으면 덮어쓰지 않고 건너뜀(기존 데이터 보호)
+        const already = A.students.some(s => String(s.학번) === String(p.학번) && (s.프로그램 || '') === val);
+        if (already) { skipped++; console.warn('[프로그램 이동] 대상에 이미 등록됨 — 건너뜀', p.학번, val); continue; }
+        // 신규 등록(이름·장소·요일 유지) → 기존 비활성. 비활성 실패 시 신규를 되돌려 중복 활성 방지.
+        await sb.students.upsert({
+          학번: p.학번, 이름: stu ? stu.이름 : '', 프로그램: val,
+          장소: stu ? stu.장소 : '', 출석요일: stu ? stu.출석요일 : null,
+        });
+        try {
+          await sb.students.deactivate(p.학번, p.프로그램);
+        } catch (e2) {
+          try { await sb.students.deactivate(p.학번, val); } catch (_) {}  // 보상: 방금 만든 신규 비활성(이동 취소)
+          throw e2;
+        }
+      }
+      done++;
+    } catch (e) { fail++; console.warn('[일괄 적용] 실패', p, e); }
+  }
+  btn.disabled = false; btn.textContent = '적용';
+  try { TLOG.log('audit_bulk_student', { kind: kind, val: val, count: pairs.length, done: done, skipped: skipped, fail: fail }); } catch (_) {}
+  closeBulkStudentModal();
+  selectedStudents.clear();
+  await loadAllStudents();
+  renderStudentsTable();
+  const parts = [`${done}명 적용`];
+  if (skipped) parts.push(`${skipped}명 건너뜀(대상에 이미 등록)`);
+  if (fail) parts.push(`${fail}명 실패`);
+  showAdminToast(parts.join(', '), (fail || skipped) ? 'warn' : 'ok');
+}
+
+async function bulkSetStudentsActive(active) {
+  const pairs = _selectedStudentPairs();
+  if (pairs.length === 0) return;
+  if (!confirm(`선택한 ${pairs.length}명을 ${active ? '활성화' : '비활성화'}할까요?`)) return;
+  let done = 0, fail = 0;
+  for (const p of pairs) {
+    try {
+      if (active) await sb.students.reactivate(p.학번, p.프로그램);
+      else await sb.students.deactivate(p.학번, p.프로그램);
+      done++;
+    } catch (e) { fail++; }
+  }
+  try { TLOG.log('audit_bulk_active', { active: active, count: pairs.length, done: done, fail: fail }); } catch (_) {}
+  selectedStudents.clear();
+  await loadAllStudents();
+  renderStudentsTable();
+  showAdminToast(`${done}명 ${active ? '활성화' : '비활성화'} 완료${fail ? `, ${fail}명 실패` : ''}`, fail ? 'warn' : 'ok');
+}
+
 function renderStudentsTable() {
   const tbody = document.getElementById('students-tbody');
   if (!tbody) return;
@@ -8684,6 +9058,7 @@ function renderStudentsTable() {
 
   // 카운트 표시
   document.getElementById('students-count').textContent = `${filtered.length}명`;
+  lastFilteredStudents = filtered;   // 일괄 선택(전체 선택)용
 
   // 페이지네이션
   const totalPages = Math.max(1, Math.ceil(filtered.length / A.studentsPerPage));
@@ -8692,8 +9067,9 @@ function renderStudentsTable() {
   const pageItems = filtered.slice(start, start + A.studentsPerPage);
 
   if (pageItems.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="student-table-empty">조건에 맞는 학생이 없어요</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="student-table-empty">조건에 맞는 학생이 없어요</td></tr>';
     document.getElementById('students-pagination').innerHTML = '';
+    updateStudentBulkBar();
     return;
   }
 
@@ -8708,9 +9084,12 @@ function renderStudentsTable() {
       return `<button type="button" class="${cls}" ${inactive ? 'disabled' : ''} onclick="toggleStudentDay('${s.학번}', '${escapeAttr(s.프로그램)}', '${d}', this)">${d}</button>`;
     }).join('');
 
+    const _key = s.학번 + '|' + (s.프로그램 || '');
+    const _checked = selectedStudents.has(_key) ? 'checked' : '';
     return `
       <tr class="${inactive ? 'inactive' : ''}">
-        <td class="st-cell-no">${s.학번}</td>
+        <td class="st-cell-check"><input type="checkbox" class="stu-row-check" ${_checked} onchange="toggleStudentSelect('${s.학번}', '${escapeAttr(s.프로그램)}', this.checked)"></td>
+        <td class="st-cell-no">${escapeHtml(s.학번)}</td>
         <td class="st-cell-name">${escapeHtml(s.이름 || '')}</td>
         <td class="st-cell-program">${escapeHtml(s.프로그램 || '')}</td>
         <td class="st-cell-room">${escapeHtml(s.장소 || '')}</td>
@@ -8730,6 +9109,7 @@ function renderStudentsTable() {
 
   // 페이지네이션 렌더
   renderStudentsPagination(totalPages);
+  updateStudentBulkBar();
 }
 
 function renderStudentsPagination(totalPages) {
@@ -9023,6 +9403,7 @@ async function executeConfirm() {
 
     if (action === 'deactivate') {
       await sb.students.deactivate(no, program);
+      try { TLOG.log('audit_student_deactivate', { no: no, program: program, name: name }); } catch (_) {}
       showAdminToast(`${name} 학생이 비활성화됐어요`, 'ok');
     } else if (action === 'delete') {
       // 완전 삭제 — 학생 + 관련 출석 기록 모두
@@ -9037,12 +9418,14 @@ async function executeConfirm() {
         .eq('학번', no)
         .eq('프로그램', program);
       sb.invalidateCache('students');
+      try { TLOG.log('audit_student_delete', { no: no, program: program, name: name }); } catch (_) {}
       showAdminToast(`${name} 학생이 완전 삭제됐어요`, 'ok');
     } else if (action === 'deleteSession') {
       // 세션 + 관련 출석기록 모두 삭제
       const sessionId = A.pendingConfirm.sessionId;
       await sb.client().from('attendance').delete().eq('세션id', sessionId);
       await sb.client().from('sessions').delete().eq('세션id', sessionId);
+      try { TLOG.log('audit_session_delete', { sessionId: sessionId }); } catch (_) {}
       A.selectedSession = null;
       A.selectedAttendance = [];
       renderHistoryDetail();
@@ -9053,7 +9436,9 @@ async function executeConfirm() {
     } else if (action === 'deleteAttendance') {
       // 개별 출석 삭제
       const attId = A.pendingConfirm.attId;
+      const _delRec = (A.selectedAttendance || []).find(a => a.id === attId);
       await sb.attendance.delete(attId);
+      try { TLOG.log('audit_attendance_delete', { id: attId, no: _delRec ? _delRec.학번 : null, sessionId: _delRec ? _delRec.세션id : (A.selectedSession && A.selectedSession.세션id) || null }); } catch (_) {}
       A.selectedAttendance = A.selectedAttendance.filter(a => a.id !== attId);
       renderHistoryDetail();
       showAdminToast('출석 기록이 삭제됐어요', 'ok');
@@ -9090,25 +9475,29 @@ async function loadHistorySessions() {
   const days = parseInt(document.getElementById('hist-filter-range').value);
 
   try {
-    // 1. attendance 조회 (기존 로직)
-    let attQ = sb.client()
-      .from('attendance')
-      .select('세션id, 학번, 이름, 프로그램, 장소, 교사, 날짜, 원래시각, 사후여부')
-      .order('날짜', { ascending: false })
-      .order('원래시각', { ascending: true });
-    if (days > 0) attQ = attQ.gte('날짜', daysAgoKST(days));
-    const attRes = await attQ;
-    if (attRes.error) throw attRes.error;
-    const attData = attRes.data || [];
+    // 1. attendance 조회 — 전량 페이지 조회(1000행 캡 유실 방지)
+    const attData = await fetchAllRows(() => {
+      let q = sb.client()
+        .from('attendance')
+        .select('세션id, 학번, 이름, 프로그램, 장소, 교사, 날짜, 원래시각, 사후여부')
+        .order('날짜', { ascending: false })
+        .order('원래시각', { ascending: true })
+        .order('id', { ascending: true });   // 페이지 경계 안정용 타이브레이커
+      if (days > 0) q = q.gte('날짜', daysAgoKST(days));
+      return q;
+    });
 
-    // 2. sessions 조회 (빈 세션 포함)
-    let sessQ = sb.client()
-      .from('sessions')
-      .select('*')
-      .order('날짜', { ascending: false });
-    if (days > 0) sessQ = sessQ.gte('날짜', daysAgoKST(days));
-    const sessRes = await sessQ;
-    const sessTable = sessRes.error ? [] : (sessRes.data || []);
+    // 2. sessions 조회 (빈 세션 포함) — 전량 페이지 조회
+    let sessTable = [];
+    try {
+      sessTable = await fetchAllRows(() => {
+        let q = sb.client().from('sessions').select('*')
+          .order('날짜', { ascending: false })
+          .order('세션id', { ascending: true });   // 페이지 경계 안정용 타이브레이커
+        if (days > 0) q = q.gte('날짜', daysAgoKST(days));
+        return q;
+      });
+    } catch (_) { sessTable = []; }
 
     const sessionMap = {};
 
@@ -9650,6 +10039,7 @@ async function doLateAttend() {
     }
 
     // 성공 → 모달 닫기 + 상세 갱신
+    try { TLOG.log('audit_late_attend', { no: no, sessionId: s.세션id, name: studentInfo.이름 }); } catch (_) {}
     closeLateAttendModal();
     showAdminToast(`${studentInfo.이름} 학생 사후 출석 처리됨`, 'ok');
 
@@ -9705,19 +10095,35 @@ async function loadAnalysis() {
   const container = document.getElementById('analysis-content');
   container.innerHTML = '<div class="student-table-empty">불러오는 중...</div>';
 
-  const days = parseInt(document.getElementById('anal-filter-range').value);
+  const rangeVal = document.getElementById('anal-filter-range').value;
+  // '이번 학기'는 semester_start(설정)부터 오늘까지. 그 외는 기존과 동일하게 '최근 N일'.
+  const isSemester = rangeVal === 'semester';
+  const days = isSemester ? 0 : parseInt(rangeVal);
+  let semSinceStr = null;
+  if (isSemester) {
+    try {
+      const semStart = await sb.settings.semesterStart();
+      if (semStart) {
+        semSinceStr = String(semStart).slice(0, 10);   // YYYY-MM-DD
+      } else {
+        showAdminToast('학기 시작일(semester_start)이 설정되지 않았어요 — 전체 기간으로 표시해요.', 'warn');
+      }
+    } catch (e) {
+      console.warn('학기 시작일 로드 실패 (전체로 대체):', e);
+    }
+  }
 
   try {
-    let query = sb.client()
-      .from('attendance')
-      .select('세션id, 학번, 이름, 프로그램, 장소, 날짜, 원래시각, 사후여부, 상태');
-
-    if (days > 0) {
-      query = query.gte('날짜', daysAgoKST(days));
-    }
-
-    const { data, error } = await query;
-    if (error) throw error;
+    // attendance 전량 페이지 조회(1000행 캡 유실 방지)
+    const data = await fetchAllRows(() => {
+      let q = sb.client()
+        .from('attendance')
+        .select('세션id, 학번, 이름, 프로그램, 장소, 날짜, 원래시각, 사후여부, 상태')
+        .order('id', { ascending: true });   // 페이지 경계 안정용
+      if (semSinceStr) q = q.gte('날짜', semSinceStr);
+      else if (days > 0) q = q.gte('날짜', daysAgoKST(days));
+      return q;
+    });
 
     A.analysisAttendance = data || [];
 
@@ -9728,8 +10134,21 @@ async function loadAnalysis() {
       if (r.날짜) dateSet.add(r.날짜);
     });
 
-    // days가 지정된 경우 그 기간의 모든 날짜를 채움 (출석이 없는 날도 포함)
-    if (days > 0) {
+    if (semSinceStr) {
+      // 학기 시작일~오늘 모든 날짜를 채움 (출석 없는 날도 포함)
+      const end = new Date(todayKST() + 'T00:00:00');
+      let d = new Date(semSinceStr + 'T00:00:00');
+      let guard = 0;
+      while (d <= end && guard < 400) {   // 400일 안전 상한(학기≈150일)
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        dateSet.add(`${y}-${m}-${day}`);
+        d.setDate(d.getDate() + 1);
+        guard++;
+      }
+    } else if (days > 0) {
+      // days가 지정된 경우 그 기간의 모든 날짜를 채움 (출석이 없는 날도 포함)
       const today = new Date();
       for (let i = 0; i < days; i++) {
         const d = new Date();
@@ -9745,25 +10164,23 @@ async function loadAnalysis() {
 
     // 학생별 첫 출석 날짜 맵 (전체 기간 기준) — 한 번만 로드해서 캐시
     // 신규 등록/비활성 재활성 학생의 "등록 이전 기간 결석" 왜곡 방지용
+    // ⚠️ 전량 조회라 1000행 캡을 반드시 넘는다 → fetchAllRows로 페이지네이션(캡 유실 시 중도등록 학생이 통째로 사라짐).
     if (!A.firstAttDateMap) {
       try {
-        const { data: allFirst, error: e2 } = await sb.client()
+        const allFirst = await fetchAllRows(() => sb.client()
           .from('attendance')
           .select('학번, 프로그램, 날짜')
-          .order('날짜', { ascending: true });
-        if (!e2 && allFirst) {
-          const m = {};
-          allFirst.forEach(r => {
-            const k = `${r.학번}|${r.프로그램}`;
-            if (!m[k]) m[k] = r.날짜; // order asc라 첫 값이 최소
-          });
-          A.firstAttDateMap = m;
-        } else {
-          A.firstAttDateMap = {}; // 실패 시 빈 맵 (분모 왜곡 방지 로직만 스킵)
-        }
+          .order('날짜', { ascending: true })
+          .order('id', { ascending: true }));   // 페이지 경계 안정용(같은 날짜 tiebreaker)
+        const m = {};
+        (allFirst || []).forEach(r => {
+          const k = `${r.학번}|${r.프로그램}`;
+          if (!m[k]) m[k] = r.날짜; // order asc라 첫 값이 최소(=첫 출석일)
+        });
+        A.firstAttDateMap = m;
       } catch (e) {
         console.warn('첫 출석일 로드 실패 (분석은 계속):', e);
-        A.firstAttDateMap = {};
+        A.firstAttDateMap = {}; // 실패 시 빈 맵 (분모 왜곡 방지 로직만 스킵)
       }
     }
 
@@ -9774,6 +10191,53 @@ async function loadAnalysis() {
     console.error('분석 데이터 로딩 실패:', e);
     container.innerHTML = `<div class="student-table-empty">불러오기 실패: ${e.message || '오류'}</div>`;
   }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  분석 집계 단일화 — 화면 통계·매트릭스·엑셀이 동일 규칙을 쓰게 하는 공용 판정
+//  규칙(하나): ①그날 (프로그램+장소)에 세션이 없으면 제외 → ②학생 출석요일이 아니면 제외
+//            → ③학생 첫 출석일 이전(또는 첫 출석 기록 없음)이면 분모 제외(중도 등록·재활성 보호)
+//            → ④나머지에서 출석 기록 있으면 출석(사후=late), 없으면 결석.
+//  이전에는 매트릭스·엑셀이 ③을 적용하지 않아 화면 출석률과 어긋났다(중도 등록 학생에 거짓 X).
+// ══════════════════════════════════════════════════════════════
+function buildAnalysisContext(filteredAtt) {
+  const attMap = {};
+  const sessionDatesByPS = {};
+  filteredAtt.forEach(r => {
+    attMap[`${r.학번}|${r.프로그램}|${r.날짜}`] = r;
+    const psKey = `${r.프로그램}|${r.장소}`;
+    if (!sessionDatesByPS[psKey]) sessionDatesByPS[psKey] = new Set();
+    sessionDatesByPS[psKey].add(r.날짜);
+  });
+  return { attMap, sessionDatesByPS, firstAttByStudent: A.firstAttDateMap || {} };
+}
+
+// 한 학생·한 날짜의 판정. state: 'none'|'notTarget'|'preStart'|'attended'|'absent'
+function analysisDayCell(s, date, ctx) {
+  const sessionDates = ctx.sessionDatesByPS[`${s.프로그램}|${s.장소}`];
+  if (!sessionDates || !sessionDates.has(date)) return { state: 'none' };
+  const sDays = Array.isArray(s.출석요일) ? s.출석요일 : [];
+  const dayKr = DAY_KR_ANAL[new Date(date + 'T00:00:00').getDay()];
+  if (!(sDays.length === 0 || sDays.includes(dayKr))) return { state: 'notTarget' };
+  const firstDate = ctx.firstAttByStudent[`${s.학번}|${s.프로그램}`] || null;
+  if (!firstDate || date < firstDate) return { state: 'preStart' };
+  const rec = ctx.attMap[`${s.학번}|${s.프로그램}|${date}`];
+  if (rec) return { state: 'attended', late: !!rec.사후여부, rec: rec };
+  return { state: 'absent' };
+}
+
+// 학생 배열 → 기간 집계(_target/_attended/_absent/_rate). dates는 A.analysisDates.
+function computeAnalysisStats(students, ctx, dates) {
+  return students.map(s => {
+    let target = 0, attended = 0;
+    dates.forEach(date => {
+      const st = analysisDayCell(s, date, ctx).state;
+      if (st === 'attended') { target++; attended++; }
+      else if (st === 'absent') { target++; }
+    });
+    return { ...s, _target: target, _attended: attended, _absent: target - attended,
+             _rate: target > 0 ? Math.round(attended / target * 100) : null };
+  });
 }
 
 // 분석 렌더링 (필터 적용)
@@ -9806,71 +10270,9 @@ function renderAnalysis() {
   if (filterProg) filteredAtt = filteredAtt.filter(a => a.프로그램 === filterProg);
   if (filterRoom) filteredAtt = filteredAtt.filter(a => a.장소 === filterRoom);
 
-  // 출석 맵 만들기: { "학번|프로그램|날짜": record }
-  const attMap = {};
-  filteredAtt.forEach(r => {
-    const key = `${r.학번}|${r.프로그램}|${r.날짜}`;
-    attMap[key] = r;
-  });
-
-  // ⭐ 핵심 변경: (프로그램+장소)별로 실제 세션이 있었던 날짜들 수집
-  // 이걸 통해 학생별 분모를 "실제 운영된 날 중 학생의 출석요일에 맞는 날"로 계산
-  const sessionDatesByPS = {};
-  filteredAtt.forEach(r => {
-    const psKey = `${r.프로그램}|${r.장소}`;
-    if (!sessionDatesByPS[psKey]) sessionDatesByPS[psKey] = new Set();
-    sessionDatesByPS[psKey].add(r.날짜);
-  });
-
-  // ⭐ 신규/재활성화 학생의 "등록 이전 기간 결석" 왜곡 방지:
-  // 학생별 (학번+프로그램) 전체 기간 첫 출석 날짜를 구해서, 그 이전 날짜는 분모에서 제외
-  // 비활성→재활성, 학기 중 신규 등록 등 케이스에서 억울한 결석이 쌓이지 않도록
-  // A.firstAttDateMap은 loadAnalysis()에서 전체 기간 기준으로 한 번만 로드됨
-  const firstAttByStudent = A.firstAttDateMap || {};
-
-  // 학생별 출석률 계산 (분모: 학생 (프로그램+장소)에 세션이 있었던 날 ∩ 학생 출석요일 ∩ 학생 첫 출석일 이후)
-  const studentStats = students.map(s => {
-    const days = Array.isArray(s.출석요일) ? s.출석요일 : [];
-    const psKey = `${s.프로그램}|${s.장소}`;
-    const sessionDates = sessionDatesByPS[psKey] || new Set();
-    const firstDate = firstAttByStudent[`${s.학번}|${s.프로그램}`] || null;
-
-    let target = 0;
-    let attended = 0;
-    let absentDates = []; // 결석한 날짜 목록 (디버깅/툴팁용)
-
-    sessionDates.forEach(date => {
-      // 학생의 첫 출석 이전 날짜는 분모 제외 (등록 전 or 비활성 기간)
-      // 첫 출석 기록이 아예 없는 학생은 분모 0 → 출석률 N/A 로 처리
-      if (!firstDate || date < firstDate) return;
-
-      const d = new Date(date + 'T00:00:00');
-      const dayKr = DAY_KR_ANAL[d.getDay()];
-
-      // 학생의 출석요일에 해당하지 않으면 분모에서 제외
-      // 단, 출석요일이 비어있으면 모든 세션 날 포함
-      const isTarget = days.length === 0 || days.includes(dayKr);
-      if (!isTarget) return;
-
-      target++;
-      const key = `${s.학번}|${s.프로그램}|${date}`;
-      if (attMap[key]) {
-        attended++;
-      } else {
-        absentDates.push(date);
-      }
-    });
-
-    const rate = target > 0 ? Math.round(attended / target * 100) : null;
-    const absent = target - attended;
-    return {
-      ...s,
-      _target: target,
-      _attended: attended,
-      _absent: absent,
-      _rate: rate,  // null이면 N/A (분모 0)
-    };
-  });
+  // 집계 컨텍스트(출석맵·세션날짜·첫출석일) + 학생별 통계 — 매트릭스·엑셀과 동일한 공용 규칙 사용
+  const ctx = buildAnalysisContext(filteredAtt);
+  const studentStats = computeAnalysisStats(students, ctx, A.analysisDates);
 
   // 사용자 선택 정렬 적용
   const sortMode = (document.getElementById('anal-sort') || {}).value || 'no_asc';
@@ -10002,34 +10404,27 @@ function renderAnalysis() {
     // 행 (학생) — 너무 많으면 잘라내기 (최대 200명)
     const displayStats = studentStats.slice(0, 200);
     displayStats.forEach(s => {
-      const sDays = Array.isArray(s.출석요일) ? s.출석요일 : [];
-      const psKey = `${s.프로그램}|${s.장소}`;
-      const sessionDates = sessionDatesByPS[psKey] || new Set();
-
       html += `<tr>
         <td class="matrix-td-fixed matrix-td-no">${s.학번}</td>
         <td class="matrix-td-fixed matrix-td-name">${escapeHtml(s.이름 || '')}</td>
       `;
 
       A.analysisDates.forEach(date => {
-        const d = new Date(date + 'T00:00:00');
-        const dayKr = DAY_KR_ANAL[d.getDay()];
-        const hasSession = sessionDates.has(date);
-        const isTarget = sDays.length === 0 || sDays.includes(dayKr);
-        const key = `${s.학번}|${s.프로그램}|${date}`;
-        const rec = attMap[key];
-
-        if (!hasSession) {
+        const cell = analysisDayCell(s, date, ctx);  // 화면 통계·엑셀과 동일 규칙
+        if (cell.state === 'none') {
           // 그날 (프로그램+장소)에 세션 자체가 없었음
           html += `<td><span class="matrix-cell no-session" title="세션 없음">·</span></td>`;
-        } else if (!isTarget) {
+        } else if (cell.state === 'notTarget') {
           // 세션은 있었지만 학생 출석요일이 아님
           html += `<td><span class="matrix-cell no-target" title="출석 대상 아님">·</span></td>`;
-        } else if (rec) {
+        } else if (cell.state === 'preStart') {
+          // 학생 첫 출석일 이전(등록 전/비활성 기간) — 분모 제외, 결석 아님
+          html += `<td><span class="matrix-cell no-target" title="등록 전 (분모 제외)">·</span></td>`;
+        } else if (cell.state === 'attended') {
           // 출석 (정상 또는 사후)
-          const time = (rec.원래시각 || '').slice(0, 5);
-          const cls = rec.사후여부 ? 'late' : 'attended';
-          html += `<td><span class="matrix-cell ${cls}" title="${time} 출석${rec.사후여부 ? ' (사후)' : ''}">✓</span></td>`;
+          const time = (cell.rec && cell.rec.원래시각 || '').slice(0, 5);
+          const cls = cell.late ? 'late' : 'attended';
+          html += `<td><span class="matrix-cell ${cls}" title="${time} 출석${cell.late ? ' (사후)' : ''}">✓</span></td>`;
         } else {
           // 결석 (세션 있었고 학생 출석요일이었는데 안 옴)
           html += `<td><span class="matrix-cell absent" title="결석">X</span></td>`;
@@ -10101,24 +10496,11 @@ function exportAnalysisXlsx() {
     return (a.프로그램 || '').localeCompare(b.프로그램 || '');
   });
 
-  // 출석 맵
+  // 출석 데이터 필터 → 공용 집계 컨텍스트(화면과 동일 규칙)
   let filteredAtt = A.analysisAttendance;
   if (filterProg) filteredAtt = filteredAtt.filter(a => a.프로그램 === filterProg);
   if (filterRoom) filteredAtt = filteredAtt.filter(a => a.장소 === filterRoom);
-
-  const attMap = {};
-  filteredAtt.forEach(r => {
-    const key = `${r.학번}|${r.프로그램}|${r.날짜}`;
-    attMap[key] = r;
-  });
-
-  // (프로그램+장소)별 실제 세션 날짜
-  const sessionDatesByPS = {};
-  filteredAtt.forEach(r => {
-    const psKey = `${r.프로그램}|${r.장소}`;
-    if (!sessionDatesByPS[psKey]) sessionDatesByPS[psKey] = new Set();
-    sessionDatesByPS[psKey].add(r.날짜);
-  });
+  const ctx = buildAnalysisContext(filteredAtt);
 
   // 헤더 행
   const header = ['학번', '이름', '프로그램', '장소'];
@@ -10129,40 +10511,25 @@ function exportAnalysisXlsx() {
   });
   header.push('출석', '대상', '출석률');
 
-  // 데이터 행
+  // 데이터 행 — 셀 표기: O 출석 / ◎ 사후 / X 결석 / - 대상아님·등록전(분모제외) / (빈칸) 세션없음
   const rows = [header];
   students.forEach(s => {
-    const sDays = Array.isArray(s.출석요일) ? s.출석요일 : [];
-    const psKey = `${s.프로그램}|${s.장소}`;
-    const sessionDates = sessionDatesByPS[psKey] || new Set();
-
     let target = 0;
     let attended = 0;
-
     const row = [s.학번, s.이름 || '', s.프로그램 || '', s.장소 || ''];
 
     A.analysisDates.forEach(date => {
-      const d = new Date(date + 'T00:00:00');
-      const dayKr = DAY_KR_ANAL[d.getDay()];
-      const hasSession = sessionDates.has(date);
-      const isTarget = sDays.length === 0 || sDays.includes(dayKr);
-      const key = `${s.학번}|${s.프로그램}|${date}`;
-      const rec = attMap[key];
-
-      if (!hasSession) {
-        // 그날 세션이 없었음
-        row.push('');
-      } else if (!isTarget) {
-        // 세션은 있었지만 학생 출석요일 아님
-        row.push('-');
+      const cell = analysisDayCell(s, date, ctx);
+      if (cell.state === 'none') {
+        row.push('');            // 세션 없음
+      } else if (cell.state === 'notTarget' || cell.state === 'preStart') {
+        row.push('-');           // 대상 아님 / 등록 전 → 분모 제외
+      } else if (cell.state === 'attended') {
+        target++; attended++;
+        row.push(cell.late ? '◎' : 'O');
       } else {
         target++;
-        if (rec) {
-          attended++;
-          row.push(rec.사후여부 ? '◎' : 'O');
-        } else {
-          row.push('X');
-        }
+        row.push('X');           // 결석
       }
     });
 
@@ -10366,8 +10733,75 @@ const ST = {
   studentsCache: null,   // 사전 캐싱: 해당 세션의 학생 명단 (학번 → 학생정보)
 };
 
+// ══════════════════════════════════════════════════════════════
+//  학생 출석 내구성 큐 (약신호 '거짓 성공' 방지) ⭐
+//  전송이 일반 네트워크 오류로 실패한 출석을 localStorage에 저장해
+//  화면 재진입·온라인 복귀 시 능동 재시도한다. sendBeacon(페이지 종료 대비)과 병행.
+//  unique 제약(세션id,학번) 덕분에 중복 insert는 무해(alreadyAttended로 처리).
+// ══════════════════════════════════════════════════════════════
+const ATTEND_QUEUE = {
+  KEY: 'cosmos_attend_queue',
+  MAX: 50,
+  MAX_AGE_MS: 2 * 24 * 60 * 60 * 1000,  // 2일 지난 항목 폐기(마감 세션은 서버가 어차피 거부)
+  _flushing: false,
+
+  load() {
+    try { return JSON.parse(localStorage.getItem(this.KEY) || '[]') || []; }
+    catch (e) { return []; }
+  },
+  save(items) {
+    try { localStorage.setItem(this.KEY, JSON.stringify(items.slice(-this.MAX))); } catch (e) {}
+  },
+  _key(p) { return (p && (p.sessionId || p.세션id) || '') + '|' + (p && (p.no || p.학번) || ''); },
+
+  enqueue(payload) {
+    try {
+      const items = this.load();
+      const k = this._key(payload);
+      if (items.some(it => this._key(it.payload) === k)) return;  // 동일 (세션,학번) 중복 방지
+      items.push({ payload: payload, ts: Date.now() });
+      this.save(items);
+    } catch (e) { console.warn('[출석큐] 적재 실패:', e); }
+  },
+
+  async flush() {
+    if (this._flushing) return;
+    const items = this.load();
+    if (items.length === 0) return;
+    this._flushing = true;
+    try {
+      const now = Date.now();
+      const resolved = new Set();   // 제거 확정된 _key(성공·이미출석·종결오류·만료)
+      for (const it of items) {
+        const k = this._key(it.payload);
+        if (it.ts && (now - it.ts) > this.MAX_AGE_MS) { resolved.add(k); continue; }  // 오래된 항목 폐기
+        try {
+          const r = await sb.attendance.add(it.payload);
+          if (r && r.ok) { resolved.add(k); continue; }            // 성공/이미출석 → 제거
+          const msg = (r && r.msg) || '';
+          if (/마감|만료|찾을 수 없/.test(msg)) { resolved.add(k); continue; } // 종결 오류 → 폐기
+          // 그 외(일시 오류) → 보존(resolved에 넣지 않음)
+        } catch (e) {
+          // throw(네트워크 등) → 보존
+        }
+      }
+      // ⚠️ await 사이 다른 전송이 enqueue했을 수 있으므로, 스냅샷을 덮어쓰지 않고
+      //    지금 큐를 다시 읽어 '확정 제거분'만 걸러 저장(동시 적재분 보존).
+      this.save(this.load().filter(it => !resolved.has(this._key(it.payload))));
+    } finally {
+      this._flushing = false;
+    }
+  },
+};
+
+// 온라인 복귀 시 대기 큐 재전송
+window.addEventListener('online', () => { try { ATTEND_QUEUE.flush(); } catch (e) {} });
+
 async function enterStudentScreen(sessionId, scanRoom) {
   showScreen('screen-student');
+
+  // 이전에 약신호로 밀린 출석이 있으면 이 기회에 재전송(fire-and-forget)
+  try { ATTEND_QUEUE.flush(); } catch (e) {}
 
   // 모든 하위 상태 숨김 + 로딩 표시
   document.getElementById('st-loading').style.display = 'block';
@@ -10384,7 +10818,7 @@ async function enterStudentScreen(sessionId, scanRoom) {
   // 세션 조회
   let session;
   try {
-    session = await sb.sessions.byKey(sessionId);
+    session = await sb._retry(() => sb.sessions.byKey(sessionId));   // 학교망 블립 자동 재시도
   } catch (e) {
     console.error('세션 조회 실패:', e);
     showStudentError('세션 정보를 불러올 수 없어요. 잠시 후 다시 시도해주세요.');
@@ -10602,6 +11036,8 @@ async function doStudentAttend() {
         const titleEl = successEl && successEl.querySelector('.success-title');
         if (titleEl) { titleEl.textContent = '이미 출석했어요'; successEl.classList.add('already'); }
       }
+      // 신호가 살아있는 지금, 이전에 밀렸던 출석 큐도 함께 비운다
+      try { ATTEND_QUEUE.flush(); } catch (e) {}
     } else {
       // ⭐ 세션 만료/마감 거부 → 즉시 학생에게 알림 (낙관적 UI 되돌리기)
       const msg = result.msg || '';
@@ -10618,8 +11054,10 @@ async function doStudentAttend() {
         }
         console.warn('[출석 거부]', msg);
       } else {
-        // 일반 네트워크 오류: sendBeacon 백업이 남아있음. 학생 화면은 성공 상태 유지.
-        console.warn('출석 전송 2회 실패, sendBeacon 백업에 의존:', msg);
+        // 일반 네트워크 오류: 내구성 큐에 적재(재진입·온라인 복귀 시 능동 재시도) + sendBeacon 백업 유지.
+        // 학생 화면은 성공 상태 유지(둘 중 하나로 반드시 도달, unique 제약으로 중복 무해).
+        ATTEND_QUEUE.enqueue(payload);
+        console.warn('출석 전송 2회 실패 → 내구성 큐 적재 + sendBeacon 백업:', msg);
       }
     }
   })();
@@ -12393,7 +12831,8 @@ const DIAG = {
 
     let rows = this.logs.slice();
     if (roomFilter) rows = rows.filter(r => r.장소 === roomFilter);
-    if (eventFilter === 'errors') rows = rows.filter(r => (r.이벤트 || '').includes('fail'));
+    if (eventFilter === 'audit') rows = rows.filter(r => (r.이벤트 || '').startsWith('audit_'));
+    else if (eventFilter === 'errors') rows = rows.filter(r => (r.이벤트 || '').includes('fail'));
     else if (eventFilter === 'session') rows = rows.filter(r => {
       const ev = r.이벤트 || '';
       return ev.includes('session') || ev.includes('start') || ev.includes('extend') || ev.includes('expire');
