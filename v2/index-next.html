@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>코스모스 독서시간 출석 v2</title>
 
+<!-- ══ 홈 화면 설치(PWA) · 모바일 ══ -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1a130c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="코스모스 출석">
+<link rel="apple-touch-icon" href="icon-180.png"><!-- iOS는 SVG 미지원 → PNG -->
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+
 <!-- ══ 외부 라이브러리 ══ -->
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1845,6 +1856,27 @@ input { font-family: inherit; }
 .row-manual:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 수동 출석 취소 버튼 (교사가 직접 처리한 건만) */
+.row-undo {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.row-undo:hover {
+  background: rgba(184, 84, 63, 0.12);
+  border-color: rgba(184, 84, 63, 0.5);
+  color: var(--terra);
 }
 
 /* 새로 들어온 학생 강조 */
@@ -5671,6 +5703,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
             <option value="14">최근 14일</option>
             <option value="30" selected>최근 30일</option>
             <option value="90">최근 3개월</option>
+            <option value="semester">이번 학기</option>
             <option value="0">전체</option>
           </select>
           <select class="admin-filter-select" id="anal-filter-prog" onchange="renderAnalysis()">
@@ -5865,6 +5898,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
             </select>
             <select id="diag-log-event" onchange="DIAG.renderLogs()">
               <option value="">모든 이벤트</option>
+              <option value="audit">변경·삭제 (감사)</option>
               <option value="errors">에러만 (fail)</option>
               <option value="session">세션 관련</option>
               <option value="supervisor">감독 자동채움</option>
@@ -6401,6 +6435,17 @@ function nowTimeStr() {
   const d = new Date();
   return d.toTimeString().slice(0, 8);
 }
+
+// ══════════════════════════════════════════════════════════════
+//  DOM 마이크로 헬퍼 (null-안전) — 신규 코드용 축약 유틸
+//  ※ 기존 getElementById 호출부는 회귀 위험이 있어 일괄 치환하지 않음.
+//     새로 추가하는 코드에서만 사용해 본문을 줄이고 null 접근을 방지한다.
+// ══════════════════════════════════════════════════════════════
+function $(id) { return document.getElementById(id); }
+function setText(id, text) { const el = $(id); if (el) el.textContent = text; }
+function show(id, display) { const el = $(id); if (el) el.style.display = (display === undefined ? '' : display); }
+function hide(id) { const el = $(id); if (el) el.style.display = 'none'; }
+function focusLater(id, ms) { setTimeout(() => { const el = $(id); if (el) { try { el.focus(); } catch (_) {} } }, ms || 50); }
 
 // ══════════════════════════════════════════════════════════════
 //  ┌─────────────────────────────────────────────────────────┐
@@ -7475,6 +7520,7 @@ async function enterTeacherScreen(room) {
   // (이전 장소에서 진행 중이던 세션 상태 정리 — 다른 장소로 전환 시 잔존 상태 방지)
   T.session = null;
   T.attendedMap = {};
+  if (T.undoneKeys) T.undoneKeys.clear();   // 세션 전환 시 취소 억제 키 정리
   T.rosterStudents = [];
   stopTeacherTimer();
   unsubscribeRoster();
@@ -7892,6 +7938,7 @@ async function confirmExtendEnd() {
   T.session = null;
   T.rosterStudents = [];
   T.attendedMap = {};
+  if (T.undoneKeys) T.undoneKeys.clear();   // 세션 종료 시 취소 억제 키 정리
 
   // 메인 화면으로
   document.getElementById('t-wrap').classList.remove('session-active');
@@ -7931,6 +7978,7 @@ async function confirmEndSession() {
   T.session = null;
   T.rosterStudents = [];
   T.attendedMap = {};
+  if (T.undoneKeys) T.undoneKeys.clear();   // 세션 마감 시 취소 억제 키 정리
 
   // 설정 화면으로 복귀
   document.getElementById('t-setup').style.display = 'block';
@@ -8196,6 +8244,8 @@ function subscribeRoster() {
       const records = await sb.attendance.bySession(T.session.sessionId);
       let changed = false;
       records.forEach(rec => {
+        // 방금 취소(undo)한 학번은 DB 삭제가 전파되는 동안 되살리지 않는다(유령 출석 방지)
+        if (T.undoneKeys && T.undoneKeys.has(rec.학번)) return;
         if (!T.attendedMap[rec.학번]) {
           const isInRoster = T.rosterStudents.some(s => s.학번 === rec.학번);
           T.attendedMap[rec.학번] = {
@@ -8230,6 +8280,8 @@ function unsubscribeRoster() {
 function handleRealtimeAttendance(rec) {
   // 이미 명단에 있으면 무시 (낙관적 업데이트 또는 중복)
   if (T.attendedMap[rec.학번]) return;
+  // 방금 취소(undo)한 학번은 DB 삭제가 전파되는 동안 되살리지 않는다(유령 출석 방지)
+  if (T.undoneKeys && T.undoneKeys.has(rec.학번)) return;
 
   // 분모 안에 있는지 확인 (자율 여부)
   const isInRoster = T.rosterStudents.some(s => s.학번 === rec.학번);
@@ -8341,6 +8393,10 @@ function renderRoster() {
         timeText = att.time;
       }
       if (att.fresh) cls += 'fresh ';
+      // 교사가 직접 처리한 수동 출석만 이 화면에서 취소 가능
+      if (att.manual && att.id) {
+        actionHtml = `<button class="row-undo" onclick="undoManualAttend('${escapeAttr(s.학번)}')" title="수동 출석 취소" aria-label="${escapeAttr(s.이름)} 수동 출석 취소">취소</button>`;
+      }
     } else {
       cls += 'absent ';
       statusIcon = '·';
@@ -8407,18 +8463,20 @@ function switchListTab(tab) {
 async function manualAttend(no, name) {
   if (!T.session) return;
   if (T.attendedMap[no]) return; // 이미 출석함
+  if (T.undoneKeys) T.undoneKeys.delete(no); // 방금 취소한 학생을 다시 넣는 경우 억제 해제
 
   // 즉시 낙관적 업데이트
   const now = new Date();
   const timeStr = now.toTimeString().slice(0, 8);
   const timeShort = timeStr.slice(0, 5);
 
-  // 임시로 표시
+  // 임시로 표시 (manual: 교사가 직접 처리 → 취소(undo) 가능 대상)
   T.attendedMap[no] = {
     name: name,
     time: timeShort,
     isSelf: false,
     fresh: true,
+    manual: true,
   };
   renderRoster();
 
@@ -8439,6 +8497,19 @@ async function manualAttend(no, name) {
       throw new Error(result.msg || '저장 실패');
     }
 
+    // 저장된 레코드 id 확보 → 취소(undo) 가능하도록 기억
+    if (T.attendedMap[no]) {
+      if (result.data && result.data.id) {
+        T.attendedMap[no].id = result.data.id;
+      } else if (result.alreadyAttended) {
+        // 이미(학생 QR 등으로) 출석돼 있던 경우: 교사가 만든 게 아니므로 수동 취소 대상에서 제외.
+        // 표시 시각은 낙관적으로 넣은 교사 클릭 시각으로 남을 수 있으나(분 단위 경미),
+        // 명단 새로고침(loadRoster) 시 실제 원래시각으로 교정된다.
+        T.attendedMap[no].manual = false;
+      }
+    }
+    try { TLOG.log('audit_manual_attend', { no: no, sessionId: T.session.sessionId, id: (result.data && result.data.id) || null }); } catch (_) {}
+
     // 강조 효과 2.5초 후 제거
     setTimeout(() => {
       if (T.attendedMap[no]) {
@@ -8453,6 +8524,42 @@ async function manualAttend(no, name) {
     delete T.attendedMap[no];
     renderRoster();
     alert('출석 처리 실패: ' + (e.message || '오류'));
+  }
+}
+
+// 수동 출석 취소 (교사가 잘못 눌렀을 때 되돌리기)
+//   - 이 세션에서 교사가 '출석' 버튼/넘버패드로 직접 처리한 건만 대상(att.manual && att.id).
+//   - 학생 본인 QR 출석은 여기서 지우지 않는다(관리자 페이지의 삭제를 사용).
+async function undoManualAttend(no) {
+  if (!T.session) return;
+  const att = T.attendedMap[no];
+  if (!att || !att.manual || !att.id) return;
+
+  if (!confirm(`${att.name || no} 학생의 수동 출석을 취소할까요?`)) return;
+
+  const attId = att.id;
+  const sid = T.session.sessionId;   // 세션 동일성 확인용(await 중 세션 전환 방지)
+  // 폴링/realtime이 DB 삭제 전파 전의 잔존 행을 되살리지 못하도록 억제 키 등록
+  if (!T.undoneKeys) T.undoneKeys = new Set();
+  T.undoneKeys.add(no);
+  // 낙관적 제거
+  delete T.attendedMap[no];
+  renderRoster();
+
+  try {
+    await sb.attendance.delete(attId);
+    try { TLOG.log('audit_manual_undo', { no: no, sessionId: sid, id: attId }); } catch (_) {}
+    // 삭제 확정 후에도 진행 중이던 폴링 SELECT가 잔존 행을 되살릴 수 있어 잠시 더 억제
+    setTimeout(() => { if (T.undoneKeys) T.undoneKeys.delete(no); }, 6000);
+  } catch (e) {
+    console.error('수동 출석 취소 실패:', e);
+    if (T.undoneKeys) T.undoneKeys.delete(no);   // 억제 해제(실제 출석이 다시 표시될 수 있도록)
+    // await 사이 세션이 바뀌었으면 이전 세션 항목을 새 명단에 주입하지 않는다
+    if (!T.session || T.session.sessionId !== sid) return;
+    // 실패 시 복원
+    T.attendedMap[no] = att;
+    renderRoster();
+    alert('취소 실패: ' + (e.message || '오류') + '\n잠시 후 다시 시도해주세요.');
   }
 }
 
@@ -8884,6 +8991,7 @@ async function applyBulkStudent() {
     } catch (e) { fail++; console.warn('[일괄 적용] 실패', p, e); }
   }
   btn.disabled = false; btn.textContent = '적용';
+  try { TLOG.log('audit_bulk_student', { kind: kind, val: val, count: pairs.length, done: done, skipped: skipped, fail: fail }); } catch (_) {}
   closeBulkStudentModal();
   selectedStudents.clear();
   await loadAllStudents();
@@ -8906,6 +9014,7 @@ async function bulkSetStudentsActive(active) {
       done++;
     } catch (e) { fail++; }
   }
+  try { TLOG.log('audit_bulk_active', { active: active, count: pairs.length, done: done, fail: fail }); } catch (_) {}
   selectedStudents.clear();
   await loadAllStudents();
   renderStudentsTable();
@@ -9291,6 +9400,7 @@ async function executeConfirm() {
 
     if (action === 'deactivate') {
       await sb.students.deactivate(no, program);
+      try { TLOG.log('audit_student_deactivate', { no: no, program: program, name: name }); } catch (_) {}
       showAdminToast(`${name} 학생이 비활성화됐어요`, 'ok');
     } else if (action === 'delete') {
       // 완전 삭제 — 학생 + 관련 출석 기록 모두
@@ -9305,12 +9415,14 @@ async function executeConfirm() {
         .eq('학번', no)
         .eq('프로그램', program);
       sb.invalidateCache('students');
+      try { TLOG.log('audit_student_delete', { no: no, program: program, name: name }); } catch (_) {}
       showAdminToast(`${name} 학생이 완전 삭제됐어요`, 'ok');
     } else if (action === 'deleteSession') {
       // 세션 + 관련 출석기록 모두 삭제
       const sessionId = A.pendingConfirm.sessionId;
       await sb.client().from('attendance').delete().eq('세션id', sessionId);
       await sb.client().from('sessions').delete().eq('세션id', sessionId);
+      try { TLOG.log('audit_session_delete', { sessionId: sessionId }); } catch (_) {}
       A.selectedSession = null;
       A.selectedAttendance = [];
       renderHistoryDetail();
@@ -9321,7 +9433,9 @@ async function executeConfirm() {
     } else if (action === 'deleteAttendance') {
       // 개별 출석 삭제
       const attId = A.pendingConfirm.attId;
+      const _delRec = (A.selectedAttendance || []).find(a => a.id === attId);
       await sb.attendance.delete(attId);
+      try { TLOG.log('audit_attendance_delete', { id: attId, no: _delRec ? _delRec.학번 : null, sessionId: _delRec ? _delRec.세션id : (A.selectedSession && A.selectedSession.세션id) || null }); } catch (_) {}
       A.selectedAttendance = A.selectedAttendance.filter(a => a.id !== attId);
       renderHistoryDetail();
       showAdminToast('출석 기록이 삭제됐어요', 'ok');
@@ -9922,6 +10036,7 @@ async function doLateAttend() {
     }
 
     // 성공 → 모달 닫기 + 상세 갱신
+    try { TLOG.log('audit_late_attend', { no: no, sessionId: s.세션id, name: studentInfo.이름 }); } catch (_) {}
     closeLateAttendModal();
     showAdminToast(`${studentInfo.이름} 학생 사후 출석 처리됨`, 'ok');
 
@@ -9977,7 +10092,23 @@ async function loadAnalysis() {
   const container = document.getElementById('analysis-content');
   container.innerHTML = '<div class="student-table-empty">불러오는 중...</div>';
 
-  const days = parseInt(document.getElementById('anal-filter-range').value);
+  const rangeVal = document.getElementById('anal-filter-range').value;
+  // '이번 학기'는 semester_start(설정)부터 오늘까지. 그 외는 기존과 동일하게 '최근 N일'.
+  const isSemester = rangeVal === 'semester';
+  const days = isSemester ? 0 : parseInt(rangeVal);
+  let semSinceStr = null;
+  if (isSemester) {
+    try {
+      const semStart = await sb.settings.semesterStart();
+      if (semStart) {
+        semSinceStr = String(semStart).slice(0, 10);   // YYYY-MM-DD
+      } else {
+        showAdminToast('학기 시작일(semester_start)이 설정되지 않았어요 — 전체 기간으로 표시해요.', 'warn');
+      }
+    } catch (e) {
+      console.warn('학기 시작일 로드 실패 (전체로 대체):', e);
+    }
+  }
 
   try {
     // attendance 전량 페이지 조회(1000행 캡 유실 방지)
@@ -9986,7 +10117,8 @@ async function loadAnalysis() {
         .from('attendance')
         .select('세션id, 학번, 이름, 프로그램, 장소, 날짜, 원래시각, 사후여부, 상태')
         .order('id', { ascending: true });   // 페이지 경계 안정용
-      if (days > 0) q = q.gte('날짜', daysAgoKST(days));
+      if (semSinceStr) q = q.gte('날짜', semSinceStr);
+      else if (days > 0) q = q.gte('날짜', daysAgoKST(days));
       return q;
     });
 
@@ -9999,8 +10131,21 @@ async function loadAnalysis() {
       if (r.날짜) dateSet.add(r.날짜);
     });
 
-    // days가 지정된 경우 그 기간의 모든 날짜를 채움 (출석이 없는 날도 포함)
-    if (days > 0) {
+    if (semSinceStr) {
+      // 학기 시작일~오늘 모든 날짜를 채움 (출석 없는 날도 포함)
+      const end = new Date(todayKST() + 'T00:00:00');
+      let d = new Date(semSinceStr + 'T00:00:00');
+      let guard = 0;
+      while (d <= end && guard < 400) {   // 400일 안전 상한(학기≈150일)
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        dateSet.add(`${y}-${m}-${day}`);
+        d.setDate(d.getDate() + 1);
+        guard++;
+      }
+    } else if (days > 0) {
+      // days가 지정된 경우 그 기간의 모든 날짜를 채움 (출석이 없는 날도 포함)
       const today = new Date();
       for (let i = 0; i < days; i++) {
         const d = new Date();
@@ -12664,7 +12809,8 @@ const DIAG = {
 
     let rows = this.logs.slice();
     if (roomFilter) rows = rows.filter(r => r.장소 === roomFilter);
-    if (eventFilter === 'errors') rows = rows.filter(r => (r.이벤트 || '').includes('fail'));
+    if (eventFilter === 'audit') rows = rows.filter(r => (r.이벤트 || '').startsWith('audit_'));
+    else if (eventFilter === 'errors') rows = rows.filter(r => (r.이벤트 || '').includes('fail'));
     else if (eventFilter === 'session') rows = rows.filter(r => {
       const ev = r.이벤트 || '';
       return ev.includes('session') || ev.includes('start') || ev.includes('extend') || ev.includes('expire');
