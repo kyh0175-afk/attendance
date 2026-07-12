@@ -4709,6 +4709,20 @@ body.admin-readonly #admin-tab-diag {
 .seat-admin-conflict{background:rgba(184,84,63,.08);border:1px solid rgba(184,84,63,.3);border-radius:var(--r);padding:10px 14px;margin-bottom:14px;font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--terra)}
 
 
+/* ══ 명단 일괄 관리 ══ */
+.stu-bulk-bar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 10px 14px; margin: 0 0 12px;
+  background: var(--paper2); border: 1px solid var(--border2); border-radius: var(--r-md);
+}
+.stu-bulk-count { font-size: 13px; color: var(--amber); font-weight: 600; }
+.stu-bulk-count b { color: var(--cream); }
+.stu-bulk-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.st-check-th, .st-cell-check { width: 40px; text-align: center; }
+.stu-row-check, #students-select-all { width: 17px; height: 17px; accent-color: var(--amber); cursor: pointer; }
+.bulk-desc { font-size: 13px; color: var(--ink-dim); line-height: 1.6; margin: 0 0 12px; }
+.bulk-days { display: flex; gap: 6px; flex-wrap: wrap; }
+
 /* ══ 3단계 폴리시 (색상 무변경·안전본) ══ */
 /* 키보드 포커스 링 — 버튼·링크·탭요소만(입력류는 자체 포커스 있음) */
 a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
@@ -5553,10 +5567,24 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
           <span class="admin-result-count" id="students-count">—</span>
         </div>
 
+        <!-- 명단 일괄 관리 액션 바 (선택 시 표시) -->
+        <div class="stu-bulk-bar" id="students-bulk-bar" style="display:none">
+          <span class="stu-bulk-count"><b id="stu-bulk-count">0</b>명 선택됨</span>
+          <div class="stu-bulk-actions">
+            <button class="admin-btn admin-btn-sm" onclick="openBulkStudentModal('days')">출석요일 변경</button>
+            <button class="admin-btn admin-btn-sm" onclick="openBulkStudentModal('room')">장소 변경</button>
+            <button class="admin-btn admin-btn-sm" onclick="openBulkStudentModal('program')">프로그램 이동</button>
+            <button class="admin-btn admin-btn-sm success" onclick="bulkSetStudentsActive(true)">활성화</button>
+            <button class="admin-btn admin-btn-sm danger" onclick="bulkSetStudentsActive(false)">비활성화</button>
+            <button class="admin-btn admin-btn-sm" onclick="clearStudentSelection()">선택 해제</button>
+          </div>
+        </div>
+
         <div class="student-table-wrap">
           <table class="student-table">
             <thead>
               <tr>
+                <th class="st-check-th"><input type="checkbox" id="students-select-all" onchange="toggleSelectAllStudents(this)" title="현재 필터 전체 선택"></th>
                 <th>학번</th>
                 <th>이름</th>
                 <th>프로그램</th>
@@ -5567,7 +5595,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
               </tr>
             </thead>
             <tbody id="students-tbody">
-              <tr><td colspan="7" class="student-table-empty">불러오는 중...</td></tr>
+              <tr><td colspan="8" class="student-table-empty">불러오는 중...</td></tr>
             </tbody>
           </table>
         </div>
@@ -5918,6 +5946,19 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeConfirmModal()">취소</button>
       <button class="btn btn-primary" id="confirm-ok-btn" onclick="executeConfirm()">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 명단 일괄 변경 모달 -->
+<div class="modal-bg" id="bulk-student-modal">
+  <div class="modal">
+    <div class="modal-title" id="bulk-student-title">일괄 변경</div>
+    <div id="bulk-student-body" style="margin:14px 0"></div>
+    <p id="bulk-student-err" class="modal-err"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeBulkStudentModal()">취소</button>
+      <button class="btn btn-primary" id="bulk-student-apply" onclick="applyBulkStudent()">적용</button>
     </div>
   </div>
 </div>
@@ -6637,6 +6678,27 @@ const sb = {
       const { error } = await sb.client()
         .from('students')
         .update({ 활성: false, 수정일시: new Date().toISOString() })
+        .eq('학번', String(no))
+        .eq('프로그램', program);
+      if (error) throw error;
+      sb.invalidateCache('students');
+    },
+
+    async reactivate(no, program) {
+      const { error } = await sb.client()
+        .from('students')
+        .update({ 활성: true, 수정일시: new Date().toISOString() })
+        .eq('학번', String(no))
+        .eq('프로그램', program);
+      if (error) throw error;
+      sb.invalidateCache('students');
+    },
+
+    // 임의 필드 부분 업데이트(일괄 장소 변경 등). 학번+프로그램 키.
+    async updateFields(no, program, fields) {
+      const { error } = await sb.client()
+        .from('students')
+        .update({ ...fields, 수정일시: new Date().toISOString() })
         .eq('학번', String(no))
         .eq('프로그램', program);
       if (error) throw error;
@@ -8683,6 +8745,159 @@ async function fetchAllRows(buildQuery, pageSize = 1000) {
 // 명단 검색: 매 키입력 전체 재렌더 방지(200ms) + 검색 시 첫 페이지로 리셋
 const onStudentsSearch = debounce(() => { A.studentsPage = 1; renderStudentsTable(); }, 200);
 
+// ══════════════════════════════════════════
+//  명단 일괄 관리 (선택 → 요일/장소/프로그램/활성 일괄 변경)
+// ══════════════════════════════════════════
+let selectedStudents = new Set();   // key: 학번|프로그램
+let lastFilteredStudents = [];       // 현재 필터 결과(전체 선택용)
+
+function _stuKey(no, prog) { return no + '|' + (prog || ''); }
+
+function toggleStudentSelect(no, prog, checked) {
+  const k = _stuKey(no, prog);
+  if (checked) selectedStudents.add(k); else selectedStudents.delete(k);
+  updateStudentBulkBar();
+}
+
+function toggleSelectAllStudents(cb) {
+  lastFilteredStudents.forEach(s => {
+    const k = _stuKey(s.학번, s.프로그램);
+    if (cb.checked) selectedStudents.add(k); else selectedStudents.delete(k);
+  });
+  renderStudentsTable();   // 행 체크 상태 반영
+}
+
+function clearStudentSelection() {
+  selectedStudents.clear();
+  renderStudentsTable();
+}
+
+function updateStudentBulkBar() {
+  const bar = document.getElementById('students-bulk-bar');
+  if (!bar) return;
+  const n = selectedStudents.size;
+  bar.style.display = n > 0 ? '' : 'none';
+  const cnt = document.getElementById('stu-bulk-count');
+  if (cnt) cnt.textContent = n;
+  const all = document.getElementById('students-select-all');
+  if (all) {
+    const keys = lastFilteredStudents.map(s => _stuKey(s.학번, s.프로그램));
+    const allSel = keys.length > 0 && keys.every(k => selectedStudents.has(k));
+    all.checked = allSel;
+    all.indeterminate = !allSel && keys.some(k => selectedStudents.has(k));
+  }
+}
+
+function _selectedStudentPairs() {
+  return Array.from(selectedStudents).map(k => {
+    const i = k.lastIndexOf('|');
+    return { 학번: k.slice(0, i), 프로그램: k.slice(i + 1) };
+  });
+}
+
+function openBulkStudentModal(kind) {
+  const pairs = _selectedStudentPairs();
+  if (pairs.length === 0) return;
+  const modal = document.getElementById('bulk-student-modal');
+  const title = document.getElementById('bulk-student-title');
+  const body = document.getElementById('bulk-student-body');
+  document.getElementById('bulk-student-err').textContent = '';
+  modal.dataset.kind = kind;
+  const n = pairs.length;
+  if (kind === 'days') {
+    title.textContent = `출석요일 일괄 변경 (${n}명)`;
+    body.innerHTML = `<p class="bulk-desc">선택한 <b>${n}명</b>의 출석요일을 아래 선택값으로 <b>덮어씁니다</b>.</p>`
+      + `<div class="bulk-days" id="bulk-days">`
+      + ['월','화','수','목','금','토','일'].map(d =>
+          `<button type="button" class="day-toggle-btn ${d==='토'||d==='일'?'weekend':''}" data-day="${d}" onclick="this.classList.toggle('on')">${d}</button>`).join('')
+      + `</div>`;
+  } else if (kind === 'room') {
+    title.textContent = `장소 일괄 변경 (${n}명)`;
+    const rooms = Array.from(new Set(A.students.map(s => s.장소).filter(Boolean))).sort();
+    body.innerHTML = `<p class="bulk-desc">선택한 <b>${n}명</b>의 장소를 변경합니다.</p>`
+      + `<input type="text" id="bulk-room-input" class="admin-search" list="bulk-room-list" placeholder="장소 입력 또는 선택" style="width:100%">`
+      + `<datalist id="bulk-room-list">` + rooms.map(r => `<option value="${escapeAttr(r)}">`).join('') + `</datalist>`;
+  } else if (kind === 'program') {
+    title.textContent = `프로그램 이동 (${n}명)`;
+    const progs = Array.from(new Set(A.students.map(s => s.프로그램).filter(Boolean))).sort();
+    body.innerHTML = `<p class="bulk-desc">선택한 <b>${n}명</b>을 다른 프로그램으로 이동합니다. 이름·장소·요일은 유지되며, `
+      + `<b>기존 프로그램 등록은 비활성 처리</b>됩니다(데이터 보존·복구 가능).</p>`
+      + `<input type="text" id="bulk-prog-input" class="admin-search" list="bulk-prog-list" placeholder="이동할 프로그램" style="width:100%">`
+      + `<datalist id="bulk-prog-list">` + progs.map(p => `<option value="${escapeAttr(p)}">`).join('') + `</datalist>`;
+  }
+  modal.classList.add('on');
+}
+
+function closeBulkStudentModal() {
+  document.getElementById('bulk-student-modal').classList.remove('on');
+}
+
+async function applyBulkStudent() {
+  const modal = document.getElementById('bulk-student-modal');
+  const kind = modal.dataset.kind;
+  const err = document.getElementById('bulk-student-err');
+  const btn = document.getElementById('bulk-student-apply');
+  const pairs = _selectedStudentPairs();
+  err.textContent = '';
+
+  let val;
+  if (kind === 'days') {
+    val = Array.from(document.querySelectorAll('#bulk-days .day-toggle-btn.on')).map(b => b.dataset.day);
+    if (val.length === 0) { err.textContent = '요일을 1개 이상 선택해주세요'; return; }
+  } else if (kind === 'room') {
+    val = document.getElementById('bulk-room-input').value.trim();
+    if (!val) { err.textContent = '장소를 입력해주세요'; return; }
+  } else if (kind === 'program') {
+    val = document.getElementById('bulk-prog-input').value.trim();
+    if (!val) { err.textContent = '이동할 프로그램을 입력해주세요'; return; }
+  }
+
+  btn.disabled = true; btn.textContent = '적용 중...';
+  let done = 0, fail = 0;
+  for (const p of pairs) {
+    try {
+      const stu = A.students.find(s => String(s.학번) === String(p.학번) && (s.프로그램 || '') === p.프로그램);
+      if (kind === 'days') {
+        await sb.students.updateDays(p.학번, p.프로그램, val);
+      } else if (kind === 'room') {
+        await sb.students.updateFields(p.학번, p.프로그램, { 장소: val });
+      } else if (kind === 'program') {
+        if (val === p.프로그램) { done++; continue; }
+        await sb.students.upsert({
+          학번: p.학번, 이름: stu ? stu.이름 : '', 프로그램: val,
+          장소: stu ? stu.장소 : '', 출석요일: stu ? stu.출석요일 : null,
+        });
+        await sb.students.deactivate(p.학번, p.프로그램);
+      }
+      done++;
+    } catch (e) { fail++; console.warn('[일괄 적용] 실패', p, e); }
+  }
+  btn.disabled = false; btn.textContent = '적용';
+  closeBulkStudentModal();
+  selectedStudents.clear();
+  await loadAllStudents();
+  renderStudentsTable();
+  showAdminToast(`${done}명 적용 완료${fail ? `, ${fail}명 실패` : ''}`, fail ? 'warn' : 'ok');
+}
+
+async function bulkSetStudentsActive(active) {
+  const pairs = _selectedStudentPairs();
+  if (pairs.length === 0) return;
+  if (!confirm(`선택한 ${pairs.length}명을 ${active ? '활성화' : '비활성화'}할까요?`)) return;
+  let done = 0, fail = 0;
+  for (const p of pairs) {
+    try {
+      if (active) await sb.students.reactivate(p.학번, p.프로그램);
+      else await sb.students.deactivate(p.학번, p.프로그램);
+      done++;
+    } catch (e) { fail++; }
+  }
+  selectedStudents.clear();
+  await loadAllStudents();
+  renderStudentsTable();
+  showAdminToast(`${done}명 ${active ? '활성화' : '비활성화'} 완료${fail ? `, ${fail}명 실패` : ''}`, fail ? 'warn' : 'ok');
+}
+
 function renderStudentsTable() {
   const tbody = document.getElementById('students-tbody');
   if (!tbody) return;
@@ -8717,6 +8932,7 @@ function renderStudentsTable() {
 
   // 카운트 표시
   document.getElementById('students-count').textContent = `${filtered.length}명`;
+  lastFilteredStudents = filtered;   // 일괄 선택(전체 선택)용
 
   // 페이지네이션
   const totalPages = Math.max(1, Math.ceil(filtered.length / A.studentsPerPage));
@@ -8725,8 +8941,9 @@ function renderStudentsTable() {
   const pageItems = filtered.slice(start, start + A.studentsPerPage);
 
   if (pageItems.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="student-table-empty">조건에 맞는 학생이 없어요</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="student-table-empty">조건에 맞는 학생이 없어요</td></tr>';
     document.getElementById('students-pagination').innerHTML = '';
+    updateStudentBulkBar();
     return;
   }
 
@@ -8741,9 +8958,12 @@ function renderStudentsTable() {
       return `<button type="button" class="${cls}" ${inactive ? 'disabled' : ''} onclick="toggleStudentDay('${s.학번}', '${escapeAttr(s.프로그램)}', '${d}', this)">${d}</button>`;
     }).join('');
 
+    const _key = s.학번 + '|' + (s.프로그램 || '');
+    const _checked = selectedStudents.has(_key) ? 'checked' : '';
     return `
       <tr class="${inactive ? 'inactive' : ''}">
-        <td class="st-cell-no">${s.학번}</td>
+        <td class="st-cell-check"><input type="checkbox" class="stu-row-check" ${_checked} onchange="toggleStudentSelect('${s.학번}', '${escapeAttr(s.프로그램)}', this.checked)"></td>
+        <td class="st-cell-no">${escapeHtml(s.학번)}</td>
         <td class="st-cell-name">${escapeHtml(s.이름 || '')}</td>
         <td class="st-cell-program">${escapeHtml(s.프로그램 || '')}</td>
         <td class="st-cell-room">${escapeHtml(s.장소 || '')}</td>
@@ -8763,6 +8983,7 @@ function renderStudentsTable() {
 
   // 페이지네이션 렌더
   renderStudentsPagination(totalPages);
+  updateStudentBulkBar();
 }
 
 function renderStudentsPagination(totalPages) {
@@ -9139,7 +9360,9 @@ async function loadHistorySessions() {
     let sessTable = [];
     try {
       sessTable = await fetchAllRows(() => {
-        let q = sb.client().from('sessions').select('*').order('날짜', { ascending: false });
+        let q = sb.client().from('sessions').select('*')
+          .order('날짜', { ascending: false })
+          .order('세션id', { ascending: true });   // 페이지 경계 안정용 타이브레이커
         if (days > 0) q = q.gte('날짜', daysAgoKST(days));
         return q;
       });
