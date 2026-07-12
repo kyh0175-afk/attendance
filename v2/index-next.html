@@ -8664,6 +8664,22 @@ function debounce(fn, ms) {
   let t;
   return function (...a) { clearTimeout(t); t = setTimeout(() => fn.apply(this, a), ms); };
 }
+
+// Supabase 기본 1000행 캡 우회 — 쿼리를 페이지로 끊어 전량을 가져온다.
+// buildQuery: 매 호출마다 '새' 쿼리 빌더를 반환하는 함수(빌더는 1회용이라 재생성 필요).
+async function fetchAllRows(buildQuery, pageSize = 1000) {
+  let all = [], from = 0;
+  for (;;) {
+    const { data, error } = await buildQuery().range(from, from + pageSize - 1);
+    if (error) throw error;
+    const batch = data || [];
+    all = all.concat(batch);
+    if (batch.length < pageSize) break;   // 마지막 페이지
+    from += pageSize;
+    if (from > 200000) break;             // 안전 상한(무한루프 방지)
+  }
+  return all;
+}
 // 명단 검색: 매 키입력 전체 재렌더 방지(200ms) + 검색 시 첫 페이지로 리셋
 const onStudentsSearch = debounce(() => { A.studentsPage = 1; renderStudentsTable(); }, 200);
 
@@ -9107,25 +9123,27 @@ async function loadHistorySessions() {
   const days = parseInt(document.getElementById('hist-filter-range').value);
 
   try {
-    // 1. attendance 조회 (기존 로직)
-    let attQ = sb.client()
-      .from('attendance')
-      .select('세션id, 학번, 이름, 프로그램, 장소, 교사, 날짜, 원래시각, 사후여부')
-      .order('날짜', { ascending: false })
-      .order('원래시각', { ascending: true });
-    if (days > 0) attQ = attQ.gte('날짜', daysAgoKST(days));
-    const attRes = await attQ;
-    if (attRes.error) throw attRes.error;
-    const attData = attRes.data || [];
+    // 1. attendance 조회 — 전량 페이지 조회(1000행 캡 유실 방지)
+    const attData = await fetchAllRows(() => {
+      let q = sb.client()
+        .from('attendance')
+        .select('세션id, 학번, 이름, 프로그램, 장소, 교사, 날짜, 원래시각, 사후여부')
+        .order('날짜', { ascending: false })
+        .order('원래시각', { ascending: true })
+        .order('id', { ascending: true });   // 페이지 경계 안정용 타이브레이커
+      if (days > 0) q = q.gte('날짜', daysAgoKST(days));
+      return q;
+    });
 
-    // 2. sessions 조회 (빈 세션 포함)
-    let sessQ = sb.client()
-      .from('sessions')
-      .select('*')
-      .order('날짜', { ascending: false });
-    if (days > 0) sessQ = sessQ.gte('날짜', daysAgoKST(days));
-    const sessRes = await sessQ;
-    const sessTable = sessRes.error ? [] : (sessRes.data || []);
+    // 2. sessions 조회 (빈 세션 포함) — 전량 페이지 조회
+    let sessTable = [];
+    try {
+      sessTable = await fetchAllRows(() => {
+        let q = sb.client().from('sessions').select('*').order('날짜', { ascending: false });
+        if (days > 0) q = q.gte('날짜', daysAgoKST(days));
+        return q;
+      });
+    } catch (_) { sessTable = []; }
 
     const sessionMap = {};
 
@@ -9725,16 +9743,15 @@ async function loadAnalysis() {
   const days = parseInt(document.getElementById('anal-filter-range').value);
 
   try {
-    let query = sb.client()
-      .from('attendance')
-      .select('세션id, 학번, 이름, 프로그램, 장소, 날짜, 원래시각, 사후여부, 상태');
-
-    if (days > 0) {
-      query = query.gte('날짜', daysAgoKST(days));
-    }
-
-    const { data, error } = await query;
-    if (error) throw error;
+    // attendance 전량 페이지 조회(1000행 캡 유실 방지)
+    const data = await fetchAllRows(() => {
+      let q = sb.client()
+        .from('attendance')
+        .select('세션id, 학번, 이름, 프로그램, 장소, 날짜, 원래시각, 사후여부, 상태')
+        .order('id', { ascending: true });   // 페이지 경계 안정용
+      if (days > 0) q = q.gte('날짜', daysAgoKST(days));
+      return q;
+    });
 
     A.analysisAttendance = data || [];
 
