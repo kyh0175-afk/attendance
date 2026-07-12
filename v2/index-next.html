@@ -5538,7 +5538,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 
         <div class="admin-filters">
           <input type="text" class="admin-search" id="students-search" placeholder="학번 또는 이름으로 검색..." oninput="onStudentsSearch()">
-          <select class="admin-filter-select" id="students-filter-prog" onchange="renderStudentsTable()">
+          <select class="admin-filter-select" id="students-filter-prog" onchange="onStudentsFilterChange()">
             <option value="">전체 프로그램</option>
             <option>심야 독서시간</option>
             <option>야간 독서시간</option>
@@ -5546,20 +5546,20 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
             <option>토요일 독서시간</option>
             <option>일요일 독서시간</option>
           </select>
-          <select class="admin-filter-select" id="students-filter-room" onchange="renderStudentsTable()">
+          <select class="admin-filter-select" id="students-filter-room" onchange="onStudentsFilterChange()">
             <option value="">전체 장소</option>
             <option>아우름</option>
             <option>교과1실</option>
             <option>해오름</option>
             <option>리케이온</option>
           </select>
-          <select class="admin-filter-select" id="students-filter-grade" onchange="renderStudentsTable()">
+          <select class="admin-filter-select" id="students-filter-grade" onchange="onStudentsFilterChange()">
             <option value="">전체 학년</option>
             <option value="1">1학년</option>
             <option value="2">2학년</option>
             <option value="3">3학년</option>
           </select>
-          <select class="admin-filter-select" id="students-filter-active" onchange="renderStudentsTable()">
+          <select class="admin-filter-select" id="students-filter-active" onchange="onStudentsFilterChange()">
             <option value="active">활성만</option>
             <option value="all">전체 (비활성 포함)</option>
             <option value="inactive">비활성만</option>
@@ -8742,8 +8742,10 @@ async function fetchAllRows(buildQuery, pageSize = 1000) {
   }
   return all;
 }
-// 명단 검색: 매 키입력 전체 재렌더 방지(200ms) + 검색 시 첫 페이지로 리셋
-const onStudentsSearch = debounce(() => { A.studentsPage = 1; renderStudentsTable(); }, 200);
+// 명단 검색: 매 키입력 전체 재렌더 방지(200ms) + 첫 페이지 리셋 + 선택 초기화(숨은 선택 오적용 방지)
+const onStudentsSearch = debounce(() => { selectedStudents.clear(); A.studentsPage = 1; renderStudentsTable(); }, 200);
+// 필터 변경: 대상 집합이 바뀌므로 선택을 초기화(다른 필터의 숨은 선택에 일괄 적용되는 사고 방지)
+function onStudentsFilterChange() { selectedStudents.clear(); A.studentsPage = 1; renderStudentsTable(); }
 
 // ══════════════════════════════════════════
 //  명단 일괄 관리 (선택 → 요일/장소/프로그램/활성 일괄 변경)
@@ -8790,7 +8792,7 @@ function updateStudentBulkBar() {
 
 function _selectedStudentPairs() {
   return Array.from(selectedStudents).map(k => {
-    const i = k.lastIndexOf('|');
+    const i = k.indexOf('|');   // 학번엔 파이프가 없으므로 첫 '|'가 구분자(프로그램명에 '|' 있어도 안전)
     return { 학번: k.slice(0, i), 프로그램: k.slice(i + 1) };
   });
 }
@@ -8853,7 +8855,7 @@ async function applyBulkStudent() {
   }
 
   btn.disabled = true; btn.textContent = '적용 중...';
-  let done = 0, fail = 0;
+  let done = 0, fail = 0, skipped = 0;
   for (const p of pairs) {
     try {
       const stu = A.students.find(s => String(s.학번) === String(p.학번) && (s.프로그램 || '') === p.프로그램);
@@ -8862,12 +8864,21 @@ async function applyBulkStudent() {
       } else if (kind === 'room') {
         await sb.students.updateFields(p.학번, p.프로그램, { 장소: val });
       } else if (kind === 'program') {
-        if (val === p.프로그램) { done++; continue; }
+        if (val === p.프로그램) { skipped++; continue; }
+        // 대상 프로그램에 이 학번이 이미 등록돼 있으면 덮어쓰지 않고 건너뜀(기존 데이터 보호)
+        const already = A.students.some(s => String(s.학번) === String(p.학번) && (s.프로그램 || '') === val);
+        if (already) { skipped++; console.warn('[프로그램 이동] 대상에 이미 등록됨 — 건너뜀', p.학번, val); continue; }
+        // 신규 등록(이름·장소·요일 유지) → 기존 비활성. 비활성 실패 시 신규를 되돌려 중복 활성 방지.
         await sb.students.upsert({
           학번: p.학번, 이름: stu ? stu.이름 : '', 프로그램: val,
           장소: stu ? stu.장소 : '', 출석요일: stu ? stu.출석요일 : null,
         });
-        await sb.students.deactivate(p.학번, p.프로그램);
+        try {
+          await sb.students.deactivate(p.학번, p.프로그램);
+        } catch (e2) {
+          try { await sb.students.deactivate(p.학번, val); } catch (_) {}  // 보상: 방금 만든 신규 비활성(이동 취소)
+          throw e2;
+        }
       }
       done++;
     } catch (e) { fail++; console.warn('[일괄 적용] 실패', p, e); }
@@ -8877,7 +8888,10 @@ async function applyBulkStudent() {
   selectedStudents.clear();
   await loadAllStudents();
   renderStudentsTable();
-  showAdminToast(`${done}명 적용 완료${fail ? `, ${fail}명 실패` : ''}`, fail ? 'warn' : 'ok');
+  const parts = [`${done}명 적용`];
+  if (skipped) parts.push(`${skipped}명 건너뜀(대상에 이미 등록)`);
+  if (fail) parts.push(`${fail}명 실패`);
+  showAdminToast(parts.join(', '), (fail || skipped) ? 'warn' : 'ok');
 }
 
 async function bulkSetStudentsActive(active) {
