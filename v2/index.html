@@ -6612,6 +6612,25 @@ const sb = {
       return data === true;
     },
 
+    // 관리자 로그인 — 비번 검증 후 토큰 발급, 세션 동안 sessionStorage 보관
+    async adminLogin(input) {
+      const { data, error } = await sb.client()
+        .rpc('admin_login', { p_password: input });
+      if (error) throw error;
+      if (data) { try { sessionStorage.setItem('cosmos_admin_token', data); } catch (_) {} }
+      return !!data;
+    },
+    adminToken() {
+      try { return sessionStorage.getItem('cosmos_admin_token') || null; } catch (_) { return null; }
+    },
+    // 관리자 전용 RPC 호출 — 토큰 자동 주입 (미인증/만료 시 서버가 거부)
+    async adminRpc(fn, params) {
+      const { data, error } = await sb.client()
+        .rpc(fn, Object.assign({ p_token: sb.settings.adminToken() }, params || {}));
+      if (error) throw error;
+      return data;
+    },
+
     async semesterStart() {
       return this.get('semester_start');
     },
@@ -8558,7 +8577,8 @@ async function undoManualAttend(no) {
   renderRoster();
 
   try {
-    await sb.attendance.delete(attId);
+    const { error: undoErr } = await sb.client().rpc('undo_recent_attendance', { p_id: attId });
+    if (undoErr) throw undoErr;
     try { TLOG.log('audit_manual_undo', { no: no, sessionId: sid, id: attId }); } catch (_) {}
     // 삭제 확정 후에도 진행 중이던 폴링 SELECT가 잔존 행을 되살릴 수 있어 잠시 더 억제
     setTimeout(() => { if (T.undoneKeys) T.undoneKeys.delete(no); }, 6000);
@@ -8737,6 +8757,13 @@ const A = {
 async function enterAdminScreen(opts) {
   opts = opts || {};
   A.readOnly = !!opts.readOnly;
+
+  // 관리자 모드는 유효한 로그인 토큰 필요 (새로고침/북마크 직접진입 방어; View 모드는 예외)
+  if (!A.readOnly && !sb.settings.adminToken()) {
+    goHome();
+    openPwModal();
+    return;
+  }
 
   // View 모드면 기본 탭을 history로, 관리자 전용 탭 접근을 차단
   if (A.readOnly) {
@@ -9414,25 +9441,15 @@ async function executeConfirm() {
       try { TLOG.log('audit_student_deactivate', { no: no, program: program, name: name }); } catch (_) {}
       showAdminToast(`${name} 학생이 비활성화됐어요`, 'ok');
     } else if (action === 'delete') {
-      // 완전 삭제 — 학생 + 관련 출석 기록 모두
-      await sb.client()
-        .from('attendance')
-        .delete()
-        .eq('학번', no)
-        .eq('프로그램', program);
-      await sb.client()
-        .from('students')
-        .delete()
-        .eq('학번', no)
-        .eq('프로그램', program);
+      // 완전 삭제 — 학생 + 관련 출석 기록 모두 (관리자 토큰 검증 RPC)
+      await sb.settings.adminRpc('admin_delete_student', { p_hakbun: no, p_program: program });
       sb.invalidateCache('students');
       try { TLOG.log('audit_student_delete', { no: no, program: program, name: name }); } catch (_) {}
       showAdminToast(`${name} 학생이 완전 삭제됐어요`, 'ok');
     } else if (action === 'deleteSession') {
       // 세션 + 관련 출석기록 모두 삭제
       const sessionId = A.pendingConfirm.sessionId;
-      await sb.client().from('attendance').delete().eq('세션id', sessionId);
-      await sb.client().from('sessions').delete().eq('세션id', sessionId);
+      await sb.settings.adminRpc('admin_delete_session', { p_session_id: sessionId });
       try { TLOG.log('audit_session_delete', { sessionId: sessionId }); } catch (_) {}
       A.selectedSession = null;
       A.selectedAttendance = [];
@@ -9445,7 +9462,7 @@ async function executeConfirm() {
       // 개별 출석 삭제
       const attId = A.pendingConfirm.attId;
       const _delRec = (A.selectedAttendance || []).find(a => a.id === attId);
-      await sb.attendance.delete(attId);
+      await sb.settings.adminRpc('admin_delete_attendance', { p_id: attId });
       try { TLOG.log('audit_attendance_delete', { id: attId, no: _delRec ? _delRec.학번 : null, sessionId: _delRec ? _delRec.세션id : (A.selectedSession && A.selectedSession.세션id) || null }); } catch (_) {}
       A.selectedAttendance = A.selectedAttendance.filter(a => a.id !== attId);
       renderHistoryDetail();
@@ -11308,7 +11325,7 @@ async function confirmPw() {
 
   let ok;
   try {
-    ok = await sb.settings.verifyPassword(val);
+    ok = await sb.settings.adminLogin(val);
   } catch (e) {
     err.textContent = '비밀번호 확인 실패: ' + (e.message || '오류');
     input.disabled = false;
@@ -14271,13 +14288,8 @@ const SEAT_ADMIN = {
     if (!a) return;
     if (!confirm(a.이름 + ' (' + a.학번 + ') 학생의 신청을 삭제합니다.\n되돌릴 수 없어요.')) return;
     try {
-      // seat_requests에서 실제 삭제 (해당 기간 + 학번 매치)
-      const { error } = await sb.client()
-        .from('seat_requests')
-        .delete()
-        .eq('period_id', this.selectedPeriodId)
-        .eq('학번', 학번);
-      if (error) throw error;
+      // seat_requests에서 실제 삭제 (관리자 토큰 검증 RPC, period_id+학번 매치)
+      await sb.settings.adminRpc('admin_remove_seat_request', { p_period_id: this.selectedPeriodId, p_hakbun: 학번 });
       // 로컬 상태에서도 제거
       this.assignments = this.assignments.filter(x => x.학번 !== 학번);
       this.requests = this.requests.filter(x => x.학번 !== 학번);
