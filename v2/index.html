@@ -6604,6 +6604,14 @@ const sb = {
       return this.get('admin_password');
     },
 
+    // 서버측 대조 RPC — 비밀번호를 클라이언트로 내려받지 않고 boolean만 반환
+    async verifyPassword(input) {
+      const { data, error } = await sb.client()
+        .rpc('verify_admin_password', { p_input: input });
+      if (error) throw error;
+      return data === true;
+    },
+
     async semesterStart() {
       return this.get('semester_start');
     },
@@ -11298,9 +11306,9 @@ async function confirmPw() {
   // 입력 잠시 잠금
   input.disabled = true;
 
-  let correctPw;
+  let ok;
   try {
-    correctPw = await sb.settings.adminPassword();
+    ok = await sb.settings.verifyPassword(val);
   } catch (e) {
     err.textContent = '비밀번호 확인 실패: ' + (e.message || '오류');
     input.disabled = false;
@@ -11309,7 +11317,7 @@ async function confirmPw() {
 
   input.disabled = false;
 
-  if (val !== correctPw) {
+  if (!ok) {
     err.textContent = '비밀번호가 올바르지 않아요';
     input.classList.add('error');
     input.classList.add('shake');
@@ -11415,21 +11423,15 @@ async function runDiagnostics() {
   // ── 3. sb 헬퍼 함수 검증 ──
   diagLog('sb 헬퍼 함수 검증 시작', 'info');
 
-  // settings.adminPassword
+  // settings.verifyPassword (RPC 상태만 확인 — 비밀번호를 가져오지 않음)
   diagSet('diag-h-pw', '조회 중...', 'pending');
   try {
-    const pw = await sb.settings.adminPassword();
-    if (pw && pw.length > 0) {
-      // 보안: 마스킹해서 표시
-      const masked = pw.substring(0, 2) + '***' + pw.substring(pw.length - 1);
-      diagSet('diag-h-pw', `✓ ${masked} (${pw.length}자)`, 'ok');
-      diagLog(`adminPassword(): ${pw.length}자 OK`, 'ok');
-    } else {
-      diagSet('diag-h-pw', '❌ 빈 값', 'err');
-    }
+    const ok = await sb.settings.verifyPassword('__healthcheck__');
+    diagSet('diag-h-pw', ok === false ? '✓ RPC 정상' : '✓ RPC 응답', 'ok');
+    diagLog('verify_admin_password RPC OK', 'ok');
   } catch (e) {
     diagSet('diag-h-pw', '❌ ' + e.message, 'err');
-    diagLog('adminPassword() 실패: ' + e.message, 'err');
+    diagLog('verify_admin_password 실패: ' + e.message, 'err');
   }
 
   // settings.semesterStart
