@@ -11755,11 +11755,10 @@ const COSMOS = {
     btn.disabled = true;
     btn.textContent = '가져오는 중...';
     try {
-      const { data, error } = await sb.client().rpc('import_cosmos_from_seats', {
+      const data = await sb.settings.adminRpc('admin_import_cosmos_from_seats', {
         p_좌석배치월: month,
         p_프로그램들: programs,
       });
-      if (error) throw error;
       if (data && data.success === false) {
         errEl.textContent = data.message || '가져오기 실패';
         return;
@@ -11851,7 +11850,7 @@ const COSMOS = {
     btn.disabled = true;
     btn.textContent = '추가 중...';
     try {
-      const { data, error } = await sb.client().rpc('add_cosmos_student', {
+      await sb.settings.adminRpc('admin_add_cosmos_student', {
         p_학번: no,
         p_이름: name,
         p_프로그램: program,
@@ -11860,7 +11859,6 @@ const COSMOS = {
         p_요일: days,
         p_좌석배치월: this.currentMonth,
       });
-      if (error) throw error;
       this.closeAddStudentModal();
       showAdminToast(name + ' (' + no + ') 추가됨', 'ok');
       await this._loadMonthData();
@@ -12064,8 +12062,7 @@ const COSMOS = {
     };
 
     try {
-      const { error } = await sb.client().rpc('update_cosmos_schedule', payload);
-      if (error) throw error;
+      await sb.settings.adminRpc('admin_update_cosmos_schedule', payload);
       // 로컬 상태 갱신
       row.프로그램 = next.프로그램;
       row.장소 = next.장소;
@@ -12099,8 +12096,7 @@ const COSMOS = {
     if (!confirm(name + ' (' + row.학번 + ') 의 ' + row.프로그램 + '/' + row.장소 +
       ' 등록을 삭제할까요?\n해당 학생의 다른 등록이 없으면 명단에서도 제거돼요.')) return;
     try {
-      const { data, error } = await sb.client().rpc('delete_cosmos_schedule', { p_id: scheduleId });
-      if (error) throw error;
+      const data = await sb.settings.adminRpc('admin_delete_cosmos_schedule', { p_id: scheduleId });
       const msg = data && data.member_deleted
         ? name + ' 명단에서 완전 삭제됨'
         : name + ' 등록 삭제됨 (' + (data && data.remaining_schedules) + '개 등록 남음)';
@@ -12306,11 +12302,10 @@ const COSMOS = {
     btn.textContent = '업로드 중...';
 
     try {
-      const { data, error } = await sb.client().rpc('bulk_upsert_cosmos', {
+      const data = await sb.settings.adminRpc('admin_bulk_upsert_cosmos', {
         p_좌석배치월: this.currentMonth,
         p_rows: this._uploadRows,
       });
-      if (error) throw error;
 
       const msg =
         '✓ 학생 ' + (data.members_added || 0) + '명 추가, ' + (data.members_updated || 0) + '명 갱신\n' +
@@ -14055,14 +14050,13 @@ const SEAT_ADMIN = {
     btn.disabled = true;
     btn.textContent = '추가 중...';
     try {
-      const { error } = await sb.client().rpc('admin_add_seat_request', {
+      await sb.settings.adminRpc('admin_seat_add_request', {
         p_period_id: this.selectedPeriodId,
         p_학번: no,
         p_이름: name,
         p_장소: room,
         p_좌석번호: seatNum,
       });
-      if (error) throw error;
       this.closeManualModal();
       showAdminToast(name + ' 추가됨 (' + room + ' ' + seatNum + '번)', 'ok');
       await this.selectPeriod(this.selectedPeriodId);
@@ -14352,11 +14346,10 @@ const SEAT_ADMIN = {
   async changeStatus(newStatus) {
     if (!this.selectedPeriodId) return;
     try {
-      const { error } = await sb.client().rpc('update_seat_period_status', {
+      await sb.settings.adminRpc('admin_update_seat_period_status', {
         p_period_id: this.selectedPeriodId,
         p_새상태: newStatus,
       });
-      if (error) throw error;
       showAdminToast('상태가 변경됐어요', 'ok');
       await this.refresh();
     } catch (e) {
@@ -14394,7 +14387,7 @@ const SEAT_ADMIN = {
 
     const teacherName = prompt('확정하는 교사 이름을 입력해주세요', '') || '';
     try {
-      const { error } = await sb.client().rpc('confirm_seat_assignments', {
+      await sb.settings.adminRpc('admin_confirm_seat_assignments', {
         p_period_id: this.selectedPeriodId,
         p_assignments: this.assignments.map(a => ({
           학번: a.학번,
@@ -14407,7 +14400,6 @@ const SEAT_ADMIN = {
         })),
         p_확정자: teacherName,
       });
-      if (error) throw error;
       showAdminToast('좌석 배치가 확정됐어요', 'ok');
       await this.refresh();
     } catch (e) {
@@ -14422,10 +14414,9 @@ const SEAT_ADMIN = {
     if (!p) return;
     if (!confirm(p.제목 + ' 기간과 모든 신청·배치를 삭제합니다.\n되돌릴 수 없어요.')) return;
     try {
-      const { error } = await sb.client().rpc('delete_seat_period', {
+      await sb.settings.adminRpc('admin_delete_seat_period', {
         p_period_id: this.selectedPeriodId,
       });
-      if (error) throw error;
       this.selectedPeriodId = null;
       this.assignments = [];
       document.getElementById('seat-admin-detail').innerHTML = '';
@@ -14487,7 +14478,7 @@ const SEAT_ADMIN = {
       const endIso = new Date(endStr).toISOString();
       const teacherName = prompt('만드는 교사 이름을 입력해주세요', '') || '';
 
-      const { data, error } = await sb.client().rpc('create_seat_period', {
+      const data = await sb.settings.adminRpc('admin_create_seat_period', {
         p_제목: title,
         p_신청시작: startIso,
         p_신청마감: endIso,
@@ -14495,7 +14486,6 @@ const SEAT_ADMIN = {
         p_허용학년: grades,
         p_좌석배치월: document.getElementById('sp-month').value || null,
       });
-      if (error) throw error;
 
       this.closePeriodModal();
       showAdminToast('신청 기간이 만들어졌어요', 'ok');
