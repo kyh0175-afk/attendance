@@ -1,0 +1,10 @@
+{
+  "name": "cosmos-account-tool",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "코스모스 출석 v3 학생 Auth 계정 벌크 생성 도구 (로컬 실행)",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}
