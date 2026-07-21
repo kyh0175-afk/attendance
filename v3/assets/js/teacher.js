@@ -1,6 +1,9 @@
 // 코스모스 출석 v3 — 교사 페이지 (로그인 · 세션 시작 · 명단 · 퇴실코드 · 마감)
-import { sb, logout, currentUser, isStaff, createSession, issueExitCode, finalizeSession, sessionRoster } from './sb.js';
+import { sb, setAuthStorageKey, logout, currentUser, isStaff, createSession, issueExitCode, finalizeSession, sessionRoster } from './sb.js';
 import { STAFF_EMAIL, PROGRAMS, ROOMS } from './config.js';
+
+// 교사 세션은 학생과 별도 저장키 — 같은 브라우저에서 교사·학생 동시 로그인 가능
+setAuthStorageKey('cosmos_v3_staff');
 
 const $ = (id) => document.getElementById(id);
 const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;

@@ -3,6 +3,10 @@
 import { SUPABASE_URL, SUPABASE_KEY, EMAIL_DOMAIN } from './config.js';
 
 let _client = null;
+let _storageKey = 'cosmos_v3_auth';   // 학생 기본. 교사 페이지는 별도 키로 분리(같은 브라우저 공존).
+// ★ sb() 최초 호출 전에 불러야 적용됨 (페이지 모듈 최상단에서 호출).
+export function setAuthStorageKey(key) { _storageKey = key; }
+
 export function sb() {
   if (!_client) {
     if (!window.supabase || !window.supabase.createClient) {
@@ -12,7 +16,7 @@ export function sb() {
       auth: {
         persistSession: true,        // 로그인 유지 (앱 열면 자동 로그인)
         autoRefreshToken: true,
-        storageKey: 'cosmos_v3_auth',
+        storageKey: _storageKey,
       },
     });
   }
