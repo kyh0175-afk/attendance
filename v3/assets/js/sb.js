@@ -69,6 +69,34 @@ export async function checkOut(code) {
   return data; // { ok, already?, msg? }
 }
 
+// ── 교사(staff) ──
+export async function isStaff() {
+  try { const { data, error } = await sb().rpc('is_staff'); if (error) return false; return data === true; }
+  catch (_) { return false; }
+}
+export async function createSession(program, room, teacher) {
+  const { data, error } = await sb().rpc('create_v3_session', { p_program: program, p_room: room, p_teacher: teacher });
+  if (error) throw error;
+  return data; // { session_id, entry_code }
+}
+export async function issueExitCode(sessionId) {
+  const { data, error } = await sb().rpc('issue_exit_code', { p_session_id: sessionId });
+  if (error) throw error;
+  return data; // { code, expires_at }
+}
+export async function finalizeSession(sessionId) {
+  const { data, error } = await sb().rpc('finalize_session', { p_session_id: sessionId });
+  if (error) throw error;
+  return data; // { ok, missing }
+}
+export async function sessionRoster(sessionId) {
+  const { data, error } = await sb().from('attendance')
+    .select('학번,이름,원래시각,퇴실시각,상태').eq('세션id', sessionId)
+    .order('원래시각', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
 // ── DAL (학생 본인 데이터 — RLS가 본인 학번 행으로 제한) ──
 export async function myProfile() {
   const { data, error } = await sb().from('students').select('*').eq('활성', true);

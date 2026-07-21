@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>코스모스 출석 · 교사</title>
+<meta name="theme-color" content="#1a130c">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,600&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg:#f4efe6; --bg2:#efe7d9; --card:#fffdf8; --ink:#2a2018; --ink2:#5a4d3e;
+    --sub:#9a8975; --line:#ece4d5; --line2:#e2d8c6;
+    --brand:#5b4433; --lamp:#c7994f; --ok:#3c7d5f; --ok-bg:#e7f1ea; --warn:#b57a2e; --warn-bg:#f6ecda; --err:#b34a3a;
+    --r:16px; --r-lg:22px; --ease:cubic-bezier(.22,1,.36,1);
+    --shadow:0 4px 18px rgba(60,42,24,.07),0 1px 3px rgba(60,42,24,.05);
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; }
+  body {
+    font-family:'IBM Plex Sans KR',system-ui,sans-serif; color:var(--ink); line-height:1.55; -webkit-font-smoothing:antialiased;
+    background:radial-gradient(120% 80% at 50% -10%, #fbf7ee 0%, var(--bg) 46%, var(--bg2) 100%) fixed; min-height:100dvh;
+  }
+  .app { max-width:560px; margin:0 auto; padding:0 20px calc(28px + env(safe-area-inset-bottom)); }
+  .top { padding:24px 2px 8px; display:flex; align-items:baseline; gap:8px; }
+  .top .en { font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:600; font-size:19px; color:var(--lamp); }
+  .top .role { font-size:12px; color:var(--sub); font-weight:600; letter-spacing:.04em; }
+  .view { display:none; } .view.on { display:block; } .view.enter { animation:vin .4s var(--ease) both; }
+  @keyframes vin { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--shadow); padding:22px; }
+  .card + .card { margin-top:14px; }
+  .lead { margin:30px 2px 20px; } .lead h1 { font-size:23px; font-weight:700; margin:0 0 6px; } .lead p { font-size:14px; color:var(--sub); margin:0; }
+  label { display:block; font-size:12.5px; font-weight:600; color:var(--ink2); margin:14px 0 7px 2px; }
+  input,select {
+    width:100%; padding:15px; font-size:16.5px; font-family:inherit; font-weight:500; color:var(--ink);
+    background:#fdfbf6; border:1.5px solid var(--line2); border-radius:var(--r); outline:none; transition:border-color .18s,box-shadow .18s;
+  }
+  input:focus,select:focus { border-color:var(--lamp); box-shadow:0 0 0 4px rgba(199,153,79,.14); background:#fff; }
+  .btn {
+    display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:20px; padding:16px;
+    font-size:16.5px; font-weight:600; font-family:inherit; color:#fdf8ee; background:var(--brand); border:none; border-radius:var(--r);
+    cursor:pointer; transition:transform .12s var(--ease),box-shadow .2s,opacity .2s; box-shadow:0 6px 18px rgba(91,68,51,.22); touch-action:manipulation;
+  }
+  .btn:active { transform:scale(.975); } .btn:disabled { opacity:.5; box-shadow:none; }
+  .btn.ghost { background:transparent; color:var(--sub); box-shadow:none; font-weight:500; font-size:14px; margin-top:14px; }
+  .btn.warn { background:#fff; color:var(--err); border:1.5px solid #ecccc4; box-shadow:none; }
+  .btn.lamp { background:var(--lamp); box-shadow:0 6px 18px rgba(199,153,79,.28); }
+
+  /* 입실 코드 카드 */
+  .codecard { background:#31241a; color:#f6ead2; border-radius:var(--r-lg); padding:24px; text-align:center; box-shadow:var(--shadow); }
+  .codecard .meta { font-size:13px; color:#cbb590; }
+  .codecard .label { font-size:12px; color:#a8957b; margin-top:14px; letter-spacing:.04em; }
+  .codecard .code { font-size:60px; font-weight:700; letter-spacing:.16em; font-variant-numeric:tabular-nums; color:#fbf1dc; margin:2px 0; }
+  .codecard .code.sm { font-size:44px; }
+  .codecard .hint { font-size:12.5px; color:#bda98a; margin-top:8px; }
+  .exitwrap { margin-top:14px; padding-top:16px; border-top:1px solid rgba(255,255,255,.1); }
+  .exitwrap.hidden { display:none; }
+  .cd { font-size:12px; color:var(--lamp); font-variant-numeric:tabular-nums; }
+
+  /* 명단 */
+  .roster-head { display:flex; align-items:baseline; justify-content:space-between; margin:0 2px 12px; }
+  .roster-head h2 { font-size:15px; font-weight:600; margin:0; }
+  .roster-head .n { font-size:13px; color:var(--sub); }
+  .roster-head .n b { color:var(--brand); font-size:16px; }
+  ul.roster { list-style:none; margin:0; padding:0; max-height:44vh; overflow:auto; }
+  ul.roster li { display:flex; align-items:center; gap:10px; padding:11px 2px; border-bottom:1px solid var(--line); font-size:14px; }
+  ul.roster li:last-child { border-bottom:none; }
+  ul.roster .nm { font-weight:600; } ul.roster .no { font-size:12px; color:var(--sub); font-variant-numeric:tabular-nums; }
+  ul.roster .t { margin-left:auto; font-size:12px; color:var(--sub); font-variant-numeric:tabular-nums; }
+  ul.roster .b { font-size:11px; font-weight:600; padding:3px 8px; border-radius:99px; margin-left:8px; }
+  ul.roster .b.out { background:var(--ok-bg); color:var(--ok); } ul.roster .b.in { background:var(--warn-bg); color:var(--warn); }
+  ul.roster .empty { justify-content:center; color:var(--sub); padding:24px 0; }
+  .row2 { display:flex; gap:11px; }
+  .toast {
+    position:fixed; left:50%; bottom:calc(26px + env(safe-area-inset-bottom)); transform:translate(-50%,18px);
+    background:var(--ink); color:#fdf8ee; padding:13px 20px; border-radius:14px; font-size:14px; font-weight:500;
+    opacity:0; pointer-events:none; transition:.26s var(--ease); max-width:88vw; text-align:center; z-index:50; box-shadow:0 10px 30px rgba(30,20,10,.3);
+  }
+  .toast.on { opacity:1; transform:translate(-50%,0); } .toast.ok { background:var(--ok); } .toast.err { background:var(--err); }
+  @media (prefers-reduced-motion:reduce) { .view.enter { animation:none; } * { transition-duration:.01ms !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top"><span class="en">Cosmos</span><span class="role">교사</span></div>
+
+  <div id="view-loading" class="view on"><div class="card" style="text-align:center;color:var(--sub);padding:50px">불러오는 중…</div></div>
+
+  <!-- 로그인 -->
+  <div id="view-login" class="view">
+    <div class="lead"><h1>교사 로그인</h1><p>공용 교사 PIN을 입력해주세요.</p></div>
+    <div class="card">
+      <label for="t-pin">교사 PIN</label>
+      <input id="t-pin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="교사 PIN">
+      <button id="t-login-btn" class="btn">로그인</button>
+    </div>
+  </div>
+
+  <!-- 세션 시작 -->
+  <div id="view-setup" class="view">
+    <div class="lead"><h1>세션 시작</h1><p>프로그램과 장소를 고르고 출석을 시작해요.</p></div>
+    <div class="card">
+      <label for="t-program">프로그램</label>
+      <select id="t-program"></select>
+      <label for="t-room">장소</label>
+      <select id="t-room"></select>
+      <label for="t-teacher">담당 교사 이름</label>
+      <input id="t-teacher" type="text" placeholder="이름" autocomplete="off">
+      <button id="t-start-btn" class="btn">▶ 출석 시작</button>
+      <button id="t-logout-btn" class="btn ghost">로그아웃</button>
+    </div>
+  </div>
+
+  <!-- 세션 진행 -->
+  <div id="view-session" class="view">
+    <div class="codecard">
+      <div class="meta" id="s-meta">—</div>
+      <div class="label">입실 코드</div>
+      <div class="code" id="s-entry">0000</div>
+      <div class="hint">칠판에 적어 학생들에게 안내해주세요</div>
+      <div class="exitwrap hidden" id="s-exitwrap">
+        <div class="label">퇴실 코드</div>
+        <div class="code sm" id="s-exit">----</div>
+        <div class="cd" id="s-exit-cd"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="roster-head">
+        <h2>출석 현황</h2>
+        <div class="n"><b id="s-in">0</b>명 입실 · <span id="s-out">0</span>명 퇴실</div>
+      </div>
+      <ul class="roster" id="s-roster"></ul>
+    </div>
+
+    <div class="row2" style="margin-top:14px">
+      <button id="s-issue-btn" class="btn lamp" style="margin-top:0">퇴실 코드 발급</button>
+      <button id="s-finalize-btn" class="btn warn" style="margin-top:0">마감</button>
+    </div>
+    <button id="s-back-btn" class="btn ghost">← 세션 목록으로</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<script type="module" src="assets/js/teacher.js"></script>
+</body>
+</html>
