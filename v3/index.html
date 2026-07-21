@@ -91,7 +91,43 @@
   .greet .who b { color:var(--brand); }
   .greet .no { font-size:12px; color:var(--sub); font-variant-numeric:tabular-nums; padding-bottom:5px; }
 
-  /* 히어로 — 이번 달 출석 (램프 글로우) */
+  /* 입실/퇴실 버튼 */
+  .check-row { display:flex; gap:11px; margin-bottom:14px; }
+  .check-btn {
+    flex:1; padding:18px 0; font-size:17px; font-weight:700; font-family:inherit; border-radius:var(--r);
+    cursor:pointer; touch-action:manipulation; transition:transform .12s var(--ease), box-shadow .2s, background .2s;
+    border:1.5px solid transparent;
+  }
+  .check-btn:active { transform:scale(.97); }
+  .check-btn.in { color:#fdf8ee; background:var(--brand); box-shadow:0 6px 16px rgba(91,68,51,.2); }
+  .check-btn.out { color:var(--brand); background:#fff; border-color:var(--line2); }
+  .check-btn.out:active { background:#fbf7ef; }
+
+  /* 바텀 시트 */
+  .sheet-bg {
+    position:fixed; inset:0; background:rgba(30,20,10,.34); backdrop-filter:blur(2px);
+    opacity:0; pointer-events:none; transition:opacity .28s var(--ease); z-index:60;
+    display:flex; align-items:flex-end; justify-content:center;
+  }
+  .sheet-bg.on { opacity:1; pointer-events:auto; }
+  .sheet {
+    width:100%; max-width:440px; background:var(--card); border-radius:24px 24px 0 0;
+    padding:12px 22px calc(26px + env(safe-area-inset-bottom)); box-shadow:0 -8px 40px rgba(40,28,14,.2);
+    transform:translateY(100%); transition:transform .34s var(--ease);
+  }
+  .sheet-bg.on .sheet { transform:none; }
+  .sheet-grip { width:38px; height:4px; border-radius:99px; background:var(--line2); margin:0 auto 16px; }
+  .sheet-title { font-size:18px; font-weight:700; text-align:center; }
+  .sheet-sub { font-size:13px; color:var(--sub); text-align:center; margin:5px 0 18px; }
+  .code-input {
+    width:100%; text-align:center; font-size:38px; font-weight:700; letter-spacing:.32em; font-variant-numeric:tabular-nums;
+    padding:16px 10px; border:1.5px solid var(--line2); border-radius:var(--r); background:#fdfbf6; color:var(--ink); outline:none;
+    transition:border-color .18s, box-shadow .18s;
+  }
+  .code-input:focus { border-color:var(--lamp); box-shadow:0 0 0 4px rgba(199,153,79,.14); background:#fff; }
+  .code-input::placeholder { color:#d8cbb6; letter-spacing:.32em; }
+
+  /* 히어로 — 이번 달 출석 */
   .hero {
     border-radius:var(--r-lg);
     background:#31241a; color:#f6ead2;
@@ -196,6 +232,11 @@
       <div class="no">학번 <span id="dash-hakbun"></span></div>
     </div>
 
+    <div class="check-row">
+      <button class="check-btn in" id="btn-checkin">입실</button>
+      <button class="check-btn out" id="btn-checkout">퇴실</button>
+    </div>
+
     <div class="hero">
       <div class="hero-label">이번 달 출석</div>
       <div class="hero-num"><span class="n" id="stat-month">0</span><span class="u">번</span></div>
@@ -208,6 +249,18 @@
     </div>
 
     <button id="dash-logout" class="btn ghost">로그아웃</button>
+  </div>
+</div>
+
+<!-- 입실/퇴실 코드 입력 시트 -->
+<div class="sheet-bg" id="sheet-bg">
+  <div class="sheet" id="sheet">
+    <div class="sheet-grip"></div>
+    <div class="sheet-title" id="sheet-title">입실 코드</div>
+    <div class="sheet-sub" id="sheet-sub">칠판에 적힌 4자리 코드를 입력해요</div>
+    <input id="code-input" class="code-input" type="tel" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
+    <button class="btn" id="code-submit">확인</button>
+    <button class="btn ghost" id="code-cancel">닫기</button>
   </div>
 </div>
 

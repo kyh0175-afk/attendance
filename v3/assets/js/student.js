@@ -1,5 +1,5 @@
 // 코스모스 출석 v3 — 학생 페이지 컨트롤러 (로그인 · PIN변경 · 대시보드)
-import { login, logout, currentUser, hakbunOf, mustChangePin, changePin, myProfile, myAttendance } from './sb.js';
+import { login, logout, currentUser, hakbunOf, mustChangePin, changePin, myProfile, myAttendance, checkIn, checkOut } from './sb.js';
 
 const $ = (id) => document.getElementById(id);
 const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -131,6 +131,45 @@ async function renderDash(user) {
   }
 }
 
+// ── 입실 / 퇴실 시트 ──
+let sheetMode = 'in';
+let sheetBusy = false;
+function openSheet(mode) {
+  sheetMode = mode;
+  $('sheet-title').textContent = mode === 'in' ? '입실 코드' : '퇴실 코드';
+  $('sheet-sub').textContent = mode === 'in'
+    ? '칠판에 적힌 입실 코드 4자리를 입력해요'
+    : '선생님이 안내한 퇴실 코드 4자리를 입력해요';
+  $('code-input').value = '';
+  $('sheet-bg').classList.add('on');
+  setTimeout(() => $('code-input').focus(), 260);
+}
+function closeSheet() { $('sheet-bg').classList.remove('on'); $('code-input').blur(); }
+
+async function submitCode() {
+  if (sheetBusy) return;
+  const code = $('code-input').value.trim();
+  if (!/^\d{4}$/.test(code)) { toast('코드 4자리를 입력해주세요'); return; }
+  sheetBusy = true;
+  const btn = $('code-submit'); btn.disabled = true; btn.textContent = '확인 중…';
+  try {
+    const res = sheetMode === 'in' ? await checkIn(code) : await checkOut(code);
+    if (!res || res.ok === false) { toast((res && res.msg) || '코드를 다시 확인해주세요', 'err'); return; }
+    buzz(18);
+    if (sheetMode === 'in') {
+      toast(res.already ? '이미 입실했어요' : `입실 완료 · ${res.장소 || ''}`.trim(), 'ok');
+    } else {
+      toast(res.already ? '이미 퇴실했어요' : '퇴실 완료! 오늘도 수고했어요', 'ok');
+    }
+    closeSheet();
+    await renderDash(await currentUser());
+  } catch (e) {
+    toast('처리 실패: ' + (e.message || '오류'), 'err');
+  } finally {
+    sheetBusy = false; btn.disabled = false; btn.textContent = '확인';
+  }
+}
+
 async function doLogout() { await logout(); $('login-pin').value = ''; show('view-login'); }
 
 // ── 바인딩 ──
@@ -141,6 +180,12 @@ window.addEventListener('DOMContentLoaded', () => {
   $('pin-btn').addEventListener('click', doChangePin);
   $('pin-new2').addEventListener('keydown', (e) => { if (e.key === 'Enter') doChangePin(); });
   $('dash-logout').addEventListener('click', doLogout);
+  $('btn-checkin').addEventListener('click', () => openSheet('in'));
+  $('btn-checkout').addEventListener('click', () => openSheet('out'));
+  $('code-submit').addEventListener('click', submitCode);
+  $('code-cancel').addEventListener('click', closeSheet);
+  $('code-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitCode(); });
+  $('sheet-bg').addEventListener('click', (e) => { if (e.target === $('sheet-bg')) closeSheet(); });
   boot();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 });
