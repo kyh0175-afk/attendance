@@ -57,6 +57,18 @@ export async function changePin(newPin) {
   if (error) throw error;
 }
 
+// ── 입실 / 퇴실 (코드 기반) ──
+export async function checkIn(code) {
+  const { data, error } = await sb().rpc('check_in', { p_code: String(code).trim() });
+  if (error) throw error;
+  return data; // { ok, already?, msg?, 프로그램?, 장소? }
+}
+export async function checkOut(code) {
+  const { data, error } = await sb().rpc('check_out', { p_code: String(code).trim() });
+  if (error) throw error;
+  return data; // { ok, already?, msg? }
+}
+
 // ── DAL (학생 본인 데이터 — RLS가 본인 학번 행으로 제한) ──
 export async function myProfile() {
   const { data, error } = await sb().from('students').select('*').eq('활성', true);
