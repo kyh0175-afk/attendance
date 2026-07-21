@@ -2,18 +2,54 @@
 import { login, logout, currentUser, hakbunOf, mustChangePin, changePin, myProfile, myAttendance } from './sb.js';
 
 const $ = (id) => document.getElementById(id);
-const show = (id) => { for (const v of ['view-loading', 'view-login', 'view-pin', 'view-dash']) $(v).style.display = (v === id ? 'block' : 'none'); };
-const toast = (msg, ok) => {
-  const t = $('toast'); t.textContent = msg; t.className = 'toast on' + (ok ? ' ok' : ' err');
-  setTimeout(() => { t.className = 'toast'; }, 2600);
-};
+const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const buzz = (ms = 12) => { try { navigator.vibrate && navigator.vibrate(ms); } catch (_) {} };
 
-// ── 부팅: 세션 확인 → 화면 분기 ──
+const VIEWS = ['view-loading', 'view-login', 'view-pin', 'view-dash'];
+function show(id) {
+  for (const v of VIEWS) {
+    const el = $(v);
+    if (!el) continue;
+    if (v === id) el.classList.add('on');
+    else el.classList.remove('on', 'enter');
+  }
+  const t = $(id);
+  if (t && id !== 'view-loading') { void t.offsetWidth; t.classList.add('enter'); } // 애니메이션 리트리거
+}
+
+let toastTimer;
+function toast(msg, kind) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast on' + (kind ? ' ' + kind : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = 'toast'; }, 2600);
+}
+
+function countUp(el, to) {
+  to = +to || 0;
+  if (REDUCE || to <= 0) { el.textContent = to; return; }
+  const dur = 900, t0 = performance.now();
+  (function tick(now) {
+    const t = Math.min(1, (now - t0) / dur);
+    el.textContent = Math.round(to * (1 - Math.pow(1 - t, 3)));
+    if (t < 1) requestAnimationFrame(tick);
+  })(performance.now());
+}
+
+function fmtDate(s) {
+  if (!s) return '';
+  const p = s.split('-');
+  if (p.length < 3) return s;
+  const wd = ['일', '월', '화', '수', '목', '금', '토'][new Date(s + 'T00:00:00').getDay()];
+  return `${+p[1]}.${+p[2]} ${wd}`;
+}
+
+// ── 부팅 ──
 async function boot() {
   show('view-loading');
   let user;
-  try { user = await currentUser(); }
-  catch (e) { show('view-login'); return; }
+  try { user = await currentUser(); } catch (e) { show('view-login'); return; }
   if (!user) { show('view-login'); return; }
   if (mustChangePin(user)) { show('view-pin'); return; }
   await renderDash(user);
@@ -29,31 +65,32 @@ async function doLogin() {
   btn.disabled = true; btn.textContent = '확인 중…';
   try {
     await login(hakbun, pin);
+    buzz();
     const user = await currentUser();
-    if (mustChangePin(user)) { show('view-pin'); }
-    else { await renderDash(user); }
+    if (mustChangePin(user)) show('view-pin');
+    else await renderDash(user);
   } catch (e) {
-    toast(/Invalid login/i.test(e.message || '') ? '학번 또는 PIN이 올바르지 않아요' : ('로그인 실패: ' + (e.message || '오류')));
+    toast(/Invalid login/i.test(e.message || '') ? '학번 또는 PIN이 올바르지 않아요' : ('로그인 실패: ' + (e.message || '오류')), 'err');
   } finally {
     btn.disabled = false; btn.textContent = '로그인';
   }
 }
 
-// ── PIN 변경 (최초 로그인 필수) ──
+// ── PIN 변경 (최초) ──
 async function doChangePin() {
   const p1 = $('pin-new').value.trim();
   const p2 = $('pin-new2').value.trim();
   const btn = $('pin-btn');
-  if (!/^\d{4,6}$/.test(p1)) { toast('새 PIN은 숫자 4~6자리'); return; }
+  if (!/^\d{4,6}$/.test(p1)) { toast('새 PIN은 숫자 4~6자리로 해주세요'); return; }
   if (p1 !== p2) { toast('두 PIN이 일치하지 않아요'); return; }
   btn.disabled = true; btn.textContent = '저장 중…';
   try {
     await changePin(p1);
-    toast('PIN이 설정됐어요', true);
-    const user = await currentUser();
-    await renderDash(user);
+    buzz(18);
+    toast('PIN이 설정됐어요', 'ok');
+    await renderDash(await currentUser());
   } catch (e) {
-    toast('변경 실패: ' + (e.message || '오류'));
+    toast('변경 실패: ' + (e.message || '오류'), 'err');
   } finally {
     btn.disabled = false; btn.textContent = 'PIN 설정하기';
   }
@@ -67,23 +104,30 @@ async function renderDash(user) {
   try {
     const [profile, att] = await Promise.all([myProfile(), myAttendance()]);
     const name = (profile[0] && profile[0].이름) || '';
-    $('dash-name').textContent = name ? (name + ' 님') : (hakbun + ' 님');
+    $('dash-name').innerHTML = name ? `<b>${name}</b> 님` : `<b>${hakbun}</b> 님`;
 
-    const total = att.length;
-    const thisMonth = att.filter(a => (a.날짜 || '').slice(0, 7) === new Date().toISOString().slice(0, 7)).length;
-    $('stat-total').textContent = total;
-    $('stat-month').textContent = thisMonth;
+    const ym = new Date().toISOString().slice(0, 7);
+    const month = att.filter((a) => (a.날짜 || '').slice(0, 7) === ym).length;
+    countUp($('stat-month'), month);
+    countUp($('stat-total'), att.length);
+    $('hero-sub').innerHTML = att.length ? `지금까지 전체 <b>${att.length}</b>번 나왔어요` : '첫 출석을 기다리고 있어요';
+    $('log-cnt').textContent = att.length ? `${att.length}건` : '';
 
     const list = $('dash-list');
     if (!att.length) { list.innerHTML = '<li class="empty">아직 출석 기록이 없어요.</li>'; return; }
-    list.innerHTML = att.slice(0, 30).map(a => {
-      const out = a.퇴실시각 ? '<span class="badge ok">퇴실 완료</span>'
-        : (a.상태 === '퇴실미확인' ? '<span class="badge warn">퇴실미확인</span>' : '');
-      return `<li><span class="d">${a.날짜 || ''}</span><span class="p">${a.프로그램 || ''} · ${a.장소 || ''}</span>${out}</li>`;
+    list.innerHTML = att.slice(0, 30).map((a) => {
+      const miss = a.상태 === '퇴실미확인';
+      const badge = a.퇴실시각 ? '<span class="badge ok">퇴실</span>'
+        : (miss ? '<span class="badge warn">퇴실미확인</span>' : '');
+      return `<li>
+        <span class="dot ${miss ? 'miss' : ''}"></span>
+        <span class="meta"><span class="d">${fmtDate(a.날짜)}</span><span class="p">${a.프로그램 || ''} · ${a.장소 || ''}</span></span>
+        ${badge}
+      </li>`;
     }).join('');
   } catch (e) {
-    $('dash-name').textContent = (hakbun || '') + ' 님';
-    toast('기록 조회 실패: ' + (e.message || '오류'));
+    $('dash-name').innerHTML = `<b>${hakbun || ''}</b> 님`;
+    toast('기록을 불러오지 못했어요. 잠시 후 다시 시도해주세요', 'err');
   }
 }
 
@@ -93,9 +137,10 @@ async function doLogout() { await logout(); $('login-pin').value = ''; show('vie
 window.addEventListener('DOMContentLoaded', () => {
   $('login-btn').addEventListener('click', doLogin);
   $('login-pin').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+  $('login-hakbun').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('login-pin').focus(); });
   $('pin-btn').addEventListener('click', doChangePin);
+  $('pin-new2').addEventListener('keydown', (e) => { if (e.key === 'Enter') doChangePin(); });
   $('dash-logout').addEventListener('click', doLogout);
   boot();
-  // 서비스워커 등록 (오프라인 앱 셸)
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 });
