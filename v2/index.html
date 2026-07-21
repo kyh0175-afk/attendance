@@ -6699,22 +6699,28 @@ const sb = {
     },
 
     async upsert(student) {
-      const row = {
-        학번: String(student.학번 || student.no),
-        프로그램: student.프로그램 || student.program,
-        이름: student.이름 || student.name,
-        장소: student.장소 || student.cls || student.room,
-        출석요일: student.출석요일 || student.days || null,
-        활성: true,
-        수정일시: new Date().toISOString(),
-      };
-      const { data, error } = await sb.client()
-        .from('students')
-        .upsert(row, { onConflict: '학번,프로그램' })
-        .select();
+      // 관리자 추가/수정 — 토큰 검증 RPC
+      await sb.settings.adminRpc('admin_upsert_student', {
+        p_hakbun: String(student.학번 || student.no),
+        p_program: student.프로그램 || student.program,
+        p_name: student.이름 || student.name,
+        p_room: student.장소 || student.cls || student.room,
+        p_days: student.출석요일 || student.days || null,
+      });
+      sb.invalidateCache('students');
+    },
+
+    // 학생 자가등록 — 무비번, 없을 때만 생성(남의 학번 덮어쓰기 방지)
+    async selfRegister(student) {
+      const { error } = await sb.client().rpc('self_register_student', {
+        p_hakbun: String(student.학번 || student.no),
+        p_program: student.프로그램 || student.program,
+        p_name: student.이름 || student.name,
+        p_room: student.장소 || student.cls || student.room,
+        p_days: student.출석요일 || student.days || null,
+      });
       if (error) throw error;
       sb.invalidateCache('students');
-      return data;
     },
 
     async bulkUpsert(studentList) {
@@ -6726,54 +6732,38 @@ const sb = {
         장소: s.장소 || s.cls || s.room,
         출석요일: s.출석요일 || s.days || null,
       }));
-      const { data, error } = await sb.client()
-        .rpc('bulk_upsert_students', { p_students: payload });
-      if (error) throw error;
+      const data = await sb.settings.adminRpc('admin_bulk_upsert_students', { p_students: payload });
       sb.invalidateCache('students');
       return data;
     },
 
     async updateDays(no, program, days) {
-      const { error } = await sb.client()
-        .from('students')
-        .update({
-          출석요일: days && days.length ? days : null,
-          수정일시: new Date().toISOString(),
-        })
-        .eq('학번', String(no))
-        .eq('프로그램', program);
-      if (error) throw error;
+      await sb.settings.adminRpc('admin_set_student_days', {
+        p_hakbun: String(no), p_program: program,
+        p_days: days && days.length ? days : null,
+      });
       sb.invalidateCache('students');
     },
 
     async deactivate(no, program) {
-      const { error } = await sb.client()
-        .from('students')
-        .update({ 활성: false, 수정일시: new Date().toISOString() })
-        .eq('학번', String(no))
-        .eq('프로그램', program);
-      if (error) throw error;
+      await sb.settings.adminRpc('admin_set_student_active', {
+        p_hakbun: String(no), p_program: program, p_active: false,
+      });
       sb.invalidateCache('students');
     },
 
     async reactivate(no, program) {
-      const { error } = await sb.client()
-        .from('students')
-        .update({ 활성: true, 수정일시: new Date().toISOString() })
-        .eq('학번', String(no))
-        .eq('프로그램', program);
-      if (error) throw error;
+      await sb.settings.adminRpc('admin_set_student_active', {
+        p_hakbun: String(no), p_program: program, p_active: true,
+      });
       sb.invalidateCache('students');
     },
 
-    // 임의 필드 부분 업데이트(일괄 장소 변경 등). 학번+프로그램 키.
+    // 부분 업데이트 — 현재 사용처는 장소 변경뿐. 토큰 검증 RPC.
     async updateFields(no, program, fields) {
-      const { error } = await sb.client()
-        .from('students')
-        .update({ ...fields, 수정일시: new Date().toISOString() })
-        .eq('학번', String(no))
-        .eq('프로그램', program);
-      if (error) throw error;
+      await sb.settings.adminRpc('admin_set_student_location', {
+        p_hakbun: String(no), p_program: program, p_room: fields.장소,
+      });
       sb.invalidateCache('students');
     },
   },
@@ -11175,8 +11165,8 @@ async function doRegisterAndAttend() {
   showAttendProgress(no);
 
   try {
-    // 1. 학생 등록 (upsert)
-    await sb.students.upsert({
+    // 1. 학생 등록 (자가등록 — 무비번 제한 RPC)
+    await sb.students.selfRegister({
       학번: no,
       이름: name,
       프로그램: ST.session.program,
