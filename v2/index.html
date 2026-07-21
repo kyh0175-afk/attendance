@@ -7112,37 +7112,23 @@ const sb = {
     },
 
     async approveCorrection(id, note = '') {
-      const { data, error } = await sb.client()
-        .rpc('approve_correction_request', {
-          p_request_id: id,
-          p_teacher_note: note,
-        });
-      if (error) throw error;
-      return data;
+      return await sb.settings.adminRpc('admin_approve_correction', {
+        p_request_id: id, p_teacher_note: note,
+      });
     },
 
     async approveDayChange(id, note = '') {
-      const { data, error } = await sb.client()
-        .rpc('approve_day_change_request', {
-          p_request_id: id,
-          p_teacher_note: note,
-        });
-      if (error) throw error;
+      const data = await sb.settings.adminRpc('admin_approve_daychange', {
+        p_request_id: id, p_teacher_note: note,
+      });
       sb.invalidateCache('students');
       return data;
     },
 
     async reject(type, id, note = '') {
-      const table = type === 'correction' ? 'correction_requests' : 'day_change_requests';
-      const { error } = await sb.client()
-        .from(table)
-        .update({
-          처리상태: '거절',
-          교사메모: note,
-          처리일시: new Date().toISOString(),
-        })
-        .eq('id', id);
-      if (error) throw error;
+      await sb.settings.adminRpc('admin_reject_request', {
+        p_type: type, p_id: id, p_note: note,
+      });
     },
   },
 
