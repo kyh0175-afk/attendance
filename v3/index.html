@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>코스모스 출석</title>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1a130c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="코스모스 출석">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap">
+
+<style>
+  :root {
+    --bg:#f7f3ec; --card:#fffdf9; --ink:#2a2118; --sub:#8a7a66; --line:#e8e0d3;
+    --accent:#5b4636; --accent2:#8a6d4f; --ok:#2f7d5b; --warn:#b6772a; --err:#b34a3a;
+    --shadow:0 6px 24px rgba(60,42,24,.08);
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; }
+  body {
+    font-family:'IBM Plex Sans KR',system-ui,sans-serif; background:var(--bg); color:var(--ink);
+    min-height:100vh; min-height:100dvh; line-height:1.5;
+  }
+  .wrap { max-width:460px; margin:0 auto; padding:24px 18px calc(24px + env(safe-area-inset-bottom)); }
+  .brand { text-align:center; margin:28px 0 22px; }
+  .brand .en { font-size:13px; letter-spacing:.22em; color:var(--accent2); font-weight:600; }
+  .brand .ko { font-size:22px; font-weight:700; margin-top:4px; letter-spacing:.02em; }
+  .brand .sub { font-size:12px; color:var(--sub); margin-top:6px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); padding:22px; }
+  h2 { font-size:17px; margin:0 0 4px; }
+  .hint { font-size:13px; color:var(--sub); margin:0 0 18px; }
+  label { display:block; font-size:12px; font-weight:600; color:var(--sub); margin:14px 0 6px; }
+  input {
+    width:100%; padding:14px 15px; font-size:17px; font-family:inherit; color:var(--ink);
+    background:#fff; border:1.5px solid var(--line); border-radius:12px; outline:none; transition:border-color .15s;
+  }
+  input:focus { border-color:var(--accent2); }
+  .btn {
+    width:100%; margin-top:20px; padding:15px; font-size:16px; font-weight:600; font-family:inherit;
+    color:#fff; background:var(--accent); border:none; border-radius:12px; cursor:pointer; transition:opacity .15s;
+  }
+  .btn:disabled { opacity:.5; }
+  .btn.ghost { background:transparent; color:var(--sub); box-shadow:none; margin-top:8px; font-weight:500; font-size:14px; }
+  .stats { display:flex; gap:12px; margin:4px 0 18px; }
+  .stat { flex:1; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; text-align:center; box-shadow:var(--shadow); }
+  .stat .n { font-size:30px; font-weight:700; color:var(--accent); }
+  .stat .l { font-size:12px; color:var(--sub); margin-top:2px; }
+  .dash-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; }
+  .dash-head .who { font-size:19px; font-weight:700; }
+  .dash-head .no { font-size:12px; color:var(--sub); }
+  ul.list { list-style:none; margin:0; padding:0; }
+  ul.list li { display:flex; align-items:center; gap:10px; padding:13px 4px; border-bottom:1px solid var(--line); font-size:14px; }
+  ul.list li:last-child { border-bottom:none; }
+  ul.list .d { font-weight:600; width:88px; flex:none; font-variant-numeric:tabular-nums; }
+  ul.list .p { color:var(--sub); flex:1; }
+  ul.list .empty { color:var(--sub); justify-content:center; padding:26px 0; }
+  .badge { font-size:11px; font-weight:600; padding:3px 8px; border-radius:999px; }
+  .badge.ok { background:#e6f2eb; color:var(--ok); }
+  .badge.warn { background:#f7ecdb; color:var(--warn); }
+  .loading { text-align:center; color:var(--sub); padding:60px 0; }
+  .toast {
+    position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:12px 18px; border-radius:12px; font-size:14px; font-weight:500;
+    opacity:0; pointer-events:none; transition:.2s; max-width:90vw; text-align:center; z-index:50;
+  }
+  .toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.ok { background:var(--ok); }
+  .toast.err { background:var(--err); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <div class="en">COSMOS</div>
+    <div class="ko">코스모스 독서시간</div>
+    <div class="sub">유봉여자고등학교 · 출석</div>
+  </div>
+
+  <div id="view-loading" class="loading">불러오는 중…</div>
+
+  <!-- 로그인 -->
+  <div id="view-login" class="card" style="display:none">
+    <h2>로그인</h2>
+    <p class="hint">학번과 PIN을 입력해주세요. 처음이면 안내받은 초기 PIN을 입력하세요.</p>
+    <label for="login-hakbun">학번</label>
+    <input id="login-hakbun" type="tel" inputmode="numeric" autocomplete="username" placeholder="예: 10203" maxlength="6">
+    <label for="login-pin">PIN</label>
+    <input id="login-pin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="숫자 4~6자리">
+    <button id="login-btn" class="btn">로그인</button>
+  </div>
+
+  <!-- PIN 변경 (최초) -->
+  <div id="view-pin" class="card" style="display:none">
+    <h2>새 PIN 설정</h2>
+    <p class="hint">본인만 아는 새 PIN으로 바꿔주세요. 다음부터 이 PIN으로 로그인합니다.</p>
+    <label for="pin-new">새 PIN (숫자 4~6자리)</label>
+    <input id="pin-new" type="password" inputmode="numeric" autocomplete="new-password" placeholder="새 PIN">
+    <label for="pin-new2">새 PIN 확인</label>
+    <input id="pin-new2" type="password" inputmode="numeric" autocomplete="new-password" placeholder="한 번 더">
+    <button id="pin-btn" class="btn">PIN 설정하기</button>
+  </div>
+
+  <!-- 대시보드 -->
+  <div id="view-dash" style="display:none">
+    <div class="dash-head">
+      <div class="who" id="dash-name">—</div>
+      <div class="no">학번 <span id="dash-hakbun"></span></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="n" id="stat-month">0</div><div class="l">이번 달 출석</div></div>
+      <div class="stat"><div class="n" id="stat-total">0</div><div class="l">전체 출석</div></div>
+    </div>
+    <div class="card">
+      <h2 style="margin-bottom:12px">출석 기록</h2>
+      <ul class="list" id="dash-list"></ul>
+    </div>
+    <button id="dash-logout" class="btn ghost">로그아웃</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script type="module" src="assets/js/student.js"></script>
+</body>
+</html>
