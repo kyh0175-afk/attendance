@@ -53,18 +53,18 @@
   .btn.warn { background:#fff; color:var(--err); border:1.5px solid #ecccc4; box-shadow:none; }
   .btn.lamp { background:var(--lamp); box-shadow:0 6px 18px rgba(199,153,79,.28); }
 
-  /* 세션 헤더 — 나가기 + 입실 코드(큰 숫자) */
-  .sesshdr { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:2px 0 14px; }
+  /* 세션 헤더 — 나가기 + '입실 코드' 라벨 */
+  .sesshdr { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:2px 0 12px; }
   .sesshdr .back { width:auto; margin:0; padding:8px 12px; flex:none; }
-  .entry { text-align:right; line-height:1; min-width:0; }
-  .entry .l { display:block; font-size:12px; font-weight:600; color:var(--sub); letter-spacing:.04em; margin-bottom:4px; }
-  .entry .code { display:block; font-size:clamp(44px, 14vw, 84px); font-weight:700; line-height:1; letter-spacing:.04em; font-variant-numeric:tabular-nums; color:var(--brand); white-space:nowrap; }
+  .sesshdr .hdr-label { font-size:13px; font-weight:600; color:var(--sub); letter-spacing:.04em; }
 
-  /* 퇴실 코드 카드 (발급 시 표시) */
-  .codecard { background:#31241a; color:#f6ead2; border-radius:var(--r-lg); padding:22px 20px 24px; text-align:center; box-shadow:var(--shadow); margin-bottom:14px; }
-  .codecard.hidden { display:none; }
+  /* 입실 코드 카드 — 숫자 크게 (멀리서도 보이게) */
+  .codecard { background:#31241a; color:#f6ead2; border-radius:var(--r-lg); padding:26px 20px 30px; text-align:center; box-shadow:var(--shadow); }
   .codecard .label { font-size:13px; color:#a8957b; letter-spacing:.06em; font-weight:600; }
-  .codecard .code { font-size:clamp(52px, 18vw, 96px); font-weight:700; line-height:1.02; letter-spacing:.1em; font-variant-numeric:tabular-nums; color:#fbf1dc; margin:6px 0 0; }
+  .codecard .code { font-size:clamp(72px, 26vw, 148px); font-weight:700; line-height:1.02; letter-spacing:.1em; font-variant-numeric:tabular-nums; color:#fbf1dc; }
+  .codecard .code.sm { font-size:clamp(52px, 18vw, 96px); }
+  .exitwrap { margin-top:20px; padding-top:18px; border-top:1px solid rgba(255,255,255,.12); }
+  .exitwrap.hidden { display:none; }
   .cd { font-size:13px; color:var(--lamp); font-variant-numeric:tabular-nums; margin-top:6px; }
 
   /* 명단 */
@@ -136,16 +136,19 @@
   <div id="view-session" class="view">
     <div class="sesshdr">
       <button id="s-back-btn" class="btn ghost back">← 나가기</button>
-      <div class="entry"><span class="l">입실 코드</span><span class="code" id="s-entry">0000</span></div>
+      <span class="hdr-label">입실 코드</span>
     </div>
 
-    <div class="codecard hidden" id="s-exitwrap">
-      <div class="label">퇴실 코드</div>
-      <div class="code" id="s-exit">----</div>
-      <div class="cd" id="s-exit-cd"></div>
+    <div class="codecard">
+      <div class="code" id="s-entry">0000</div>
+      <div class="exitwrap hidden" id="s-exitwrap">
+        <div class="label">퇴실 코드</div>
+        <div class="code sm" id="s-exit">----</div>
+        <div class="cd" id="s-exit-cd"></div>
+      </div>
     </div>
 
-    <div class="card" style="margin-top:0">
+    <div class="card" style="margin-top:14px">
       <div class="roster-head">
         <h2>출석 현황</h2>
         <div class="seg" id="s-grade">
