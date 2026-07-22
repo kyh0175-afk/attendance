@@ -208,3 +208,40 @@ end $$;
 revoke execute on function public.admin_delete_session_v3(text, boolean) from public;
 revoke execute on function public.admin_delete_session_v3(text, boolean) from anon;
 grant execute on function public.admin_delete_session_v3(text, boolean) to authenticated;
+
+-- 9) 교사 수동 출석 (오프라인·코드 입력 불가 대비) — is_STAFF 게이트(관리자 아님)
+--    실시간 입실: 원래시각=지금(KST), 사후여부=false, 메모='수동입실'
+create or replace function public.staff_manual_attendance(p_session_id text, p_hakbun text)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  s record; st record; new_id bigint;
+begin
+  if not public.is_staff() then raise exception '교사 권한이 필요합니다'; end if;
+  if p_hakbun !~ '^\d{5}$' then raise exception '학번은 5자리 숫자여야 합니다'; end if;
+  select "세션id", "프로그램", "장소", "교사", "날짜" into s
+    from public.sessions where "세션id" = p_session_id limit 1;
+  if s."세션id" is null then raise exception '세션을 찾을 수 없습니다'; end if;
+  select "이름", "장소" into st
+    from public.students where "학번" = p_hakbun and "프로그램" = s."프로그램" limit 1;
+  if st."이름" is null then
+    select "이름", null::text as "장소" into st
+      from public.students where "학번" = p_hakbun limit 1;
+  end if;
+  if st."이름" is null then raise exception '명단에 없는 학번입니다'; end if;
+  begin
+    insert into public.attendance
+      ("세션id", "학번", "이름", "날짜", "원래시각", "처리시각", "사후여부", "프로그램", "장소", "교사", "상태", "메모")
+    values
+      (s."세션id", p_hakbun, st."이름", s."날짜",
+       (now() at time zone 'Asia/Seoul')::time, now(), false, s."프로그램",
+       coalesce(st."장소", s."장소"), s."교사", '출석', '수동입실')
+    returning id into new_id;
+  exception when unique_violation then
+    return jsonb_build_object('ok', true, 'already', true, 'name', st."이름");
+  end;
+  return jsonb_build_object('ok', true, 'id', new_id, 'name', st."이름");
+end $$;
+revoke execute on function public.staff_manual_attendance(text, text) from public;
+revoke execute on function public.staff_manual_attendance(text, text) from anon;
+grant execute on function public.staff_manual_attendance(text, text) to authenticated;

@@ -100,10 +100,18 @@ export async function finalizeSession(sessionId) {
 }
 export async function sessionRoster(sessionId) {
   const { data, error } = await sb().from('attendance')
-    .select('학번,이름,원래시각,퇴실시각,상태').eq('세션id', sessionId)
+    .select('학번,이름,원래시각,퇴실시각,상태,메모').eq('세션id', sessionId)
     .order('원래시각', { ascending: true });
   if (error) throw error;
   return data || [];
+}
+// 교사 수동 출석 (오프라인·코드 불가 대비) — is_staff 게이트 RPC
+export async function manualAttendance(sessionId, hakbun) {
+  const { data, error } = await sb().rpc('staff_manual_attendance', {
+    p_session_id: String(sessionId), p_hakbun: String(hakbun).trim(),
+  });
+  if (error) throw error;
+  return data; // { ok, id?, name?, already? }
 }
 
 // ── 관리자(admin) — RLS: staff 전체 읽기 / 쓰기는 is_admin() 게이트 RPC ──
