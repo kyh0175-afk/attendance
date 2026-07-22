@@ -29,6 +29,9 @@
   .top { padding:24px 2px 8px; display:flex; align-items:baseline; gap:8px; }
   .top .en { font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:600; font-size:19px; color:var(--lamp); }
   .top .role { font-size:12px; color:var(--sub); font-weight:600; letter-spacing:.04em; }
+  .top .sess { margin-left:auto; font-size:13px; font-weight:600; color:var(--ink2); text-align:right; }
+  .top .sess:empty { display:none; }
+  .top .sess .rm { color:var(--brand); }
   .view { display:none; } .view.on { display:block; } .view.enter { animation:vin .4s var(--ease) both; }
   @keyframes vin { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
   .card { background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--shadow); padding:22px; }
@@ -50,22 +53,24 @@
   .btn.warn { background:#fff; color:var(--err); border:1.5px solid #ecccc4; box-shadow:none; }
   .btn.lamp { background:var(--lamp); box-shadow:0 6px 18px rgba(199,153,79,.28); }
 
-  /* 입실 코드 카드 */
-  .codecard { background:#31241a; color:#f6ead2; border-radius:var(--r-lg); padding:24px; text-align:center; box-shadow:var(--shadow); }
-  .codecard .meta { font-size:13px; color:#cbb590; }
-  .codecard .label { font-size:12px; color:#a8957b; margin-top:14px; letter-spacing:.04em; }
-  .codecard .code { font-size:60px; font-weight:700; letter-spacing:.16em; font-variant-numeric:tabular-nums; color:#fbf1dc; margin:2px 0; }
-  .codecard .code.sm { font-size:44px; }
-  .codecard .hint { font-size:12.5px; color:#bda98a; margin-top:8px; }
-  .exitwrap { margin-top:14px; padding-top:16px; border-top:1px solid rgba(255,255,255,.1); }
+  /* 입실 코드 카드 — 멀리서도 보이게 크게 */
+  .codecard { background:#31241a; color:#f6ead2; border-radius:var(--r-lg); padding:26px 20px 30px; text-align:center; box-shadow:var(--shadow); }
+  .codecard .label { font-size:13px; color:#a8957b; letter-spacing:.06em; font-weight:600; }
+  .codecard .code { font-size:clamp(72px, 26vw, 148px); font-weight:700; line-height:1.02; letter-spacing:.1em; font-variant-numeric:tabular-nums; color:#fbf1dc; margin:6px 0 0; }
+  .codecard .code.sm { font-size:clamp(52px, 18vw, 96px); }
+  .exitwrap { margin-top:20px; padding-top:18px; border-top:1px solid rgba(255,255,255,.12); }
   .exitwrap.hidden { display:none; }
-  .cd { font-size:12px; color:var(--lamp); font-variant-numeric:tabular-nums; }
+  .cd { font-size:13px; color:var(--lamp); font-variant-numeric:tabular-nums; margin-top:6px; }
 
   /* 명단 */
-  .roster-head { display:flex; align-items:baseline; justify-content:space-between; margin:0 2px 12px; }
+  .roster-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 2px 12px; flex-wrap:wrap; }
   .roster-head h2 { font-size:15px; font-weight:600; margin:0; }
   .roster-head .n { font-size:13px; color:var(--sub); }
   .roster-head .n b { color:var(--brand); font-size:16px; }
+  /* 학년 토글 */
+  .seg { display:inline-flex; background:#f3ece0; border-radius:99px; padding:3px; gap:2px; }
+  .seg button { font-family:inherit; font-size:12.5px; font-weight:600; color:var(--ink2); background:transparent; border:none; border-radius:99px; padding:6px 13px; cursor:pointer; transition:all .14s var(--ease); }
+  .seg button.on { background:#fff; color:var(--brand); box-shadow:0 1px 4px rgba(60,42,24,.12); }
   ul.roster { list-style:none; margin:0; padding:0; max-height:44vh; overflow:auto; }
   ul.roster li { display:flex; align-items:center; gap:10px; padding:11px 2px; border-bottom:1px solid var(--line); font-size:14px; }
   ul.roster li:last-child { border-bottom:none; }
@@ -74,7 +79,14 @@
   ul.roster .b { font-size:11px; font-weight:600; padding:3px 8px; border-radius:99px; margin-left:8px; }
   ul.roster .b.out { background:var(--ok-bg); color:var(--ok); } ul.roster .b.in { background:var(--warn-bg); color:var(--warn); }
   ul.roster .empty { justify-content:center; color:var(--sub); padding:24px 0; }
+  ul.roster .b.man { background:#efeaf6; color:#6b5b8a; }
   .row2 { display:flex; gap:11px; }
+
+  /* 수동 출석 (오프라인 대비) */
+  .manual { display:flex; gap:10px; align-items:stretch; margin-top:12px; }
+  .manual input { flex:1; text-align:center; font-size:20px; letter-spacing:.16em; font-weight:600; font-variant-numeric:tabular-nums; }
+  .manual button { flex:none; width:auto; margin-top:0; padding:0 20px; font-size:15px; }
+  .manual-hint { font-size:12px; color:var(--sub); margin:10px 2px 0; }
   .toast {
     position:fixed; left:50%; bottom:calc(26px + env(safe-area-inset-bottom)); transform:translate(-50%,18px);
     background:var(--ink); color:#fdf8ee; padding:13px 20px; border-radius:14px; font-size:14px; font-weight:500;
@@ -86,7 +98,7 @@
 </head>
 <body>
 <div class="app">
-  <div class="top"><span class="en">Cosmos</span><span class="role">교사</span></div>
+  <div class="top"><span class="en">Cosmos</span><span class="role">교사</span><span class="sess" id="top-sess"></span></div>
 
   <div id="view-loading" class="view on"><div class="card" style="text-align:center;color:var(--sub);padding:50px">불러오는 중…</div></div>
 
@@ -117,11 +129,11 @@
 
   <!-- 세션 진행 -->
   <div id="view-session" class="view">
+    <button id="s-back-btn" class="btn ghost" style="margin:0 0 8px;justify-content:flex-start;padding:6px 2px">← 나가기 (세션은 계속 열림)</button>
+
     <div class="codecard">
-      <div class="meta" id="s-meta">—</div>
       <div class="label">입실 코드</div>
       <div class="code" id="s-entry">0000</div>
-      <div class="hint">칠판에 적어 학생들에게 안내해주세요</div>
       <div class="exitwrap hidden" id="s-exitwrap">
         <div class="label">퇴실 코드</div>
         <div class="code sm" id="s-exit">----</div>
@@ -132,16 +144,25 @@
     <div class="card" style="margin-top:14px">
       <div class="roster-head">
         <h2>출석 현황</h2>
-        <div class="n"><b id="s-in">0</b>명 입실 · <span id="s-out">0</span>명 퇴실</div>
+        <div class="seg" id="s-grade">
+          <button data-g="" class="on">전체</button>
+          <button data-g="1">1학년</button>
+          <button data-g="2">2학년</button>
+          <button data-g="3">3학년</button>
+        </div>
       </div>
+      <div class="n" style="margin:0 2px 10px;font-size:13px;color:var(--sub)"><b id="s-in" style="color:var(--brand);font-size:16px">0</b>명 입실 · <span id="s-out">0</span>명 퇴실</div>
       <ul class="roster" id="s-roster"></ul>
+
+      <div class="manual">
+        <input id="s-manual-hakbun" type="tel" inputmode="numeric" maxlength="5" placeholder="학번 5자리" autocomplete="off">
+        <button id="s-manual-btn" class="btn">수동 출석</button>
+      </div>
+      <p class="manual-hint">인터넷·코드 입력이 안 되는 학생은 학번으로 직접 출석 처리할 수 있어요.</p>
     </div>
 
-    <div class="row2" style="margin-top:14px">
-      <button id="s-issue-btn" class="btn lamp" style="margin-top:0">퇴실 코드 발급</button>
-      <button id="s-finalize-btn" class="btn warn" style="margin-top:0">마감</button>
-    </div>
-    <button id="s-back-btn" class="btn ghost">← 세션 목록으로</button>
+    <button id="s-issue-btn" class="btn lamp">퇴실 코드 발급</button>
+    <button id="s-finalize-btn" class="btn warn" style="display:none">마감</button>
   </div>
 </div>
 
