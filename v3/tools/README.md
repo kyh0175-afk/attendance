@@ -1,4 +1,14 @@
-# 학생 계정 벌크 생성 도구
+# 계정 관리 로컬 도구
+
+Supabase Auth 계정을 다루는 로컬 전용 스크립트 3종. 전부 service_role 키가 필요하다(아래 주의).
+
+| 스크립트 | 용도 | 실행 시점 |
+|---|---|---|
+| `create-accounts.mjs` | 학생 계정 벌크 생성 (`students` 활성 명단 기준, 기존 건너뜀) | 학기 초 / 신규 입학 (✅ 2026-07-22 292명 생성 완료) |
+| `create-admin.mjs` | 관리자 계정 생성 + staff(role=admin) 등록. 이미 있으면 임시 PIN 재발급 | W3 최초 1회 / 관리자 PIN 분실 시 |
+| `reset-pin.mjs 학번` | 학생 PIN 초기화(임시 PIN 발급 + 첫 로그인 변경 강제) | 학생이 PIN 잊었을 때 |
+
+## 학생 계정 벌크 생성 (create-accounts.mjs)
 
 `students`(활성) 명단의 학번마다 Supabase Auth 계정을 만든다. **로컬 PC에서 한 번씩** 실행 (학기 초 / 신규 입학 시).
 
@@ -40,7 +50,24 @@ node create-accounts.mjs
 
 기본은 "PIN = 학번"이라 학생이 외우기 쉽지만, 친구가 학번을 알면 선점 위험이 있다(관리자 PIN 초기화로 복구 가능). 더 안전하게 하려면 `create-accounts.mjs` 상단 `PIN_STRATEGY`를 무작위 PIN으로 바꾸고 종이로 배부 — 파일 주석 참고.
 
+## 관리자 계정 (create-admin.mjs)
+
+```powershell
+node create-admin.mjs
+```
+- `admin@staff.yubongsystem.com` 생성 + `staff` 테이블 role='admin' 등록을 한 번에.
+- 임시 PIN(6자리)이 터미널에 표시됨 → `admin.html` 로그인 → 새 PIN 설정 강제.
+- 이미 계정이 있으면 임시 PIN만 재발급(관리자 PIN 분실 복구용).
+
+## 학생 PIN 초기화 (reset-pin.mjs)
+
+```powershell
+node reset-pin.mjs 30610              # 임시 PIN 자동 발급(4자리)
+node reset-pin.mjs 30610 --pin 1234   # PIN 지정
+```
+- 관리자 화면(admin.html) 명단 탭의 [PIN 초기화] 버튼이 이 명령을 안내한다(브라우저에선 service_role을 쓸 수 없어 실행은 로컬에서).
+- 초기화 후 첫 로그인 때 새 PIN 설정 강제.
+
 ## 개별 관리
 
-- PIN 초기화 1명: 관리자 화면(W3, 예정)의 "PIN 초기화" 또는 대시보드 Auth에서 수동.
-- 전출: `students.활성=false` 처리(계정은 남지만 로그인해도 볼 데이터 없음). 필요 시 대시보드에서 계정 삭제.
+- 전출: `students.활성=false` 처리(계정은 남지만 로그인해도 볼 데이터 없음) — admin.html 명단 탭의 활성/비활성 버튼(학생 단위) 또는 v2 관리자(프로그램 단위). 필요 시 대시보드에서 계정 삭제.
