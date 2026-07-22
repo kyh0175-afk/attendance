@@ -13,11 +13,14 @@
 | v3 설계 확정 | ✅ `DESIGN.md` (결정 A~G 확정) |
 | v3 W1 (학생 로그인·대시보드) | ✅ + 리디자인(독서등 톤) |
 | v3 W2 (코드 입퇴실: 학생+교사) | ✅ E2E 실동작 확인 |
-| **다음: 학생 계정 벌크 생성** | ⏳ `tools/` 준비됨 — 실행만 |
-| W3 (관리자 화면·통계) | ⬜ 미착수 |
+| 학생 계정 벌크 생성 | ✅ 2026-07-22 실행 완료 — **292명** 전원 생성·검증 (아래 주의 참고) |
+| W3 (관리자 화면·통계) | ✅ 2026-07-22 구현+적대리뷰(38에이전트, 확정7 전건 수정)+헤드리스 검증 — **마이그레이션 적용·라이브 E2E·커밋만 남음** (§6-2) |
 | W4 (파일럿) · 도메인 연결 | ⬜ 미착수 |
 
-**바로 다음 할 일**: `v3/tools/`의 계정 생성 스크립트를 로컬에서 실행(582명 계정) → 그 다음 W3.
+**바로 다음 할 일**: ① `docs/w3_migration.sql` 적용(SQL Editor 또는 Supabase MCP) → ② admin.html 관리자 첫 로그인(PIN 변경)·4탭 E2E → ③ 커밋·push(=배포).
+
+> **★ 학생 수 정정**: 이전 판의 "582명"은 `students` **행 수**(581)를 잘못 센 것. 이 테이블은 (학번×프로그램) 등록 행이라 한 학생이 최대 4행 — 실제 고유 학생은 **292명**(활성 576행). 스크립트가 학번 기준 dedup하므로 계정도 292개가 정답.
+> **★ 발견된 명단 오타**: `60310 서혜인`(토요일, 4/30 수기 등록)은 `30610 서혜인`(심야)과 동일 학생의 학번 오타로 추정(고교에 6학년 없음). 계정은 둘 다 생성됨 — 확인 후 students 행 학번 정정 + `60310@st...` 계정 삭제 권장.
 
 ---
 
@@ -57,17 +60,20 @@
 v3/
   index.html            학생 PWA (로그인·PIN변경·대시보드·입실/퇴실 시트)
   teacher.html          교사 콘솔 (로그인·세션시작·명단·퇴실코드·마감)
+  admin.html            관리자 (오늘 현황·통계·명단·설정/진단 — W3, 2026-07-22)
   assets/js/
-    config.js           SUPABASE_URL/KEY(공개 anon), EMAIL_DOMAIN, STAFF_EMAIL, PROGRAMS, ROOMS
-    sb.js               Supabase 클라이언트 + auth + DAL + setAuthStorageKey()
+    config.js           SUPABASE_URL/KEY(공개 anon), EMAIL_DOMAIN, STAFF_EMAIL, ADMIN_EMAIL, PROGRAMS, ROOMS
+    sb.js               Supabase 클라이언트 + auth + DAL + setAuthStorageKey() + 관리자 DAL(fetchAllPaged 등)
     student.js          학생 페이지 컨트롤러
     teacher.js          교사 페이지 컨트롤러
+    admin.js            관리자 페이지 컨트롤러 (저장키 cosmos_v3_admin)
+  docs/w3_migration.sql W3 서버측 마이그레이션 (is_admin·staff self read+GRANT·sessions staff read·활성토글 RPC)
   sw.js                 서비스워커(앱셸 캐시, 네트워크우선)
   manifest.webmanifest  PWA
   icon-*.png, icon.svg  아이콘(v2 복사)
   DESIGN.md             설계서(권위본)
   HANDOFF.md            이 문서
-  tools/                계정 벌크생성 (create-accounts.mjs, README.md, package.json)
+  tools/                로컬 도구 3종: create-accounts.mjs(학생 벌크) · create-admin.mjs(관리자 생성/PIN재발급) · reset-pin.mjs(학생 PIN 초기화)
 ```
 
 **디자인 시스템**(계승할 것): 따뜻한 크림/브라운(v2 유지) + "독서등" 다크 히어로 카드 + 램프골드 액센트(#c7994f). 모션=카운트업·스프링 뷰전환·촉각버튼·햅틱·reduced-motion. 폰트=Cormorant Garamond(워드마크)+IBM Plex Sans KR. ★광원(글로우) 효과는 사자님이 뺐음 — 넣지 말 것.
@@ -88,12 +94,13 @@ v3/
 
 ## 6. 다음 작업 순서 (권장)
 
-1. **학생 계정 생성** — `v3/tools/README.md` 따라 로컬 실행. (582명, `--dry` 먼저)
-2. **W3 관리자 화면 (`admin.html` + `admin.js`)**:
-   - ★ auth 저장키 `cosmos_v3_admin`.
-   - 로그인(관리자). 명단 관리(활성/PIN초기화 — PIN초기화는 계정 password 갱신, Admin API 필요 → 로컬스크립트나 Edge Function; 브라우저에서 service_role 금지).
-   - **통계**: 퇴실율, `퇴실미확인` 집계(학생별·기간별), 반복 미퇴실자.
-   - (선택) v2 관리자 기능 이식 — 다만 v2 admin은 그대로 살아있으니 급하지 않음.
+1. ~~**학생 계정 생성**~~ ✅ 2026-07-22 완료 (292명, 실패 0 — §0 정정·오타 메모 참고).
+2. **W3 관리자 화면** ✅ 구현 완료 (2026-07-22) — 남은 것과 구현 내역:
+   - **남은 것**: ⓐ `docs/w3_migration.sql` 적용 — 적용 전에도 화면은 동작(오늘/통계/명단 읽기·CSV). 적용해야 열리는 것 = 활성/비활성 토글·진단 role 표시·(퇴실 지표의 세션 기반 정밀 판별) ⓑ 관리자 첫 로그인(임시 PIN → 새 PIN 6~12자리) ⓒ 4탭 라이브 E2E ⓓ 커밋·push.
+   - **인증 결정(확정)**: v2 토큰 재사용 대신 **Supabase Auth 통합** — `admin@staff.yubongsystem.com`(staff role='admin', tools/create-admin.mjs로 생성됨). gateOk = 이메일+is_staff, is_admin() 배포 후엔 role 판정 추가. 관리자 PIN 6~12자리 강제.
+   - **화면**: 오늘(활성 세션 카드·같은 세션id sibling 행 dedup·재실=학번 고유 계수·15초 폴링) / 통계(기간·프로그램 필터, 퇴실 지표는 세션+퇴실흔적 이중 판별, 반복 미퇴실자, 일별 차트, CSV — 수식 인젝션 방어·퇴실시각 KST 통일) / 명단(학생 단위, 활성 토글은 RPC, PIN 초기화는 로컬 도구 안내 모달) / 설정(시스템 진단·PIN 변경·도구 명령).
+   - **적대 리뷰**: 38에이전트(Find=Opus 4렌즈, Verify=Fable 2인 교차) — 확정 7건 전건 수정(CSV 수식 인젝션·sibling 이중 집계·CSV/화면 퇴실시각 TZ·세션 비가독 시 통계 오표시·관리자 PIN 4자리·재실 중복 계수), 기각 7건(예: "sessions에 id 없음" 주장은 라이브 DB로 반증 — **id 컬럼 실존**).
+   - (선택) v2 관리자 기능 이식 — v2 admin은 그대로 살아있으니 급하지 않음. **백로그**: supabase-js CDN 버전 고정/벤더링(SRI — admin만이 아니라 오리진 전체 결정 필요).
 3. **도메인 연결**: `cosmos.yubongsystem.com` → GitHub Pages 커스텀 도메인(CNAME). 오픈 전 확정.
 4. **W4 파일럿**: 방학 자습(현재 세션 0)에서 실전 테스트.
 5. **개학 후 측정 모드 2주**: 퇴실 체크 운영하되 제재·통보 없이 통계만 → 실태 보고 → 룰 확정.
@@ -121,7 +128,9 @@ v3/
 
 ## 9. 테스트 계정·상태 메모
 
-- 학생 테스트 계정: 대시보드에서 수동 생성했던 것(예 `99999@st.yubongsystem.com`)이 있을 수 있음. 실 학생 계정은 아직 미생성(§6-1에서 생성).
+- 학생 테스트 계정: `99999@st.yubongsystem.com` (수동 생성, `must_change_pin` 없음) 잔존. **실 학생 292계정은 2026-07-22 생성 완료** — 초기 PIN=학번, `must_change_pin=true`, email_confirmed. 검증: Auth 총 294 = 학생 293(292+테스트) + 교사 1.
+- **관리자 계정**: `admin@staff.yubongsystem.com` 2026-07-22 생성 + staff(role=admin) 등록 완료(tools/create-admin.mjs). 임시 PIN 발급 상태 — 첫 로그인·PIN 변경 대기. 분실 시 create-admin.mjs 재실행.
+- **Supabase MCP**: 2026-07-22 user 스코프 등록 완료. 연결엔 `SUPABASE_ACCESS_TOKEN`(개인 액세스 토큰 — service_role과 다름! dashboard/account/tokens) setx + Claude Code 재시작 필요.
 - 교사: `teacher@staff.yubongsystem.com` 생성 + `staff` 등록 완료(role teacher).
 - 테스트용 세션/출석 데이터는 정리 완료(실데이터 무영향).
 
