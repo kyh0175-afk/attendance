@@ -2,7 +2,10 @@
 
 유봉여자고등학교 자율학습 프로그램 "코스모스 독서시간"의 출석 관리 웹 시스템입니다.
 
-🔗 **배포**: [kyh0175-afk.github.io/attendance/v2/](https://kyh0175-afk.github.io/attendance/v2/)
+🔗 **배포**: **[cosmos.yubongsystem.com](https://cosmos.yubongsystem.com/)** (커스텀 도메인, 2026-07-22 연결)
+- 학생/교사(v3): `cosmos.yubongsystem.com/v3/` · `…/v3/teacher.html` · 관리자 `…/v3/admin.html`
+- v2(운영 중): `cosmos.yubongsystem.com/v2/`
+- 기존 `kyh0175-afk.github.io/attendance/*` 주소·QR은 새 도메인으로 자동 리다이렉트됨
 
 ---
 
