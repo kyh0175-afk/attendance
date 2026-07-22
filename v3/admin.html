@@ -148,6 +148,54 @@
   .ctip.on { opacity:1; }
   .ctip b { color:var(--lamp-soft); font-variant-numeric:tabular-nums; }
 
+  /* 요일 칩 */
+  .chips { display:flex; gap:6px; flex-wrap:wrap; }
+  .chip {
+    padding:7px 13px; font-size:13px; font-weight:600; font-family:inherit; color:var(--ink2);
+    background:#fff; border:1.5px solid var(--line2); border-radius:99px; cursor:pointer; transition:all .14s var(--ease);
+  }
+  .chip.on { background:var(--brand); color:#fdf8ee; border-color:var(--brand); }
+
+  /* 출석률 바 */
+  .rate { display:flex; align-items:center; gap:8px; min-width:130px; }
+  .rate .bar { flex:1; height:8px; border-radius:99px; background:#efe7d8; overflow:hidden; }
+  .rate .bar i { display:block; height:100%; border-radius:99px; background:var(--ok); }
+  .rate .bar i.mid { background:var(--warn); } .rate .bar i.low { background:var(--err); }
+  .rate .pct { font-size:12.5px; font-weight:600; font-variant-numeric:tabular-nums; width:40px; text-align:right; }
+
+  /* 일자 도트 (행 확장) */
+  .dots { display:flex; gap:4px; flex-wrap:wrap; padding:4px 0 2px; }
+  .dots .dt { width:15px; height:15px; border-radius:4px; }
+  .dots .dt.hit { background:var(--brand); }
+  .dots .dt.missd { background:#f3ece0; border:1.5px dashed #d9cbb0; }
+
+  /* 기록 탭 — 세션 리스트 */
+  .sesslist { display:flex; flex-direction:column; gap:8px; }
+  .sessrow {
+    display:flex; align-items:center; gap:12px; padding:13px 16px; background:#fff;
+    border:1.5px solid var(--line2); border-radius:14px; cursor:pointer; font-size:14px; transition:border-color .14s;
+  }
+  .sessrow:hover { border-color:var(--lamp); }
+  .sessrow.on { border-color:var(--brand); background:#fbf7ef; }
+  .sessrow .pg { font-weight:600; }
+  .sessrow .meta { color:var(--sub); font-size:12.5px; }
+  .sessrow .cnt { margin-left:auto; font-size:12.5px; color:var(--sub); font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+  /* 테이블 내 컨트롤 */
+  select.cell { width:auto; padding:6px 26px 6px 10px; font-size:12.5px; border-radius:10px; }
+  .btn.xs { padding:6px 11px; font-size:12px; border-radius:10px; margin:0; box-shadow:none; display:inline-flex; width:auto; }
+
+  /* 학생 관리 모달 내부 */
+  .proglist { list-style:none; margin:12px 0 0; padding:0; }
+  .proglist li { border:1.5px solid var(--line); border-radius:14px; padding:11px 14px; margin-bottom:9px; }
+  .proglist .head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .proglist .head b { font-size:13.5px; }
+  .proglist .head .meta { font-size:12px; color:var(--sub); }
+  .proglist .head .acts { margin-left:auto; display:flex; gap:6px; }
+  .editbox { margin-top:14px; padding-top:12px; border-top:1px dashed var(--line2); }
+  .editbox .row { display:flex; gap:10px; } .editbox .row .f { flex:1; }
+  .editbox label { margin-top:8px; }
+
   /* 진단 리스트 */
   ul.diag { list-style:none; margin:0; padding:0; font-size:13.5px; }
   ul.diag li { display:flex; align-items:center; gap:10px; padding:9px 2px; border-bottom:1px solid var(--line); }
@@ -224,6 +272,7 @@
   <div id="view-main" class="view">
     <div class="tabbar">
       <button class="tab on" data-tab="today">오늘</button>
+      <button class="tab" data-tab="records">기록</button>
       <button class="tab" data-tab="stats">통계</button>
       <button class="tab" data-tab="roster">명단</button>
       <button class="tab" data-tab="settings">설정</button>
@@ -248,6 +297,39 @@
           <thead><tr><th>시각</th><th>학번</th><th>이름</th><th>프로그램</th><th>장소</th><th>퇴실</th><th>상태</th></tr></thead>
           <tbody id="td-rows"></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- ── 기록 ── -->
+    <div id="pane-records" class="pane">
+      <div class="card">
+        <div class="controls">
+          <div class="f"><label for="rc-date">날짜</label><input id="rc-date" type="date"></div>
+          <div class="f grow2"><label for="rc-program">프로그램</label><select id="rc-program"><option value="">전체 프로그램</option></select></div>
+          <button id="rc-load" class="btn sm">조회</button>
+        </div>
+      </div>
+      <div class="sec"><h2>세션</h2><span class="note" id="rc-count"></span></div>
+      <div id="rc-sessions" class="sesslist"></div>
+
+      <div id="rc-detail" style="display:none">
+        <div class="sec"><h2 id="rc-d-title">세션 상세</h2><span class="note" id="rc-d-meta"></span></div>
+        <div class="card" style="padding:16px 18px">
+          <div class="controls">
+            <div class="f grow2">
+              <label for="rc-late-hakbun">사후 출석 추가 — 학번 (명단에 있는 학생만)</label>
+              <input id="rc-late-hakbun" type="text" inputmode="numeric" maxlength="5" placeholder="10101" autocomplete="off">
+            </div>
+            <button id="rc-late-btn" class="btn sm">사후 출석 추가</button>
+            <button id="rc-del-session" class="btn sm danger">세션 삭제</button>
+          </div>
+        </div>
+        <div class="tblwrap" style="margin-top:12px">
+          <table class="tbl">
+            <thead><tr><th>시각</th><th>학번</th><th>이름</th><th>장소</th><th>퇴실</th><th>상태</th><th style="text-align:right">관리</th></tr></thead>
+            <tbody id="rc-rows"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -302,6 +384,26 @@
           </div>
         </div>
 
+        <div class="sec"><h2>출석률 (등록별)</h2><span class="note">대상일 = 그 프로그램 세션이 열린 날 × 학생 출석요일 × 첫 출석 이후 · 활성 등록만</span></div>
+        <div class="card" style="padding:14px 18px">
+          <div class="controls">
+            <div class="f"><label for="ar-sort">정렬</label>
+              <select id="ar-sort">
+                <option value="low">출석률 낮은순</option>
+                <option value="high">출석률 높은순</option>
+                <option value="hakbun">학번순</option>
+              </select>
+            </div>
+            <div class="f grow2"><label for="ar-search">검색</label><input id="ar-search" type="search" placeholder="학번·이름"></div>
+          </div>
+        </div>
+        <div class="tblwrap" style="max-height:480px;margin-top:12px">
+          <table class="tbl">
+            <thead><tr><th></th><th>학번</th><th>이름</th><th>프로그램</th><th>대상</th><th>출석</th><th>출석률</th></tr></thead>
+            <tbody id="ar-rows"></tbody>
+          </table>
+        </div>
+
         <div class="sec"><h2>반복 퇴실미확인</h2><span class="note">기간 내 2회 이상은 진하게 표시돼요</span></div>
         <div class="tblwrap" style="max-height:320px">
           <table class="tbl">
@@ -331,6 +433,12 @@
           <div class="f grow2"><label for="ro-program">프로그램</label><select id="ro-program"><option value="">전체 프로그램</option></select></div>
           <button id="ro-reload" class="btn sm line">새로고침</button>
         </div>
+        <div class="controls" style="margin-top:12px">
+          <button id="ro-add" class="btn sm">+ 학생 추가</button>
+          <button id="ro-excel" class="btn sm line">엑셀 일괄 업로드</button>
+          <button id="ro-template" class="btn sm line">양식 다운로드</button>
+          <input id="ro-file" type="file" accept=".xlsx,.xls,.csv" style="display:none">
+        </div>
       </div>
       <div class="sec"><h2>학생 명단</h2><span class="note" id="ro-count"></span></div>
       <div class="tblwrap" style="max-height:560px">
@@ -340,8 +448,9 @@
         </table>
       </div>
       <p class="empty-note" style="text-align:left;padding:12px 4px 0;font-size:12.5px">
-        · 학생 추가·프로그램별 수정·엑셀 업로드는 당분간 <b>v2 관리자 화면</b>을 그대로 사용해주세요. 여기의 활성/비활성은 학생 단위(전 프로그램 일괄)예요.<br>
-        · PIN 초기화는 보안상 브라우저에서 직접 할 수 없어 로컬 도구 명령을 안내해드려요.
+        · [관리] = 프로그램별 수정·활성/비활성·삭제. 행의 활성/비활성 버튼은 학생 단위(전 프로그램 일괄)예요.<br>
+        · 엑셀 양식은 v2와 동일(프로그램/장소/학번/이름/월~일 'O' 표시) — 기존 파일 그대로 올릴 수 있어요.<br>
+        · PIN 초기화는 보안상 브라우저에서 직접 할 수 없어 로컬 도구 명령을 안내해드려요. 좌석·코스모스 관리는 v2 관리자에 남아 있어요.
       </p>
     </div>
 
@@ -370,6 +479,37 @@
       </div>
 
       <button id="a-logout" class="btn ghost">로그아웃</button>
+    </div>
+  </div>
+</div>
+
+<!-- 학생 추가/관리 모달 -->
+<div class="modal-bg" id="modal-stu-bg">
+  <div class="modal" style="max-width:560px;max-height:86dvh;overflow:auto">
+    <h3 id="ms-title">학생 관리</h3>
+    <div id="ms-hakbun-wrap">
+      <label for="ms-hakbun">학번 (5자리)</label>
+      <input id="ms-hakbun" type="text" inputmode="numeric" maxlength="5" placeholder="10101" autocomplete="off">
+    </div>
+    <label for="ms-name">이름</label>
+    <div style="display:flex;gap:8px;align-items:stretch">
+      <input id="ms-name" type="text" placeholder="이름" style="flex:1" autocomplete="off">
+      <button id="ms-name-save" class="btn sm line" style="flex:none;align-self:center">이름 저장</button>
+    </div>
+    <ul class="proglist" id="ms-programs"></ul>
+    <div class="editbox">
+      <label id="ms-add-label">프로그램 추가</label>
+      <div class="row">
+        <div class="f"><select id="ms-add-program"></select></div>
+        <div class="f"><select id="ms-add-room"></select></div>
+      </div>
+      <div class="chips" id="ms-add-days" style="margin-top:10px"></div>
+      <button id="ms-add-save" class="btn sm" style="margin-top:12px">저장</button>
+      <button id="ms-add-cancel" class="btn sm line" style="margin-top:12px;display:none">수정 취소</button>
+    </div>
+    <div class="foot">
+      <button class="btn sm danger" id="ms-delete" style="margin-right:auto">학생 완전 삭제</button>
+      <button class="btn sm line" id="ms-close">닫기</button>
     </div>
   </div>
 </div>

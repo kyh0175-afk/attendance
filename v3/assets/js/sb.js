@@ -2,6 +2,11 @@
 // supabase-js는 index.html에서 CDN으로 로드 → window.supabase 로 접근.
 import { SUPABASE_URL, SUPABASE_KEY, EMAIL_DOMAIN } from './config.js';
 
+// HTML 이스케이프 — DB에 저장된 이름/프로그램/장소 등을 innerHTML에 넣기 전 반드시 적용.
+// (관리자 엑셀 업로드 등으로 악성 문자열이 저장될 수 있으므로 렌더 시점에서 방어)
+export const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
 let _client = null;
 let _storageKey = 'cosmos_v3_auth';   // 학생 기본. 교사 페이지는 별도 키로 분리(같은 브라우저 공존).
 // ★ sb() 최초 호출 전에 불러야 적용됨 (페이지 모듈 최상단에서 호출).
@@ -151,6 +156,54 @@ export async function setStudentActive(hakbun, active) {
   if (error) throw error;
   return data; // { ok, updated }
 }
+
+// ── 관리자 CRUD (w3_crud_migration.sql — 전부 is_admin 게이트 RPC) ──
+const adminRpc = async (fn, params) => {
+  const { data, error } = await sb().rpc(fn, params);
+  if (error) throw error;
+  return data;
+};
+export const upsertStudent = (hakbun, program, name, room, days) =>
+  adminRpc('admin_upsert_student_v3', { p_hakbun: String(hakbun), p_program: program, p_name: name, p_room: room, p_days: days });
+export const bulkUpsertStudents = (list) =>
+  adminRpc('admin_bulk_upsert_students_v3', { p_students: list });
+export const setStudentProgramActive = (hakbun, program, active) =>
+  adminRpc('admin_set_student_active_program_v3', { p_hakbun: String(hakbun), p_program: program, p_active: !!active });
+export const deleteStudent = (hakbun, program, deleteAttendance) =>
+  adminRpc('admin_delete_student_v3', { p_hakbun: String(hakbun), p_program: program || null, p_delete_attendance: !!deleteAttendance });
+export const addLateAttendance = (sessionId, hakbun) =>
+  adminRpc('admin_add_attendance_v3', { p_session_id: String(sessionId), p_hakbun: String(hakbun) });
+export const setAttendanceStatus = (id, status) =>
+  adminRpc('admin_update_attendance_status_v3', { p_id: id, p_status: status });
+export const deleteAttendance = (id) =>
+  adminRpc('admin_delete_attendance_v3', { p_id: id });
+export const deleteSession = (sessionId, deleteAttendance = true) =>
+  adminRpc('admin_delete_session_v3', { p_session_id: String(sessionId), p_delete_attendance: !!deleteAttendance });
+
+export async function sessionsByDate(date) {
+  const { data, error } = await sb().from('sessions').select('*').eq('날짜', date).order('시작시각', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+export async function attendanceBySession(sessionId) {
+  const { data, error } = await sb().from('attendance').select('*')
+    .eq('세션id', String(sessionId)).order('원래시각', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+// (학번×프로그램)별 첫 출석일 맵 (출석률 분모 보정용 — 전 기간 1회 스캔 후 캐시)
+// ★ 프로그램별로 키를 나눠야 다중 프로그램 학생의 출석률이 정확하다 (전역 최소일이면
+//   나중에 등록한 프로그램의 대상일이 등록 이전까지 소급돼 출석률이 과소 표시됨).
+export const firstAttendanceDates = async () => {
+  const rows = await fetchAllPaged(() => sb().from('attendance').select('학번,프로그램,날짜').order('id'));
+  const map = new Map();   // '학번|프로그램' → 최소 날짜
+  for (const r of rows) {
+    if (!r.날짜) continue;
+    const k = `${r.학번}|${r.프로그램}`;
+    if (!map.has(k) || r.날짜 < map.get(k)) map.set(k, r.날짜);
+  }
+  return map;
+};
 
 // ── DAL (학생 본인 데이터 — RLS가 본인 학번 행으로 제한) ──
 export async function myProfile() {

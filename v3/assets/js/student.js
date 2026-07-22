@@ -1,5 +1,5 @@
 // 코스모스 출석 v3 — 학생 페이지 컨트롤러 (로그인 · PIN변경 · 대시보드)
-import { login, logout, currentUser, hakbunOf, mustChangePin, changePin, myProfile, myAttendance, checkIn, checkOut } from './sb.js';
+import { login, logout, currentUser, hakbunOf, mustChangePin, changePin, myProfile, myAttendance, checkIn, checkOut, esc } from './sb.js';
 
 const $ = (id) => document.getElementById(id);
 const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -104,7 +104,7 @@ async function renderDash(user) {
   try {
     const [profile, att] = await Promise.all([myProfile(), myAttendance()]);
     const name = (profile[0] && profile[0].이름) || '';
-    $('dash-name').innerHTML = name ? `<b>${name}</b> 님` : `<b>${hakbun}</b> 님`;
+    $('dash-name').innerHTML = name ? `<b>${esc(name)}</b> 님` : `<b>${esc(hakbun)}</b> 님`;
 
     const ym = new Date().toISOString().slice(0, 7);
     const month = att.filter((a) => (a.날짜 || '').slice(0, 7) === ym).length;
@@ -121,7 +121,7 @@ async function renderDash(user) {
         : (miss ? '<span class="badge warn">퇴실미확인</span>' : '');
       return `<li>
         <span class="dot ${miss ? 'miss' : ''}"></span>
-        <span class="meta"><span class="d">${fmtDate(a.날짜)}</span><span class="p">${a.프로그램 || ''} · ${a.장소 || ''}</span></span>
+        <span class="meta"><span class="d">${fmtDate(a.날짜)}</span><span class="p">${esc(a.프로그램 || '')} · ${esc(a.장소 || '')}</span></span>
         ${badge}
       </li>`;
     }).join('');

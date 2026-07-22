@@ -1,5 +1,5 @@
 // 코스모스 출석 v3 — 교사 페이지 (로그인 · 세션 시작 · 명단 · 퇴실코드 · 마감)
-import { sb, setAuthStorageKey, logout, currentUser, isStaff, createSession, issueExitCode, finalizeSession, sessionRoster } from './sb.js';
+import { sb, setAuthStorageKey, logout, currentUser, isStaff, createSession, issueExitCode, finalizeSession, sessionRoster, esc } from './sb.js';
 import { STAFF_EMAIL, PROGRAMS, ROOMS } from './config.js';
 
 // 교사 세션은 학생과 별도 저장키 — 같은 브라우저에서 교사·학생 동시 로그인 가능
@@ -94,7 +94,7 @@ async function renderRoster() {
   if (!rows.length) { ul.innerHTML = '<li class="empty">아직 입실한 학생이 없어요.</li>'; return; }
   ul.innerHTML = rows.map((r) => {
     const badge = r.퇴실시각 ? '<span class="b out">퇴실</span>' : '<span class="b in">재실</span>';
-    return `<li><span class="nm">${r.이름 || ''}</span><span class="no">${r.학번 || ''}</span>${badge}<span class="t">${fmtTime(r.원래시각)}</span></li>`;
+    return `<li><span class="nm">${esc(r.이름 || '')}</span><span class="no">${esc(r.학번 || '')}</span>${badge}<span class="t">${fmtTime(r.원래시각)}</span></li>`;
   }).join('');
 }
 
