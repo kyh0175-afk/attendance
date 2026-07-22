@@ -101,6 +101,57 @@ export async function sessionRoster(sessionId) {
   return data || [];
 }
 
+// ── 관리자(admin) — RLS: staff 전체 읽기 / 쓰기는 is_admin() 게이트 RPC ──
+// is_admin(): true/false = 판정 결과, null = 함수 미배포(마이그레이션 전 — 호출측에서 폴백 판단)
+export async function isAdmin() {
+  const { data, error } = await sb().rpc('is_admin');
+  if (error) return error.code === 'PGRST202' ? null : false;
+  return data === true;
+}
+
+// PostgREST 1,000행 캡 우회 — build()가 매번 새 쿼리 빌더를 반환해야 한다.
+// ⚠️ 정렬이 결정적이어야 페이지 경계가 안 깨진다(고유 tiebreaker 포함 필수).
+export async function fetchAllPaged(build, pageSize = 1000, hardCap = 200000) {
+  const out = [];
+  for (let from = 0; from < hardCap; from += pageSize) {
+    const { data, error } = await build().range(from, from + pageSize - 1);
+    if (error) throw error;
+    out.push(...(data || []));
+    if (!data || data.length < pageSize) break;
+  }
+  return out;
+}
+
+export const allStudents = () =>
+  fetchAllPaged(() => sb().from('students').select('*').order('학번').order('프로그램').order('생성일시'));
+
+export const allSessions = () =>
+  fetchAllPaged(() => sb().from('sessions').select('*').order('id', { ascending: false }));
+
+export async function activeSessions() {
+  const { data, error } = await sb().from('sessions').select('*').eq('활성', true).order('id', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export const attendanceInRange = (from, to, program) =>
+  fetchAllPaged(() => {
+    let q = sb().from('attendance').select('*').order('날짜', { ascending: false }).order('id', { ascending: false });
+    if (from) q = q.gte('날짜', from);
+    if (to) q = q.lte('날짜', to);
+    if (program) q = q.eq('프로그램', program);
+    return q;
+  });
+
+// 학생 전체 활성/비활성 (전 프로그램 행 일괄) — admin 전용 RPC (w3_migration.sql)
+export async function setStudentActive(hakbun, active) {
+  const { data, error } = await sb().rpc('admin_set_student_active_v3', {
+    p_hakbun: String(hakbun), p_active: !!active,
+  });
+  if (error) throw error;
+  return data; // { ok, updated }
+}
+
 // ── DAL (학생 본인 데이터 — RLS가 본인 학번 행으로 제한) ──
 export async function myProfile() {
   const { data, error } = await sb().from('students').select('*').eq('활성', true);

@@ -9,6 +9,9 @@ export const EMAIL_DOMAIN = 'st.yubongsystem.com';
 // 교사 공용 계정 (PIN만으로 로그인 — 계정은 대시보드 생성 + staff 등록)
 export const STAFF_EMAIL = 'teacher@staff.yubongsystem.com';
 
+// 관리자 계정 (admin.html 전용 — staff 테이블 role='admin' 등록 필요)
+export const ADMIN_EMAIL = 'admin@staff.yubongsystem.com';
+
 // 운영 프로그램 · 장소
 export const PROGRAMS = ['방과후 독서시간', '야간 독서시간', '심야 독서시간', '토요일 독서시간', '일요일 독서시간'];
 export const ROOMS = ['아우름', '교과1실', '해오름', '리케이온'];
