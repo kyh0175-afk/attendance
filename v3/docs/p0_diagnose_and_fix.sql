@@ -1,7 +1,11 @@
 -- ═══════════════════════════════════════════════════════════════
 --  코스모스 v3 — P0 진단 & 패치 (2026-08-01)
---  Supabase 대시보드 → SQL Editor 에 섹션별로 붙여넣어 실행.
---  A는 읽기 전용(진단), B는 변경, C는 덤프용.
+--  Supabase 대시보드 → SQL Editor 에 붙여넣어 실행.
+--  A = 진단(읽기 전용) · B = 권한 패치(멱등 — 필요할 때만 적용) · C = 정의 덤프
+--
+--  ★ SQL Editor는 결과 패널에 '마지막 SELECT' 하나만 보여준다.
+--     A-1 ~ A-5를 각각 확인하려면 그 쿼리만 블록 선택 후 Ctrl+Enter 로 실행할 것.
+--     (전체 실행하면 마지막 결과만 보이고 앞의 표는 안 보인다)
 -- ═══════════════════════════════════════════════════════════════
 
 
@@ -71,7 +75,7 @@ select (select count(*) from public.students)                            as "명
        (select count(*) from public.attendance)                          as "출석 행";
 
 -- A-5. 좀비 세션 — 어제 이전인데 아직 열려 있는 세션(자동 마감이 없어 수동 정리 필요)
-select "세션id", "날짜", "프로그램", "장소", "담당교사", "시작시각"
+select "세션id", "날짜", "프로그램", "장소", "교사", "시작시각"
 from public.sessions
 where "활성" = true
   and "날짜" < (now() at time zone 'Asia/Seoul')::date
@@ -79,13 +83,23 @@ order by "날짜" desc, "시작시각";
 
 
 -- ───────────────────────────────────────────────────────────────
--- B. 패치 — A-3에서 sessions의 "authenticated SELECT"가 false일 때만 실행
+-- B. 패치 — sessions의 authenticated SELECT 권한 (없을 때만 부여)
 -- ───────────────────────────────────────────────────────────────
 
 -- ⚠️ RLS 스위치는 건드리지 않는다. v2가 같은 테이블을 anon으로 쓰고 있어
 --    enable row level security를 새로 켜면 v2 라이브가 깨질 수 있다.
 --    여기서는 authenticated에게 SELECT 권한만 추가한다(정책이 실제 범위를 통제).
-grant select on public.sessions to authenticated;
+--
+-- 이미 권한이 있으면 아무것도 하지 않는다 → 몇 번을 실행해도 안전(멱등).
+do $$
+begin
+  if has_table_privilege('authenticated', 'public.sessions', 'SELECT') then
+    raise notice 'B: 이미 권한 있음 — 변경 없음';
+  else
+    execute 'grant select on public.sessions to authenticated';
+    raise notice 'B: GRANT 적용됨';
+  end if;
+end $$;
 
 -- 확인
 select has_table_privilege('authenticated', 'public.sessions', 'SELECT') as "이제 true여야 함";
