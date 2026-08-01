@@ -95,6 +95,10 @@
   .manual input { flex:1; text-align:center; font-size:20px; letter-spacing:.16em; font-weight:600; font-variant-numeric:tabular-nums; }
   .manual button { flex:none; width:auto; margin-top:0; padding:0 20px; font-size:15px; }
   .manual-hint { font-size:12px; color:var(--sub); margin:10px 2px 0; }
+  .setup-hint { font-size:12px; color:var(--sub); margin:6px 2px 0; line-height:1.5; }
+  /* 자동 발급 안내 — 발급 버튼 바로 아래, 가운데 정렬 */
+  .auto-hint { font-size:12.5px; color:var(--sub); text-align:center; margin:9px 2px 0; line-height:1.5; }
+  .auto-hint.on { color:var(--lamp); font-weight:500; }
   .toast {
     position:fixed; left:50%; bottom:calc(26px + env(safe-area-inset-bottom)); transform:translate(-50%,18px);
     background:var(--ink); color:#fdf8ee; padding:13px 20px; border-radius:14px; font-size:14px; font-weight:500;
@@ -130,6 +134,9 @@
       <select id="t-room"></select>
       <label for="t-teacher">담당 교사 이름</label>
       <input id="t-teacher" type="text" placeholder="이름" autocomplete="off">
+      <label for="t-end">종료 시각</label>
+      <input id="t-end" type="time" step="60">
+      <p class="setup-hint" id="t-end-hint">이 시각 5분 전에 퇴실 코드가 자동으로 발급돼요. 다르면 고쳐주세요.</p>
       <button id="t-start-btn" class="btn">▶ 출석 시작</button>
       <button id="t-logout-btn" class="btn ghost">로그아웃</button>
     </div>
@@ -172,6 +179,7 @@
     </div>
 
     <button id="s-issue-btn" class="btn lamp">퇴실 코드 발급</button>
+    <p class="auto-hint" id="s-auto-hint"></p>
     <button id="s-finalize-btn" class="btn warn" style="display:none">마감</button>
   </div>
 </div>

@@ -1,6 +1,6 @@
 // 코스모스 출석 v3 — 교사 페이지 (로그인 · 세션 시작 · 명단 · 퇴실코드 · 마감)
 import { sb, setAuthStorageKey, logout, currentUser, isStaff, createSession, issueExitCode, finalizeSession, sessionRoster, manualAttendance, activeSessions, esc, isAuthError, onSignedOut } from './sb.js';
-import { STAFF_EMAIL, PROGRAMS, ROOMS } from './config.js';
+import { STAFF_EMAIL, PROGRAMS, ROOMS, guessEndTime, AUTO_EXIT_LEAD_MIN } from './config.js';
 
 // 교사 세션은 학생과 별도 저장키 — 같은 브라우저에서 교사·학생 동시 로그인 가능
 setAuthStorageKey('cosmos_v3_staff');
@@ -18,6 +18,20 @@ function toast(msg, kind) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.className = 'toast'; }, 2800);
 }
 const fmtTime = (v) => { if (!v) return ''; const s = String(v); const m = s.match(/(\d{2}):(\d{2})/); return m ? `${m[1]}:${m[2]}` : s; };
+const pad2 = (n) => String(n).padStart(2, '0');
+const hhmm = (ms) => { const d = new Date(ms); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+
+// 'HH:MM'(교사가 화면에서 보는 벽시계 시각) → 오늘 날짜의 타임스탬프.
+// ★ 기기 시계를 그대로 쓴다. 전자칠판·교사 노트북은 KST이므로 변환이 필요 없고,
+//   변환을 넣으면 오히려 교사가 입력한 값과 화면 표시가 어긋난다.
+function endAtFromTime(v) {
+  if (!v) return 0;
+  const m = String(v).match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return 0;
+  const d = new Date();
+  d.setHours(Number(m[1]), Number(m[2]), 0, 0);
+  return d.getTime();
+}
 
 // 세션 상태
 let SESSION = null;       // { session_id, program, room, teacher, entry_code }
@@ -28,6 +42,7 @@ let exitIssued = false;   // 퇴실 코드 발급 여부 (마감 버튼 게이�
 let rosterInFlight = false;   // 폴링 중복 실행 방지 (느린 회선에서 응답 역전 차단)
 let rosterFailStreak = 0;     // 연속 실패 횟수 (교사에게 표시)
 let loggingOut = false;       // 사용자가 직접 로그아웃한 경우 SIGNED_OUT 알림 억제
+let autoTimer = null;         // 퇴실 코드 자동 발급 감시 틱
 
 // ── 세션 영속 ──
 // ★ 세션이 메모리에만 있으면 전자칠판 탭이 한 번만 리로드돼도 진행 중 세션으로 돌아갈 길이 없다.
@@ -109,6 +124,7 @@ async function tryRestoreSession() {
   }
   show('view-session');
   startPolling();
+  armAutoExit();              // 저장해둔 종료 시각으로 자동 발급 감시 재개
   toast('진행 중이던 출석으로 돌아왔어요', 'ok');
   return true;
 }
@@ -153,12 +169,22 @@ function resetRosterView() {
 function enterSetup() {
   stopPolling();
   clearExitCountdown();
+  clearAutoExit();
   resetRosterView();
   $('top-sess').innerHTML = '';   // 상단 세션 표시 비움
   const prog = $('t-program'), room = $('t-room');
   if (!prog.options.length) { prog.innerHTML = PROGRAMS.map((p) => `<option>${p}</option>`).join(''); }
   if (!room.options.length) { room.innerHTML = ROOMS.map((r) => `<option>${r}</option>`).join(''); }
+  syncEndInput();
   show('view-setup');
+}
+
+// 프로그램에 맞는 종료 시각을 입력칸에 채운다.
+// 토요일은 지금 시각으로 오전·오후를 추정하므로, 어긋나면 교사가 그 자리에서 고치면 된다.
+function syncEndInput() {
+  const el = $('t-end');
+  if (!el) return;
+  el.value = guessEndTime($('t-program').value, new Date());
 }
 
 async function startSession() {
@@ -168,7 +194,10 @@ async function startSession() {
   btn.disabled = true; btn.textContent = '시작 중…';
   try {
     const res = await createSession(program, room, teacher);
-    SESSION = { session_id: res.session_id, program, room, teacher, entry_code: res.entry_code };
+    SESSION = {
+      session_id: res.session_id, program, room, teacher, entry_code: res.entry_code,
+      endAt: endAtFromTime($('t-end').value),   // 퇴실 코드 자동 발급 기준
+    };
     saveSession();
     // 세션 정보는 상단 바에 (프로그램 · 장소 · 교사) — 코드 카드는 코드만 크게
     $('top-sess').innerHTML = `${esc(program)} · <span class="rm">${esc(room)}</span> · ${esc(teacher)}`;
@@ -184,6 +213,7 @@ async function startSession() {
     resetRosterView();          // ★ 이전 세션 명단·인원 초기화
     show('view-session');
     startPolling();
+    armAutoExit();
   } catch (e) {
     toast('시작 실패: ' + (e.message || '오류'), 'err');
   } finally {
@@ -257,7 +287,7 @@ async function doManual() {
 }
 
 // ── 퇴실 코드 발급 ──
-async function issueExit() {
+async function issueExit(auto) {
   if (!SESSION) return;
   const btn = $('s-issue-btn'); btn.disabled = true;
   try {
@@ -273,9 +303,11 @@ async function issueExit() {
     exitIssued = true;
     $('s-finalize-btn').style.display = '';
     $('s-issue-btn').textContent = '퇴실 코드 재발급';
-    toast('퇴실 코드가 발급됐어요 (10분)', 'ok');
+    toast(auto ? '퇴실 코드가 자동으로 발급됐어요 (10분)' : '퇴실 코드가 발급됐어요 (10분)', 'ok');
+    updateAutoHint();
   } catch (e) {
     toast('발급 실패: ' + (e.message || '오류'), 'err');
+    if (auto) updateAutoHint();
   } finally { btn.disabled = false; }
 }
 function startExitCountdown() {
@@ -302,6 +334,48 @@ function startExitCountdown() {
 }
 function clearExitCountdown() { if (exitTimer) { clearInterval(exitTimer); exitTimer = null; } }
 
+// ── 퇴실 코드 자동 발급 (종료 N분 전) ──
+// ★ 긴 setTimeout 금지. 방과후는 시작~종료가 두 시간 가까이인데, 전자칠판이 절전에
+//   들어가거나 탭이 백그라운드가 되면 Chrome이 타이머를 클램프·지연시켜 제 시각에
+//   안 터진다. 짧은 주기로 '벽시계'를 비교하면 절전에서 깨어나도 즉시 따라잡는다.
+let autoBusy = false, autoTries = 0;
+function clearAutoExit() { if (autoTimer) { clearInterval(autoTimer); autoTimer = null; } }
+
+function armAutoExit() {
+  clearAutoExit();
+  autoTries = 0;
+  updateAutoHint();
+  if (!SESSION || !SESSION.endAt) return;
+  if (exitIssued) return;
+  if (Date.now() >= SESSION.endAt) return;   // 종료 시각이 이미 지남 → 수동 발급만
+  autoTimer = setInterval(autoExitTick, 20000);
+  autoExitTick();
+}
+
+async function autoExitTick() {
+  if (!SESSION || !SESSION.endAt) { clearAutoExit(); return; }
+  if (exitIssued) { clearAutoExit(); updateAutoHint(); return; }   // 교사가 먼저 발급함
+  if (autoBusy) return;
+  if (Date.now() < SESSION.endAt - AUTO_EXIT_LEAD_MIN * 60000) return;
+  if (autoTries >= 5) { clearAutoExit(); updateAutoHint(); return; }
+  autoTries++;
+  autoBusy = true;
+  try { await issueExit(true); } finally { autoBusy = false; }
+  if (exitIssued) clearAutoExit();
+}
+
+function updateAutoHint() {
+  const el = $('s-auto-hint');
+  if (!el) return;
+  el.classList.remove('on');
+  if (exitIssued) { el.textContent = '필요하면 위 버튼으로 다시 발급할 수 있어요.'; return; }
+  if (autoTries >= 5) { el.textContent = '자동 발급에 실패했어요. 위 버튼으로 직접 발급해주세요.'; return; }
+  if (!SESSION || !SESSION.endAt) { el.textContent = '종료 시각이 없어 자동 발급을 하지 않아요. 때가 되면 직접 발급해주세요.'; return; }
+  if (Date.now() >= SESSION.endAt) { el.textContent = '종료 시각이 지나 자동 발급을 하지 않아요. 직접 발급해주세요.'; return; }
+  el.textContent = `${hhmm(SESSION.endAt - AUTO_EXIT_LEAD_MIN * 60000)}에 자동으로 발급돼요 · 종료 ${hhmm(SESSION.endAt)}`;
+  el.classList.add('on');
+}
+
 // ── 마감 ──
 async function finalize() {
   if (!SESSION) return;
@@ -311,7 +385,7 @@ async function finalize() {
   const btn = $('s-finalize-btn'); btn.disabled = true; btn.textContent = '마감 중…';
   try {
     const res = await finalizeSession(SESSION.session_id);
-    stopPolling(); clearExitCountdown();
+    stopPolling(); clearExitCountdown(); clearAutoExit();
     toast(res.missing > 0 ? `마감 완료 · 퇴실미확인 ${res.missing}명` : '마감 완료 · 전원 퇴실', 'ok');
     clearSavedSession();
     setTimeout(enterSetup, 900);
@@ -322,21 +396,23 @@ async function finalize() {
 
 async function doLogout() {
   loggingOut = true;
-  stopPolling(); clearExitCountdown();
+  stopPolling(); clearExitCountdown(); clearAutoExit();
   clearSavedSession();               // 다른 교사가 이어받을 때 옛 세션으로 복귀하지 않게
   try { await logout(); } catch (_) {}
   show('view-login');
   loggingOut = false;
 }
 // '나가기'는 세션을 닫지 않는다 → 저장본을 지우지 않아야 새로고침 후에도 돌아올 수 있다
-function backToSetup() { if (confirm('세션은 계속 열려 있어요.\n나가도 학생들은 계속 입·퇴실할 수 있고, 다시 들어오려면 새로 시작하면 돼요.\n나갈까요?')) { stopPolling(); clearExitCountdown(); enterSetup(); } }
+function backToSetup() { if (confirm('세션은 계속 열려 있어요.\n나가도 학생들은 계속 입·퇴실할 수 있고, 다시 들어오려면 새로 시작하면 돼요.\n나갈까요?')) { stopPolling(); clearExitCountdown(); clearAutoExit(); enterSetup(); } }
 
 window.addEventListener('DOMContentLoaded', () => {
   $('t-login-btn').addEventListener('click', doLogin);
   $('t-pin').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
   $('t-start-btn').addEventListener('click', startSession);
   $('t-logout-btn').addEventListener('click', doLogout);
-  $('s-issue-btn').addEventListener('click', issueExit);
+  // ★ 핸들러로 직접 넘기면 첫 인자에 MouseEvent가 들어와 auto=true로 오해한다
+  $('s-issue-btn').addEventListener('click', () => issueExit(false));
+  $('t-program').addEventListener('change', syncEndInput);
   $('s-finalize-btn').addEventListener('click', finalize);
   $('s-back-btn').addEventListener('click', backToSetup);
   $('s-grade').addEventListener('click', (e) => { const b = e.target.closest('button[data-g]'); if (b) setGrade(b.dataset.g); });
@@ -345,7 +421,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // 리프레시 토큰 무효화 → 로그인 화면으로. 폴링을 멈춰야 실패 토스트가 계속 뜨지 않는다.
   onSignedOut(() => {
     if (loggingOut) return;
-    stopPolling(); clearExitCountdown();
+    stopPolling(); clearExitCountdown(); clearAutoExit();
     toast('로그인이 만료됐어요. 다시 로그인해주세요 (세션은 그대로 열려 있어요)', 'err');
     show('view-login');
   });
