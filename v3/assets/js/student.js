@@ -12,7 +12,7 @@ const $ = (id) => document.getElementById(id);
 const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const buzz = (ms = 12) => { try { navigator.vibrate && navigator.vibrate(ms); } catch (_) {} };
 
-const VIEWS = ['view-loading', 'view-login', 'view-pin', 'view-dash'];
+const VIEWS = ['view-loading', 'view-start', 'view-login', 'view-pin', 'view-dash'];
 function show(id) {
   for (const v of VIEWS) {
     const el = $(v);
@@ -78,9 +78,10 @@ async function bounceIfExpired(e) {
 // ── 부팅 ──
 async function boot() {
   show('view-loading');
+  const wantStart = /[?&]start\b/.test(location.search);   // QR 진입
   let user;
-  try { user = await currentUser(); } catch (e) { show('view-login'); return; }
-  if (!user) { show('view-login'); return; }
+  try { user = await currentUser(); } catch (e) { show(wantStart ? 'view-start' : 'view-login'); if (wantStart) startWizard(); return; }
+  if (!user) { if (wantStart) startWizard(); else show('view-login'); return; }
   if (mustChangePin(user)) { show('view-pin'); return; }
   await renderDash(user);
 }
@@ -132,7 +133,7 @@ async function doChangePin() {
   toast('PIN이 설정됐어요', 'ok');
   let user = null;
   try { user = await currentUser(); } catch (_) {}
-  if (user) { await renderDash(user); maybeAutoInstallGuide(); }
+  if (user) { await renderDash(user); maybeShowUsageGuide(); }
   else { toast('새 PIN으로 다시 로그인해주세요', 'ok'); show('view-login'); }
 }
 
@@ -269,9 +270,11 @@ function refreshInstallBar() {
   bar.classList.toggle('on', show);
 }
 
-// 브라우저별 설치 경로 안내
-function installGuide() {
-  if (isIOS()) {
+// 브라우저별 설치 경로 안내. os를 넘기면 그 기준으로, 안 넘기면 자동 감지.
+function installGuide(os) {
+  let target = os || (isIOS() ? 'ios' : 'and');
+  if (target === 'and' && isSamsung()) target = 'samsung';
+  if (target === 'ios') {
     return {
       sub: 'Safari에서 아래 순서대로 하면 앱처럼 쓸 수 있어요',
       steps: [
@@ -282,7 +285,7 @@ function installGuide() {
       note: '· 크롬 앱에서 열었다면 Safari로 다시 열어야 이 메뉴가 나와요.<br>· 추가한 뒤에는 학번과 PIN으로 한 번만 다시 로그인하면 계속 유지돼요.',
     };
   }
-  if (isSamsung()) {
+  if (target === 'samsung') {
     return {
       sub: '삼성 인터넷에서 아래 순서대로 해요',
       steps: [
@@ -304,8 +307,9 @@ function installGuide() {
   };
 }
 
-function openInstallSheet() {
-  const g = installGuide();
+function openInstallSheet(os) {
+  const g = installGuide(os);
+  $('install-title').textContent = '홈 화면에 추가하기';
   $('install-sub').textContent = g.sub;
   $('install-steps').innerHTML = g.steps
     .map((s, i) => `<li><span class="n">${i + 1}</span><span>${s}</span></li>`).join('');
@@ -314,7 +318,8 @@ function openInstallSheet() {
 }
 function closeInstallSheet() { $('install-bg').classList.remove('on'); }
 
-async function doInstall() {
+// 반환값 = 브라우저 프롬프트로 실제 설치까지 끝났는지
+async function doInstall(os) {
   // 안드로이드·데스크톱 크롬: 브라우저가 준 프롬프트를 그대로 띄운다
   if (deferredPrompt) {
     const p = deferredPrompt;
@@ -322,21 +327,88 @@ async function doInstall() {
     try {
       p.prompt();
       const res = await p.userChoice;
-      if (res && res.outcome === 'accepted') { snoozeInstall(); refreshInstallBar(); }
-      return;
+      const ok = !!(res && res.outcome === 'accepted');
+      if (ok) { snoozeInstall(); refreshInstallBar(); }
+      return ok;
     } catch (_) { /* 실패하면 수동 안내로 폴백 */ }
   }
-  openInstallSheet();
+  openInstallSheet(os);
+  return false;
 }
 
-// 최초 PIN 설정 직후 한 번만 자동 안내 (DESIGN 2-1의 설치 안내 지점)
-function maybeAutoInstallGuide() {
-  if (isStandalone()) return;
+// 최초 PIN 설정 직후 한 번만 사용법 안내 (DESIGN 2-1의 안내 지점)
+// 설치 안내는 대시보드 배너가 상시 담당하므로 여기서는 '쓰는 법'을 보여준다.
+function maybeShowUsageGuide() {
   try {
     if (localStorage.getItem(INSTALL_SHOWN_KEY)) return;
     localStorage.setItem(INSTALL_SHOWN_KEY, '1');
   } catch (_) { return; }
-  setTimeout(() => { if (!isStandalone()) doInstall(); }, 900);
+  setTimeout(showUsageGuide, 900);
+}
+
+// ── 시작 위저드 (QR로 들어온 학생용) ──
+// QR → /v3/?start → 기기 선택 → 설치 → 로그인 안내 순으로 한 단계씩 진행한다.
+// ★ 설치 단계를 이 페이지(index.html)에서 진행하는 게 중요하다. 별도 안내 페이지를
+//   만들어 거기서 '홈 화면에 추가'를 하면, 구형 iOS는 manifest의 start_url 대신
+//   그 페이지 주소를 그대로 저장해 버려 앱 아이콘이 안내 페이지로 열린다.
+const WIZ_TITLES = [
+  { t: '어떤 폰을 쓰나요?', d: '기기에 따라 방법이 조금 달라요' },
+  { t: '앱으로 만들기', d: '홈 화면에 추가하면 다음부터 바로 열려요' },
+  { t: '로그인하기', d: '학번과 처음 PIN만 있으면 돼요' },
+];
+let wizOS = '';
+
+function wizGo(n) {
+  for (let i = 0; i < 3; i++) {
+    const p = $('w-p' + i);
+    if (p) p.classList.toggle('on', i === n);
+  }
+  const dots = $('w-dots').children;
+  for (let i = 0; i < dots.length; i++) dots[i].classList.toggle('on', i <= n);
+  $('w-title').textContent = WIZ_TITLES[n].t;
+  $('w-desc').textContent = WIZ_TITLES[n].d;
+  window.scrollTo(0, 0);
+}
+
+function wizPickOS(os) {
+  wizOS = os;
+  $('w-ios').classList.toggle('on', os === 'ios');
+  $('w-and').classList.toggle('on', os === 'and');
+
+  const g = installGuide(os);
+  $('w-steps').innerHTML = g.steps
+    .map((s, i) => `<li><span class="n">${i + 1}</span><span>${s}</span></li>`).join('');
+  $('w-steps-note').innerHTML = g.note;
+  // 안드로이드에서 브라우저가 설치 프롬프트를 줄 때만 '앱 설치하기' 버튼이 의미 있다
+  $('w-install').style.display = (os === 'and' && deferredPrompt) ? '' : 'none';
+  wizGo(1);
+}
+
+function startWizard() {
+  wizGo(0);
+  const guessed = isIOS() ? '아이폰' : '안드로이드';
+  $('w-guess').textContent = `이 폰은 ${guessed}으로 보여요. 맞으면 그대로 누르고, 다르면 다른 쪽을 눌러주세요.`;
+  show('view-start');
+  // 이미 설치한 상태로 들어오면 설치 단계는 건너뛴다
+  if (isStandalone()) { wizOS = isIOS() ? 'ios' : 'and'; wizGo(2); }
+}
+
+function wizToLogin() {
+  show('view-login');
+  setTimeout(() => { try { $('login-hakbun').focus(); } catch (_) {} }, 300);
+}
+
+// PIN 설정까지 끝낸 학생에게 사용법을 한 번 보여준다
+function showUsageGuide() {
+  $('install-title').textContent = '이제 이렇게 쓰면 돼요';
+  $('install-sub').textContent = '입실과 퇴실, 두 번만 찍으면 끝이에요';
+  $('install-steps').innerHTML = [
+    '자습실에 도착하면 <span class="k">입실</span> → 칠판의 <b>입실 코드 4자리</b>',
+    '끝날 때 <span class="k">퇴실</span> → 선생님이 알려주는 <b>퇴실 코드 4자리</b>',
+    '내 출석 기록은 이 화면에서 언제든 볼 수 있어요',
+  ].map((s, i) => `<li><span class="n">${i + 1}</span><span>${s}</span></li>`).join('');
+  $('install-note').innerHTML = '· 퇴실을 안 찍으면 <b>퇴실미확인</b>으로 남아요. 꼭 찍고 나가주세요.';
+  $('install-bg').classList.add('on');
 }
 
 // ── 바인딩 ──
@@ -357,8 +429,16 @@ window.addEventListener('DOMContentLoaded', () => {
   $('code-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitCode(); });
   $('sheet-bg').addEventListener('click', (e) => { if (e.target === $('sheet-bg')) closeSheet(); });
 
+  // 시작 위저드
+  $('w-ios').addEventListener('click', () => wizPickOS('ios'));
+  $('w-and').addEventListener('click', () => wizPickOS('and'));
+  $('w-install').addEventListener('click', async () => { if (await doInstall(wizOS)) wizGo(2); });
+  $('w-next1').addEventListener('click', () => wizGo(2));
+  $('w-go-login').addEventListener('click', wizToLogin);
+  $('w-skip').addEventListener('click', wizToLogin);
+
   // 앱 설치
-  $('install-go').addEventListener('click', doInstall);
+  $('install-go').addEventListener('click', () => doInstall());
   $('install-x').addEventListener('click', () => { snoozeInstall(); refreshInstallBar(); });
   $('install-close').addEventListener('click', closeInstallSheet);
   $('install-bg').addEventListener('click', (e) => { if (e.target === $('install-bg')) closeInstallSheet(); });
