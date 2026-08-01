@@ -14,7 +14,9 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- ★ 버전 고정: @2(부동)면 Supabase가 최신 문법을 쓰는 릴리스를 내는 순간
+     아무 커밋 없이 구형 크롬(전자칠판 Chrome 112)에서 앱이 죽는다. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap">
@@ -222,6 +224,7 @@
         <input id="pin-new2" type="password" inputmode="numeric" autocomplete="new-password" placeholder="새 PIN 확인">
       </div>
       <button id="pin-btn" class="btn">PIN 설정하기</button>
+      <button id="pin-logout" class="btn ghost" style="margin-top:8px">다른 학번으로 로그인</button>
     </div>
   </div>
 

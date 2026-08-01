@@ -1,5 +1,5 @@
 // 코스모스 출석 v3 — 교사 페이지 (로그인 · 세션 시작 · 명단 · 퇴실코드 · 마감)
-import { sb, setAuthStorageKey, logout, currentUser, isStaff, createSession, issueExitCode, finalizeSession, sessionRoster, manualAttendance, esc } from './sb.js';
+import { sb, setAuthStorageKey, logout, currentUser, isStaff, createSession, issueExitCode, finalizeSession, sessionRoster, manualAttendance, activeSessions, esc, isAuthError, onSignedOut } from './sb.js';
 import { STAFF_EMAIL, PROGRAMS, ROOMS } from './config.js';
 
 // 교사 세션은 학생과 별도 저장키 — 같은 브라우저에서 교사·학생 동시 로그인 가능
@@ -20,19 +20,97 @@ function toast(msg, kind) {
 const fmtTime = (v) => { if (!v) return ''; const s = String(v); const m = s.match(/(\d{2}):(\d{2})/); return m ? `${m[1]}:${m[2]}` : s; };
 
 // 세션 상태
-let SESSION = null;       // { session_id, program, room }
+let SESSION = null;       // { session_id, program, room, teacher, entry_code }
 let rosterTimer = null, exitTimer = null, exitExpiry = null;
 let rosterRows = [];      // 최근 명단 (학년 필터·재렌더용)
 let gradeFilter = '';     // '' | '1' | '2' | '3'
 let exitIssued = false;   // 퇴실 코드 발급 여부 (마감 버튼 게이트)
+let rosterInFlight = false;   // 폴링 중복 실행 방지 (느린 회선에서 응답 역전 차단)
+let rosterFailStreak = 0;     // 연속 실패 횟수 (교사에게 표시)
+let loggingOut = false;       // 사용자가 직접 로그아웃한 경우 SIGNED_OUT 알림 억제
+
+// ── 세션 영속 ──
+// ★ 세션이 메모리에만 있으면 전자칠판 탭이 한 번만 리로드돼도 진행 중 세션으로 돌아갈 길이 없다.
+//   새 세션을 시작하면 기존 출석 행이 옛 세션id에 묶여 퇴실·마감이 모두 막힌다.
+const SKEY = 'cosmos_v3_teacher_session';
+function saveSession() {
+  try { localStorage.setItem(SKEY, JSON.stringify(SESSION)); } catch (_) {}
+}
+function clearSavedSession() {
+  SESSION = null;
+  try { localStorage.removeItem(SKEY); } catch (_) {}
+}
+function loadSavedSession() {
+  try {
+    const raw = localStorage.getItem(SKEY);
+    if (!raw) return null;
+    const o = JSON.parse(raw);
+    return (o && o.session_id) ? o : null;
+  } catch (_) { return null; }
+}
 
 // ── 부팅 ──
 async function boot() {
   show('view-loading');
   let user;
   try { user = await currentUser(); } catch (e) { show('view-login'); return; }
-  if (user && (await isStaff())) enterSetup();
-  else show('view-login');
+  if (!user) { show('view-login'); return; }
+  let staff = false;
+  try {
+    staff = await isStaff();
+  } catch (e) {
+    // ★ 네트워크 오류를 '권한 없음'으로 처리하면 안 된다 (로그아웃 금지 — 세션은 유효하다)
+    show('view-login');
+    toast(isAuthError(e) ? '로그인이 만료됐어요. 다시 로그인해주세요' : '연결이 불안정해요. 잠시 후 새로고침 해주세요', 'err');
+    return;
+  }
+  if (!staff) { show('view-login'); return; }
+  if (await tryRestoreSession()) return;   // 진행 중 세션이 있으면 복귀
+  enterSetup();
+}
+
+// 새로고침·탭 리로드 후 진행 중 세션으로 복귀
+async function tryRestoreSession() {
+  const saved = loadSavedSession();
+  if (!saved) return false;
+  let rows;
+  try { rows = await activeSessions(); } catch (e) { return false; }
+  // ★ 쌍둥이 장소(아우름/교과1실)는 같은 세션id로 두 행이 존재할 수 있다 — filter 후 첫 행 사용
+  const match = rows.filter((r) => String(r.세션id) === String(saved.session_id));
+  if (!match.length) {
+    // 활성 세션이 여럿 있는데 그중 없다 = 확실히 마감됨 → 저장본 폐기.
+    // 목록이 비어 있으면 RLS 정책 미적용으로 0행일 수도 있으므로 저장본을 남긴다.
+    if (rows.length) clearSavedSession();
+    return false;
+  }
+  const row = match[0];
+
+  SESSION = saved;
+  $('top-sess').innerHTML = `${esc(saved.program)} · <span class="rm">${esc(saved.room)}</span> · ${esc(saved.teacher || '')}`;
+  $('s-entry').textContent = row.입실코드 || saved.entry_code || '----';
+  resetRosterView();
+  gradeFilter = ''; updateGradeSeg();
+
+  // 퇴실 코드는 DB 값이 권위 — 클라 추정치보다 정확하다
+  const exp = row.퇴실코드만료 ? new Date(row.퇴실코드만료).getTime() : 0;
+  if (row.퇴실코드 && exp) {
+    $('s-exit').textContent = row.퇴실코드;
+    $('s-exitwrap').classList.remove('hidden');
+    exitExpiry = exp;
+    exitIssued = true;
+    $('s-issue-btn').textContent = '퇴실 코드 재발급';
+    $('s-finalize-btn').style.display = '';
+    startExitCountdown();
+  } else {
+    $('s-exitwrap').classList.add('hidden');
+    exitIssued = false;
+    $('s-issue-btn').textContent = '퇴실 코드 발급';
+    $('s-finalize-btn').style.display = 'none';
+  }
+  show('view-session');
+  startPolling();
+  toast('진행 중이던 출석으로 돌아왔어요', 'ok');
+  return true;
 }
 
 // ── 로그인 ──
@@ -44,7 +122,16 @@ async function doLogin() {
   try {
     const { error } = await sb().auth.signInWithPassword({ email: STAFF_EMAIL, password: pin });
     if (error) throw error;
-    if (!(await isStaff())) { toast('교사 계정이 아니에요. 관리자에게 문의해주세요', 'err'); await logout(); return; }
+    let staff;
+    try {
+      staff = await isStaff();
+    } catch (e2) {
+      // ★ 판정 실패는 권한 문제가 아니다 — 성공한 로그인을 날리지 않는다
+      toast('연결이 불안정해요. 잠시 후 다시 시도해주세요', 'err');
+      return;
+    }
+    if (!staff) { toast('교사 계정이 아니에요. 관리자에게 문의해주세요', 'err'); await logout(); return; }
+    if (await tryRestoreSession()) return;
     enterSetup();
   } catch (e) {
     toast(/Invalid login/i.test(e.message || '') ? 'PIN이 올바르지 않아요' : ('로그인 실패: ' + (e.message || '오류')), 'err');
@@ -53,9 +140,20 @@ async function doLogin() {
   }
 }
 
+// 명단 표시 초기화 — ★ 이걸 안 하면 새 세션 화면에 이전 세션 명단·인원이 그대로 남는다
+function resetRosterView() {
+  rosterRows = [];
+  rosterFailStreak = 0;
+  $('s-in').textContent = '0';
+  $('s-out').textContent = '0';
+  $('s-roster').innerHTML = '<li class="empty">명단을 불러오는 중…</li>';
+}
+
 // ── 세션 시작 화면 ──
 function enterSetup() {
   stopPolling();
+  clearExitCountdown();
+  resetRosterView();
   $('top-sess').innerHTML = '';   // 상단 세션 표시 비움
   const prog = $('t-program'), room = $('t-room');
   if (!prog.options.length) { prog.innerHTML = PROGRAMS.map((p) => `<option>${p}</option>`).join(''); }
@@ -70,17 +168,20 @@ async function startSession() {
   btn.disabled = true; btn.textContent = '시작 중…';
   try {
     const res = await createSession(program, room, teacher);
-    SESSION = { session_id: res.session_id, program, room };
+    SESSION = { session_id: res.session_id, program, room, teacher, entry_code: res.entry_code };
+    saveSession();
     // 세션 정보는 상단 바에 (프로그램 · 장소 · 교사) — 코드 카드는 코드만 크게
     $('top-sess').innerHTML = `${esc(program)} · <span class="rm">${esc(room)}</span> · ${esc(teacher)}`;
     $('s-entry').textContent = res.entry_code;
     $('s-exitwrap').classList.add('hidden');
     exitIssued = false;
+    exitExpiry = null;
     $('s-issue-btn').style.display = ''; $('s-issue-btn').textContent = '퇴실 코드 발급';
     $('s-finalize-btn').style.display = 'none';
     gradeFilter = '';
     updateGradeSeg();
     clearExitCountdown();
+    resetRosterView();          // ★ 이전 세션 명단·인원 초기화
     show('view-session');
     startPolling();
   } catch (e) {
@@ -96,7 +197,25 @@ function stopPolling() { if (rosterTimer) { clearInterval(rosterTimer); rosterTi
 
 async function renderRoster() {
   if (!SESSION) return;
-  try { rosterRows = await sessionRoster(SESSION.session_id); } catch (e) { return; }
+  if (rosterInFlight) return;        // ★ 응답 역전 방지 — 느린 회선에서 옛 응답이 새 응답을 덮어쓰는 걸 막는다
+  rosterInFlight = true;
+  try {
+    rosterRows = await sessionRoster(SESSION.session_id);
+    rosterFailStreak = 0;
+  } catch (e) {
+    // ★ 조용히 실패하면 교사는 "아무도 안 들어온다"고 믿는다 — 화면에 표시한다
+    rosterFailStreak++;
+    if (rosterFailStreak === 2) toast('명단을 갱신하지 못하고 있어요. 인터넷 연결을 확인해주세요', 'err');
+    if (rosterFailStreak >= 2) {
+      const ul = $('s-roster');
+      if (ul && !ul.querySelector('.stale-note')) {
+        ul.insertAdjacentHTML('afterbegin', '<li class="empty stale-note">⚠ 연결이 끊겨 아래 명단이 최신이 아닐 수 있어요</li>');
+      }
+    }
+    return;
+  } finally {
+    rosterInFlight = false;
+  }
   paintRoster();
 }
 
@@ -144,8 +263,11 @@ async function issueExit() {
   try {
     const res = await issueExitCode(SESSION.session_id);
     $('s-exit').textContent = res.code;
+    $('s-exit').classList.remove('expired');
     $('s-exitwrap').classList.remove('hidden');
-    exitExpiry = Date.now() + 10 * 60 * 1000;
+    // ★ 서버가 돌려준 만료 시각을 쓴다 — 클라에서 10분을 추정하면 응답 지연만큼 항상 길게 표시된다
+    const exp = res.expires_at ? new Date(res.expires_at).getTime() : 0;
+    exitExpiry = exp || (Date.now() + 10 * 60 * 1000);
     startExitCountdown();
     // 퇴실 코드 발급 후에만 마감 버튼 노출 (실수 마감 방지)
     exitIssued = true;
@@ -158,11 +280,23 @@ async function issueExit() {
 }
 function startExitCountdown() {
   clearExitCountdown();
+  const codeEl = $('s-exit');
+  const savedCode = codeEl.textContent;
   const tick = () => {
     const left = Math.max(0, Math.round((exitExpiry - Date.now()) / 1000));
+    if (left <= 0) {
+      // ★ 만료 안내가 13px 소문자뿐이면 뒷자리에선 안 읽힌다. 칠판의 큰 숫자 자체를 바꿔야
+      //   "코드 틀렸대요 / 칠판에 있는데?" 상황이 안 생긴다.
+      codeEl.textContent = '만료';
+      codeEl.classList.add('expired');
+      $('s-exit-cd').textContent = '퇴실 코드를 다시 발급해주세요';
+      clearExitCountdown();
+      return;
+    }
+    codeEl.textContent = savedCode;
+    codeEl.classList.remove('expired');
     const m = Math.floor(left / 60), s = left % 60;
-    $('s-exit-cd').textContent = left > 0 ? `${m}:${String(s).padStart(2, '0')} 남음` : '만료됨 — 다시 발급해주세요';
-    if (left <= 0) clearExitCountdown();
+    $('s-exit-cd').textContent = `${m}:${String(s).padStart(2, '0')} 남음`;
   };
   tick(); exitTimer = setInterval(tick, 1000);
 }
@@ -171,20 +305,30 @@ function clearExitCountdown() { if (exitTimer) { clearInterval(exitTimer); exitT
 // ── 마감 ──
 async function finalize() {
   if (!SESSION) return;
+  // 표시 계층(display:none)뿐 아니라 로직 게이트도 둔다 — 노출 조건이 늘어날 때 사고 방지
+  if (!exitIssued) { toast('퇴실 코드를 먼저 발급해주세요', 'err'); return; }
   if (!confirm('이 세션을 마감할까요?\n아직 퇴실 안 한 학생은 "퇴실미확인"으로 기록돼요.')) return;
   const btn = $('s-finalize-btn'); btn.disabled = true; btn.textContent = '마감 중…';
   try {
     const res = await finalizeSession(SESSION.session_id);
     stopPolling(); clearExitCountdown();
     toast(res.missing > 0 ? `마감 완료 · 퇴실미확인 ${res.missing}명` : '마감 완료 · 전원 퇴실', 'ok');
-    SESSION = null;
+    clearSavedSession();
     setTimeout(enterSetup, 900);
   } catch (e) {
-    toast('마감 실패: ' + (e.message || '오류'), 'err');
+    toast('마감 실패: ' + (e.message || '오류') + ' — 다시 눌러주세요', 'err');
   } finally { btn.disabled = false; btn.textContent = '마감'; }
 }
 
-async function doLogout() { stopPolling(); clearExitCountdown(); await logout(); show('view-login'); }
+async function doLogout() {
+  loggingOut = true;
+  stopPolling(); clearExitCountdown();
+  clearSavedSession();               // 다른 교사가 이어받을 때 옛 세션으로 복귀하지 않게
+  try { await logout(); } catch (_) {}
+  show('view-login');
+  loggingOut = false;
+}
+// '나가기'는 세션을 닫지 않는다 → 저장본을 지우지 않아야 새로고침 후에도 돌아올 수 있다
 function backToSetup() { if (confirm('세션은 계속 열려 있어요.\n나가도 학생들은 계속 입·퇴실할 수 있고, 다시 들어오려면 새로 시작하면 돼요.\n나갈까요?')) { stopPolling(); clearExitCountdown(); enterSetup(); } }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -198,5 +342,12 @@ window.addEventListener('DOMContentLoaded', () => {
   $('s-grade').addEventListener('click', (e) => { const b = e.target.closest('button[data-g]'); if (b) setGrade(b.dataset.g); });
   $('s-manual-btn').addEventListener('click', doManual);
   $('s-manual-hakbun').addEventListener('keydown', (e) => { if (e.key === 'Enter') doManual(); });
+  // 리프레시 토큰 무효화 → 로그인 화면으로. 폴링을 멈춰야 실패 토스트가 계속 뜨지 않는다.
+  onSignedOut(() => {
+    if (loggingOut) return;
+    stopPolling(); clearExitCountdown();
+    toast('로그인이 만료됐어요. 다시 로그인해주세요 (세션은 그대로 열려 있어요)', 'err');
+    show('view-login');
+  });
   boot();
 });

@@ -1,5 +1,12 @@
 // 코스모스 출석 v3 — 학생 페이지 컨트롤러 (로그인 · PIN변경 · 대시보드)
-import { login, logout, currentUser, hakbunOf, mustChangePin, changePin, myProfile, myAttendance, checkIn, checkOut, esc } from './sb.js';
+import {
+  setAuthStorageKey, login, logout, currentUser, hakbunOf, mustChangePin, changePin,
+  myProfile, myAttendance, checkIn, checkOut, esc, monthKST, isAuthError, onSignedOut,
+} from './sb.js';
+
+// ★ 학생 저장키를 명시적으로 지정 (HANDOFF §3). sb.js 기본값에 암묵 의존하면
+//   기본값이 바뀌는 순간 292명 전원이 조용히 로그아웃된다.
+setAuthStorageKey('cosmos_v3_auth');
 
 const $ = (id) => document.getElementById(id);
 const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -41,8 +48,31 @@ function fmtDate(s) {
   if (!s) return '';
   const p = s.split('-');
   if (p.length < 3) return s;
-  const wd = ['일', '월', '화', '수', '목', '금', '토'][new Date(s + 'T00:00:00').getDay()];
-  return `${+p[1]}.${+p[2]} ${wd}`;
+  const d = new Date(s + 'T00:00:00');
+  const wd = ['일', '월', '화', '수', '목', '금', '토'][d.getDay()];
+  return wd ? `${+p[1]}.${+p[2]} ${wd}` : `${+p[1]}.${+p[2]}`;   // 비정상 날짜에 'undefined' 방지
+}
+
+// Supabase Auth의 영문 오류를 학생이 읽을 수 있는 문구로 변환
+function authMsg(e) {
+  const m = String((e && e.message) || '');
+  if (/Invalid login/i.test(m)) return '학번 또는 PIN이 올바르지 않아요';
+  if (/should be different/i.test(m)) return '지금 쓰는 PIN과 다른 PIN으로 해주세요';
+  const len = m.match(/at least (\d+) characters/i);
+  if (len) return `새 PIN은 최소 ${len[1]}자리여야 해요`;
+  if (/rate limit|too many/i.test(m)) return '잠시 후 다시 시도해주세요';
+  if (isAuthError(e)) return '로그인이 만료됐어요. 다시 로그인해주세요';
+  if (/Failed to fetch|NetworkError|load 실패/i.test(m)) return '연결이 불안정해요. 잠시 후 다시 시도해주세요';
+  return m || '오류';
+}
+
+// 인증 만료면 로그인 화면으로 되돌린다 (true 반환 = 처리함)
+async function bounceIfExpired(e) {
+  if (!isAuthError(e)) return false;
+  try { await logout(); } catch (_) {}
+  toast('로그인이 만료됐어요. 다시 로그인해주세요', 'err');
+  show('view-login');
+  return true;
 }
 
 // ── 부팅 ──
@@ -57,43 +87,53 @@ async function boot() {
 
 // ── 로그인 ──
 async function doLogin() {
+  const btn = $('login-btn');
+  if (btn.disabled) return;            // ★ Enter 키는 disabled를 우회한다 — 함수 진입에서 막아야 중복 제출이 안 난다
   const hakbun = $('login-hakbun').value.trim();
   const pin = $('login-pin').value.trim();
-  const btn = $('login-btn');
   if (!/^\d{4,6}$/.test(hakbun)) { toast('학번을 정확히 입력해주세요'); return; }
   if (pin.length < 4) { toast('PIN을 입력해주세요'); return; }
   btn.disabled = true; btn.textContent = '확인 중…';
+  let user = null;
   try {
     await login(hakbun, pin);
     buzz();
-    const user = await currentUser();
-    if (mustChangePin(user)) show('view-pin');
-    else await renderDash(user);
+    user = await currentUser();
   } catch (e) {
-    toast(/Invalid login/i.test(e.message || '') ? '학번 또는 PIN이 올바르지 않아요' : ('로그인 실패: ' + (e.message || '오류')), 'err');
+    toast(authMsg(e), 'err');
+    return;
   } finally {
     btn.disabled = false; btn.textContent = '로그인';
   }
+  if (mustChangePin(user)) show('view-pin');
+  else await renderDash(user);
 }
 
 // ── PIN 변경 (최초) ──
 async function doChangePin() {
+  const btn = $('pin-btn');
+  if (btn.disabled) return;            // ★ Enter 키 중복 제출 방지 (changePin 2회 발사 → 두 번째가 영문 에러)
   const p1 = $('pin-new').value.trim();
   const p2 = $('pin-new2').value.trim();
-  const btn = $('pin-btn');
   if (!/^\d{4,6}$/.test(p1)) { toast('새 PIN은 숫자 4~6자리로 해주세요'); return; }
   if (p1 !== p2) { toast('두 PIN이 일치하지 않아요'); return; }
   btn.disabled = true; btn.textContent = '저장 중…';
   try {
     await changePin(p1);
-    buzz(18);
-    toast('PIN이 설정됐어요', 'ok');
-    await renderDash(await currentUser());
   } catch (e) {
-    toast('변경 실패: ' + (e.message || '오류'), 'err');
+    toast(authMsg(e), 'err');
+    return;
   } finally {
     btn.disabled = false; btn.textContent = 'PIN 설정하기';
   }
+  // ★ 여기서부터는 PIN이 이미 바뀐 상태다. 이후 실패를 '변경 실패'로 표시하면
+  //   학생이 옛 PIN으로 재로그인을 시도해 계정이 고장난 것으로 오해한다.
+  buzz(18);
+  toast('PIN이 설정됐어요', 'ok');
+  let user = null;
+  try { user = await currentUser(); } catch (_) {}
+  if (user) await renderDash(user);
+  else { toast('새 PIN으로 다시 로그인해주세요', 'ok'); show('view-login'); }
 }
 
 // ── 대시보드 ──
@@ -106,7 +146,7 @@ async function renderDash(user) {
     const name = (profile[0] && profile[0].이름) || '';
     $('dash-name').innerHTML = name ? `<b>${esc(name)}</b> 님` : `<b>${esc(hakbun)}</b> 님`;
 
-    const ym = new Date().toISOString().slice(0, 7);
+    const ym = monthKST();   // ★ UTC 기준이면 매월 1일 오전 9시 전까지 전월로 집계된다
     const month = att.filter((a) => (a.날짜 || '').slice(0, 7) === ym).length;
     countUp($('stat-month'), month);
     countUp($('stat-total'), att.length);
@@ -126,7 +166,14 @@ async function renderDash(user) {
       </li>`;
     }).join('');
   } catch (e) {
-    $('dash-name').innerHTML = `<b>${hakbun || ''}</b> 님`;
+    if (await bounceIfExpired(e)) return;
+    $('dash-name').innerHTML = `<b>${esc(hakbun)}</b> 님`;
+    // ★ 실패했는데 하드코딩 0을 그대로 두면 "이번 달 출석 0번"으로 읽혀 재입실을 시도한다.
+    $('stat-month').textContent = '—';
+    $('stat-total').textContent = '—';
+    $('hero-sub').textContent = '기록을 불러오지 못했어요';
+    $('log-cnt').textContent = '';
+    $('dash-list').innerHTML = '<li class="empty">기록을 불러오지 못했어요. 당겨서 새로고침 해주세요.</li>';
     toast('기록을 불러오지 못했어요. 잠시 후 다시 시도해주세요', 'err');
   }
 }
@@ -152,25 +199,39 @@ async function submitCode() {
   if (!/^\d{4}$/.test(code)) { toast('코드 4자리를 입력해주세요'); return; }
   sheetBusy = true;
   const btn = $('code-submit'); btn.disabled = true; btn.textContent = '확인 중…';
+  let res;
   try {
-    const res = sheetMode === 'in' ? await checkIn(code) : await checkOut(code);
-    if (!res || res.ok === false) { toast((res && res.msg) || '코드를 다시 확인해주세요', 'err'); return; }
-    buzz(18);
-    if (sheetMode === 'in') {
-      toast(res.already ? '이미 입실했어요' : `입실 완료 · ${res.장소 || ''}`.trim(), 'ok');
-    } else {
-      toast(res.already ? '이미 퇴실했어요' : '퇴실 완료! 오늘도 수고했어요', 'ok');
-    }
-    closeSheet();
-    await renderDash(await currentUser());
+    res = sheetMode === 'in' ? await checkIn(code) : await checkOut(code);
   } catch (e) {
-    toast('처리 실패: ' + (e.message || '오류'), 'err');
+    if (!(await bounceIfExpired(e))) toast('처리 실패: ' + authMsg(e), 'err');
+    return;
   } finally {
     sheetBusy = false; btn.disabled = false; btn.textContent = '확인';
   }
+  if (!res || res.ok === false) { toast((res && res.msg) || '코드를 다시 확인해주세요', 'err'); return; }
+  // ★ 여기서부터는 출석이 이미 기록된 상태 — 이후 실패를 '처리 실패'로 표시하면 안 된다.
+  buzz(18);
+  if (sheetMode === 'in') {
+    toast(res.already ? '이미 입실했어요' : `입실 완료 · ${res.장소 || ''}`.trim(), 'ok');
+  } else {
+    toast(res.already ? '이미 퇴실했어요' : '퇴실 완료! 오늘도 수고했어요', 'ok');
+  }
+  closeSheet();
+  try {
+    const user = await currentUser();
+    if (user) await renderDash(user);
+  } catch (_) { /* 대시보드 갱신 실패는 출석 결과와 무관 — 조용히 넘어간다 */ }
 }
 
-async function doLogout() { await logout(); $('login-pin').value = ''; show('view-login'); }
+let loggingOut = false;
+async function doLogout() {
+  loggingOut = true;
+  try { await logout(); } catch (_) {}
+  $('login-pin').value = '';
+  $('login-hakbun').value = '';
+  show('view-login');
+  loggingOut = false;
+}
 
 // ── 바인딩 ──
 window.addEventListener('DOMContentLoaded', () => {
@@ -180,12 +241,21 @@ window.addEventListener('DOMContentLoaded', () => {
   $('pin-btn').addEventListener('click', doChangePin);
   $('pin-new2').addEventListener('keydown', (e) => { if (e.key === 'Enter') doChangePin(); });
   $('dash-logout').addEventListener('click', doLogout);
+  // 친구 학번으로 잘못 로그인했을 때 PIN 변경 화면에서 빠져나올 수 있게 (탈출구)
+  const pinBack = $('pin-logout');
+  if (pinBack) pinBack.addEventListener('click', doLogout);
   $('btn-checkin').addEventListener('click', () => openSheet('in'));
   $('btn-checkout').addEventListener('click', () => openSheet('out'));
   $('code-submit').addEventListener('click', submitCode);
   $('code-cancel').addEventListener('click', closeSheet);
   $('code-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitCode(); });
   $('sheet-bg').addEventListener('click', (e) => { if (e.target === $('sheet-bg')) closeSheet(); });
+  // 리프레시 토큰이 무효화되면 supabase-js가 SIGNED_OUT을 발생시킨다 → 로그인 화면으로 복귀
+  onSignedOut(() => {
+    if (loggingOut) return;                     // 사용자가 직접 로그아웃한 경우는 제외
+    toast('로그인이 만료됐어요. 다시 로그인해주세요', 'err');
+    show('view-login');
+  });
   boot();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 });
