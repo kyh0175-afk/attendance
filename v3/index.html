@@ -87,6 +87,21 @@
   .btn.ghost { background:transparent; color:var(--sub); box-shadow:none; font-weight:500; font-size:14.5px; margin-top:18px; padding:12px; }
   .btn.ghost:active { transform:scale(.98); background:rgba(90,77,62,.05); }
 
+  /* ── 역할 진입 (교사·관리자) ──
+     ★ 로그인 화면에서만 보인다. 학생은 자동 로그인이라 이 화면을 거의 안 보고,
+        PWA 시작 주소(start_url:"./")도 그대로라 설치된 앱 동작에 영향이 없다. */
+  .role-links { margin:26px 2px 0; text-align:center; }
+  .role-q { display:block; font-size:12.5px; color:var(--sub); margin-bottom:10px; }
+  .role-btns { display:flex; gap:9px; }
+  .role-btn {
+    flex:1; display:block; padding:13px 8px; font-size:13.5px; font-weight:600;
+    color:var(--ink2); background:var(--card); border:1px solid var(--line2);
+    border-radius:var(--r); text-decoration:none;
+    transition:transform .12s var(--ease), border-color .2s, color .2s;
+  }
+  .role-btn .sub { display:block; font-size:11px; font-weight:400; color:var(--sub); margin-top:3px; }
+  .role-btn:active { transform:scale(.975); border-color:var(--lamp); color:var(--brand); }
+
   /* ── 대시보드 ── */
   .greet { display:flex; align-items:flex-end; justify-content:space-between; margin:30px 2px 20px; }
   .greet .who { font-size:23px; font-weight:700; letter-spacing:-.01em; }
@@ -205,6 +220,14 @@
         <input id="login-pin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="숫자 4~6자리">
       </div>
       <button id="login-btn" class="btn">로그인</button>
+    </div>
+
+    <div class="role-links">
+      <span class="role-q">선생님이신가요?</span>
+      <div class="role-btns">
+        <a class="role-btn" href="teacher.html">출석 진행<span class="sub">세션 시작 · 코드 발급</span></a>
+        <a class="role-btn" href="admin.html">기록 · 통계<span class="sub">관리자 · 비밀번호 필요</span></a>
+      </div>
     </div>
   </div>
 
