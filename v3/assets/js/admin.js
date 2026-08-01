@@ -4,7 +4,7 @@ import {
   isStaff, isAdmin, allStudents, allSessions, activeSessions, attendanceInRange, setStudentActive,
   upsertStudent, bulkUpsertStudents, setStudentProgramActive, deleteStudent,
   addLateAttendance, setAttendanceStatus, deleteAttendance, deleteSession,
-  sessionsByDate, attendanceBySession, firstAttendanceDates,
+  sessionsByDate, attendanceBySession, firstAttendanceDates, onSignedOut,
 } from './sb.js';
 import { ADMIN_EMAIL, PROGRAMS, ROOMS } from './config.js';
 
@@ -48,6 +48,8 @@ const isAbsent = (r) => r.상태 === '결석';
 const isRpcMissing = (e) => e && (e.code === 'PGRST202' || /Could not find the function/i.test(e.message || ''));
 
 // ── 부팅 / 게이트 ──
+// ★ isStaff()/isAdmin()은 판정 실패 시 throw한다 — 호출측에서 '권한 없음'과 '연결 실패'를 구분해야
+//   일시적 네트워크 오류로 관리자를 강제 로그아웃시키지 않는다.
 async function gateOk(user) {
   if (!user) return false;
   if ((user.email || '').toLowerCase() !== ADMIN_EMAIL.toLowerCase()) return false;
@@ -61,21 +63,38 @@ async function boot() {
   let user = null;
   try { user = await currentUser(); } catch (_) { /* 네트워크 등 — 로그인으로 */ }
   if (!user) { show('view-login'); return; }
-  if (!(await gateOk(user))) { await logout(); toast('관리자 계정이 아니에요', 'err'); show('view-login'); return; }
+  let ok = false;
+  try {
+    ok = await gateOk(user);
+  } catch (e) {
+    // 연결 실패 — 세션은 유효하므로 로그아웃하지 않는다
+    show('view-login');
+    toast('연결이 불안정해요. 잠시 후 새로고침 해주세요', 'err');
+    return;
+  }
+  if (!ok) { await logout(); toast('관리자 계정이 아니에요', 'err'); show('view-login'); return; }
   if (mustChangePin(user)) { show('view-pin'); return; }
   enterMain();
 }
 
 async function doLogin() {
-  const pin = $('a-pin').value.trim();
   const btn = $('a-login-btn');
+  if (btn.disabled) return;          // Enter 키가 disabled를 우회하므로 함수 진입에서 막는다
+  const pin = $('a-pin').value.trim();
   if (pin.length < 4) { toast('PIN을 입력해주세요'); return; }
   btn.disabled = true; btn.textContent = '확인 중…';
   try {
     const { error } = await sb().auth.signInWithPassword({ email: ADMIN_EMAIL, password: pin });
     if (error) throw error;
     const user = await currentUser();
-    if (!(await gateOk(user))) { await logout(); toast('관리자 권한이 없는 계정이에요', 'err'); return; }
+    let ok;
+    try {
+      ok = await gateOk(user);
+    } catch (e2) {
+      toast('연결이 불안정해요. 잠시 후 다시 시도해주세요', 'err');   // 성공한 로그인을 날리지 않는다
+      return;
+    }
+    if (!ok) { await logout(); toast('관리자 권한이 없는 계정이에요', 'err'); return; }
     if (mustChangePin(user)) { show('view-pin'); return; }
     enterMain();
   } catch (e) {
@@ -979,11 +998,17 @@ async function runDiag() {
 
   const user = await currentUser().catch(() => null);
   add(!!user, '로그인', user ? (user.email || '') : '세션 없음');
-  add(await isStaff(), 'is_staff() — 교직원 인증', '');
+  // isStaff()/isAdmin()은 판정 실패 시 throw — 진단 화면이 통째로 죽지 않게 감싼다
+  try { add(await isStaff(), 'is_staff() — 교직원 인증', ''); }
+  catch (e) { add(false, 'is_staff() — 교직원 인증', e.message || '호출 실패'); }
 
-  const adm = await isAdmin();
-  if (adm === null) add('na', 'is_admin() — 관리자 판별 함수', '미배포 · 이메일 확인으로 동작 중 (w3_migration.sql)');
-  else add(adm, 'is_admin() — 관리자 판별 함수', adm ? 'role=admin 확인' : 'role이 admin이 아니에요');
+  try {
+    const adm = await isAdmin();
+    if (adm === null) add('na', 'is_admin() — 관리자 판별 함수', '미배포 · 이메일 확인으로 동작 중 (w3_migration.sql)');
+    else add(adm, 'is_admin() — 관리자 판별 함수', adm ? 'role=admin 확인' : 'role이 admin이 아니에요');
+  } catch (e) {
+    add(false, 'is_admin() — 관리자 판별 함수', e.message || '호출 실패');
+  }
 
   // ⚠️ RLS 정책 부재 = 에러가 아니라 0행 — 0행이면 '정책 미적용 가능성'으로 표기
   for (const [table, label] of [['students', '명단 읽기'], ['attendance', '출석 읽기'], ['sessions', '세션 읽기']]) {
@@ -991,7 +1016,8 @@ async function runDiag() {
       const { count, error } = await sb().from(table).select('*', { count: 'exact', head: true });
       if (error) throw error;
       if (count) add(true, label, `${count.toLocaleString()}행`);
-      else add('na', label, '0행 — 읽기 정책 미적용이거나 데이터 없음 (w3_migration.sql 확인)');
+      else if (table === 'sessions') add('na', label, '0행 — sessions 읽기 정책/GRANT 미적용이거나 세션 없음 (w3_migration.sql)');
+      else add('na', label, '0행 — 읽기 정책 미적용이거나 데이터 없음 (students/attendance 정책은 W1 소관)');
     } catch (e) {
       add(false, label, e.message || '오류');
     }
@@ -1015,6 +1041,19 @@ async function runDiag() {
     else if (/관리자 권한/.test(e.message || '')) add(false, 'admin_set_student_active_v3 — 활성 토글 함수', '배포됨 · 권한 거부(role 확인 필요)');
     else add(false, 'admin_set_student_active_v3 — 활성 토글 함수', e.message || '오류');
   }
+  try {
+    // ★ CRUD 마이그레이션(w3_crud_migration.sql) 배포 프로브.
+    //   id=-1 → 0행 갱신이라 무해하다. 이 프로브가 없으면 crud 미적용을 진단에서 못 잡고,
+    //   학생 추가·엑셀 업로드·상태 정정을 눌렀을 때 영문 에러로만 드러난다.
+    await setAttendanceStatus(-1, '출석');
+    add(true, 'CRUD RPC (w3_crud_migration.sql)', '배포됨 · 명단/기록 편집 사용 가능');
+  } catch (e) {
+    const m = e.message || '';
+    if (isRpcMissing(e)) add(false, 'CRUD RPC (w3_crud_migration.sql)', '미배포 — 기록 탭 편집·명단 CRUD·엑셀 업로드가 동작하지 않아요');
+    else if (/is_admin.*does not exist|function public\.is_admin/i.test(m)) add(false, 'CRUD RPC (w3_crud_migration.sql)', 'is_admin() 미배포 — w3_migration.sql을 먼저 적용해주세요');
+    else if (/관리자 권한/.test(m)) add(false, 'CRUD RPC (w3_crud_migration.sql)', '배포됨 · 권한 거부(staff role=admin 확인 필요)');
+    else add(false, 'CRUD RPC (w3_crud_migration.sql)', m || '오류');
+  }
 
   ul.innerHTML = items.map((it) => {
     const cls = it.ok === 'na' ? 'na' : (it.ok ? 'ok' : 'bad');
@@ -1034,11 +1073,14 @@ async function doSettingsPinChange() {
   finally { btn.disabled = false; btn.textContent = 'PIN 변경'; }
 }
 
+let loggingOut = false;
 async function doLogout() {
+  loggingOut = true;
   stopTodayPolling();
-  await logout();
+  try { await logout(); } catch (_) {}
   loadedOnce.clear();
   show('view-login');
+  loggingOut = false;
 }
 
 // ── 차트 툴팁 ──
@@ -1063,6 +1105,13 @@ function bindChartTooltip() {
 
 // ── 바인딩 ──
 window.addEventListener('DOMContentLoaded', () => {
+  // 리프레시 토큰 무효화 → 로그인 화면으로 (폴링도 정지)
+  onSignedOut(() => {
+    if (loggingOut) return;
+    stopTodayPolling();
+    toast('로그인이 만료됐어요. 다시 로그인해주세요', 'err');
+    show('view-login');
+  });
   $('a-login-btn').addEventListener('click', doLogin);
   $('a-pin').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
   $('a-pin-btn').addEventListener('click', doFirstPinChange);

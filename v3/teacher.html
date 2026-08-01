@@ -7,7 +7,8 @@
 <meta name="theme-color" content="#1a130c">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- ★ 버전 고정 — 전자칠판 Chrome 112 보호 (부동 @2는 최신 문법 릴리스에 그대로 노출) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap">
@@ -63,6 +64,8 @@
   .codecard .label { font-size:13px; color:#a8957b; letter-spacing:.06em; font-weight:600; }
   .codecard .code { font-size:clamp(72px, 26vw, 148px); font-weight:700; line-height:1.02; letter-spacing:.1em; font-variant-numeric:tabular-nums; color:#fbf1dc; }
   .codecard .code.sm { font-size:clamp(52px, 18vw, 96px); }
+  /* 만료된 퇴실 코드: 칠판에서 바로 구분되도록 숫자 자체를 '만료'로 바꾸고 색을 죽인다 */
+  .codecard .code.expired { color:#8d7f6d; font-size:clamp(38px, 12vw, 64px); letter-spacing:.02em; }
   .exitwrap { margin-top:20px; padding-top:18px; border-top:1px solid rgba(255,255,255,.12); }
   .exitwrap.hidden { display:none; }
   .cd { font-size:13px; color:var(--lamp); font-variant-numeric:tabular-nums; margin-top:6px; }

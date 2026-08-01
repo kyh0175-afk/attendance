@@ -7,6 +7,34 @@ import { SUPABASE_URL, SUPABASE_KEY, EMAIL_DOMAIN } from './config.js';
 export const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+// ── KST 날짜 헬퍼 ──
+// ★ 브라우저 로컬 TZ나 UTC에 의존하면 안 된다. attendance.날짜는 전부 KST 기준이라
+//   toISOString()(UTC)을 쓰면 매월 1일 KST 00:00~09:00에 전월로 집계된다.
+const _kstFmt = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
+});
+export const todayKST = (d) => _kstFmt.format(d || new Date());        // 'YYYY-MM-DD'
+export const monthKST = (d) => todayKST(d).slice(0, 7);               // 'YYYY-MM'
+export const daysAgoKST = (n) => todayKST(new Date(Date.now() - n * 864e5));
+
+// ── 인증 만료 판별 ──
+// 토큰이 만료·무효화되면 PostgREST가 401(PGRST301) 또는 JWT 관련 메시지를 돌려준다.
+// 이 경우엔 '일시적 오류'가 아니라 재로그인이 필요한 상태이므로 호출측에서 구분해야 한다.
+export function isAuthError(e) {
+  if (!e) return false;
+  const msg = String(e.message || '');
+  const code = String(e.code || '');
+  const status = String(e.status || '');
+  return code === 'PGRST301' || status === '401'
+    || /jwt|invalid token|token is expired|not authenticated|session (from session_id )?(is )?(expired|missing)|refresh token/i.test(msg);
+}
+
+// SIGNED_OUT(리프레시 토큰 무효화 포함) 감지 — 페이지에서 로그인 화면으로 되돌리는 용도.
+export function onSignedOut(cb) {
+  try { sb().auth.onAuthStateChange((event) => { if (event === 'SIGNED_OUT') cb(); }); }
+  catch (_) { /* 라이브러리 로드 실패 등 — 무시 */ }
+}
+
 let _client = null;
 let _storageKey = 'cosmos_v3_auth';   // 학생 기본. 교사 페이지는 별도 키로 분리(같은 브라우저 공존).
 // ★ sb() 최초 호출 전에 불러야 적용됨 (페이지 모듈 최상단에서 호출).
@@ -79,9 +107,12 @@ export async function checkOut(code) {
 }
 
 // ── 교사(staff) ──
+// ★ 네트워크 오류를 false로 삼키면 "교사 계정이 아니에요"로 둔갑해 정상 로그인을 강제 로그아웃시킨다.
+//   판정 실패는 반드시 throw — 호출측이 '권한 없음'과 '연결 실패'를 구분하게 한다.
 export async function isStaff() {
-  try { const { data, error } = await sb().rpc('is_staff'); if (error) return false; return data === true; }
-  catch (_) { return false; }
+  const { data, error } = await sb().rpc('is_staff');
+  if (error) throw error;
+  return data === true;
 }
 export async function createSession(program, room, teacher) {
   const { data, error } = await sb().rpc('create_v3_session', { p_program: program, p_room: room, p_teacher: teacher });
@@ -118,7 +149,10 @@ export async function manualAttendance(sessionId, hakbun) {
 // is_admin(): true/false = 판정 결과, null = 함수 미배포(마이그레이션 전 — 호출측에서 폴백 판단)
 export async function isAdmin() {
   const { data, error } = await sb().rpc('is_admin');
-  if (error) return error.code === 'PGRST202' ? null : false;
+  if (error) {
+    if (error.code === 'PGRST202') return null;   // 함수 미배포 — 폴백 판정
+    throw error;                                   // 네트워크·권한 오류는 호출측에서 구분
+  }
   return data === true;
 }
 
@@ -222,10 +256,7 @@ export async function myProfile() {
 
 export async function myAttendance(days) {
   let q = sb().from('attendance').select('*').order('날짜', { ascending: false });
-  if (days) {
-    const since = new Date(Date.now() - days * 864e5).toISOString().slice(0, 10);
-    q = q.gte('날짜', since);
-  }
+  if (days) q = q.gte('날짜', daysAgoKST(days));   // KST 기준 (UTC면 하루 밀림)
   const { data, error } = await q;
   if (error) throw error;
   return data || [];
