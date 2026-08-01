@@ -136,6 +136,43 @@
   .sheet-grip { width:38px; height:4px; border-radius:99px; background:var(--line2); margin:0 auto 16px; }
   .sheet-title { font-size:18px; font-weight:700; text-align:center; }
   .sheet-sub { font-size:13px; color:var(--sub); text-align:center; margin:5px 0 18px; }
+
+  /* ── 앱 설치 안내 ── */
+  .ibar {
+    display:none; align-items:center; gap:10px;
+    margin:0 0 14px; padding:12px 14px;
+    background:#31241a; color:#f6ead2; border-radius:var(--r); box-shadow:var(--shadow);
+  }
+  .ibar.on { display:flex; }
+  .ibar .ic { font-size:19px; line-height:1; }
+  .ibar .tx { flex:1; font-size:13px; line-height:1.45; }
+  .ibar .tx b { color:var(--lamp-soft); font-weight:600; }
+  .ibar button {
+    font-family:inherit; font-weight:600; border:none; cursor:pointer;
+    border-radius:10px; touch-action:manipulation; transition:transform .12s var(--ease);
+  }
+  .ibar button:active { transform:scale(.94); }
+  .ibar .go { padding:9px 13px; font-size:13px; color:#31241a; background:var(--lamp-soft); }
+  .ibar .x  { padding:9px 8px; font-size:15px; color:#a8967c; background:transparent; }
+
+  /* 설치 방법 안내 시트 */
+  .steps { margin:0 0 6px; padding:0; list-style:none; }
+  .steps li {
+    display:flex; gap:11px; align-items:flex-start;
+    padding:12px 0; border-top:1px solid var(--line); font-size:14px; line-height:1.55;
+  }
+  .steps li:first-child { border-top:none; }
+  .steps .n {
+    flex:none; width:23px; height:23px; border-radius:50%;
+    background:var(--brand); color:#fdf8ee; font-size:12px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; margin-top:1px;
+  }
+  .steps .k {
+    display:inline-block; padding:1px 7px; margin:0 1px;
+    background:#f2ebde; border:1px solid var(--line2); border-radius:6px;
+    font-size:13px; font-weight:600; color:var(--ink2);
+  }
+  .steps-note { font-size:12.5px; color:var(--sub); line-height:1.6; margin:14px 2px 0; }
   .code-input {
     width:100%; text-align:center; font-size:38px; font-weight:700; letter-spacing:.32em; font-variant-numeric:tabular-nums;
     padding:16px 10px; border:1.5px solid var(--line2); border-radius:var(--r); background:#fdfbf6; color:var(--ink); outline:none;
@@ -253,6 +290,13 @@
 
   <!-- 대시보드 -->
   <div id="view-dash" class="view">
+    <div class="ibar" id="install-bar">
+      <span class="ic">📲</span>
+      <span class="tx"><b>홈 화면에 추가</b>하면 앱처럼 바로 열려요</span>
+      <button class="go" id="install-go">추가</button>
+      <button class="x" id="install-x" aria-label="닫기">✕</button>
+    </div>
+
     <div class="greet">
       <div class="who" id="dash-name">—</div>
       <div class="no">학번 <span id="dash-hakbun"></span></div>
@@ -287,6 +331,18 @@
     <input id="code-input" class="code-input" type="tel" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off">
     <button class="btn" id="code-submit">확인</button>
     <button class="btn ghost" id="code-cancel">닫기</button>
+  </div>
+</div>
+
+<!-- 설치 방법 안내 (iOS 등 자동 설치 배너가 없는 브라우저용) -->
+<div class="sheet-bg" id="install-bg">
+  <div class="sheet">
+    <div class="sheet-grip"></div>
+    <div class="sheet-title">홈 화면에 추가하기</div>
+    <div class="sheet-sub" id="install-sub">아래 순서대로 하면 앱처럼 쓸 수 있어요</div>
+    <ol class="steps" id="install-steps"></ol>
+    <p class="steps-note" id="install-note"></p>
+    <button class="btn ghost" id="install-close">닫기</button>
   </div>
 </div>
 

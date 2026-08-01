@@ -132,13 +132,14 @@ async function doChangePin() {
   toast('PIN이 설정됐어요', 'ok');
   let user = null;
   try { user = await currentUser(); } catch (_) {}
-  if (user) await renderDash(user);
+  if (user) { await renderDash(user); maybeAutoInstallGuide(); }
   else { toast('새 PIN으로 다시 로그인해주세요', 'ok'); show('view-login'); }
 }
 
 // ── 대시보드 ──
 async function renderDash(user) {
   show('view-dash');
+  refreshInstallBar();
   const hakbun = hakbunOf(user);
   $('dash-hakbun').textContent = hakbun || '';
   try {
@@ -233,6 +234,111 @@ async function doLogout() {
   loggingOut = false;
 }
 
+// ── 앱 설치 (홈 화면에 추가) ──
+// v3는 이미 PWA(manifest + 서비스워커)라 설치 자체는 되는데, 학생이 방법을 몰라서
+// 안 하는 게 문제였다. 안드로이드는 브라우저가 주는 설치 프롬프트를 그대로 띄우고,
+// iOS는 그런 API가 없어서 '공유 → 홈 화면에 추가'를 그림 없이도 따라할 수 있게 안내한다.
+const INSTALL_SNOOZE_KEY = 'cosmos_v3_install_snooze';
+const INSTALL_SHOWN_KEY = 'cosmos_v3_install_shown';
+const INSTALL_SNOOZE_DAYS = 7;
+let deferredPrompt = null;
+
+function isStandalone() {
+  try {
+    if (window.navigator.standalone === true) return true;        // iOS Safari
+    return matchMedia('(display-mode: standalone)').matches;      // Android · 데스크톱
+  } catch (_) { return false; }
+}
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent)
+  || (/mac/i.test(navigator.platform || '') && navigator.maxTouchPoints > 1);   // iPadOS
+const isSamsung = () => /samsungbrowser/i.test(navigator.userAgent);
+
+function installSnoozed() {
+  try {
+    const t = Number(localStorage.getItem(INSTALL_SNOOZE_KEY) || 0);
+    return !!t && (Date.now() - t) < INSTALL_SNOOZE_DAYS * 864e5;
+  } catch (_) { return false; }
+}
+function snoozeInstall() {
+  try { localStorage.setItem(INSTALL_SNOOZE_KEY, String(Date.now())); } catch (_) {}
+}
+function refreshInstallBar() {
+  const bar = $('install-bar');
+  if (!bar) return;
+  const show = !isStandalone() && !installSnoozed();
+  bar.classList.toggle('on', show);
+}
+
+// 브라우저별 설치 경로 안내
+function installGuide() {
+  if (isIOS()) {
+    return {
+      sub: 'Safari에서 아래 순서대로 하면 앱처럼 쓸 수 있어요',
+      steps: [
+        '화면 <span class="k">아래쪽 공유 버튼</span>을 눌러요 (네모에 화살표 ↑)',
+        '목록을 내려서 <span class="k">홈 화면에 추가</span>를 눌러요',
+        '오른쪽 위 <span class="k">추가</span>를 누르면 끝이에요',
+      ],
+      note: '· 크롬 앱에서 열었다면 Safari로 다시 열어야 이 메뉴가 나와요.<br>· 추가한 뒤에는 학번과 PIN으로 한 번만 다시 로그인하면 계속 유지돼요.',
+    };
+  }
+  if (isSamsung()) {
+    return {
+      sub: '삼성 인터넷에서 아래 순서대로 해요',
+      steps: [
+        '아래쪽 <span class="k">☰</span> 메뉴를 눌러요',
+        '<span class="k">현재 페이지 추가</span>를 눌러요',
+        '<span class="k">홈 화면</span>을 골라요',
+      ],
+      note: '· 홈 화면에 코스모스 아이콘이 생기면 성공이에요.',
+    };
+  }
+  return {
+    sub: '브라우저 메뉴에서 아래 순서대로 해요',
+    steps: [
+      '오른쪽 위 <span class="k">⋮</span> 메뉴를 눌러요',
+      '<span class="k">앱 설치</span> 또는 <span class="k">홈 화면에 추가</span>를 눌러요',
+      '<span class="k">설치</span>를 누르면 끝이에요',
+    ],
+    note: '· 메뉴에 안 보이면 주소창 오른쪽의 설치 아이콘을 확인해보세요.',
+  };
+}
+
+function openInstallSheet() {
+  const g = installGuide();
+  $('install-sub').textContent = g.sub;
+  $('install-steps').innerHTML = g.steps
+    .map((s, i) => `<li><span class="n">${i + 1}</span><span>${s}</span></li>`).join('');
+  $('install-note').innerHTML = g.note;
+  $('install-bg').classList.add('on');
+}
+function closeInstallSheet() { $('install-bg').classList.remove('on'); }
+
+async function doInstall() {
+  // 안드로이드·데스크톱 크롬: 브라우저가 준 프롬프트를 그대로 띄운다
+  if (deferredPrompt) {
+    const p = deferredPrompt;
+    deferredPrompt = null;
+    try {
+      p.prompt();
+      const res = await p.userChoice;
+      if (res && res.outcome === 'accepted') { snoozeInstall(); refreshInstallBar(); }
+      return;
+    } catch (_) { /* 실패하면 수동 안내로 폴백 */ }
+  }
+  openInstallSheet();
+}
+
+// 최초 PIN 설정 직후 한 번만 자동 안내 (DESIGN 2-1의 설치 안내 지점)
+function maybeAutoInstallGuide() {
+  if (isStandalone()) return;
+  try {
+    if (localStorage.getItem(INSTALL_SHOWN_KEY)) return;
+    localStorage.setItem(INSTALL_SHOWN_KEY, '1');
+  } catch (_) { return; }
+  setTimeout(() => { if (!isStandalone()) doInstall(); }, 900);
+}
+
 // ── 바인딩 ──
 window.addEventListener('DOMContentLoaded', () => {
   $('login-btn').addEventListener('click', doLogin);
@@ -250,6 +356,13 @@ window.addEventListener('DOMContentLoaded', () => {
   $('code-cancel').addEventListener('click', closeSheet);
   $('code-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitCode(); });
   $('sheet-bg').addEventListener('click', (e) => { if (e.target === $('sheet-bg')) closeSheet(); });
+
+  // 앱 설치
+  $('install-go').addEventListener('click', doInstall);
+  $('install-x').addEventListener('click', () => { snoozeInstall(); refreshInstallBar(); });
+  $('install-close').addEventListener('click', closeInstallSheet);
+  $('install-bg').addEventListener('click', (e) => { if (e.target === $('install-bg')) closeInstallSheet(); });
+  refreshInstallBar();
   // 리프레시 토큰이 무효화되면 supabase-js가 SIGNED_OUT을 발생시킨다 → 로그인 화면으로 복귀
   onSignedOut(() => {
     if (loggingOut) return;                     // 사용자가 직접 로그아웃한 경우는 제외
@@ -258,4 +371,19 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   boot();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+});
+
+// 안드로이드·데스크톱 크롬이 "설치 가능" 판정을 내리면 여기로 온다.
+// 기본 배너를 막아두고, 우리 배너의 [추가] 버튼에서 원하는 타이밍에 띄운다.
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  refreshInstallBar();
+});
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  snoozeInstall();
+  refreshInstallBar();
+  closeInstallSheet();
+  toast('홈 화면에 추가됐어요', 'ok');
 });

@@ -11,12 +11,15 @@
 - [x] ~~**코어 RPC 덤프**~~ ✅ `docs/core_rpc.sql` 확보 (백업 완료)
 - [x] ~~**코어 RPC 결함 수정**~~ ✅ `docs/core_rpc_fix.sql` 적용 완료
 - [x] ~~**라이브 스모크**~~ ✅ 8/1 전 항목 통과 (§5 참고)
-- [ ] **A-3 확인** — `docs/p0_diagnose_and_fix.sql`의 A-3 블록만 실행
-  - `sessions`의 `authenticated SELECT`가 **false면 섹션 B 실행**
-  - ※ 관리자 4탭이 이미 정상 표시되므로 true일 가능성이 높음 — 확인만
+- [x] ~~**A-3 확인**~~ ✅ `sessions`의 `authenticated SELECT` = true (섹션 B 불필요). 4개 테이블 RLS 전부 ON
+- [x] ~~**anon 정책 축소**~~ ✅ 적용 완료 — v3 세션 5건이 anon에게서 가려짐 (§5)
+- [ ] **v2 스모크** ★ 필수 — `docs/anon_policy_harden.sql` 섹션 3
+  - v2 세션 시작 → QR 출석 1건 → 마감 → check 화면
+  - 병행 운영 중이라 이걸 안 하면 개학 후에 터진다. 방학이라 지금이 가장 안전한 확인 시점
+  - 깨지면 파일 안의 원복 SQL 즉시 실행
+- [ ] **자동 발급 라이브 확인** — 종료 시각을 지금+6분으로 넣고 세션 시작 → 1분 뒤 자동 발급되는지
 - [ ] **테스트 데이터 정리** — `docs/cleanup_test_data.sql` (미리보기 → 삭제 순서)
-- [ ] **레포 커밋** — SQL 3종 + 자동 발급/역할 진입 코드 4파일 + `TODO.md`
-- [ ] **자동 발급 라이브 확인** — 종료 시각을 지금+6분으로 넣고 세션 시작 → 5분 전(=1분 뒤)에 자동 발급되는지
+- [ ] **레포 커밋** — `cleanup_test_data.sql` · `anon_policy_harden.sql` · `TODO.md`
 
 ---
 
@@ -94,6 +97,7 @@
 | 4 | **백업 확보** | ⬜ 미정 — GitHub Actions CSV 덤프(무료) / Supabase Pro $35 |
 | 5 | **파일럿 범위** | ⬜ 미정 — 8/11~16에 어느 프로그램·장소에서 돌릴지 |
 | 6 | **레포를 Google Drive 밖으로** | ⬜ 미정 — Drive가 `.git`을 동기화하다 꼬이면 레포가 깨짐. HANDOFF §8에도 경고돼 있음 |
+| 7 | v2 은퇴 시점 | ✅ **9월 초** (한 달 더 병행) — 그때 `anon_policy_harden.sql` 섹션 4 실행 |
 
 ---
 
@@ -107,6 +111,13 @@
   - 교사: **세션 영속·자동 복귀** · 퇴실코드 만료 대형 표시 · 새 세션 명단 초기화 · 폴링 in-flight 가드+실패 표시 · 서버 `expires_at` 사용 · 마감 로직 게이트
   - 공통: `isStaff()`/`isAdmin()` 네트워크 오류 구분 · KST 헬퍼 · 진단 탭 CRUD 프로브 · SW 폴백 수정 · supabase-js `@2.111.0` 핀 고정
 - ✅ **마이그레이션 배포 확인** — `w3_migration.sql`·`w3_crud_migration.sql` 둘 다 적용돼 있음(함수 17종 존재 확인)
+- ✅ **anon RLS 정책 축소** — v3 설계를 무력화하던 경로 차단
+  - **입실·퇴실 코드가 anon에게 그대로 노출되던 문제.** `sessions`에 v3의 `입실코드`·`퇴실코드`·`퇴실코드만료`가 들어 있는데 anon 정책이 `FOR ALL USING(true)`라, publishable 키(HTML에 공개)만으로 `GET /rest/v1/sessions?활성=eq.true`면 두 코드가 다 읽혔다. → **교실에 오지 않고 입실·퇴실이 가능** = 찍튀 방지라는 v3 전제가 무너지는 경로
+  - 해법: v2 세션은 `입실코드`가 null(v3 전용 컬럼)이라는 점을 이용해 `using ("입실코드" is null)`로 분리. **anon에게 v3 세션은 존재하지 않는 것처럼 보인다.** v2는 그대로 동작
+  - `attendance` anon UPDATE 차단 — v2는 UPDATE를 한 번도 쓰지 않는데(전수 grep 확인) 권한과 정책이 열려 있어 남의 출석 상태를 고칠 수 있었다
+  - `students` 정책을 읽기로 축소
+  - 적용 결과: anon이 보는 v2 세션 298건 / 가려진 v3 세션 5건
+  - **잔여**: 명단·출석 '읽기'는 v2 구조상 유지. v2 은퇴(9월 초) 시 회수 — SQL은 `anon_policy_harden.sql` 섹션 4에 준비됨
 - ✅ **퇴실코드 자동 발급 구현** (종료 5분 전)
   - `config.js` — `PROGRAM_END` 상수 + `guessEndTime()`. 토요일은 13시 기준 오전/오후 추정
   - `teacher.html` — 세션 시작 화면에 **종료 시각** 입력칸(프로그램 선택 시 자동 채움, 교사가 수정 가능) + 발급 버튼 아래 자동 발급 안내
