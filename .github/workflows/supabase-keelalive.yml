@@ -1,0 +1,87 @@
+# ─────────────────────────────────────────────────────────────
+#  Supabase keep-alive
+#  무료 플랜 Supabase 프로젝트는 7일간 API 요청이 없으면 자동 일시정지되고,
+#  일시정지되면 도메인 자체가 사라져 앱에서 "TypeError: Failed to fetch"가 뜬다.
+#  주 2회(KST 화·금 06:10) 가벼운 SELECT를 날려 일시정지를 예방한다.
+#
+#  설치 위치:  attendance 레포  →  .github/workflows/supabase-keepalive.yml
+#  키는 클라이언트 HTML에 이미 공개된 publishable(anon) 키라 그대로 적어도 안전하다.
+# ─────────────────────────────────────────────────────────────
+name: Supabase keep-alive
+
+on:
+  schedule:
+    # UTC 월·목 21:10  =  KST 화·금 06:10  (최대 공백 4일 < 7일)
+    - cron: '10 21 * * 1,4'
+  workflow_dispatch:        # Actions 탭에서 수동 실행 가능
+
+permissions:
+  contents: write
+
+jobs:
+  ping:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false      # 한쪽이 실패해도 나머지는 계속 시도
+      matrix:
+        include:
+          - name: 출석 (cosmos)
+            url: https://rxsmmwqekrtbstcjbagj.supabase.co
+            key: sb_publishable_h7o2vnvgu7Akrg87cAYSkg__DA-KRpn
+            table: sessions
+          - name: 급식 (YB-meal)
+            url: https://mvuxbngxpmdmxdkxohoc.supabase.co
+            key: sb_publishable_h6vVNV3t-b2JSZAH2wuZ3g_bBq3_GwI
+            table: meal_sessions
+    steps:
+      - name: REST 요청으로 프로젝트 깨우기
+        run: |
+          set -u
+          code=000
+          for i in 1 2 3; do
+            code=$(curl -sS -o /tmp/body.txt -w '%{http_code}' --max-time 30 \
+              "${{ matrix.url }}/rest/v1/${{ matrix.table }}?select=*&limit=1" \
+              -H "apikey: ${{ matrix.key }}" \
+              -H "Authorization: Bearer ${{ matrix.key }}") || code=000
+            echo "[$i회차] ${{ matrix.name }} → HTTP $code"
+            if [ "$code" = "200" ]; then
+              echo "✅ ${{ matrix.name }} 정상 응답"
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "❌ ${{ matrix.name }} 응답 실패 (마지막 코드: $code)"
+          echo "--- 응답 본문 ---"
+          head -c 500 /tmp/body.txt || true
+          echo
+          echo "code=000 이면 DNS 실패 = 프로젝트가 일시정지/삭제된 상태."
+          echo "https://supabase.com/dashboard 에서 Restore 필요."
+          exit 1
+
+  keep-repo-active:
+    # GitHub은 60일간 레포 활동이 없으면 schedule 워크플로를 자동 비활성화한다.
+    # 방학처럼 긴 공백에도 살아남도록, 45일 이상 커밋이 없을 때만 더미 커밋을 남긴다.
+    name: 레포 활동 갱신
+    needs: ping
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 45일 이상 커밋 없으면 타임스탬프 커밋
+        run: |
+          set -e
+          LAST=$(git log -1 --format=%ct)
+          NOW=$(date -u +%s)
+          DAYS=$(( (NOW - LAST) / 86400 ))
+          echo "마지막 커밋으로부터 ${DAYS}일 경과"
+          if [ "$DAYS" -lt 45 ]; then
+            echo "60일 자동 비활성화까지 여유 있음 — 커밋 생략"
+            exit 0
+          fi
+          date -u +'%Y-%m-%dT%H:%M:%SZ' > .keepalive
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .keepalive
+          git commit -m "chore: keep scheduled workflow alive"
+          git push
