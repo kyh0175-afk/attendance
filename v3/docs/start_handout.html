@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><title>코스모스 출석 · 시작 안내</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap">
+<style>
+  @page { size:A4; margin:14mm; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:'IBM Plex Sans KR',system-ui,sans-serif; color:#2a2018;
+         background:#fff; line-height:1.55; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .sheet { max-width:180mm; margin:0 auto; padding:6mm 0; }
+  .top { text-align:center; margin-bottom:7mm; }
+  .wm { font-weight:700; font-style:italic; font-size:19px; color:#c7994f; letter-spacing:.02em; }
+  h1 { font-size:27px; margin:5px 0 6px; letter-spacing:-.01em; }
+  .lead { font-size:14px; color:#5a4d3e; margin:0; }
+  .qrbox { display:flex; align-items:center; gap:9mm; background:#faf6ee; border:1px solid #ece4d5;
+           border-radius:14px; padding:7mm 8mm; margin-bottom:7mm; }
+  .qrbox img { width:44mm; height:44mm; flex:none; background:#fff; border-radius:8px; }
+  .qrtx h2 { font-size:18px; margin:0 0 6px; }
+  .qrtx p { font-size:13.5px; color:#5a4d3e; margin:0 0 8px; }
+  .url { display:inline-block; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px;
+         background:#fff; border:1px solid #e2d8c6; border-radius:7px; padding:5px 10px; color:#5b4433; }
+  h3 { font-size:15px; margin:0 0 7px; padding-bottom:5px; border-bottom:2px solid #c7994f; display:inline-block; }
+  .cols { display:flex; gap:7mm; }
+  .col { flex:1; }
+  ol { margin:7px 0 0; padding-left:19px; font-size:13px; }
+  ol li { margin-bottom:5px; }
+  .k { display:inline-block; padding:0 6px; background:#f2ebde; border:1px solid #e2d8c6;
+       border-radius:5px; font-size:12px; font-weight:600; }
+  .warn { margin-top:7mm; background:#f6ecda; border-left:4px solid #b57a2e; border-radius:0 9px 9px 0;
+          padding:5mm 6mm; font-size:13px; }
+  .warn b { color:#8a5a15; }
+  .use { margin-top:6mm; background:#31241a; color:#f6ead2; border-radius:12px; padding:6mm 7mm; }
+  .use h3 { color:#fff; border-color:#c7994f; }
+  .use ol { color:#e8dcc4; }
+  .use b { color:#e6c98a; }
+  .foot { margin-top:6mm; text-align:center; font-size:11.5px; color:#9a8975; }
+</style></head><body>
+<div class="sheet">
+  <div class="top">
+    <div class="wm">Cosmos</div>
+    <h1>코스모스 독서시간 출석 시작하기</h1>
+    <p class="lead">QR을 찍으면 순서대로 안내가 나와요. 3분이면 끝나요.</p>
+  </div>
+
+  <div class="qrbox">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAloAAAJaAQMAAADNlXupAAAABlBMVEUqIBj///9Xgun5AAAC/UlEQVR42u2dQY6DMAxFreEAHImrc6QeoBKDKIm/nbCaLkbyywaF0reJ9GV/O4kd3xu7AQMGDBgwYMCAAQMGDNjfYbv5WM+5Lcerzc5P3tfLc7z8k/OljA/lx744gAED9j9hlpToIxBJLkQ1tmN46drDAgADVkk1PqHDpQU+C+GIxhp7+7LNUA1gwGqrxp2hDFJy/3agGsCAoRoqEJ6oLNevc5cD1QAGDF8jWRhmqhpbe+BrAAOGauQayp5ykqfHQGEBgAEroxp5mKWQ4woygr7MyrgsADBgtVSj+58uEDk1MU9bBn1BNYABK+ZrBEMjeaOfRo3rlT+WUWZYAGDAKqlGl4tVWjMk1nAHZFEN8T+gGsCAFYw1brkYJCEan302lFJYAGDAKvkaWRm6XHSXw2eSmoQ4hAUABqxWrHHPZIfapEX0CKao+iGoBjBgtVSjNXTNSq76uZZS5DdUAxiwmrHG1ve1Ht6hcRwqLN368KiEGgowYFV9jZ5+qBt6exciLK1fI+QrqAYwYGUzlG5u9sdD5bV1eWnfKAsADFgl1bBwsIYczjOYouPhPPRrAANWMEO5s5BJMtLjkFg8aYPKKzBgtTOUdL6GBbNj0RrtHZzorhRUAxiwSqqRyiUTSTCz5H+K9YFqAANWL0OxFl2Ir+EVlWxv6AYUMhRgwOrGGvGeAy2yxuZxadS4H6gGMGA1+zV6FuLRhTqlppEHJwACA1Y81jALd55I2pKP/hv+R6wBDFhV1bDBtPC9Jmvao4KvAQwYvsZ0d8nbpSQ7IHosILEGMGAVVSOftWNp91o2RT04oTcUGLCCqpGvjJ4qSuwiHfwQVAMYsJK+hlkyNKKwvMLJXty9BgxYcV9j3P+e3FCZ7bMdsKgGMGAFfY14YOj1Km6Kt/HSNVQDGDBU43HPa2w61/ZRVAMYsOJ3yk8vSdFyiaX7llANYMC4U352Lcr6WIBFNYABq1xDibejbPm04XC1EvtQgAGrqRrfGTswYMCAAQMGDBgwYMCA/Qn2C3FfDU8ELaNwAAAAAElFTkSuQmCC" alt="QR">
+    <div class="qrtx">
+      <h2>휴대폰 카메라로 QR을 찍어주세요</h2>
+      <p>카메라 앱을 켜고 QR에 대면 링크가 떠요. 그 링크를 누르면 시작돼요.</p>
+      <span class="url">cosmos.yubongsystem.com/v3/?start</span>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="col">
+      <h3>아이폰</h3>
+      <ol>
+        <li><b>Safari</b>로 열어주세요</li>
+        <li>화면 <span class="k">아래 공유 버튼</span> (네모에 화살표 ↑)</li>
+        <li>내려서 <span class="k">홈 화면에 추가</span></li>
+        <li>오른쪽 위 <span class="k">추가</span></li>
+        <li>홈 화면 아이콘으로 열어서 <b>로그인</b></li>
+      </ol>
+    </div>
+    <div class="col">
+      <h3>안드로이드 · 갤럭시</h3>
+      <ol>
+        <li>크롬은 <span class="k">앱 설치</span> 버튼이 바로 떠요</li>
+        <li>안 뜨면 오른쪽 위 <span class="k">⋮</span></li>
+        <li><span class="k">홈 화면에 추가</span> 누르기</li>
+        <li>삼성 인터넷은 아래 <span class="k">☰</span> → <span class="k">현재 페이지 추가</span></li>
+        <li>홈 화면 아이콘으로 열어서 <b>로그인</b></li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="warn">
+    <b>처음 PIN은 내 학번과 똑같아요.</b> 로그인하면 바로 새 PIN(숫자 4~6자리)을 정하게 돼요.
+    남이 아는 번호(학번·생일)는 피하고, <b>잊어버리지 않게</b> 기억해 주세요.
+    아이폰은 홈 화면에 추가한 뒤 한 번만 다시 로그인하면 계속 유지돼요.
+  </div>
+
+  <div class="use">
+    <h3>매일 이렇게 써요</h3>
+    <ol>
+      <li>자습실 도착 → <b>입실</b> → 칠판의 <b>입실 코드 4자리</b> 입력</li>
+      <li>끝날 때 → <b>퇴실</b> → 선생님이 알려주는 <b>퇴실 코드 4자리</b> 입력</li>
+      <li>퇴실을 안 찍으면 <b>퇴실미확인</b>으로 남아요. 꼭 찍고 나가주세요.</li>
+    </ol>
+  </div>
+
+  <p class="foot">유봉여자고등학교 · 코스모스 독서시간 &nbsp;|&nbsp; 문제가 있으면 담당 선생님께 말씀해 주세요</p>
+</div>
+</body></html>

@@ -173,6 +173,28 @@
     font-size:13px; font-weight:600; color:var(--ink2);
   }
   .steps-note { font-size:12.5px; color:var(--sub); line-height:1.6; margin:14px 2px 0; }
+
+  /* ── 시작 위저드 (QR로 들어온 학생용) ── */
+  .wdots { display:flex; gap:6px; justify-content:center; margin:0 0 18px; }
+  .wdots i { width:24px; height:4px; border-radius:99px; background:var(--line2); transition:background .25s; }
+  .wdots i.on { background:var(--lamp); }
+  .wpane { display:none; }
+  .wpane.on { display:block; animation:viewIn .34s var(--ease) both; }
+  .devpick { display:flex; gap:10px; }
+  .dev {
+    flex:1; padding:22px 10px; font-family:inherit; font-size:15px; font-weight:700; color:var(--ink);
+    background:#fdfbf6; border:1.5px solid var(--line2); border-radius:var(--r); cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:4px; touch-action:manipulation;
+    transition:transform .12s var(--ease), border-color .2s, background .2s, box-shadow .2s;
+  }
+  .dev:active { transform:scale(.97); }
+  .dev.on { border-color:var(--lamp); background:#fff; box-shadow:0 0 0 4px rgba(199,153,79,.14); }
+  .dev .e { font-size:27px; line-height:1.1; }
+  .dev .s { font-size:11px; font-weight:400; color:var(--sub); }
+  .wnote { font-size:12.5px; color:var(--sub); margin:16px 2px 0; line-height:1.6; }
+  .wdone { text-align:center; padding:6px 0 2px; }
+  .wdone .big { font-size:40px; line-height:1.2; }
+  .wdone p { font-size:14px; color:var(--ink2); margin:10px 0 0; line-height:1.6; }
   .code-input {
     width:100%; text-align:center; font-size:38px; font-weight:700; letter-spacing:.32em; font-variant-numeric:tabular-nums;
     padding:16px 10px; border:1.5px solid var(--line2); border-radius:var(--r); background:#fdfbf6; color:var(--ink); outline:none;
@@ -239,6 +261,45 @@
   <!-- 부팅 스켈레톤 -->
   <div id="view-loading" class="view on boot">
     <div class="skel b1"></div><div class="skel b2"></div><div class="skel b3"></div>
+  </div>
+
+  <!-- 시작 위저드 — QR로 들어오면 여기부터 (?start) -->
+  <div id="view-start" class="view">
+    <div class="lead">
+      <h1 id="w-title">어떤 폰을 쓰나요?</h1>
+      <p id="w-desc">기기에 따라 방법이 조금 달라요</p>
+    </div>
+    <div class="wdots" id="w-dots"><i></i><i></i><i></i></div>
+
+    <!-- 0단계 · 기기 선택 -->
+    <div class="card wpane" id="w-p0">
+      <div class="devpick">
+        <button class="dev" id="w-ios"><span class="e">🍎</span>아이폰<span class="s">iPhone · iPad</span></button>
+        <button class="dev" id="w-and"><span class="e">🤖</span>안드로이드<span class="s">갤럭시 등</span></button>
+      </div>
+      <p class="wnote" id="w-guess"></p>
+    </div>
+
+    <!-- 1단계 · 앱 설치 -->
+    <div class="card wpane" id="w-p1">
+      <ol class="steps" id="w-steps"></ol>
+      <p class="steps-note" id="w-steps-note"></p>
+      <button class="btn" id="w-install">앱 설치하기</button>
+      <button class="btn ghost" id="w-next1">다 했어요 · 다음 →</button>
+    </div>
+
+    <!-- 2단계 · 로그인 -->
+    <div class="card wpane" id="w-p2">
+      <ol class="steps">
+        <li><span class="n">1</span><span>학번 <span class="k">5자리</span>를 입력해요</span></li>
+        <li><span class="n">2</span><span>처음 PIN은 <b>내 학번과 똑같아요</b></span></li>
+        <li><span class="n">3</span><span>바로 <span class="k">새 PIN</span>을 정해요 (숫자 4~6자리)</span></li>
+      </ol>
+      <p class="steps-note">· 새 PIN은 나만 알아야 해요. 학번이나 생일처럼 남이 아는 번호는 피해주세요.</p>
+      <button class="btn" id="w-go-login">로그인하러 가기</button>
+    </div>
+
+    <button class="btn ghost" id="w-skip">건너뛰고 바로 로그인</button>
   </div>
 
   <!-- 로그인 -->
@@ -338,7 +399,7 @@
 <div class="sheet-bg" id="install-bg">
   <div class="sheet">
     <div class="sheet-grip"></div>
-    <div class="sheet-title">홈 화면에 추가하기</div>
+    <div class="sheet-title" id="install-title">홈 화면에 추가하기</div>
     <div class="sheet-sub" id="install-sub">아래 순서대로 하면 앱처럼 쓸 수 있어요</div>
     <ol class="steps" id="install-steps"></ol>
     <p class="steps-note" id="install-note"></p>
