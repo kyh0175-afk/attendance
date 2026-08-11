@@ -532,13 +532,13 @@ function paintRates() {
   $('ar-rows').innerHTML = list.length ? list.map((r, i) => {
     if (r.rate == null) {
       return `<tr><td></td><td class="num">${esc(r.hakbun)}</td><td>${esc(r.name)}</td><td class="dim">${esc(shortProg(r.program))}</td>
-        <td class="num dim">·</td><td class="num dim">·</td><td class="dim">${esc(r.reason || '세션 없음')}</td></tr>`;
+        <td class="num dim rt">·</td><td class="num dim rt">·</td><td class="dim">${esc(r.reason || '세션 없음')}</td></tr>`;
     }
     const pct = Math.round(r.rate * 100);
     const cls = pct < 70 ? 'low' : (pct < 90 ? 'mid' : '');
     return `<tr><td><button class="btn xs line" data-x="${i}" data-list="1" aria-label="일자별 보기">▾</button></td>
       <td class="num">${esc(r.hakbun)}</td><td>${esc(r.name)}</td><td class="dim">${esc(shortProg(r.program))}</td>
-      <td class="num">${r.target.length}</td><td class="num">${r.hitSet.size}</td>
+      <td class="num rt">${r.target.length}</td><td class="num rt">${r.hitSet.size}</td>
       <td><span class="rate"><span class="bar"><i class="${cls}" style="width:${pct}%"></i></span><span class="pct">${pct}%</span></span></td>
     </tr>`;
   }).join('') : '<tr class="empty"><td colspan="7">해당하는 등록이 없어요.</td></tr>';
@@ -616,7 +616,7 @@ function renderMissTable(att) {
   const list = [...map.values()].filter((m) => m.miss > 0).sort((a, b) => b.miss - a.miss || b.att - a.att).slice(0, 30);
   $('st-miss-rows').innerHTML = list.length ? list.map((m, i) => `<tr${m.miss >= 2 ? ' style="font-weight:600"' : ''}>
       <td class="num dim">${i + 1}</td><td class="num">${esc(m.hakbun)}</td><td>${esc(m.name)}</td>
-      <td class="num">${m.miss}회</td><td class="num dim">${m.att}회</td><td class="num">${Math.round((m.miss / m.att) * 100)}%</td>
+      <td class="num rt">${m.miss}회</td><td class="num dim rt">${m.att}회</td><td class="num rt">${Math.round((m.miss / m.att) * 100)}%</td>
     </tr>`).join('') : '<tr class="empty"><td colspan="6">이 기간 퇴실미확인 기록이 없어요.</td></tr>';
 }
 
@@ -636,8 +636,8 @@ function paintStudentTable() {
   const q = ($('st-search').value || '').trim().toLowerCase();
   const list = q ? stuAgg.filter((m) => m.hakbun.includes(q) || m.name.toLowerCase().includes(q)) : stuAgg;
   $('st-stu-rows').innerHTML = list.length ? list.map((m) => `<tr>
-      <td class="num">${esc(m.hakbun)}</td><td>${esc(m.name)}</td><td class="num">${m.att}</td>
-      <td class="num${m.miss ? '' : ' dim'}">${m.miss || '·'}</td><td class="num${m.early ? '' : ' dim'}">${m.early || '·'}</td>
+      <td class="num">${esc(m.hakbun)}</td><td>${esc(m.name)}</td><td class="num rt">${m.att}</td>
+      <td class="num rt${m.miss ? '' : ' dim'}">${m.miss || '·'}</td><td class="num rt${m.early ? '' : ' dim'}">${m.early || '·'}</td>
       <td class="num dim">${esc(m.last)}</td>
     </tr>`).join('') : '<tr class="empty"><td colspan="6">해당하는 학생이 없어요.</td></tr>';
 }
