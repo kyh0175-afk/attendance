@@ -20,20 +20,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/css/tokens.css">
 
 <style>
-  :root {
-    --bg:#f4efe6; --bg2:#efe7d9; --card:#fffdf8; --ink:#2a2018; --ink2:#5a4d3e;
-    --sub:#776753; /* 구 #9a8975 — 소형 텍스트 대비 2.95:1 미달 → 4.76:1(배경)·5.37:1(카드) AA 교정, 2026-08-11 감사 */ --line:#ece4d5; --line2:#e2d8c6;
-    --brand:#5b4433;          /* 딥 에스프레소 — 주 버튼/텍스트 */
-    --lamp:#c7994f;           /* 램프 골드 — 시그니처 액센트 */
-    --lamp-soft:#e6c98a;
-    --ok:#3c7d5f; --ok-bg:#e7f1ea; --warn:#b57a2e; --warn-bg:#f6ecda; --err:#b34a3a;
-    --r:16px; --r-lg:22px;
-    --ease:cubic-bezier(.22,1,.36,1);   /* 스프링 이즈아웃 */
-    --shadow:0 4px 18px rgba(60,42,24,.07), 0 1px 3px rgba(60,42,24,.05);
-    --shadow-lg:0 12px 40px rgba(80,56,30,.12);
-  }
+  /* 토큰은 assets/css/tokens.css 공용(2026-08-11 감사 #5 — 3파일 :root 복붙 드리프트 교정). 팔레트 수정은 그 파일에서만. */
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { margin:0; height:100%; }
   body {
@@ -264,8 +254,8 @@
   ul.log .d { font-size:14.5px; font-weight:600; font-variant-numeric:tabular-nums; }
   ul.log .p { font-size:12.5px; color:var(--sub); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   ul.log .badge { font-size:11px; font-weight:600; padding:4px 9px; border-radius:999px; flex:none; }
-  ul.log .badge.ok { background:var(--ok-bg); color:var(--ok); }
-  ul.log .badge.warn { background:var(--warn-bg); color:var(--warn); }
+  ul.log .badge.ok { background:var(--ok-bg); color:var(--ok-ink); }
+  ul.log .badge.warn { background:var(--warn-bg); color:var(--warn-ink); }
   .empty { text-align:center; color:var(--sub); padding:30px 0; font-size:14px; }
 
   /* 스켈레톤 로딩 */

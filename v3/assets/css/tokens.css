@@ -1,0 +1,19 @@
+/* 코스모스 v3 — 공용 디자인 토큰 (2026-08-11 감사 #5: 3파일 :root 복붙 드리프트 교정)
+   ⚠ 팔레트 수정은 이 파일에서만 한다. index/teacher/admin의 인라인 :root는 제거됨.
+   -ink 계열 = soft 배경 위 소형 텍스트용 AA 통과값(감사 #4, 괄호는 계산 대비). */
+:root {
+  --bg:#f4efe6; --bg2:#efe7d9; --card:#fffdf8; --ink:#2a2018; --ink2:#5a4d3e;
+  --sub:#776753;            /* 구 #9a8975 — 2.95:1 미달 → 4.76(배경)/5.37(카드) */
+  --line:#ece4d5; --line2:#e2d8c6;
+  --brand:#5b4433;          /* 딥 에스프레소 — 주 버튼/텍스트 */
+  --lamp:#c7994f;           /* 램프 골드 — 시그니처 액센트 */
+  --lamp-soft:#e6c98a;
+  --ok:#3c7d5f;   --ok-bg:#e7f1ea;   --ok-ink:#2f6a4f;   /* 5.51:1 on ok-bg */
+  --warn:#b57a2e; --warn-bg:#f6ecda; --warn-ink:#8a5a17; /* 5.04:1 on warn-bg (구 warn 직사용 3.10) */
+  --err:#b34a3a;  --err-bg:#f7e6e2;  --err-ink:#a03d2e;  /* 5.43:1 on err-bg */
+  --dim:#9a8770;            /* 비활성 행·배지 — 구 #b7a996(2.30:1) → 3.46:1 */
+  --r:16px; --r-lg:22px;
+  --ease:cubic-bezier(.22,1,.36,1);   /* 스프링 이즈아웃 */
+  --shadow:0 4px 18px rgba(60,42,24,.07), 0 1px 3px rgba(60,42,24,.05);
+  --shadow-lg:0 12px 40px rgba(80,56,30,.12);
+}
