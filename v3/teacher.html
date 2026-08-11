@@ -12,14 +12,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/css/tokens.css">
 <style>
-  :root {
-    --bg:#f4efe6; --bg2:#efe7d9; --card:#fffdf8; --ink:#2a2018; --ink2:#5a4d3e;
-    --sub:#776753; /* 구 #9a8975 — 소형 텍스트 대비 2.95:1 미달 → 4.76:1(배경)·5.37:1(카드) AA 교정, 2026-08-11 감사 */ --line:#ece4d5; --line2:#e2d8c6;
-    --brand:#5b4433; --lamp:#c7994f; --ok:#3c7d5f; --ok-bg:#e7f1ea; --warn:#b57a2e; --warn-bg:#f6ecda; --err:#b34a3a;
-    --r:16px; --r-lg:22px; --ease:cubic-bezier(.22,1,.36,1);
-    --shadow:0 4px 18px rgba(60,42,24,.07),0 1px 3px rgba(60,42,24,.05);
-  }
+  /* 토큰은 assets/css/tokens.css 공용(2026-08-11 감사 #5 — 3파일 :root 복붙 드리프트 교정). 팔레트 수정은 그 파일에서만. */
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { margin:0; }
   body {
@@ -33,7 +28,7 @@
   .top .sess { margin-left:auto; font-size:13px; font-weight:600; color:var(--ink2); text-align:right; }
   .top .sess:empty { display:none; }
   .top .sess .rm { color:var(--brand); }
-  .view { display:none; } .view.on { display:block; } .view.enter { animation:vin .4s var(--ease) both; }
+  .view { display:none; } .view.on { display:block; } .view.enter { animation:vin .26s var(--ease) both; }
   @keyframes vin { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
   .card { background:var(--card); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--shadow); padding:22px; }
   .card + .card { margin-top:14px; }
@@ -85,9 +80,9 @@
   ul.roster .nm { font-weight:600; } ul.roster .no { font-size:12px; color:var(--sub); font-variant-numeric:tabular-nums; }
   ul.roster .t { margin-left:auto; font-size:12px; color:var(--sub); font-variant-numeric:tabular-nums; }
   ul.roster .b { font-size:11px; font-weight:600; padding:3px 8px; border-radius:99px; margin-left:8px; }
-  ul.roster .b.out { background:var(--ok-bg); color:var(--ok); } ul.roster .b.in { background:var(--warn-bg); color:var(--warn); }
+  ul.roster .b.out { background:var(--ok-bg); color:var(--ok-ink); } ul.roster .b.in { background:var(--warn-bg); color:var(--warn-ink); }
   ul.roster .empty { justify-content:center; color:var(--sub); padding:24px 0; }
-  ul.roster .b.man { background:#efeaf6; color:#6b5b8a; }
+  ul.roster .b.man { background:#f0e9db; color:var(--ink2); } /* 구 보라 하드코딩 → 팔레트 정합(6.77:1) */
   .row2 { display:flex; gap:11px; }
 
   /* 수동 출석 (오프라인 대비) */
@@ -137,7 +132,7 @@
       <label for="t-end">종료 시각</label>
       <input id="t-end" type="time" step="60">
       <p class="setup-hint" id="t-end-hint">이 시각 5분 전에 퇴실 코드가 자동으로 발급돼요. 다르면 고쳐주세요.</p>
-      <button id="t-start-btn" class="btn">▶ 출석 시작</button>
+      <button id="t-start-btn" class="btn">출석 시작</button>
       <button id="t-logout-btn" class="btn ghost">로그아웃</button>
     </div>
   </div>
