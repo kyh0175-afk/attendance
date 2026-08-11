@@ -252,13 +252,18 @@ async function renderRoster() {
 // 학년 필터 세그먼트 + 명단 그리기 (폴링·필터 변경 공용)
 function paintRoster() {
   const rows = gradeFilter ? rosterRows.filter((r) => String(r.학번 || '')[0] === gradeFilter) : rosterRows;
-  const inN = rows.length, outN = rows.filter((r) => r.퇴실시각).length;
+  // P1 수정(2026-08-11): 관리자 정정 상태를 존중 — 구버전은 퇴실시각만 봐서 '결석' 정정 후에도 재실 유지
+  const absent = (r) => r.상태 === '결석';
+  const inN = rows.filter((r) => !absent(r)).length;
+  const outN = rows.filter((r) => !absent(r) && (r.퇴실시각 || r.상태 === '조퇴')).length;
   $('s-in').textContent = inN; $('s-out').textContent = outN;
   const ul = $('s-roster');
   if (!rosterRows.length) { ul.innerHTML = '<li class="empty">아직 입실한 학생이 없어요.</li>'; return; }
   if (!rows.length) { ul.innerHTML = '<li class="empty">이 학년은 아직 입실한 학생이 없어요.</li>'; return; }
   ul.innerHTML = rows.map((r) => {
-    const badge = r.퇴실시각 ? '<span class="b out">퇴실</span>' : '<span class="b in">재실</span>';
+    const badge = r.상태 === '결석' ? '<span class="b abs">결석</span>'
+      : r.상태 === '조퇴' ? '<span class="b out">조퇴</span>'
+      : r.퇴실시각 ? '<span class="b out">퇴실</span>' : '<span class="b in">재실</span>';
     const man = r.메모 === '수동입실' ? '<span class="b man">수동</span>' : '';
     return `<li><span class="nm">${esc(r.이름 || '')}</span><span class="no">${esc(r.학번 || '')}</span>${badge}${man}<span class="t">${fmtTime(r.원래시각)}</span></li>`;
   }).join('');

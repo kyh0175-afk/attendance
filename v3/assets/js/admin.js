@@ -490,11 +490,17 @@ let ratesView = [];   // 현재 정렬·필터된 리스트 (행 펼치기가 �
 function computeRates(att, sessions, range, program) {
   const from = range.from || (att.length ? att.map((r) => r.날짜).reduce((a, b) => (a < b ? a : b)) : localDate());
   const to = range.to || localDate();
-  const sessDates = new Map();   // 프로그램 → Set(날짜)
+  // P1 수정(2026-08-11): 대상일을 프로그램×장소로 — 프로그램 단위로만 모으면
+  // 해오름만 열린 날 아우름 학생 전원이 결석 처리됐다. 장소 미지정 등록은 프로그램 전체로 폴백.
+  const sessDates = new Map();   // `프로그램|장소` → Set(날짜)
+  const progDates = new Map();   // 프로그램 전체 (장소 미지정 등록 폴백)
   for (const s of sessions) {
     if (!s.날짜 || s.날짜 < from || s.날짜 > to) continue;
-    if (!sessDates.has(s.프로그램)) sessDates.set(s.프로그램, new Set());
-    sessDates.get(s.프로그램).add(s.날짜);
+    const sk = `${s.프로그램}|${s.장소}`;
+    if (!sessDates.has(sk)) sessDates.set(sk, new Set());
+    sessDates.get(sk).add(s.날짜);
+    if (!progDates.has(s.프로그램)) progDates.set(s.프로그램, new Set());
+    progDates.get(s.프로그램).add(s.날짜);
   }
   const attKey = new Set(att.map((r) => `${r.학번}|${r.프로그램}|${r.날짜}`));
   const WD = ['일', '월', '화', '수', '목', '금', '토'];
@@ -503,7 +509,7 @@ function computeRates(att, sessions, range, program) {
     if (!st.활성) continue;
     if (program && st.프로그램 !== program) continue;
     const hakbun = String(st.학번);
-    const dates = [...(sessDates.get(st.프로그램) || [])].sort();
+    const dates = [...(st.장소 ? (sessDates.get(`${st.프로그램}|${st.장소}`) || []) : (progDates.get(st.프로그램) || []))].sort();
     const first = FIRST_ATT.get(`${hakbun}|${st.프로그램}`) || null;   // 그 프로그램의 첫 출석일
     const days = st.출석요일;
     let reason = '';
@@ -514,8 +520,16 @@ function computeRates(att, sessions, range, program) {
     const hitSet = new Set(target.filter((d) => attKey.has(`${hakbun}|${st.프로그램}|${d}`)));
     RATES.push({
       hakbun, name: st.이름 || '', program: st.프로그램, target, hitSet, reason,
+      missN: target.length - hitSet.size,
       rate: target.length ? hitSet.size / target.length : null,
     });
+  }
+  // 이 기간 0회 출석 등록 경고 — 학생별 집계(출석 기록 기반)에는 아예 안 보이는 사각을 여기서 노출
+  const zero = RATES.filter((r) => r.rate != null && r.hitSet.size === 0).length;
+  const zeroEl = $('ar-zero');
+  if (zeroEl) {
+    zeroEl.classList.toggle('hidden', !zero);
+    if (zero) zeroEl.textContent = `이 기간 한 번도 출석하지 않은 등록 ${zero}건 — 정렬을 '결석 많은순'으로 바꿔 확인하세요.`;
   }
   paintRates();
 }
@@ -527,21 +541,22 @@ function paintRates() {
   const key = (r) => (r.rate == null ? 2 : 0);   // 산정 불가는 항상 뒤로
   if (sort === 'low') list.sort((a, b) => key(a) - key(b) || (a.rate ?? 9) - (b.rate ?? 9) || a.hakbun.localeCompare(b.hakbun));
   else if (sort === 'high') list.sort((a, b) => key(a) - key(b) || (b.rate ?? -9) - (a.rate ?? -9) || a.hakbun.localeCompare(b.hakbun));
+  else if (sort === 'miss') list.sort((a, b) => key(a) - key(b) || (b.missN ?? -1) - (a.missN ?? -1) || a.hakbun.localeCompare(b.hakbun));
   else list.sort((a, b) => a.hakbun.localeCompare(b.hakbun) || a.program.localeCompare(b.program));
   ratesView = list;
   $('ar-rows').innerHTML = list.length ? list.map((r, i) => {
     if (r.rate == null) {
       return `<tr><td></td><td class="num">${esc(r.hakbun)}</td><td>${esc(r.name)}</td><td class="dim">${esc(shortProg(r.program))}</td>
-        <td class="num dim rt">·</td><td class="num dim rt">·</td><td class="dim">${esc(r.reason || '세션 없음')}</td></tr>`;
+        <td class="num dim rt">·</td><td class="num dim rt">·</td><td class="num dim rt">·</td><td class="dim">${esc(r.reason || '세션 없음')}</td></tr>`;
     }
     const pct = Math.round(r.rate * 100);
     const cls = pct < 70 ? 'low' : (pct < 90 ? 'mid' : '');
     return `<tr><td><button class="btn xs line" data-x="${i}" data-list="1" aria-label="일자별 보기">▾</button></td>
       <td class="num">${esc(r.hakbun)}</td><td>${esc(r.name)}</td><td class="dim">${esc(shortProg(r.program))}</td>
-      <td class="num rt">${r.target.length}</td><td class="num rt">${r.hitSet.size}</td>
+      <td class="num rt">${r.target.length}</td><td class="num rt">${r.hitSet.size}</td><td class="num rt${r.missN ? '' : ' dim'}">${r.missN || '·'}</td>
       <td><span class="rate"><span class="bar"><i class="${cls}" style="width:${pct}%"></i></span><span class="pct">${pct}%</span></span></td>
     </tr>`;
-  }).join('') : '<tr class="empty"><td colspan="7">해당하는 등록이 없어요.</td></tr>';
+  }).join('') : '<tr class="empty"><td colspan="8">해당하는 등록이 없어요.</td></tr>';
 }
 
 function onRatesExpand(e) {
@@ -555,7 +570,7 @@ function onRatesExpand(e) {
   const dots = r.target.map((d) => `<span class="dt ${r.hitSet.has(d) ? 'hit' : 'missd'}" title="${esc(d)} ${r.hitSet.has(d) ? '출석' : '미출석'}"></span>`).join('');
   const row = document.createElement('tr');
   row.className = 'expand';
-  row.innerHTML = `<td colspan="7"><div class="dots">${dots}</div></td>`;
+  row.innerHTML = `<td colspan="8"><div class="dots">${dots}</div></td>`;
   tr.after(row);
   btn.textContent = '▴';
 }
