@@ -104,6 +104,7 @@
   .tbl tr:last-child td { border-bottom:none; }
   .tbl .num { font-variant-numeric:tabular-nums; }
   .tbl .dim { color:var(--sub); }
+  .tbl th.rt, .tbl td.rt { text-align:right; } /* 양적 컬럼 우측(KRDS) — 학번·시각은 좌측 유지 */
   .tbl tr.off td { color:var(--dim); }
   .tbl .empty td { text-align:center; color:var(--sub); padding:26px 0; }
 
@@ -396,7 +397,7 @@
         </div>
         <div class="tblwrap" style="max-height:480px;margin-top:12px">
           <table class="tbl">
-            <thead><tr><th></th><th>학번</th><th>이름</th><th>프로그램</th><th>대상</th><th>출석</th><th>출석률</th></tr></thead>
+            <thead><tr><th></th><th>학번</th><th>이름</th><th>프로그램</th><th class="rt">대상</th><th class="rt">출석</th><th>출석률</th></tr></thead>
             <tbody id="ar-rows"></tbody>
           </table>
         </div>
@@ -404,7 +405,7 @@
         <div class="sec"><h2>반복 퇴실미확인</h2><span class="note">기간 내 2회 이상은 진하게 표시돼요</span></div>
         <div class="tblwrap" style="max-height:320px">
           <table class="tbl">
-            <thead><tr><th>#</th><th>학번</th><th>이름</th><th>퇴실미확인</th><th>기간 출석</th><th>비율</th></tr></thead>
+            <thead><tr><th>#</th><th>학번</th><th>이름</th><th class="rt">퇴실미확인</th><th class="rt">기간 출석</th><th class="rt">비율</th></tr></thead>
             <tbody id="st-miss-rows"></tbody>
           </table>
         </div>
@@ -412,7 +413,7 @@
         <div class="sec"><h2>학생별 집계</h2><span class="note"><input id="st-search" type="search" placeholder="학번·이름 검색" style="padding:8px 12px;font-size:13px;width:180px"></span></div>
         <div class="tblwrap">
           <table class="tbl">
-            <thead><tr><th>학번</th><th>이름</th><th>출석</th><th>퇴실미확인</th><th>조퇴</th><th>최근 출석일</th></tr></thead>
+            <thead><tr><th>학번</th><th>이름</th><th class="rt">출석</th><th class="rt">퇴실미확인</th><th class="rt">조퇴</th><th>최근 출석일</th></tr></thead>
             <tbody id="st-stu-rows"></tbody>
           </table>
         </div>
