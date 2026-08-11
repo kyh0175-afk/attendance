@@ -13,7 +13,7 @@
   --err:#b34a3a;  --err-bg:#f7e6e2;  --err-ink:#a03d2e;  /* 5.43:1 on err-bg */
   --dim:#9a8770;            /* 비활성 행·배지 — 구 #b7a996(2.30:1) → 3.46:1 */
   --font-sans:'Pretendard Variable',Pretendard,system-ui,-apple-system,'Segoe UI',sans-serif; /* 2026-08-11 IBM Plex→Pretendard 통일 */
-  --font-en:'Sora','Pretendard Variable',Pretendard,sans-serif;   /* 워드마크·코드 숫자 전용(라틴/숫자만 Sora, 한글은 Pretendard 폴백) */
+  --font-en:'Zilla Slab','Pretendard Variable',Pretendard,serif; /* 워드마크·코드 숫자 — 슬랩 세리프(서재 무드, 구 Sora는 무드 불일치로 교체). 한글은 Pretendard 폴백 */
   --r:16px; --r-lg:22px;
   --ease:cubic-bezier(.22,1,.36,1);   /* 스프링 이즈아웃 */
   --shadow:0 4px 18px rgba(60,42,24,.07), 0 1px 3px rgba(60,42,24,.05);

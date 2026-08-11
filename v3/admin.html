@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@600;700&display=swap">
 <link rel="stylesheet" href="assets/css/tokens.css">
 <style>
   /* 토큰은 assets/css/tokens.css 공용(2026-08-11 감사 #5 — 3파일 :root 복붙 드리프트 교정). 팔레트 수정은 그 파일에서만. */
@@ -24,14 +24,8 @@
   }
   .app { max-width:1140px; margin:0 auto; padding:0 22px calc(30px + env(safe-area-inset-bottom)); }
   .top { padding:24px 2px 8px; display:flex; align-items:baseline; gap:8px; }
-  .top .en { font-weight:700; font-family:var(--font-en); font-size:18px; color:var(--lamp); letter-spacing:.02em; } /* 이탤릭 제거+Sora — 워드마크 정돈 */
+  .top .en { font-weight:700; font-family:var(--font-en); font-size:19px; color:var(--lamp); letter-spacing:.02em; text-decoration:none; } /* 워드마크 — 교사·관리자에선 허브 링크 겸용 */
   .top .role { font-size:12px; color:var(--sub); font-weight:600; letter-spacing:.04em; }
-  .top .hubgo {
-    font-size:12.5px; font-weight:600; color:var(--sub); text-decoration:none;
-    padding:6px 11px; border:1px solid var(--line2); border-radius:99px; background:var(--card);
-    transition:border-color .2s, color .2s;
-  }
-  .top .hubgo:active { border-color:var(--lamp); color:var(--brand); }
 
 
   .view { display:none; } .view.on { display:block; } .view.enter { animation:vin .26s var(--ease) both; }
@@ -241,7 +235,7 @@
 </head>
 <body>
 <div class="app">
-  <div class="top"><a class="hubgo" href="./">← 허브</a><span class="en">Cosmos</span><span class="role">관리자</span></div>
+  <div class="top"><a class="en" href="./" title="허브로 이동">Cosmos</a><span class="role">관리자</span></div>
 
   <div id="view-loading" class="view on"><div class="card" style="text-align:center;color:var(--sub);padding:50px">불러오는 중…</div></div>
 
