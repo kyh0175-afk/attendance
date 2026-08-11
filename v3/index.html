@@ -120,6 +120,29 @@
   .check-btn.out { color:var(--brand); background:#fff; border-color:var(--line2); }
   .check-btn.out:active { background:#fbf7ef; }
 
+  /* 허브 3버튼 (출석/조회/요청 — 8/11 재구성. 요청 하위 기능은 이식 세션에서 연결) */
+  .hub-row { display:flex; gap:9px; margin-bottom:14px; }
+  .hub-btn {
+    flex:1; padding:13px 0; font-size:15px; font-weight:600; font-family:inherit; border-radius:var(--r);
+    color:var(--ink2); background:var(--card); border:1.5px solid var(--line2); cursor:pointer;
+    transition:transform .12s var(--ease), background .2s, color .2s, border-color .2s; touch-action:manipulation;
+  }
+  .hub-btn:active { transform:scale(.97); }
+  .hub-btn.on { color:#fdf8ee; background:var(--brand); border-color:var(--brand); }
+  .hub-pane { display:none; }
+  .hub-pane.on { display:block; }
+  ul.req-menu { list-style:none; margin:0; padding:0; }
+  ul.req-menu li + li { border-top:1px solid var(--line); }
+  ul.req-menu button {
+    width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:15px 2px;
+    font-family:inherit; font-size:15px; font-weight:600; color:var(--ink); background:none; border:none;
+    cursor:pointer; text-align:left; touch-action:manipulation;
+  }
+  ul.req-menu .soon {
+    font-size:11px; font-weight:600; color:var(--warn); background:var(--warn-bg);
+    padding:3px 8px; border-radius:999px; flex:none;
+  }
+
   /* 바텀 시트 */
   .sheet-bg {
     position:fixed; inset:0; background:rgba(30,20,10,.34); backdrop-filter:blur(2px);
@@ -310,7 +333,7 @@
       <p>역할을 선택해주세요.</p>
     </div>
     <div class="card">
-      <button class="btn" id="role-student" style="margin-top:0">학생 · 출석하러 왔어요</button>
+      <button class="btn" id="role-student" style="margin-top:0">학생</button>
       <div class="role-btns" style="margin-top:12px">
         <a class="role-btn" href="teacher.html">교사<span class="sub">세션 시작 · 코드 발급</span></a>
         <a class="role-btn" href="admin.html">관리자<span class="sub">기록 · 통계 · 명단</span></a>
@@ -379,20 +402,41 @@
       <div class="no">학번 <span id="dash-hakbun"></span></div>
     </div>
 
-    <div class="check-row">
-      <button class="check-btn in" id="btn-checkin">입실</button>
-      <button class="check-btn out" id="btn-checkout">퇴실</button>
+    <div class="hub-row">
+      <button class="hub-btn on" data-hub="attend">출석</button>
+      <button class="hub-btn" data-hub="stats">조회</button>
+      <button class="hub-btn" data-hub="request">요청</button>
     </div>
 
-    <div class="hero">
-      <div class="hero-label">이번 달 출석</div>
-      <div class="hero-num"><span class="n" id="stat-month">0</span><span class="u">번</span></div>
-      <div class="hero-sub" id="hero-sub">전체 <b id="stat-total">0</b>번 나왔어요</div>
+    <div class="hub-pane on" id="hub-attend">
+      <div class="check-row">
+        <button class="check-btn in" id="btn-checkin">입실</button>
+        <button class="check-btn out" id="btn-checkout">퇴실</button>
+      </div>
     </div>
 
-    <div class="card" style="margin-top:14px">
-      <div class="log-head"><h2>최근 기록</h2><span class="cnt" id="log-cnt"></span></div>
-      <ul class="log" id="dash-list"></ul>
+    <div class="hub-pane" id="hub-stats">
+      <div class="hero">
+        <div class="hero-label">이번 달 출석</div>
+        <div class="hero-num"><span class="n" id="stat-month">0</span><span class="u">번</span></div>
+        <div class="hero-sub" id="hero-sub">전체 <b id="stat-total">0</b>번 나왔어요</div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="log-head"><h2>최근 기록</h2><span class="cnt" id="log-cnt"></span></div>
+        <ul class="log" id="dash-list"></ul>
+      </div>
+    </div>
+
+    <div class="hub-pane" id="hub-request">
+      <div class="card">
+        <ul class="req-menu">
+          <li><button data-req="seat">좌석 신청<span class="soon">준비 중</span></button></li>
+          <li><button data-req="fix">출석 수정 요청<span class="soon">준비 중</span></button></li>
+          <li><button data-req="day">요일 변경 요청<span class="soon">준비 중</span></button></li>
+          <li><button data-req="etc">요청사항 보내기<span class="soon">준비 중</span></button></li>
+        </ul>
+      </div>
     </div>
 
     <button id="dash-logout" class="btn ghost">로그아웃</button>

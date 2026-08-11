@@ -416,6 +416,18 @@ function showUsageGuide() {
 // ── 바인딩 ──
 window.addEventListener('DOMContentLoaded', () => {
   $('role-student').addEventListener('click', () => { buzz(); show('view-login'); });
+  // 허브 3버튼 전환 (출석/조회/요청)
+  for (const b of document.querySelectorAll('.hub-btn')) {
+    b.addEventListener('click', () => {
+      buzz();
+      document.querySelectorAll('.hub-btn').forEach((x) => x.classList.toggle('on', x === b));
+      document.querySelectorAll('.hub-pane').forEach((p) => p.classList.toggle('on', p.id === 'hub-' + b.dataset.hub));
+    });
+  }
+  // 요청 하위 항목 — 이식 세션(R4)에서 실제 폼 연결. 그 전까지는 준비 중 안내만
+  for (const b of document.querySelectorAll('ul.req-menu button')) {
+    b.addEventListener('click', () => toast('준비 중이에요'));
+  }
   $('login-btn').addEventListener('click', doLogin);
   $('login-pin').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
   $('login-hakbun').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('login-pin').focus(); });
