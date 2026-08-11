@@ -120,6 +120,18 @@
   .check-btn.out { color:var(--brand); background:#fff; border-color:var(--line2); }
   .check-btn.out:active { background:#fbf7ef; }
 
+  /* 역할 선택 — 동일 디자인 대형 카드 3개 (전자칠판·PC 교사 사용 전제) */
+  .role-big {
+    display:flex; flex-direction:column; align-items:center; gap:7px;
+    width:100%; margin-top:14px; padding:30px 20px;
+    font-family:inherit; font-size:20px; font-weight:700; color:var(--ink);
+    background:var(--card); border:1.5px solid var(--line2); border-radius:var(--r-lg);
+    box-shadow:var(--shadow); cursor:pointer; text-decoration:none; text-align:center;
+    transition:transform .12s var(--ease), border-color .2s, box-shadow .2s; touch-action:manipulation;
+  }
+  .role-big:active { transform:scale(.98); border-color:var(--lamp); }
+  .role-big .sub { font-size:13px; font-weight:400; color:var(--sub); }
+
   /* 허브 3버튼 (출석/조회/요청 — 8/11 재구성. 요청 하위 기능은 이식 세션에서 연결) */
   .hub-row { display:flex; gap:9px; margin-bottom:14px; }
   .hub-btn {
@@ -325,20 +337,16 @@
     <button class="btn ghost" id="w-skip">건너뛰고 바로 로그인</button>
   </div>
 
-  <!-- 역할 선택 — /v3 첫 방문(비로그인) 진입점. 로그인된 학생·설치 앱은 이 화면을 거치지 않고
-       대시보드로 직행한다(boot에서 분기). ?start(QR 온보딩)도 기존 위저드 우선. -->
+  <!-- 역할 선택 — /v3 첫 방문(비로그인) 진입점. 주 사용자는 전자칠판·PC의 교사/관리자라
+       카드를 크게(설치된 학생 앱은 이 화면을 안 거치고 대시보드 직행). ?start 온보딩 우선. -->
   <div id="view-role" class="view">
     <div class="lead">
       <h1>코스모스 출석</h1>
       <p>역할을 선택해주세요.</p>
     </div>
-    <div class="card">
-      <button class="btn" id="role-student" style="margin-top:0">학생</button>
-      <div class="role-btns" style="margin-top:12px">
-        <a class="role-btn" href="teacher.html">교사<span class="sub">세션 시작 · 코드 발급</span></a>
-        <a class="role-btn" href="admin.html">관리자<span class="sub">기록 · 통계 · 명단</span></a>
-      </div>
-    </div>
+    <button class="role-big" id="role-student">학생<span class="sub">출석 · 조회 · 요청</span></button>
+    <a class="role-big" href="teacher.html">교사<span class="sub">세션 시작 · 코드 발급</span></a>
+    <a class="role-big" href="admin.html">관리자<span class="sub">기록 · 통계 · 명단</span></a>
   </div>
 
   <!-- 로그인 -->
