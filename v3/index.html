@@ -302,6 +302,22 @@
     <button class="btn ghost" id="w-skip">건너뛰고 바로 로그인</button>
   </div>
 
+  <!-- 역할 선택 — /v3 첫 방문(비로그인) 진입점. 로그인된 학생·설치 앱은 이 화면을 거치지 않고
+       대시보드로 직행한다(boot에서 분기). ?start(QR 온보딩)도 기존 위저드 우선. -->
+  <div id="view-role" class="view">
+    <div class="lead">
+      <h1>코스모스 출석</h1>
+      <p>역할을 선택해주세요.</p>
+    </div>
+    <div class="card">
+      <button class="btn" id="role-student" style="margin-top:0">학생 · 출석하러 왔어요</button>
+      <div class="role-btns" style="margin-top:12px">
+        <a class="role-btn" href="teacher.html">교사<span class="sub">세션 시작 · 코드 발급</span></a>
+        <a class="role-btn" href="admin.html">관리자<span class="sub">기록 · 통계 · 명단</span></a>
+      </div>
+    </div>
+  </div>
+
   <!-- 로그인 -->
   <div id="view-login" class="view">
     <div class="lead">
