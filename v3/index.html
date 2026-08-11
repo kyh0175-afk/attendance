@@ -19,7 +19,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&display=swap">
 <link rel="stylesheet" href="assets/css/tokens.css">
 
 <style>
@@ -27,7 +28,7 @@
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { margin:0; height:100%; }
   body {
-    font-family:'IBM Plex Sans KR',system-ui,-apple-system,sans-serif;
+    font-family:var(--font-sans);
     color:var(--ink); line-height:1.55; -webkit-font-smoothing:antialiased;
     background:
       radial-gradient(120% 80% at 50% -10%, #fbf7ee 0%, var(--bg) 46%, var(--bg2) 100%) fixed;
@@ -37,7 +38,7 @@
 
   /* ── 상단 워드마크 ── */
   .top { padding:26px 2px 8px; }
-  .top .en { font-weight:700; font-style:italic; font-size:18px; color:var(--lamp); letter-spacing:.02em; }
+  .top .en { font-weight:700; font-family:var(--font-en); font-size:18px; color:var(--lamp); letter-spacing:.02em; } /* 이탤릭 제거+Sora — 워드마크 정돈 */
 
   /* ── 뷰 전환 (버터 스무스) ── */
   .view { display:none; }
@@ -221,7 +222,7 @@
   .wdone .big { font-size:40px; line-height:1.2; }
   .wdone p { font-size:14px; color:var(--ink2); margin:10px 0 0; line-height:1.6; }
   .code-input {
-    width:100%; text-align:center; font-size:38px; font-weight:700; letter-spacing:.32em; font-variant-numeric:tabular-nums;
+    width:100%; text-align:center; font-family:var(--font-en); font-size:38px; font-weight:700; letter-spacing:.32em; font-variant-numeric:tabular-nums;
     padding:16px 10px; border:1.5px solid var(--line2); border-radius:var(--r); background:#fdfbf6; color:var(--ink); outline:none;
     transition:border-color .18s, box-shadow .18s;
   }
@@ -235,7 +236,7 @@
     padding:30px 24px 28px; box-shadow:var(--shadow);
   }
   .hero-label { font-size:13px; font-weight:500; color:#cbb590; letter-spacing:.03em; }
-  .hero-num { margin:4px 0 2px; font-weight:700; line-height:1; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+  .hero-num { margin:4px 0 2px; font-family:var(--font-en); font-weight:700; line-height:1; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
   .hero-num .n { font-size:66px; color:#fbf1dc; }
   .hero-num .u { font-size:24px; font-weight:600; color:var(--lamp); margin-left:4px; }
   .hero-sub { margin-top:8px; font-size:13.5px; color:#bda98a; }
