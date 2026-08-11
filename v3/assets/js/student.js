@@ -12,7 +12,7 @@ const $ = (id) => document.getElementById(id);
 const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const buzz = (ms = 12) => { try { navigator.vibrate && navigator.vibrate(ms); } catch (_) {} };
 
-const VIEWS = ['view-loading', 'view-start', 'view-login', 'view-pin', 'view-dash'];
+const VIEWS = ['view-loading', 'view-start', 'view-role', 'view-login', 'view-pin', 'view-dash'];
 function show(id) {
   for (const v of VIEWS) {
     const el = $(v);
@@ -80,8 +80,10 @@ async function boot() {
   show('view-loading');
   const wantStart = /[?&]start\b/.test(location.search);   // QR 진입
   let user;
-  try { user = await currentUser(); } catch (e) { show(wantStart ? 'view-start' : 'view-login'); if (wantStart) startWizard(); return; }
-  if (!user) { if (wantStart) startWizard(); else show('view-login'); return; }
+  // 비로그인 첫 진입은 역할 선택(view-role)으로. 세션 만료 복귀(bounceIfExpired)·로그아웃은
+  // 역할이 자명하므로 기존대로 view-login 직행 — 이 분기만 다르다.
+  try { user = await currentUser(); } catch (e) { show(wantStart ? 'view-start' : 'view-role'); if (wantStart) startWizard(); return; }
+  if (!user) { if (wantStart) startWizard(); else show('view-role'); return; }
   if (mustChangePin(user)) { show('view-pin'); return; }
   await renderDash(user);
 }
@@ -413,6 +415,7 @@ function showUsageGuide() {
 
 // ── 바인딩 ──
 window.addEventListener('DOMContentLoaded', () => {
+  $('role-student').addEventListener('click', () => { buzz(); show('view-login'); });
   $('login-btn').addEventListener('click', doLogin);
   $('login-pin').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
   $('login-hakbun').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('login-pin').focus(); });
