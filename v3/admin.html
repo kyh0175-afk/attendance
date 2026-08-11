@@ -388,6 +388,7 @@
             <div class="f"><label for="ar-sort">정렬</label>
               <select id="ar-sort">
                 <option value="low">출석률 낮은순</option>
+                <option value="miss">결석 많은순</option>
                 <option value="high">출석률 높은순</option>
                 <option value="hakbun">학번순</option>
               </select>
@@ -395,9 +396,10 @@
             <div class="f grow2"><label for="ar-search">검색</label><input id="ar-search" type="search" placeholder="학번·이름"></div>
           </div>
         </div>
+        <div id="ar-zero" class="banner warn hidden" style="margin-top:12px"></div>
         <div class="tblwrap" style="max-height:480px;margin-top:12px">
           <table class="tbl">
-            <thead><tr><th></th><th>학번</th><th>이름</th><th>프로그램</th><th class="rt">대상</th><th class="rt">출석</th><th>출석률</th></tr></thead>
+            <thead><tr><th></th><th>학번</th><th>이름</th><th>프로그램</th><th class="rt">대상</th><th class="rt">출석</th><th class="rt">결석</th><th>출석률</th></tr></thead>
             <tbody id="ar-rows"></tbody>
           </table>
         </div>
