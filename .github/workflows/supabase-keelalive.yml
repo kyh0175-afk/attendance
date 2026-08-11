@@ -2,7 +2,11 @@
 #  Supabase keep-alive
 #  무료 플랜 Supabase 프로젝트는 7일간 API 요청이 없으면 자동 일시정지되고,
 #  일시정지되면 도메인 자체가 사라져 앱에서 "TypeError: Failed to fetch"가 뜬다.
-#  주 2회(KST 화·금 06:10) 가벼운 SELECT를 날려 일시정지를 예방한다.
+#  매일 아침(KST 07:05) 가벼운 SELECT를 날려 일시정지를 예방한다.
+#  ★ 주 2회로는 최대 4일간 이상을 모른다. 매일 돌리면 실패 시 다음 날 아침
+#    메일이 오므로, 학생들이 겪기 전에 먼저 알 수 있다. (공개 레포는 무료)
+#  ⚠️ keep-alive는 '예방'만 한다. 이미 정지된 프로젝트는 DNS가 사라져
+#    요청이 도착조차 못 하므로 대시보드에서 직접 Restore 해야 한다.
 #
 #  설치 위치:  attendance 레포  →  .github/workflows/supabase-keepalive.yml
 #  키는 클라이언트 HTML에 이미 공개된 publishable(anon) 키라 그대로 적어도 안전하다.
@@ -11,8 +15,8 @@ name: Supabase keep-alive
 
 on:
   schedule:
-    # UTC 월·목 21:10  =  KST 화·금 06:10  (최대 공백 4일 < 7일)
-    - cron: '10 21 * * 1,4'
+    # UTC 매일 22:05  =  KST 매일 07:05 (학교 일과 시작 전)
+    - cron: '5 22 * * *'
   workflow_dispatch:        # Actions 탭에서 수동 실행 가능
 
 permissions:
@@ -55,8 +59,20 @@ jobs:
           echo "--- 응답 본문 ---"
           head -c 500 /tmp/body.txt || true
           echo
-          echo "code=000 이면 DNS 실패 = 프로젝트가 일시정지/삭제된 상태."
-          echo "https://supabase.com/dashboard 에서 Restore 필요."
+          echo "--- DNS 조회 ---"
+          HOST=$(echo "${{ matrix.url }}" | sed -e 's#^https\?://##' -e 's#/.*##')
+          getent hosts "$HOST" || echo "  $HOST : 이름 없음 (NXDOMAIN)"
+          echo
+          if [ "$code" = "000" ]; then
+            echo "▶ code=000 + NXDOMAIN = 프로젝트 일시정지 상태입니다."
+            echo "  https://supabase.com/dashboard 에서 해당 프로젝트 Restore 후"
+            echo "  이 워크플로를 Run workflow로 한 번 수동 실행해 확인하세요."
+            echo "  (keep-alive는 예방용이라 이미 정지된 프로젝트를 깨우지 못합니다)"
+          elif [ "$code" = "401" ]; then
+            echo "▶ 401 = publishable 키가 바뀌었습니다. 워크플로의 key 값을 갱신하세요."
+          elif [ "$code" = "404" ]; then
+            echo "▶ 404 = 테이블 이름이 바뀌었거나 사라졌습니다."
+          fi
           exit 1
 
   keep-repo-active:
