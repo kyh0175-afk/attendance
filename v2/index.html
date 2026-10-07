@@ -107,7 +107,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
-body { overflow-x: hidden; }
+body { overflow-x: hidden; word-break: keep-all; overflow-wrap: break-word; /* 한국어 어절 단위 줄바꿈 (디자인게이트 KO) */ }
 a { color: inherit; text-decoration: none; }
 button {
   font-family: inherit;
@@ -1755,6 +1755,17 @@ input { font-family: inherit; }
   font-weight: 300;
   color: var(--ink-faint);
 }
+.roster-retry {
+  margin-top: 14px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--amber);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--amber);
+  font: 500 15px 'IBM Plex Sans KR', sans-serif;
+  cursor: pointer;
+}
 .list-empty .icon {
   display: block;
   font-family: 'Cormorant Garamond', serif;
@@ -2246,6 +2257,14 @@ input { font-family: inherit; }
   font-family: 'DM Mono', monospace;
   color: var(--amber);
   letter-spacing: 0.05em;
+}
+.success-sub {
+  margin-top: 16px;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink);
+  word-break: keep-all;
 }
 
 /* ── 에러 화면 (세션 만료 등) ── */
@@ -4923,7 +4942,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 <!--  교사 화면 (Phase 2C)                          -->
 <!-- ══════════════════════════════════════════ -->
 <div class="screen" id="screen-teacher" style="display:none">
-  <button class="back-btn" onclick="goHome()">
+  <button class="back-btn" onclick="teacherBack()">
     <span>←</span><span>BACK</span>
   </button>
 
@@ -5126,6 +5145,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
     <div class="modal-head" style="justify-content:center">
       <div class="modal-title">QR 시간이 만료됐어요</div>
     </div>
+    <div id="modal-extend-which" style="font-family:&#39;IBM Plex Sans KR&#39;,sans-serif;font-size:15px;color:var(--cream);margin:-4px 0 4px"></div>
     <div class="modal-body" style="text-align:center">
       <div id="modal-extend-note" style="font-family:&#39;IBM Plex Sans KR&#39;,sans-serif;font-size:14px;color:var(--ink-dim);line-height:1.6;margin-bottom:20px">학생이 더 올 예정이면 10분 연장할 수 있어요. 연장은 1회만 가능합니다.</div>
       <div style="font-family:&#39;DM Mono&#39;,monospace;font-size:42px;font-weight:600;color:var(--amber);letter-spacing:.05em;margin:16px 0 6px" id="modal-extend-countdown">5 : 00</div>
@@ -5155,8 +5175,9 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
     <!-- 상태 2: 에러 (세션 만료 / 종료 / 잘못된 QR) -->
     <div id="st-error" class="student-error" style="display:none">
       <div class="error-icon">!</div>
-      <div class="error-title">Session Closed</div>
+      <div class="error-title" id="st-error-title">출석할 수 없어요</div>
       <div class="error-msg" id="st-error-msg">QR 코드를 확인할 수 없어요.</div>
+      <button type="button" class="roster-retry" id="st-error-retry" style="display:none" onclick="location.reload()">다시 시도</button>
     </div>
 
     <!-- 상태 3: 학번 입력 -->
@@ -5206,6 +5227,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
         <strong id="st-success-program">—</strong> · <span id="st-success-room">—</span><br>
         출석 시각 <span class="success-time" id="st-success-time">—</span>
       </div>
+      <div class="success-sub" id="st-success-sub" style="display:none"></div>
     </div>
 
     <!-- 상태 5: 즉석 등록 (Phase 2F) -->
@@ -6658,15 +6680,17 @@ const sb = {
         return sb._cache.students;
       }
 
-      let query = sb.client()
-        .from('students')
-        .select('*')
-        .order('학번', { ascending: true });
-
-      if (!includeInactive) query = query.eq('활성', true);
-
-      const { data, error } = await query;
-      if (error) throw error;
+      // 1000행 상한 대비 페이지 나눔 (학번×프로그램 행이 비활성까지 누적됨). PK(학번,프로그램)로 정렬을 고정.
+      const buildQuery = () => {
+        let q = sb.client()
+          .from('students')
+          .select('*')
+          .order('학번', { ascending: true })
+          .order('프로그램', { ascending: true });
+        if (!includeInactive) q = q.eq('활성', true);
+        return q;
+      };
+      const data = await fetchAllRows(buildQuery);
 
       if (!includeInactive) {
         sb._cache.students = data;
@@ -6960,6 +6984,28 @@ const sb = {
       if (error) throw error;
     },
 
+    // 방금(5분 안) 시간 만료로 자동 마감된 미연장 세션 — 교사 화면 새로고침 시 연장 창 복구용.
+    // 직접 마감한 세션은 종료시각이 만료시각보다 이르므로 제외(자동 마감은 둘이 거의 같다).
+    async recentlyExpiredByRoom(room) {
+      const now = Date.now();
+      const { data, error } = await sb.client()
+        .from('sessions')
+        .select('*')
+        .eq('장소', room)
+        .eq('활성', false)
+        .eq('연장됨', false)
+        .eq('날짜', todayKST())
+        .gte('만료시각', new Date(now - 5 * 60 * 1000).toISOString())
+        .lte('만료시각', new Date(now).toISOString())
+        .order('시작시각', { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      const r = data && data[0];
+      if (!r || !r.종료시각) return null;
+      const gap = Math.abs(new Date(r.종료시각).getTime() - new Date(r.만료시각).getTime());
+      return gap <= 90 * 1000 ? r : null;
+    },
+
     async byKey(sessionId) {
       // sibling 세션은 세션id가 같은 행이 여러 개 있을 수 있어 limit(1)로 안전하게
       const { data, error } = await sb.client()
@@ -7186,6 +7232,16 @@ window.sb = sb;
 //  화면 라우팅
 // ══════════════════════════════════════════════════════════════
 function showScreen(id) {
+  // 교사 화면을 떠나면(뒤로가기·메인 이동) 타이머·구독·연장 창을 멈춘다 — 다른 화면 위에 연장 창이 뜨지 않게.
+  // DB 세션은 건드리지 않는다(마감은 교사가 명시적으로). 남은 세션은 다음 진입 때 오래된 세션 정리로 닫힌다.
+  if (id !== 'screen-teacher' && typeof T !== 'undefined' && T.session) {
+    stopTeacherTimer();
+    unsubscribeRoster();
+    if (typeof closeExtendModal === 'function') closeExtendModal();
+    T.session = null;
+  }
+  // 관리자 실시간 탭 폴링도 관리자 화면을 떠나면 멈춘다
+  if (id !== 'screen-admin' && typeof LIVE !== 'undefined' && LIVE.stop) LIVE.stop();
   document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
   const el = document.getElementById(id);
   if (el) el.style.display = 'flex';
@@ -7247,6 +7303,19 @@ function goSeatBoard(){history.pushState({},"",location.pathname+"?mode=seat-boa
 function goSeatRequest(){history.pushState({},"",location.pathname+"?mode=seat-request");route();}
 function goAttendance() {
   showScreen('screen-rooms');
+}
+
+// 교사 화면 BACK: 진행 중인 출석이 있으면 먼저 묻고, 없으면 장소 선택으로 돌아간다
+async function teacherBack() {
+  if (T.session) {
+    const ok = confirm('진행 중인 출석이 있어요.\n\n[확인] 출석을 마감하고 나가기\n[취소] 계속 진행하기');
+    if (!ok) return;
+    TLOG.log('session_end_clicked', { sessionId: T.session.sessionId, via: 'back' });
+    const done = await finishTeacherSession('나가기 전 마감');
+    if (!done) return;
+  }
+  history.pushState({}, '', location.pathname);
+  goAttendance();
 }
 function goView() {
   history.pushState({}, '', location.pathname + '?mode=view');
@@ -7325,13 +7394,13 @@ async function loadPastSessions() {
         const absCount = target.length - targetAtt;
 
         const endTime = s.종료시각 ? new Date(s.종료시각).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false}) : '—';
-        return `<div class="past-sess-card" data-sid="${s.세션id}">
+        return `<div class="past-sess-card" data-sid="${escapeHtml(s.세션id)}">
           <div class="past-sess-info">
             <div class="past-sess-prog">${escapeHtml(s.프로그램||'')}</div>
             <div class="past-sess-meta">${endTime} 마감 · ${escapeHtml(s.교사||'')} 선생님</div>
             <div class="past-sess-stats">출석 ${targetAtt}명<span class="abs">미출석 ${absCount}명</span></div>
           </div>
-          <button class="past-sess-btn" onclick="openPastAttend('${s.세션id}')">+ 사후 출석 추가</button>
+          <button class="past-sess-btn" onclick="openPastAttend('${escapeAttr(s.세션id)}')">+ 사후 출석 추가</button>
         </div>`;
       } catch (e) { console.warn('past session card 실패:', e); return ''; }
     }));
@@ -7490,9 +7559,24 @@ async function enterTeacherScreen(room) {
 
   // 임시 로딩 메시지 (잠깐 깜빡임 방지)
   try {
-    const active = await sb.sessions.activeByRoom(room);
+    let active = await sb.sessions.activeByRoom(room);
+    // 만료 후 5분(연장 창 대기 시간)이 지난 활성 세션 = 마감 없이 떠난 세션.
+    // 복원하면 다음 교사에게 남의 세션 연장 창이 뜨므로, 조용히 마감하고 설정 화면으로 간다.
+    if (active && active.만료시각 && new Date(active.만료시각).getTime() + 5 * 60 * 1000 < Date.now()) {
+      TLOG.log('session_stale_closed', { sessionId: active.세션id, program: active.프로그램, expire: active.만료시각 });
+      try { await sb.sessions.end(active.세션id); } catch (e) { console.warn('오래된 세션 정리 실패:', e); }
+      active = null;
+    }
+    // 연장 창이 떠 있던 중 새로고침한 경우: 방금 시간 만료로 닫힌(미연장) 세션에 다시 연결해 연장 기회를 살린다
+    if (!active) {
+      const recent = await sb.sessions.recentlyExpiredByRoom(room);
+      if (recent) {
+        TLOG.log('session_reattach_expired', { sessionId: recent.세션id });
+        active = recent;
+      }
+    }
     if (active) {
-      // 복원
+      // 복원 (만료된 세션이면 startTeacherTimer가 즉시 연장 창을 연다)
       T.session = {
         sessionId: active.세션id,
         program: active.프로그램,
@@ -7500,6 +7584,7 @@ async function enterTeacherScreen(room) {
         teacher: active.교사,
         expireMs: new Date(active.만료시각).getTime(),
         extended: active.연장됨 || false,
+        startedMs: active.시작시각 ? new Date(active.시작시각).getTime() : null,
       };
       TLOG.log('session_restore_ok', { sessionId: active.세션id, program: active.프로그램 });
 
@@ -7640,7 +7725,7 @@ async function handleProgramChange() {
   if (teacherInput.dataset.wasAutoFilled === 'true') {
     teacherInput.value = '';
   }
-  teacherInput.dataset.wasAutoFilled = (program === '심야 독서시간') ? 'true' : 'false';
+  teacherInput.dataset.wasAutoFilled = 'false';   // 자동 채움 성공 시에만 위에서 'true'
 }
 
 // 세션 시작
@@ -7697,6 +7782,7 @@ async function startTeacherSession() {
       teacher,
       expireMs,
       extended: false,
+      startedMs: Date.now(),
     };
 
     // 화면 전환
@@ -7784,7 +7870,8 @@ function startTeacherTimer() {
     }
   };
   update();
-  T.timerInterval = setInterval(update, 1000);
+  // 이미 만료된 세션으로 시작하면 update()가 자동 마감을 한 번 처리했으므로 인터벌을 다시 걸지 않는다(이중 실행 방지)
+  if (T.session && T.session.expireMs > Date.now()) T.timerInterval = setInterval(update, 1000);
 }
 
 function stopTeacherTimer() {
@@ -7830,6 +7917,13 @@ function openExtendModal() {
     extBtn.disabled = false;
     extBtn.classList.remove('disabled');
     noteEl.textContent = '학생이 더 올 예정이면 10분 연장할 수 있어요. 연장은 1회만 가능합니다.';
+  }
+
+  // 어떤 세션의 연장인지(프로그램·시작 시각) — 다른 교사가 남긴 세션을 잘못 연장하지 않게
+  const whichEl = document.getElementById('modal-extend-which');
+  if (whichEl && T.session) {
+    const st = T.session.startedMs ? new Date(T.session.startedMs) : null;
+    whichEl.textContent = T.session.program + (st ? ' · ' + String(st.getHours()).padStart(2, '0') + ':' + String(st.getMinutes()).padStart(2, '0') + ' 시작' : '');
   }
 
   modal.classList.add('on');
@@ -7919,8 +8013,27 @@ async function confirmExtendSession() {
 async function confirmExtendEnd() {
   if (!T.session) return;
   closeExtendModal();
+  // autoEndTeacherSession에서 비활성화했지만, 그때 실패했을 수 있으니 한 번 더 확정(멱등)
+  await finishTeacherSession('만료 후 마감');
+}
 
-  // (DB 비활성화는 이미 autoEndTeacherSession에서 처리됨)
+// 세션 마감 공통 처리 — DB 반영을 확인한 뒤에만 화면을 정리하고, 같은 장소의 설정 화면으로 돌아간다
+async function finishTeacherSession(reason) {
+  if (!T.session) return;
+  const sid = T.session.sessionId;
+  try {
+    await sb._retry(() => sb.sessions.end(sid));
+    TLOG.log('session_end_ok', { sessionId: sid, reason });
+  } catch (e) {
+    console.warn('세션 종료 실패:', e);
+    TLOG.log('session_end_fail', { sessionId: sid, reason, err: String(e && e.message || e) });
+    alert('마감이 서버에 저장되지 않았어요. 인터넷 연결을 확인하고 「출석 마감」을 다시 눌러주세요.');
+    // 화면을 정리하지 않고 세션 화면에 남는다(마감 버튼으로 다시 시도)
+    return false;
+  }
+
+  const attendedCount = Object.values(T.attendedMap).filter(a => !a.isSelf).length;
+  const totalCount = T.rosterStudents.length;
 
   // 정리
   stopTeacherTimer();
@@ -7929,24 +8042,18 @@ async function confirmExtendEnd() {
     document.getElementById('t-qr-box').innerHTML = '';
     T.qrInstance = null;
   }
-
-  // 출석 통계
-  const attendedCount = Object.values(T.attendedMap).filter(a => !a.isSelf).length;
-  const totalCount = T.rosterStudents.length;
-
-  // 사용자 알림
-  alert('QR 시간이 만료돼서 세션이 종료됐어요.\n\n출석: ' + attendedCount + '명 / 전체 ' + totalCount + '명\n\n메인 화면으로 이동합니다.');
-
-  // 상태 초기화
   T.session = null;
   T.rosterStudents = [];
   T.attendedMap = {};
   if (T.undoneKeys) T.undoneKeys.clear();   // 세션 종료 시 취소 억제 키 정리
 
-  // 메인 화면으로
+  // 같은 장소의 설정 화면으로 복귀 (늦게 온 학생은 위쪽 '오늘 마감된 세션' 카드에서 사후 출석)
+  document.getElementById('t-setup').style.display = 'block';
+  document.getElementById('t-session').style.display = 'none';
   document.getElementById('t-wrap').classList.remove('session-active');
-  history.pushState({}, '', location.pathname);
-  route();
+  loadPastSessions();
+  showTeacherToast('출석을 마감했어요 · 출석 ' + attendedCount + '명 / 대상 ' + totalCount + '명');
+  return true;
 }
 
 // 종료 모달
@@ -7960,34 +8067,8 @@ function closeEndModal() {
 async function confirmEndSession() {
   closeEndModal();
   if (!T.session) return;
-  console.log('[SESSION END] confirmEndSession 호출 (사용자가 마감 버튼 클릭) →', T.session.sessionId, new Error().stack);
   TLOG.log('session_end_clicked', { sessionId: T.session.sessionId });
-
-  try {
-    await sb.sessions.end(T.session.sessionId);
-    TLOG.log('session_end_ok', { sessionId: T.session.sessionId });
-  } catch (e) {
-    console.warn('세션 종료 실패:', e);
-    TLOG.log('session_end_fail', { err: String(e && e.message || e) });
-  }
-
-  // 정리
-  stopTeacherTimer();
-  unsubscribeRoster();
-  if (T.qrInstance) {
-    document.getElementById('t-qr-box').innerHTML = '';
-    T.qrInstance = null;
-  }
-  T.session = null;
-  T.rosterStudents = [];
-  T.attendedMap = {};
-  if (T.undoneKeys) T.undoneKeys.clear();   // 세션 마감 시 취소 억제 키 정리
-
-  // 설정 화면으로 복귀
-  document.getElementById('t-setup').style.display = 'block';
-  document.getElementById('t-session').style.display = 'none';
-  document.getElementById('t-wrap').classList.remove('session-active');
-  loadPastSessions();
+  await finishTeacherSession('직접 마감');
 }
 
 // 모달 이벤트
@@ -8191,6 +8272,9 @@ async function loadRosterAndSubscribe() {
   if (!T.session) return;
 
   const { program, room, sessionId } = T.session;
+  // 실패 시 이전 세션 명단이 남아 섞이지 않도록 초기화
+  T.rosterStudents = [];
+  T.attendedMap = {};
 
   try {
     // 1. 분모 학생 조회 (오늘 요일 대상자만)
@@ -8223,12 +8307,29 @@ async function loadRosterAndSubscribe() {
     // 3. 화면 렌더링
     renderRoster();
 
-    // 4. Realtime 구독 시작
-    subscribeRoster();
-
   } catch (e) {
     console.error('명단 로딩 실패:', e);
+    TLOG.log('roster_load_fail', { sessionId, msg: String(e && e.message || e).slice(0, 200) });
+    // 실패해도 화면이 '0명'으로 조용히 남지 않게 원인과 다시 시도 버튼을 보여준다
+    const body = document.getElementById('t-roster-body');
+    if (body) {
+      body.innerHTML = `
+        <div class="list-empty">
+          <span class="icon">✦</span>
+          명단을 불러오지 못했어요. 학생 출석은 계속 받고 있어요.
+          <div><button type="button" class="roster-retry" onclick="loadRosterAndSubscribe()">명단 다시 불러오기</button></div>
+        </div>
+      `;
+    }
+    // 10초 뒤 같은 세션이면 한 번 자동 재시도
+    setTimeout(() => {
+      if (T.session && T.session.sessionId === sessionId && T.rosterStudents.length === 0) loadRosterAndSubscribe();
+    }, 10000);
+    return subscribeRoster();
   }
+
+  // 4. Realtime 구독 + 폴링은 명단 로딩 성패와 무관하게 시작 (실패 시에도 출석 반영이 멈추지 않게)
+  subscribeRoster();
 }
 
 // Realtime 구독
@@ -8241,8 +8342,28 @@ function subscribeRoster() {
   });
 
   // 백업 폴링 (3초마다) — Realtime이 WebSocket 차단/지연으로 못 받는 경우 대비
+  let pollTick = 0;
   T.pollInterval = setInterval(async () => {
     if (!T.session) return;
+    // 약 30초마다 세션이 다른 화면에서 마감·교체됐는지 확인 (쌍둥이 방 칠판 2대, 탭 2개 등)
+    if (++pollTick % 10 === 0 && T.session.expireMs > Date.now()) {
+      try {
+        const cur = await sb.sessions.byKey(T.session.sessionId);
+        if (T.session && cur && cur.활성 === false) {
+          TLOG.log('session_closed_elsewhere', { sessionId: T.session.sessionId });
+          stopTeacherTimer();
+          unsubscribeRoster();
+          if (T.qrInstance) { document.getElementById('t-qr-box').innerHTML = ''; T.qrInstance = null; }
+          T.session = null;
+          document.getElementById('t-setup').style.display = 'block';
+          document.getElementById('t-session').style.display = 'none';
+          document.getElementById('t-wrap').classList.remove('session-active');
+          loadPastSessions();
+          showTeacherToast('다른 화면에서 이 출석이 마감되거나 새 출석으로 바뀌었어요.', 'err');
+          return;
+        }
+      } catch (e) { /* 확인 실패는 다음 주기에 다시 */ }
+    }
     try {
       const records = await sb.attendance.bySession(T.session.sessionId);
       let changed = false;
@@ -8401,7 +8522,7 @@ function renderRoster() {
       if (att.fresh) cls += 'fresh ';
       // 교사가 직접 처리한 수동 출석만 이 화면에서 취소 가능
       if (att.manual && att.id) {
-        actionHtml = `<button class="row-undo" onclick="undoManualAttend('${escapeAttr(s.학번)}')" title="수동 출석 취소" aria-label="${escapeAttr(s.이름)} 수동 출석 취소">취소</button>`;
+        actionHtml = `<button class="row-undo" onclick="undoManualAttend('${escapeAttr(s.학번)}')" title="수동 출석 취소" aria-label="${escapeHtml(s.이름)} 수동 출석 취소">취소</button>`;
       }
     } else {
       cls += 'absent ';
@@ -8709,6 +8830,7 @@ const A = {
   currentTab: 'students',
   readOnly: false,       // View 모드 플래그 — true면 편집 UI 숨김
   firstAttDateMap: null, // 학생별 전체 기간 첫 출석 날짜 캐시 (loadAnalysis에서 초기화)
+  dayChangeHist: null,   // 승인된 요일 변경 이력 캐시 (loadAnalysis에서 초기화, 요일 변경 승인 시 무효화)
   // 명단 관리
   students: [],          // 전체 학생 (활성 + 비활성)
   studentsLoaded: false,
@@ -8816,12 +8938,15 @@ function switchAdminTab(tab) {
 }
 
 // 토스트
-function showAdminToast(msg, type) {
+function showAdminToast(msg, type, ms) {
   const el = document.getElementById('admin-toast');
   el.textContent = msg;
   el.className = 'admin-toast on ' + (type || '');
-  setTimeout(() => el.classList.remove('on'), 2500);
+  clearTimeout(el._hideTimer);
+  el._hideTimer = setTimeout(() => el.classList.remove('on'), ms || 2500);
 }
+// 교사 화면용(칠판 거리에서 읽을 시간을 더 준다). 같은 전역 토스트를 쓴다.
+function showTeacherToast(msg, type) { showAdminToast(msg, type || 'ok', 6000); }
 
 // ════════════════════════════════════════
 //  명단 관리 — 데이터 로딩
@@ -8939,14 +9064,14 @@ function openBulkStudentModal(kind) {
     const rooms = Array.from(new Set(A.students.map(s => s.장소).filter(Boolean))).sort();
     body.innerHTML = `<p class="bulk-desc">선택한 <b>${n}명</b>의 장소를 변경합니다.</p>`
       + `<input type="text" id="bulk-room-input" class="admin-search" list="bulk-room-list" placeholder="장소 입력 또는 선택" style="width:100%">`
-      + `<datalist id="bulk-room-list">` + rooms.map(r => `<option value="${escapeAttr(r)}">`).join('') + `</datalist>`;
+      + `<datalist id="bulk-room-list">` + rooms.map(r => `<option value="${escapeHtml(r)}">`).join('') + `</datalist>`;
   } else if (kind === 'program') {
     title.textContent = `프로그램 이동 (${n}명)`;
     const progs = Array.from(new Set(A.students.map(s => s.프로그램).filter(Boolean))).sort();
     body.innerHTML = `<p class="bulk-desc">선택한 <b>${n}명</b>을 다른 프로그램으로 이동합니다. 이름·장소·요일은 유지되며, `
       + `<b>기존 프로그램 등록은 비활성 처리</b>됩니다(데이터 보존·복구 가능).</p>`
       + `<input type="text" id="bulk-prog-input" class="admin-search" list="bulk-prog-list" placeholder="이동할 프로그램" style="width:100%">`
-      + `<datalist id="bulk-prog-list">` + progs.map(p => `<option value="${escapeAttr(p)}">`).join('') + `</datalist>`;
+      + `<datalist id="bulk-prog-list">` + progs.map(p => `<option value="${escapeHtml(p)}">`).join('') + `</datalist>`;
   }
   modal.classList.add('on');
 }
@@ -9092,14 +9217,14 @@ function renderStudentsTable() {
       const on = studentDays.includes(d);
       const isWeekend = d === '토' || d === '일';
       const cls = `row-day-btn ${on ? 'on' : ''} ${isWeekend ? 'weekend' : ''}`.trim();
-      return `<button type="button" class="${cls}" ${inactive ? 'disabled' : ''} onclick="toggleStudentDay('${s.학번}', '${escapeAttr(s.프로그램)}', '${d}', this)">${d}</button>`;
+      return `<button type="button" class="${cls}" ${inactive ? 'disabled' : ''} onclick="toggleStudentDay('${escapeAttr(s.학번)}', '${escapeAttr(s.프로그램)}', '${d}', this)">${d}</button>`;
     }).join('');
 
     const _key = s.학번 + '|' + (s.프로그램 || '');
     const _checked = selectedStudents.has(_key) ? 'checked' : '';
     return `
       <tr class="${inactive ? 'inactive' : ''}">
-        <td class="st-cell-check"><input type="checkbox" class="stu-row-check" ${_checked} onchange="toggleStudentSelect('${s.학번}', '${escapeAttr(s.프로그램)}', this.checked)"></td>
+        <td class="st-cell-check"><input type="checkbox" class="stu-row-check" ${_checked} onchange="toggleStudentSelect('${escapeAttr(s.학번)}', '${escapeAttr(s.프로그램)}', this.checked)"></td>
         <td class="st-cell-no">${escapeHtml(s.학번)}</td>
         <td class="st-cell-name">${escapeHtml(s.이름 || '')}</td>
         <td class="st-cell-program">${escapeHtml(s.프로그램 || '')}</td>
@@ -9107,11 +9232,11 @@ function renderStudentsTable() {
         <td><div class="row-days">${dayBtnsHtml}</div></td>
         <td class="st-cell-status ${inactive ? 'inactive' : 'active'}">${inactive ? '비활성' : '활성'}</td>
         <td class="st-cell-actions">
-          <button class="admin-btn admin-btn-sm" onclick="editStudent('${s.학번}', '${escapeAttr(s.프로그램)}')">수정</button>
+          <button class="admin-btn admin-btn-sm" onclick="editStudent('${escapeAttr(s.학번)}', '${escapeAttr(s.프로그램)}')">수정</button>
           ${inactive
-            ? `<button class="admin-btn admin-btn-sm success" onclick="reactivateStudent('${s.학번}', '${escapeAttr(s.프로그램)}')">활성화</button>
-               <button class="admin-btn admin-btn-sm danger" onclick="confirmDeleteStudent('${s.학번}', '${escapeAttr(s.프로그램)}')">완전삭제</button>`
-            : `<button class="admin-btn admin-btn-sm danger" onclick="confirmDeactivateStudent('${s.학번}', '${escapeAttr(s.프로그램)}')">비활성화</button>`
+            ? `<button class="admin-btn admin-btn-sm success" onclick="reactivateStudent('${escapeAttr(s.학번)}', '${escapeAttr(s.프로그램)}')">활성화</button>
+               <button class="admin-btn admin-btn-sm danger" onclick="confirmDeleteStudent('${escapeAttr(s.학번)}', '${escapeAttr(s.프로그램)}')">완전삭제</button>`
+            : `<button class="admin-btn admin-btn-sm danger" onclick="confirmDeactivateStudent('${escapeAttr(s.학번)}', '${escapeAttr(s.프로그램)}')">비활성화</button>`
           }
         </td>
       </tr>
@@ -9169,8 +9294,18 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+// 인라인 onclick="f('${escapeAttr(x)}')" 의 JS 문자열 인자용.
+// 이전 구현은 ' → &#39; 였는데, 브라우저가 속성을 해석하며 다시 ' 로 되돌려 JS 문자열을 탈출할 수 있었다.
+// 그래서 먼저 JS 이스케이프(\xNN)를 하고, 남는 &만 HTML 이스케이프한다. 화면 텍스트·value 속성에는 escapeHtml을 쓸 것.
 function escapeAttr(str) {
-  return String(str || '').replace(/'/g, "\&#39;").replace(/"/g, '&quot;');
+  return String(str == null ? '' : str)
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, '\\x27')
+    .replace(/"/g, '\\x22')
+    .replace(/</g, '\\x3c')
+    .replace(/>/g, '\\x3e')
+    .replace(/\r?\n/g, '\\n')
+    .replace(/&/g, '&amp;');
 }
 
 // ════════════════════════════════════════
@@ -9352,13 +9487,8 @@ async function reactivateStudent(no, program) {
     );
     if (!student) return;
 
-    await sb.client()
-      .from('students')
-      .update({ 활성: true, 수정일시: new Date().toISOString() })
-      .eq('학번', no)
-      .eq('프로그램', program);
-
-    sb.invalidateCache('students');
+    // 관리자 토큰 RPC 경유(anon의 students UPDATE 권한은 회수됨 — 직접 UPDATE는 0행 성공처럼 보였다)
+    await sb.students.reactivate(no, program);
     await loadAllStudents();
     renderStudentsTable();
     showAdminToast(`${student.이름} 학생이 활성화됐어요`, 'ok');
@@ -9627,7 +9757,7 @@ function renderHistoryList() {
       const attCount = s._attCount || 0;
 
       html += `
-        <div class="session-card-item ${isSelected ? 'on' : ''}" onclick="selectHistorySession('${s.세션id}')">
+        <div class="session-card-item ${isSelected ? 'on' : ''}" onclick="selectHistorySession('${escapeAttr(s.세션id)}')">
           <div class="session-prog-icon" data-prog="${progShort}">${progShort[0] || '?'}</div>
           <div class="session-info-block">
             <div class="session-info-line1">
@@ -9896,7 +10026,7 @@ function renderHistoryDetail() {
     return `
       <div class="${cls.trim()}">
         <div class="detail-row-status">${statusIcon}</div>
-        <div class="detail-row-no">${st.학번}</div>
+        <div class="detail-row-no">${escapeHtml(st.학번)}</div>
         <div class="detail-row-name">${escapeHtml(st.이름 || '')}</div>
         <div class="detail-row-time">${timeText}</div>
         ${actionHtml}
@@ -9962,7 +10092,9 @@ function onLateNoInput() {
   if (matches.length === 0) {
     info.classList.remove('on');
     A.lateAttendStudent = null;
-    errEl.textContent = '명단에 없는 학번이에요. 자동으로 등록됩니다.';
+    errEl.textContent = A.readOnly
+      ? '명단에 없는 학번이에요. 관리자에게 명단 등록을 먼저 요청해주세요.'
+      : '명단에 없는 학번이에요. 학번만으로 명단에 등록한 뒤 출석 처리해요(이름은 명단 관리에서 고치기).';
     errEl.style.color = 'var(--warn)';
     return;
   }
@@ -10005,6 +10137,14 @@ async function doLateAttend() {
   let studentInfo = A.lateAttendStudent;
 
   try {
+    // 읽기 전용(View)은 명단 등록 RPC 권한이 없다 — 서버 오류 원문 대신 안내
+    if (!studentInfo && A.readOnly) {
+      errEl.textContent = '명단에 없는 학번이에요. 관리자에게 명단 등록을 먼저 요청해주세요.';
+      errEl.style.color = '';
+      btn.disabled = false;
+      btn.textContent = '출석 추가';
+      return;
+    }
     // 명단에 없으면 자동 등록 (옵션 C)
     if (!studentInfo) {
       // 이름이 없으니까 임시로 학번을 이름으로 사용
@@ -10181,7 +10321,29 @@ async function loadAnalysis() {
         A.firstAttDateMap = m;
       } catch (e) {
         console.warn('첫 출석일 로드 실패 (분석은 계속):', e);
-        A.firstAttDateMap = {}; // 실패 시 빈 맵 (분모 왜곡 방지 로직만 스킵)
+        A.firstAttDateMap = {}; // 실패 시 빈 맵 (시작일은 명단 등록일로만 판정)
+      }
+    }
+
+    // 승인된 요일 변경 이력 — 과거 날짜는 그 당시 요일로 판정(요일 변경 승인 시 과거가 소급해 바뀌지 않게)
+    if (!A.dayChangeHist) {
+      try {
+        const { data, error } = await sb.client()
+          .from('day_change_requests')
+          .select('학번, 프로그램, 현재요일, 처리일시')
+          .eq('처리상태', '승인')
+          .order('처리일시', { ascending: true });
+        if (error) throw error;
+        const h = {};
+        (data || []).forEach(r => {
+          if (!r.처리일시 || !Array.isArray(r.현재요일)) return;
+          const k = `${r.학번}|${r.프로그램}`;
+          (h[k] = h[k] || []).push({ at: localDateStr(r.처리일시), prevDays: r.현재요일 });
+        });
+        A.dayChangeHist = h;
+      } catch (e) {
+        console.warn('요일 변경 이력 로드 실패 (현재 요일로 판정):', e);
+        A.dayChangeHist = {};
       }
     }
 
@@ -10197,7 +10359,9 @@ async function loadAnalysis() {
 // ══════════════════════════════════════════════════════════════
 //  분석 집계 단일화 — 화면 통계·매트릭스·엑셀이 동일 규칙을 쓰게 하는 공용 판정
 //  규칙(하나): ①그날 (프로그램+장소)에 세션이 없으면 제외 → ②학생 출석요일이 아니면 제외
-//            → ③학생 첫 출석일 이전(또는 첫 출석 기록 없음)이면 분모 제외(중도 등록·재활성 보호)
+//            → ③시작일(첫 출석일과 명단 등록일 중 이른 날) 이전이면 분모 제외(중도 등록 보호)
+//              ※ 2026-10-07: 이전엔 첫 출석이 없으면 전 기간 제외 → 한 번도 안 온 학생이 통계에서 사라졌다.
+//              ※ ②의 요일은 날짜별로 그 당시 요일(승인된 요일 변경 이력)로 판정한다.
 //            → ④나머지에서 출석 기록 있으면 출석(사후=late), 없으면 결석.
 //  이전에는 매트릭스·엑셀이 ③을 적용하지 않아 화면 출석률과 어긋났다(중도 등록 학생에 거짓 X).
 // ══════════════════════════════════════════════════════════════
@@ -10210,18 +10374,41 @@ function buildAnalysisContext(filteredAtt) {
     if (!sessionDatesByPS[psKey]) sessionDatesByPS[psKey] = new Set();
     sessionDatesByPS[psKey].add(r.날짜);
   });
-  return { attMap, sessionDatesByPS, firstAttByStudent: A.firstAttDateMap || {} };
+  return { attMap, sessionDatesByPS, firstAttByStudent: A.firstAttDateMap || {}, dayChangeHist: A.dayChangeHist || {} };
+}
+
+// 타임스탬프 → 기기 로컬(KST) 날짜 'YYYY-MM-DD'
+function localDateStr(ts) {
+  const d = new Date(ts);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+// 그 날짜에 적용되던 출석요일: 그 날짜 이후에 승인된 가장 이른 변경의 '이전 요일', 없으면 현재 요일
+function daysOnDate(s, date, ctx) {
+  const hist = ctx.dayChangeHist[`${s.학번}|${s.프로그램}`];
+  if (hist) {
+    for (const h of hist) { if (date < h.at) return h.prevDays; }
+  }
+  return Array.isArray(s.출석요일) ? s.출석요일 : [];
+}
+
+// 분모 시작일: 첫 출석일과 명단 등록일 중 이른 날. 한 번도 안 온 학생도 등록일부터 결석으로 센다.
+function analysisStartDate(s, ctx) {
+  const first = ctx.firstAttByStudent[`${s.학번}|${s.프로그램}`] || null;
+  const reg = s.생성일시 ? localDateStr(s.생성일시) : null;
+  if (first && reg) return first < reg ? first : reg;
+  return first || reg;
 }
 
 // 한 학생·한 날짜의 판정. state: 'none'|'notTarget'|'preStart'|'attended'|'absent'
 function analysisDayCell(s, date, ctx) {
   const sessionDates = ctx.sessionDatesByPS[`${s.프로그램}|${s.장소}`];
   if (!sessionDates || !sessionDates.has(date)) return { state: 'none' };
-  const sDays = Array.isArray(s.출석요일) ? s.출석요일 : [];
+  const sDays = daysOnDate(s, date, ctx);
   const dayKr = DAY_KR_ANAL[new Date(date + 'T00:00:00').getDay()];
   if (!(sDays.length === 0 || sDays.includes(dayKr))) return { state: 'notTarget' };
-  const firstDate = ctx.firstAttByStudent[`${s.학번}|${s.프로그램}`] || null;
-  if (!firstDate || date < firstDate) return { state: 'preStart' };
+  const startDate = analysisStartDate(s, ctx);
+  if (!startDate || date < startDate) return { state: 'preStart' };
   const rec = ctx.attMap[`${s.학번}|${s.프로그램}|${date}`];
   if (rec) return { state: 'attended', late: !!rec.사후여부, rec: rec };
   return { state: 'absent' };
@@ -10357,11 +10544,11 @@ function renderAnalysis() {
     topAbsent.forEach((s, idx) => {
       const safeName = escapeAttr(s.이름 || '');
       html += `
-        <div class="top-absent-item" onclick="filterByStudent('${s.학번}', '${safeName}')">
+        <div class="top-absent-item" onclick="filterByStudent('${escapeAttr(s.학번)}', '${safeName}')">
           <div class="top-absent-rank">${idx + 1}</div>
           <div style="flex:1;min-width:0">
             <div class="top-absent-name">${escapeHtml(s.이름 || '')}</div>
-            <div class="top-absent-no">${s.학번} · ${escapeHtml((s.프로그램 || '').replace(' 독서시간', ''))}</div>
+            <div class="top-absent-no">${escapeHtml(s.학번)} · ${escapeHtml((s.프로그램 || '').replace(' 독서시간', ''))}</div>
           </div>
           <div class="top-absent-count">${s._absent}/${s._target}회</div>
         </div>
@@ -10406,7 +10593,7 @@ function renderAnalysis() {
     const displayStats = studentStats.slice(0, 200);
     displayStats.forEach(s => {
       html += `<tr>
-        <td class="matrix-td-fixed matrix-td-no">${s.학번}</td>
+        <td class="matrix-td-fixed matrix-td-no">${escapeHtml(s.학번)}</td>
         <td class="matrix-td-fixed matrix-td-name">${escapeHtml(s.이름 || '')}</td>
       `;
 
@@ -10822,7 +11009,7 @@ async function enterStudentScreen(sessionId, scanRoom) {
     session = await sb._retry(() => sb.sessions.byKey(sessionId));   // 학교망 블립 자동 재시도
   } catch (e) {
     console.error('세션 조회 실패:', e);
-    showStudentError('세션 정보를 불러올 수 없어요. 잠시 후 다시 시도해주세요.');
+    showStudentError('출석 정보를 불러오지 못했어요. 아래 「다시 시도」를 눌러 주세요.', 'network');
     return;
   }
 
@@ -10833,13 +11020,13 @@ async function enterStudentScreen(sessionId, scanRoom) {
 
   // 활성 + 만료 체크
   if (!session.활성) {
-    showStudentError('출석이 마감됐어요. 선생님께 문의해주세요.');
+    showStudentError('출석이 마감됐어요. 선생님께 학번과 이름을 말하고 수동 출석을 받아 주세요.');
     return;
   }
 
   const expireMs = new Date(session.만료시각).getTime();
   if (expireMs < Date.now()) {
-    showStudentError('QR 코드가 만료됐어요. 선생님께 새 QR을 요청해주세요.');
+    showStudentError('QR 시간이 지났어요. 칠판의 QR을 다시 찍어 보고, 그래도 안 되면 선생님께 이름을 말해 주세요.');
     return;
   }
 
@@ -10885,12 +11072,15 @@ async function enterStudentScreen(sessionId, scanRoom) {
   updateNoDisplay();
 }
 
-function showStudentError(msg) {
+// kind: 'network'이면 연결 문제 — 제목을 바꾸고 다시 시도 버튼을 보인다(카톡 인앱 브라우저는 새로고침 버튼을 찾기 어렵다)
+function showStudentError(msg, kind) {
   document.getElementById('st-loading').style.display = 'none';
   document.getElementById('st-input').style.display = 'none';
   document.getElementById('st-success').style.display = 'none';
   document.getElementById('st-error').style.display = 'block';
+  document.getElementById('st-error-title').textContent = kind === 'network' ? '연결이 불안정해요' : '출석할 수 없어요';
   document.getElementById('st-error-msg').textContent = msg;
+  document.getElementById('st-error-retry').style.display = kind === 'network' ? '' : 'none';
 }
 
 // ── 넘버패드 ──
@@ -10965,10 +11155,22 @@ async function doStudentAttend() {
   const no = ST.inputDigits.join('');
   const errEl = document.getElementById('st-err');
 
-  // 만료 재확인
+  // 만료 재확인 — 화면을 미리 열어 둔 사이 교사가 연장했을 수 있으니 서버 값을 한 번 다시 읽는다
   if (Date.now() > ST.session.expireMs) {
-    errEl.textContent = 'QR 시간이 만료됐어요. 선생님께 새 QR을 요청해주세요.';
-    return;
+    ST.inFlight = true;
+    let stillExpired = true;
+    try {
+      const cur = await sb.sessions.byKey(ST.session.sessionId);
+      if (cur && cur.활성 && cur.만료시각 && new Date(cur.만료시각).getTime() > Date.now()) {
+        ST.session.expireMs = new Date(cur.만료시각).getTime();
+        stillExpired = false;
+      }
+    } catch (e) { /* 확인 실패 시 만료로 안내 */ }
+    ST.inFlight = false;
+    if (stillExpired) {
+      errEl.textContent = 'QR 시간이 지났어요. 칠판의 QR을 다시 찍어 보고, 그래도 안 되면 선생님께 이름을 말해 주세요.';
+      return;
+    }
   }
 
   ST.inFlight = true;
@@ -10976,6 +11178,7 @@ async function doStudentAttend() {
 
   // 학생 정보 조회 — 1) 사전 캐시 히트 → 0 왕복 2) 미스 시 네트워크 폴백
   let studentInfo = null;
+  let lookupFailed = false;
   if (ST.studentsCache && ST.studentsCache[no]) {
     studentInfo = ST.studentsCache[no];
   } else {
@@ -10986,7 +11189,15 @@ async function doStudentAttend() {
                     || matches.find(s => s.장소 === ST.session.room)
                     || matches[0];
       }
-    } catch (e) { console.warn('학생 조회 실패 (출석은 진행):', e); }
+    } catch (e) { console.warn('학생 조회 실패:', e); lookupFailed = true; }
+  }
+
+  // 조회 자체가 실패한 경우는 '명단에 없음'과 구분 — 등록 화면으로 보내지 않고 다시 누르게 한다
+  if (!studentInfo && lookupFailed) {
+    hideAttendProgress();
+    ST.inFlight = false;
+    errEl.textContent = '인터넷이 불안정해 학생 정보를 확인하지 못했어요. 잠시 뒤 「출석」을 다시 눌러 주세요.';
+    return;
   }
 
   // 명단에 없으면 → 즉석 등록 폼 표시 (Phase 2F)
@@ -11044,21 +11255,31 @@ async function doStudentAttend() {
       const msg = result.msg || '';
       if (/마감|찾을 수 없|만료/.test(msg)) {
         unregisterAttendBeacon(); // 더 이상 재시도 안 함
-        const successEl = document.getElementById('st-success');
-        if (successEl) {
-          successEl.classList.add('already');
-          successEl.style.background = 'rgba(184,84,63,.08)';
-          const titleEl = successEl.querySelector('.success-title');
-          const subEl = successEl.querySelector('.success-sub');
-          if (titleEl) { titleEl.textContent = '출석 실패'; titleEl.style.color = 'var(--terra)'; }
-          if (subEl) subEl.textContent = msg;
-        }
+        setStudentResultFailed('출석이 마감됐거나 QR 시간이 지났어요. 선생님께 학번과 이름을 말하고 수동 출석을 받아 주세요.');
         console.warn('[출석 거부]', msg);
       } else {
-        // 일반 네트워크 오류: 내구성 큐에 적재(재진입·온라인 복귀 시 능동 재시도) + sendBeacon 백업 유지.
-        // 학생 화면은 성공 상태 유지(둘 중 하나로 반드시 도달, unique 제약으로 중복 무해).
+        // 일반 네트워크 오류: 내구성 큐 + sendBeacon 백업은 유지하되, 성공처럼 보이게 두지 않는다.
+        // 큐는 다음 진입 때나 비워지는데 그땐 세션이 마감돼 버려질 수 있다 → 화면이 열린 동안 직접 재시도.
         ATTEND_QUEUE.enqueue(payload);
-        console.warn('출석 전송 2회 실패 → 내구성 큐 적재 + sendBeacon 백업:', msg);
+        console.warn('출석 전송 2회 실패 → 화면에서 재시도 + 큐·sendBeacon 백업:', msg);
+        setStudentResultPending('전송이 늦어지고 있어요. 이 화면을 닫지 말고 잠시만 기다려 주세요.');
+        const deadline = Date.now() + 60 * 1000;
+        while (Date.now() < deadline) {
+          await new Promise(r => setTimeout(r, 3000));
+          const r2 = await tryOnce();
+          if (r2.ok) {
+            unregisterAttendBeacon();
+            try { ATTEND_QUEUE.flush(); } catch (e) {}
+            setStudentResultOk(r2.alreadyAttended);
+            return;
+          }
+          if (/마감|찾을 수 없|만료/.test(r2.msg || '')) {
+            unregisterAttendBeacon();
+            setStudentResultFailed('출석이 마감됐거나 QR 시간이 지났어요. 선생님께 학번과 이름을 말하고 수동 출석을 받아 주세요.');
+            return;
+          }
+        }
+        setStudentResultFailed('인터넷이 불안정해 출석이 아직 전송되지 않았어요. 선생님께 이름을 말해 확인받아 주세요.');
       }
     }
   })();
@@ -11086,6 +11307,49 @@ function showStudentSuccess(name, time, alreadyAttended) {
   document.getElementById('st-success-program').textContent = ST.session.program;
   document.getElementById('st-success-room').textContent = ST.session.room;
   document.getElementById('st-success-time').textContent = time;
+  // 이전 결과의 실패·대기 표시 초기화
+  successEl.style.background = '';
+  titleEl.style.color = '';
+  successEl.querySelector('.success-check').style.display = '';
+  successEl.querySelector('.success-meta').style.display = '';
+  const subEl = document.getElementById('st-success-sub');
+  subEl.style.display = 'none';
+  subEl.textContent = '';
+}
+
+// 출석 결과 표시 상태: 대기(전송 재시도 중) / 실패 / 확정
+function setStudentResultPending(text) {
+  const el = document.getElementById('st-success');
+  if (!el) return;
+  el.querySelector('.success-check').style.display = 'none';
+  el.querySelector('.success-title').textContent = '전송 중…';
+  const sub = document.getElementById('st-success-sub');
+  sub.textContent = text;
+  sub.style.display = 'block';
+}
+function setStudentResultFailed(text) {
+  const el = document.getElementById('st-success');
+  if (!el) return;
+  el.classList.add('already');
+  el.style.background = 'rgba(184,84,63,.08)';
+  el.querySelector('.success-check').style.display = 'none';
+  el.querySelector('.success-meta').style.display = 'none';
+  const t = el.querySelector('.success-title');
+  t.textContent = '출석되지 않았어요';
+  t.style.color = 'var(--terra)';
+  const sub = document.getElementById('st-success-sub');
+  sub.textContent = text;
+  sub.style.display = 'block';
+}
+function setStudentResultOk(alreadyAttended) {
+  const el = document.getElementById('st-success');
+  if (!el) return;
+  el.querySelector('.success-check').style.display = '';
+  el.querySelector('.success-title').textContent = alreadyAttended ? '이미 출석했어요' : 'Welcome';
+  if (alreadyAttended) el.classList.add('already');
+  const sub = document.getElementById('st-success-sub');
+  sub.style.display = 'none';
+  sub.textContent = '';
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -11543,12 +11807,14 @@ function _filt(items,fs,sr){let r=items;if(fs)r=r.filter(x=>x.처리상태===fs)
 function _fmtRD(s){if(!s)return'—';try{const d=new Date(s);return(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}catch(e){return'—';}}
 function _statCls(s){return s==='대기'?'pending':s==='승인'?'approved':'rejected';}
 function _statTxt(s){return s==='대기'?'대기중':s==='승인'?'승인됨':'거절됨';}
-function _hdr(r){const sc=_statCls(r.처리상태);return '<div class="req-card-top"><div class="req-status-badge '+sc+'"><span class="dot"></span>'+_statTxt(r.처리상태)+'</div><div class="req-student-info"><div class="req-student-name">'+escapeHtml(r.이름||'')+'</div><div class="req-student-no">'+r.학번+' · '+escapeHtml(r.프로그램||'')+' · '+escapeHtml(r.장소||'')+'</div></div><div class="req-time">'+_fmtRD(r.요청일시)+'</div></div>';}
+function _hdr(r){const sc=_statCls(r.처리상태);return '<div class="req-card-top"><div class="req-status-badge '+sc+'"><span class="dot"></span>'+_statTxt(r.처리상태)+'</div><div class="req-student-info"><div class="req-student-name">'+escapeHtml(r.이름||'')+'</div><div class="req-student-no">'+escapeHtml(r.학번)+' · '+escapeHtml(r.프로그램||'')+' · '+escapeHtml(r.장소||'')+'</div></div><div class="req-time">'+_fmtRD(r.요청일시)+'</div></div>';}
 function _note(r){if(r.처리상태==='대기'||!r.교사메모)return'';return '<div class="req-teacher-note"><span class="note-label">'+(r.처리상태==='승인'?'승인':'거절')+' 사유:</span>'+escapeHtml(r.교사메모)+'</div>';}
-function renderCorrReqs(fs,sr){const c=document.getElementById('req-list-correction');if(!c)return;const items=_filt(RQ.corrections,fs,sr);document.getElementById('req-count').textContent=items.length+'건';if(!items.length){c.innerHTML='<div class="req-empty"><span class="icon">✦</span>'+(fs==='대기'?'대기 중인 수정 요청이 없어요':'조건에 맞는 요청이 없어요')+'</div>';return;}c.innerHTML=items.map(r=>{const sc=_statCls(r.처리상태);let act='';if(r.처리상태==='대기')act='<div class="req-card-actions"><button class="admin-btn success" onclick="approveCorrection('+r.id+')">승인</button><button class="admin-btn danger" onclick="openRejectModal(&#39;correction&#39;,'+r.id+',&#39;'+escapeAttr(r.이름||'')+'&#39;,&#39;'+r.학번+'&#39;)">거절</button></div>';return '<div class="req-card '+sc+'">'+_hdr(r)+'<div class="req-card-body"><div class="req-detail-row"><span class="req-detail-label">대상 날짜</span><span class="req-detail-value highlight">'+(r.대상날짜||'—')+'</span></div><div class="req-detail-row"><span class="req-detail-label">변경 요청</span><span class="req-detail-value from-to"><span>'+escapeHtml(r.현재상태||'결석')+'</span><span class="arrow-icon">→</span><span style="color:var(--sage);font-weight:500">'+escapeHtml(r.요청상태||'출석')+'</span></span></div><div class="req-detail-row"><span class="req-detail-label">사유</span><span class="req-detail-value req-reason">'+escapeHtml(r.사유||'—')+'</span></div>'+(r.상세?'<div class="req-detail-row"><span class="req-detail-label">상세</span><span class="req-detail-value">'+escapeHtml(r.상세)+'</span></div>':'')+'</div>'+_note(r)+act+'</div>';}).join('');}
-function renderDayReqs(fs,sr){const c=document.getElementById('req-list-daychange');if(!c)return;const items=_filt(RQ.dayChanges,fs,sr);document.getElementById('req-count').textContent=items.length+'건';if(!items.length){c.innerHTML='<div class="req-empty"><span class="icon">✦</span>'+(fs==='대기'?'대기 중인 요일 변경 요청이 없어요':'조건에 맞는 요청이 없어요')+'</div>';return;}const ad=['월','화','수','목','금','토','일'];const mb=(ds)=>ad.map(d=>{const o=ds.includes(d);const w=d==='토'||d==='일';return '<span class="req-day-badge '+(o?'on':'off')+(w&&o?' weekend':'')+'">'+d+'</span>';}).join('');c.innerHTML=items.map(r=>{const sc=_statCls(r.처리상태);const cd=Array.isArray(r.현재요일)?r.현재요일:[];const rd=Array.isArray(r.요청요일)?r.요청요일:[];let act='';if(r.처리상태==='대기')act='<div class="req-card-actions"><button class="admin-btn success" onclick="approveDayChange('+r.id+')">승인</button><button class="admin-btn danger" onclick="openRejectModal(&#39;daychange&#39;,'+r.id+',&#39;'+escapeAttr(r.이름||'')+'&#39;,&#39;'+r.학번+'&#39;)">거절</button></div>';return '<div class="req-card '+sc+'">'+_hdr(r)+'<div class="req-card-body"><div class="req-detail-row"><span class="req-detail-label">현재 요일</span><span class="req-detail-value"><div class="req-day-badges">'+mb(cd)+'</div></span></div><div class="req-detail-row"><span class="req-detail-label">요청 요일</span><span class="req-detail-value"><div class="req-day-badges">'+mb(rd)+'</div></span></div><div class="req-detail-row"><span class="req-detail-label">사유</span><span class="req-detail-value req-reason">'+escapeHtml(r.사유||'—')+'</span></div></div>'+_note(r)+act+'</div>';}).join('');}
-async function approveCorrection(id){try{await sb.requests.approveCorrection(id,'');showAdminToast('수정 요청이 승인됐어요','ok');await loadRequests();}catch(e){showAdminToast('승인 실패: '+(e.message||'오류'),'err');}}
-async function approveDayChange(id){try{await sb.requests.approveDayChange(id,'');showAdminToast('요일 변경 요청이 승인됐어요','ok');sb.invalidateCache('students');await loadAllStudents();await loadRequests();}catch(e){showAdminToast('승인 실패: '+(e.message||'오류'),'err');}}
+function renderCorrReqs(fs,sr){const c=document.getElementById('req-list-correction');if(!c)return;const items=_filt(RQ.corrections,fs,sr);document.getElementById('req-count').textContent=items.length+'건';if(!items.length){c.innerHTML='<div class="req-empty"><span class="icon">✦</span>'+(fs==='대기'?'대기 중인 수정 요청이 없어요':'조건에 맞는 요청이 없어요')+'</div>';return;}c.innerHTML=items.map(r=>{const sc=_statCls(r.처리상태);let act='';if(r.처리상태==='대기')act='<div class="req-card-actions"><button class="admin-btn success" onclick="approveCorrection('+r.id+')">승인</button><button class="admin-btn danger" onclick="openRejectModal(&#39;correction&#39;,'+r.id+',&#39;'+escapeAttr(r.이름||'')+'&#39;,&#39;'+escapeAttr(r.학번)+'&#39;)">거절</button></div>';return '<div class="req-card '+sc+'">'+_hdr(r)+'<div class="req-card-body"><div class="req-detail-row"><span class="req-detail-label">대상 날짜</span><span class="req-detail-value highlight">'+(r.대상날짜||'—')+'</span></div><div class="req-detail-row"><span class="req-detail-label">변경 요청</span><span class="req-detail-value from-to"><span>'+escapeHtml(r.현재상태||'결석')+'</span><span class="arrow-icon">→</span><span style="color:var(--sage);font-weight:500">'+escapeHtml(r.요청상태||'출석')+'</span></span></div><div class="req-detail-row"><span class="req-detail-label">사유</span><span class="req-detail-value req-reason">'+escapeHtml(r.사유||'—')+'</span></div>'+(r.상세?'<div class="req-detail-row"><span class="req-detail-label">상세</span><span class="req-detail-value">'+escapeHtml(r.상세)+'</span></div>':'')+'</div>'+_note(r)+act+'</div>';}).join('');}
+function renderDayReqs(fs,sr){const c=document.getElementById('req-list-daychange');if(!c)return;const items=_filt(RQ.dayChanges,fs,sr);document.getElementById('req-count').textContent=items.length+'건';if(!items.length){c.innerHTML='<div class="req-empty"><span class="icon">✦</span>'+(fs==='대기'?'대기 중인 요일 변경 요청이 없어요':'조건에 맞는 요청이 없어요')+'</div>';return;}const ad=['월','화','수','목','금','토','일'];const mb=(ds)=>ad.map(d=>{const o=ds.includes(d);const w=d==='토'||d==='일';return '<span class="req-day-badge '+(o?'on':'off')+(w&&o?' weekend':'')+'">'+d+'</span>';}).join('');c.innerHTML=items.map(r=>{const sc=_statCls(r.처리상태);const cd=Array.isArray(r.현재요일)?r.현재요일:[];const rd=Array.isArray(r.요청요일)?r.요청요일:[];let act='';if(r.처리상태==='대기')act='<div class="req-card-actions"><button class="admin-btn success" onclick="approveDayChange('+r.id+')">승인</button><button class="admin-btn danger" onclick="openRejectModal(&#39;daychange&#39;,'+r.id+',&#39;'+escapeAttr(r.이름||'')+'&#39;,&#39;'+escapeAttr(r.학번)+'&#39;)">거절</button></div>';return '<div class="req-card '+sc+'">'+_hdr(r)+'<div class="req-card-body"><div class="req-detail-row"><span class="req-detail-label">현재 요일</span><span class="req-detail-value"><div class="req-day-badges">'+mb(cd)+'</div></span></div><div class="req-detail-row"><span class="req-detail-label">요청 요일</span><span class="req-detail-value"><div class="req-day-badges">'+mb(rd)+'</div></span></div><div class="req-detail-row"><span class="req-detail-label">사유</span><span class="req-detail-value req-reason">'+escapeHtml(r.사유||'—')+'</span></div></div>'+_note(r)+act+'</div>';}).join('');}
+// 승인으로 출석·요일이 바뀌면 기록·분석 캐시를 버려 다음에 탭을 열 때 새로 읽게 한다
+function invalidateAttendanceViews(){A.historyLoaded=false;A.analysisLoaded=false;A.firstAttDateMap=null;A.dayChangeHist=null;}
+async function approveCorrection(id){try{await sb.requests.approveCorrection(id,'');showAdminToast('수정 요청이 승인됐어요','ok');invalidateAttendanceViews();await loadRequests();}catch(e){showAdminToast('승인 실패: '+(e.message||'오류'),'err');}}
+async function approveDayChange(id){try{await sb.requests.approveDayChange(id,'');showAdminToast('요일 변경 요청이 승인됐어요','ok');invalidateAttendanceViews();sb.invalidateCache('students');await loadAllStudents();await loadRequests();}catch(e){showAdminToast('승인 실패: '+(e.message||'오류'),'err');}}
 function openRejectModal(t,id,n,no){RQ.rejectTarget={type:t,id:id};RQ.rejectReason='';document.getElementById('reject-modal-info').textContent=n+' ('+no+')';document.getElementById('reject-err').textContent='';document.getElementById('reject-custom-input').value='';document.getElementById('reject-custom-wrap').classList.remove('on');document.querySelectorAll('#reject-reasons .reject-reason-btn').forEach(b=>b.classList.remove('on'));document.getElementById('modal-reject').classList.add('on');}
 function closeRejectModal(){document.getElementById('modal-reject').classList.remove('on');RQ.rejectTarget=null;}
 function selectRejectReason(b){document.querySelectorAll('#reject-reasons .reject-reason-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');const r=b.dataset.reason;if(r==='custom'){RQ.rejectReason='';document.getElementById('reject-custom-wrap').classList.add('on');setTimeout(()=>document.getElementById('reject-custom-input').focus(),100);}else{RQ.rejectReason=r;document.getElementById('reject-custom-wrap').classList.remove('on');}}
@@ -12262,7 +12528,7 @@ const COSMOS = {
         html += '</tr></thead><tbody>';
         rows.slice(0, 50).forEach(r => {
           html += '<tr style="border-bottom:1px solid var(--border)">' +
-            '<td style="padding:4px 6px">' + r.학번 + '</td>' +
+            '<td style="padding:4px 6px">' + escapeHtml(r.학번) + '</td>' +
             '<td style="padding:4px 6px">' + r.이름 + '</td>' +
             '<td style="padding:4px 6px">' + r.프로그램 + '</td>' +
             '<td style="padding:4px 6px">' + r.장소 + '</td>' +
@@ -12930,7 +13196,7 @@ const LIVE = {
 
       // 최근 출석 5명
       const recent = atts.slice(0, 5).map(a =>
-        '<div class="live-recent-item"><span class="nm">' + escapeHtml(a.이름 || '') + ' (' + a.학번 + ')</span><span class="tm">' + (a.원래시각 || '').slice(0, 5) + '</span></div>'
+        '<div class="live-recent-item"><span class="nm">' + escapeHtml(a.이름 || '') + ' (' + escapeHtml(a.학번) + ')</span><span class="tm">' + (a.원래시각 || '').slice(0, 5) + '</span></div>'
       ).join('');
 
       return '<div class="live-card active">' +
@@ -13037,7 +13303,7 @@ const CK={no:'',name:'',programs:[],records:[],requests:[],dayRequests:[],weekOf
 const CK_DAY=['일','월','화','수','목','금','토'];
 async function enterCheckScreen(){showScreen('screen-check');document.getElementById('ck-login').style.display='block';document.getElementById('ck-dash').style.display='none';document.getElementById('ck-no').value='';document.getElementById('ck-err').textContent='';const sav=sessionStorage.getItem('ck_no');if(sav){document.getElementById('ck-no').value=sav;ckOnInput();ckLogin();}else setTimeout(()=>document.getElementById('ck-no').focus(),200);}
 function ckOnInput(){const v=document.getElementById('ck-no').value.trim();document.getElementById('ck-btn').disabled=!/^\d{5}$/.test(v);document.getElementById('ck-err').textContent='';}
-async function ckLogin(){const no=document.getElementById('ck-no').value.trim();if(!/^\d{5}$/.test(no))return;const btn=document.getElementById('ck-btn');btn.disabled=true;btn.textContent='조회 중...';try{const stus=await sb.students.byNo(no);if(!stus||stus.length===0){document.getElementById('ck-err').textContent='등록되지 않은 학번이에요';btn.textContent='조회하기';ckOnInput();return;}CK.no=no;CK.name=stus[0].이름;CK.programs=stus.map(s=>({program:s.프로그램,location:s.장소,days:Array.isArray(s.출석요일)?s.출석요일.join(','):''}));const att=await sb.attendance.byStudent(no);CK.records=(att||[]).map(r=>({date:r.날짜,program:r.프로그램,location:r.장소,status:r.사후여부?'사후출석':(r.상태||'출석')}));try{const{data:cr}=await sb.client().from('correction_requests').select('*').eq('학번',no).order('요청일시',{ascending:false});CK.requests=cr||[];}catch(e){CK.requests=[];}try{const{data:dr}=await sb.client().from('day_change_requests').select('*').eq('학번',no).order('요청일시',{ascending:false});CK.dayRequests=dr||[];}catch(e){CK.dayRequests=[];}sessionStorage.setItem('ck_no',no);ckRenderDash();}catch(e){console.error(e);document.getElementById('ck-err').textContent='조회 실패: '+(e.message||'오류');btn.textContent='조회하기';ckOnInput();}}
+async function ckLogin(){const no=document.getElementById('ck-no').value.trim();if(!/^\d{5}$/.test(no))return;const btn=document.getElementById('ck-btn');btn.disabled=true;btn.textContent='조회 중...';try{const stus=await sb.students.byNo(no);if(!stus||stus.length===0){document.getElementById('ck-err').textContent='등록되지 않은 학번이에요';btn.textContent='조회하기';ckOnInput();return;}CK.no=no;CK.name=stus[0].이름;CK.programs=stus.map(s=>({program:s.프로그램,location:s.장소,days:Array.isArray(s.출석요일)?s.출석요일.join(','):''}));const att=await sb.attendance.byStudent(no);CK.records=(att||[]).map(r=>({date:r.날짜,program:r.프로그램,location:r.장소,status:r.사후여부?'사후출석':(r.상태||'출석')}));CK.sessionKeys=await ckLoadSessionKeys(CK.programs);try{const{data:cr}=await sb.client().from('correction_requests').select('*').eq('학번',no).order('요청일시',{ascending:false});CK.requests=cr||[];}catch(e){CK.requests=[];}try{const{data:dr}=await sb.client().from('day_change_requests').select('*').eq('학번',no).order('요청일시',{ascending:false});CK.dayRequests=dr||[];}catch(e){CK.dayRequests=[];}sessionStorage.setItem('ck_no',no);ckRenderDash();}catch(e){console.error(e);document.getElementById('ck-err').textContent='조회 실패: '+(e.message||'오류');btn.textContent='조회하기';ckOnInput();}}
 function ckLogout(){sessionStorage.removeItem('ck_no');CK.no='';enterCheckScreen();}
 function ckRenderDash(){document.getElementById('ck-login').style.display='none';document.getElementById('ck-dash').style.display='block';document.getElementById('ck-avatar').textContent=CK.name[0]||'?';document.getElementById('ck-name').textContent=CK.name;document.getElementById('ck-no2').textContent=CK.no;let att=0,abs=0;CK.records.forEach(r=>{if(r.status==='출석'||r.status==='사후출석')att++;else if(r.status==='결석')abs++;});const tot=att+abs;document.getElementById('ck-rate').textContent=tot?Math.round(att/tot*100):0;document.getElementById('ck-att').textContent=att;document.getElementById('ck-abs').textContent=abs;ckRenderView();}
 function ckSwitch(v){CK.view=v;document.querySelectorAll('.dash-tab').forEach(b=>b.classList.toggle('on',b.dataset.v===v));ckRenderView();}
@@ -13045,7 +13311,7 @@ function ckGetMonday(d){const dt=new Date(d);const day=dt.getDay();const diff=da
 function ckFmtD(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function ckProgCls(name){if(name.includes('심야'))return ' p-simya';if(name.includes('야간'))return ' p-yagan';if(name.includes('방과후'))return ' p-bangg';if(name.includes('토요일')||name.includes('일요일'))return ' p-weekend';return '';}
 function ckRenderView(){const c=document.getElementById('ck-view');if(CK.view==='weekly')c.innerHTML=ckRenderWeekly();else if(CK.view==='monthly')c.innerHTML=ckRenderMonthly();else if(CK.view==='schedule')c.innerHTML=ckRenderSchedule();else c.innerHTML=ckRenderRequests();}
-function ckRenderMonthly(){if(!CK.monthOffset)CK.monthOffset=0;const today=new Date();today.setHours(0,0,0,0);const base=new Date(today.getFullYear(),today.getMonth()+CK.monthOffset,1);const y=base.getFullYear(),m=base.getMonth();const first=new Date(y,m,1);const last=new Date(y,m+1,0);const startDow=first.getDay();const title=y+'년 '+(m+1)+'월'+(CK.monthOffset===0?' (이번 달)':'');let h='<div class="month-nav"><button class="week-nav-btn" onclick="ckMon(-1)">‹</button><div class="month-title">'+title+'</div><button class="week-nav-btn" onclick="ckMon(1)">›</button></div>';const dows=['일','월','화','수','목','금','토'];CK.programs.forEach(p=>{const stuDays=p.days?p.days.split(',').map(s=>s.trim()).filter(Boolean):[];let pAtt=0,pTar=0;let cells='';dows.forEach((d,i)=>cells+='<div class="month-dow'+(i===0?' sun':i===6?' sat':'')+'">'+d+'</div>');for(let i=0;i<startDow;i++)cells+='<div class="month-cell empty"></div>';for(let day=1;day<=last.getDate();day++){const d=new Date(y,m,day);const dStr=ckFmtD(d);const dayKr=CK_DAY[d.getDay()];const isTarget=stuDays.length===0||stuDays.includes(dayKr);const isTodayOrFuture=d>=today;const rec=CK.records.find(r=>r.date===dStr&&r.program===p.program&&r.location===p.location);const req=CK.requests.find(r=>r.대상날짜===dStr&&r.프로그램===p.program&&r.처리상태==='대기');let b='N',cls='';if(!isTarget)b='N';else if(rec&&(rec.status==='출석'||rec.status==='사후출석')){b='O';pAtt++;pTar++;}else if(req){b='Q';pTar++;}else if(isTodayOrFuture)b='N';else{b='X';cls=' x';pTar++;}const isToday=ckFmtD(d)===ckFmtD(today);cells+='<div class="month-cell'+(isToday?' today':'')+cls+'" '+(b==='X'?('onclick="ckOpenReq(&#39;'+dStr+'&#39;,&#39;'+p.program+'&#39;,&#39;'+p.location+'&#39;)"'):'')+'><div class="mn">'+day+'</div><span class="mb '+b+'">'+(b==='O'?'O':b==='X'?'X':b==='J'?'자':b==='Q'?'?':'·')+'</span></div>';}const rate=pTar?Math.round(pAtt/pTar*100):0;const rcls=rate>=80?'':rate<50?' low':' mid';h+='<div class="month-prog-card"><div class="prog-head"><div class="prog-name'+ckProgCls(p.program)+'">'+p.program+' · '+p.location+'</div><div class="prog-rate'+rcls+'">'+rate+'%</div></div><div class="month-grid">'+cells+'</div></div>';});return h;}
+function ckRenderMonthly(){if(!CK.monthOffset)CK.monthOffset=0;const today=new Date();today.setHours(0,0,0,0);const base=new Date(today.getFullYear(),today.getMonth()+CK.monthOffset,1);const y=base.getFullYear(),m=base.getMonth();const first=new Date(y,m,1);const last=new Date(y,m+1,0);const startDow=first.getDay();const title=y+'년 '+(m+1)+'월'+(CK.monthOffset===0?' (이번 달)':'');let h='<div class="month-nav"><button class="week-nav-btn" onclick="ckMon(-1)">‹</button><div class="month-title">'+title+'</div><button class="week-nav-btn" onclick="ckMon(1)">›</button></div>';const dows=['일','월','화','수','목','금','토'];CK.programs.forEach(p=>{const stuDays=p.days?p.days.split(',').map(s=>s.trim()).filter(Boolean):[];let pAtt=0,pTar=0;let cells='';dows.forEach((d,i)=>cells+='<div class="month-dow'+(i===0?' sun':i===6?' sat':'')+'">'+d+'</div>');for(let i=0;i<startDow;i++)cells+='<div class="month-cell empty"></div>';for(let day=1;day<=last.getDate();day++){const d=new Date(y,m,day);const dStr=ckFmtD(d);const dayKr=CK_DAY[d.getDay()];const isTarget=(stuDays.length===0||stuDays.includes(dayKr))&&ckHadSession(dStr,p);const isTodayOrFuture=d>=today;const rec=CK.records.find(r=>r.date===dStr&&r.program===p.program&&ckSameRoom(r.location,p.location));const req=CK.requests.find(r=>r.대상날짜===dStr&&r.프로그램===p.program&&r.처리상태==='대기');let b='N',cls='';if(!isTarget)b='N';else if(rec&&(rec.status==='출석'||rec.status==='사후출석')){b='O';pAtt++;pTar++;}else if(req){b='Q';pTar++;}else if(isTodayOrFuture)b='N';else{b='X';cls=' x';pTar++;}const isToday=ckFmtD(d)===ckFmtD(today);cells+='<div class="month-cell'+(isToday?' today':'')+cls+'" '+(b==='X'?('onclick="ckOpenReq(&#39;'+dStr+'&#39;,&#39;'+p.program+'&#39;,&#39;'+p.location+'&#39;)"'):'')+'><div class="mn">'+day+'</div><span class="mb '+b+'">'+(b==='O'?'O':b==='X'?'X':b==='J'?'자':b==='Q'?'?':'·')+'</span></div>';}const rate=pTar?Math.round(pAtt/pTar*100):0;const rcls=rate>=80?'':rate<50?' low':' mid';h+='<div class="month-prog-card"><div class="prog-head"><div class="prog-name'+ckProgCls(p.program)+'">'+p.program+' · '+p.location+'</div><div class="prog-rate'+rcls+'">'+rate+'%</div></div><div class="month-grid">'+cells+'</div></div>';});return h;}
 function ckMon(d){if(!CK.monthOffset)CK.monthOffset=0;CK.monthOffset+=d;ckRenderView();}
 function ckRenderSchedule(){const dows=['월','화','수','목','금','토','일'];let h='';CK.programs.forEach(p=>{const stuDays=p.days?p.days.split(',').map(s=>s.trim()).filter(Boolean):[];h+='<div class="sched-card"><div class="sched-title">'+p.program+' · '+p.location+'</div><div class="sched-days">'+dows.map(d=>{const on=stuDays.length===0||stuDays.includes(d);return '<div class="sched-day'+(on?' on':'')+'">'+d+'</div>';}).join('')+'</div></div>';});if(!CK.programs.length)h='<div class="sched-card" style="text-align:center;color:var(--ink-faint)">등록된 프로그램이 없어요</div>';return h;}
 function ckRenderRequests(){const all=[...(CK.requests||[]).map(r=>({...r,_t:'c'})),...(CK.dayRequests||[]).map(r=>({...r,_t:'d'}))];all.sort((a,b)=>(b.요청일시||'').localeCompare(a.요청일시||''));if(!all.length)return '<div class="sched-card" style="text-align:center;color:var(--ink-faint);padding:40px">요청 내역이 없어요</div>';return all.map(r=>{const st=r.처리상태||'대기';const cls=st==='대기'?'wait':st==='승인'?'ok':'no';const type=r._t==='c'?'출석 수정':'요일 변경';const date=r._t==='c'?(r.대상날짜||'—'):((r.요청일시||'').slice(0,10));let meta='';if(r._t==='c')meta=(r.프로그램||'')+' · '+(r.장소||'');else meta=(r.프로그램||'')+' → '+(Array.isArray(r.요청요일)?r.요청요일.join(','):'');return '<div class="req-list-item"><div class="req-li-top"><div class="req-li-date">'+type+' · '+date+'</div><div class="req-li-st '+cls+'">'+st+'</div></div><div class="req-li-meta">'+meta+'</div><div class="req-li-reason">"'+(r.사유||'')+'"</div>'+(r.교사메모?'<div class="req-li-note"><strong>교사 메모:</strong> '+r.교사메모+'</div>':'')+'</div>';}).join('');}
@@ -13056,7 +13322,13 @@ function ckCloseReq(){document.getElementById('ck-modal-bg').classList.remove('o
 function ckPickReason(b,r){document.querySelectorAll('.ck-reason-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');_ckReason=r;document.getElementById('ck-submit').disabled=false;}
 async function ckSubmitReq(){if(!_ckReqCtx||!_ckReason)return;const b=document.getElementById('ck-submit');b.disabled=true;b.textContent='전송 중...';try{await sb.requests.createCorrection({no:CK.no,name:CK.name,date:_ckReqCtx.date,program:_ckReqCtx.prog,room:_ckReqCtx.loc,reason:_ckReason,detail:document.getElementById('ck-detail').value.trim()});ckCloseReq();b.textContent='요청 보내기';const{data:cr}=await sb.client().from('correction_requests').select('*').eq('학번',CK.no).order('요청일시',{ascending:false});CK.requests=cr||[];ckRenderView();alert('요청이 전송됐어요! 교사 확인 후 반영됩니다.');}catch(e){document.getElementById('ck-merr').textContent='실패: '+(e.message||'오류');b.disabled=false;b.textContent='요청 보내기';}}
 document.addEventListener('click',e=>{if(e.target.id==='ck-modal-bg')ckCloseReq();});
-function ckRenderWeekly(){const today=new Date();today.setHours(0,0,0,0);const monday=ckGetMonday(today);monday.setDate(monday.getDate()+CK.weekOffset*7);const sunday=new Date(monday);sunday.setDate(sunday.getDate()+6);const days=[];for(let i=0;i<7;i++){const d=new Date(monday);d.setDate(d.getDate()+i);days.push(d);}const range=(monday.getMonth()+1)+'/'+monday.getDate()+' ~ '+(sunday.getMonth()+1)+'/'+sunday.getDate();const title=CK.weekOffset===0?'이번 주':(CK.weekOffset===-1?'지난 주':(CK.weekOffset===1?'다음 주':(CK.weekOffset<0?Math.abs(CK.weekOffset)+'주 전':CK.weekOffset+'주 후')));let h='<div class="week-nav"><button class="week-nav-btn" onclick="ckWeek(-1)">‹</button><div class="week-nav-info"><div class="week-nav-title">'+title+'</div><div class="week-nav-range">'+range+'</div></div><button class="week-nav-btn" onclick="ckWeek(1)">›</button></div>';CK.programs.forEach(p=>{const stuDays=p.days?p.days.split(',').map(s=>s.trim()).filter(Boolean):[];let pAtt=0,pTar=0;const cells=days.map(d=>{const dStr=ckFmtD(d);const dayKr=CK_DAY[d.getDay()];const isTarget=stuDays.length===0||stuDays.includes(dayKr);const isFuture=d>today;const rec=CK.records.find(r=>r.date===dStr&&r.program===p.program&&r.location===p.location);const req=CK.requests.find(r=>r.대상날짜===dStr&&r.프로그램===p.program&&r.처리상태==='대기');let badge='N',cls='';const isTodayOrFuture=d>=today;if(!isTarget||isFuture)badge='N';else if(rec&&(rec.status==='출석'||rec.status==='사후출석')){badge='O';pAtt++;pTar++;}else if(req){badge='Q';pTar++;}else if(isTodayOrFuture){badge='N';}else{badge='X';cls=' x';pTar++;}const isToday=ckFmtD(d)===ckFmtD(today);return '<div class="day-col'+(isToday?' today':'')+cls+'" '+(badge==='X'?('onclick="ckOpenReq(&#39;'+dStr+'&#39;,&#39;'+p.program+'&#39;,&#39;'+p.location+'&#39;)"'):'')+'><div class="day-name">'+dayKr+'</div><div class="day-num">'+d.getDate()+'</div><span class="day-badge '+badge+'">'+(badge==='O'?'O':badge==='X'?'X':badge==='J'?'자':badge==='Q'?'?':'·')+'</span></div>';}).join('');const rate=pTar?Math.round(pAtt/pTar*100):0;const rcls=rate>=80?'':rate<50?' low':' mid';h+='<div class="prog-card"><div class="prog-head"><div class="prog-name'+ckProgCls(p.program)+'">'+p.program+' · '+p.location+'</div><div class="prog-rate'+rcls+'">'+rate+'%</div></div><div class="week-grid">'+cells+'</div></div>';});return h;}
+// 세션이 실제로 열린 날만 결석(X) 후보 — 방학·시험·휴일에 X가 찍혀 수정 요청이 몰리던 문제
+// 아우름↔교과1실은 한 방으로 본다(짝 방 QR로 찍어도 출석으로 인정)
+function ckRoomKey(loc){return getRoomGroup(loc).slice().sort().join('+');}
+function ckSameRoom(a,b){return a===b||ckRoomKey(a)===ckRoomKey(b);}
+async function ckLoadSessionKeys(programs){const set=new Set();try{const progs=[...new Set(programs.map(p=>p.program))];const rows=await fetchAllRows(()=>sb.client().from('sessions').select('id, 날짜, 프로그램, 장소').in('프로그램',progs).order('id',{ascending:true}));rows.forEach(r=>set.add(r.날짜+'|'+r.프로그램+'|'+ckRoomKey(r.장소)));}catch(e){console.warn('세션 날짜 조회 실패 — 요일 기준으로 표시:',e);return null;}return set;}
+function ckHadSession(dStr,p){if(!CK.sessionKeys)return true;return CK.sessionKeys.has(dStr+'|'+p.program+'|'+ckRoomKey(p.location));}
+function ckRenderWeekly(){const today=new Date();today.setHours(0,0,0,0);const monday=ckGetMonday(today);monday.setDate(monday.getDate()+CK.weekOffset*7);const sunday=new Date(monday);sunday.setDate(sunday.getDate()+6);const days=[];for(let i=0;i<7;i++){const d=new Date(monday);d.setDate(d.getDate()+i);days.push(d);}const range=(monday.getMonth()+1)+'/'+monday.getDate()+' ~ '+(sunday.getMonth()+1)+'/'+sunday.getDate();const title=CK.weekOffset===0?'이번 주':(CK.weekOffset===-1?'지난 주':(CK.weekOffset===1?'다음 주':(CK.weekOffset<0?Math.abs(CK.weekOffset)+'주 전':CK.weekOffset+'주 후')));let h='<div class="week-nav"><button class="week-nav-btn" onclick="ckWeek(-1)">‹</button><div class="week-nav-info"><div class="week-nav-title">'+title+'</div><div class="week-nav-range">'+range+'</div></div><button class="week-nav-btn" onclick="ckWeek(1)">›</button></div>';CK.programs.forEach(p=>{const stuDays=p.days?p.days.split(',').map(s=>s.trim()).filter(Boolean):[];let pAtt=0,pTar=0;const cells=days.map(d=>{const dStr=ckFmtD(d);const dayKr=CK_DAY[d.getDay()];const isTarget=(stuDays.length===0||stuDays.includes(dayKr))&&ckHadSession(dStr,p);const isFuture=d>today;const rec=CK.records.find(r=>r.date===dStr&&r.program===p.program&&ckSameRoom(r.location,p.location));const req=CK.requests.find(r=>r.대상날짜===dStr&&r.프로그램===p.program&&r.처리상태==='대기');let badge='N',cls='';const isTodayOrFuture=d>=today;if(!isTarget||isFuture)badge='N';else if(rec&&(rec.status==='출석'||rec.status==='사후출석')){badge='O';pAtt++;pTar++;}else if(req){badge='Q';pTar++;}else if(isTodayOrFuture){badge='N';}else{badge='X';cls=' x';pTar++;}const isToday=ckFmtD(d)===ckFmtD(today);return '<div class="day-col'+(isToday?' today':'')+cls+'" '+(badge==='X'?('onclick="ckOpenReq(&#39;'+dStr+'&#39;,&#39;'+p.program+'&#39;,&#39;'+p.location+'&#39;)"'):'')+'><div class="day-name">'+dayKr+'</div><div class="day-num">'+d.getDate()+'</div><span class="day-badge '+badge+'">'+(badge==='O'?'O':badge==='X'?'X':badge==='J'?'자':badge==='Q'?'?':'·')+'</span></div>';}).join('');const rate=pTar?Math.round(pAtt/pTar*100):0;const rcls=rate>=80?'':rate<50?' low':' mid';h+='<div class="prog-card"><div class="prog-head"><div class="prog-name'+ckProgCls(p.program)+'">'+p.program+' · '+p.location+'</div><div class="prog-rate'+rcls+'">'+rate+'%</div></div><div class="week-grid">'+cells+'</div></div>';});return h;}
 function ckWeek(d){CK.weekOffset+=d;ckRenderView();}
 
 
@@ -13978,15 +14250,15 @@ const SEAT_ADMIN = {
           '<td class="seat-admin-req-name">' + escapeHtml(a.이름) + '</td>' +
           '<td><span class="seat-admin-req-seat">' + escapeHtml(reqLabel) + '</span></td>' +
           '<td>' +
-            '<select class="' + inputCls + '" style="width:auto;min-width:90px;margin-right:6px" onchange="SEAT_ADMIN.editLocation(\'' + a.학번 + '\', this.value)">' +
+            '<select class="' + inputCls + '" style="width:auto;min-width:90px;margin-right:6px" onchange="SEAT_ADMIN.editLocation(\'' + escapeAttr(a.학번) + '\', this.value)">' +
               '<option value="해오름"' + (a.장소 === '해오름' ? ' selected' : '') + '>해오름</option>' +
               '<option value="리케이온"' + (a.장소 === '리케이온' ? ' selected' : '') + '>리케이온</option>' +
             '</select>' +
             '<input type="number" min="1" max="75" class="' + inputCls + '" value="' + (a.좌석번호 || '') +
-              '" onchange="SEAT_ADMIN.editSeat(\'' + a.학번 + '\', this.value)">' +
+              '" onchange="SEAT_ADMIN.editSeat(\'' + escapeAttr(a.학번) + '\', this.value)">' +
           '</td>' +
           '<td style="font-size:13px;' + reasonStyle + '">' + escapeHtml(reasonText) + '</td>' +
-          '<td style="text-align:right"><button class="admin-btn admin-btn-sm danger" onclick="SEAT_ADMIN.removeRequest(\'' + a.학번 + '\')" title="이 신청 삭제">삭제</button></td>' +
+          '<td style="text-align:right"><button class="admin-btn admin-btn-sm danger" onclick="SEAT_ADMIN.removeRequest(\'' + escapeAttr(a.학번) + '\')" title="이 신청 삭제">삭제</button></td>' +
           '</tr>';
       });
       html += '</tbody></table>';
