@@ -39,6 +39,27 @@ COLS = {
     18: ('심야 독서시간', '리케이온', ''),             # S
 }
 NAME_RE = re.compile(r'[가-힣]{2,5}[A-Za-z]?')
+UNREADABLE = [0]   # 이름으로 읽지 못한 칸 수(로그용)
+
+
+def clean_name(v):
+    """감독 칸 값 → 이름. 빈칸이면 None, 괄호 메모·공백은 정리("홍길동(대체)"→홍길동, "김 철수"→김철수).
+    정리해도 이름 형태가 아니면 None을 돌려주고, 호출부에서 '읽지 못한 칸'으로 구분한다."""
+    if not v:
+        return None
+    if is_schedule_word(v):
+        return None
+    t = re.sub(r'[\(\[（].*?[\)\]）]', '', v)
+    t = re.sub(r'\s+', '', t)
+    return t if NAME_RE.fullmatch(t) else None
+
+
+SCHEDULE_WORDS = ('공휴일', '고사', '시험', '방학', '휴업', '휴일', '행사', '축제', '체험', '개교기념', '한글날', '없음', '미운영')
+
+
+def is_schedule_word(v):
+    """'대체공휴일'·'1회 고사' 같은 일정 문구 = 그날 감독 없음(빈칸과 같게 처리)."""
+    return any(w in v for w in SCHEDULE_WORDS)
 
 
 def cell(rows, r, c):
@@ -110,7 +131,11 @@ def rows_for_month(wb, year, month):
             continue
         for c, (prog, group, slot) in COLS.items():
             v = cell(rows, r, c)
-            who = v if NAME_RE.fullmatch(v) else None
+            who = clean_name(v)
+            if v and who is None and not is_schedule_word(v):
+                # 이름으로 읽지 못한 칸(예: "홍길동/김철수", 메모)은 지우지 않고 건너뛴다 — 기존 값 유지, 건수만 로그
+                UNREADABLE[0] += 1
+                continue
             if prog in ('토요일 독서시간', '일요일 독서시간'):
                 # 2026-08·10 실제 세션 기록으로 확인: 8/17(월) 줄의 토 오후 = 8/22 감독, 10/1(목) 줄의 토 오전 = 10/3 감독
                 target = d + dt.timedelta(days=(5 if prog.startswith('토') else 6) - d.weekday())
@@ -173,6 +198,9 @@ def main():
     payload = list(merged.values())
     if not payload:
         raise SystemExit('[중단] 읽은 감독 정보가 없어요.')
+    if UNREADABLE[0]:
+        # GitHub Actions 경고 표시(::warning::) — 실행 요약에 노란 경고로 보인다
+        print(f'::warning::이름으로 읽지 못한 감독 칸 {UNREADABLE[0]}개 — 그 칸은 건너뛰고 기존 값을 유지했어요(괄호·공백 외 형식 확인)')
 
     if a.dry_run:
         json.dump(payload, open(a.dry_run, 'w', encoding='utf-8'), ensure_ascii=False)

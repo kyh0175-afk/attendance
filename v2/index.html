@@ -7024,6 +7024,7 @@ const sb = {
       }));
       const data = await sb.settings.adminRpc('admin_bulk_upsert_students', { p_students: payload });
       sb.invalidateCache('students');
+      if (data && data.ok === false) throw new Error(data.msg || '등록 실패');   // 서버가 전체를 되돌린 경우
       return data;
     },
 
@@ -7269,6 +7270,7 @@ const sb = {
       if (error) throw error;
       const r = data && data[0];
       if (!r || !r.종료시각) return null;
+      try { if (localStorage.getItem('cosmos_closed_' + r.세션id)) return null; } catch (_) {}
       const gap = Math.abs(new Date(r.종료시각).getTime() - new Date(r.만료시각).getTime());
       return gap <= 90 * 1000 ? r : null;
     },
@@ -7341,6 +7343,11 @@ const sb = {
       const group = (program === '심야 독서시간' || weekend) ? '리케이온'
         : (room === '아우름' || room === '교과1실') ? '아우름+교과1실' : '해오름+리케이온';
       const slot = weekend ? (d.getHours() < 13 ? '오전' : '오후') : '';
+      if (program === '심야 독서시간') {
+        const { data: man } = await sb.client()
+          .from('supervisors').select('교사명, 메모').eq('날짜', todayKST()).limit(1);
+        if (man && man.length && man[0].메모 !== '감독표 자동' && man[0].교사명) return man[0].교사명;   // 대체 감독 등 직접 입력
+      }
       const { data, error } = await sb.client()
         .from('supervisor_slots')
         .select('교사명')
@@ -7445,9 +7452,11 @@ const sb = {
     },
 
     async approveCorrection(id, note = '') {
-      return await sb.settings.adminRpc('admin_approve_correction', {
+      const data = await sb.settings.adminRpc('admin_approve_correction', {
         p_request_id: id, p_teacher_note: note,
       });
+      if (data && data.ok === false) throw new Error(data.msg || '승인 실패');
+      return data;
     },
 
     async approveDayChange(id, note = '') {
@@ -7455,6 +7464,7 @@ const sb = {
         p_request_id: id, p_teacher_note: note,
       });
       sb.invalidateCache('students');
+      if (data && data.ok === false) throw new Error(data.msg || '승인 실패');
       return data;
     },
 
@@ -8398,6 +8408,8 @@ async function confirmExtendEnd() {
 async function finishTeacherSession(reason) {
   if (!T.session) return;
   const sid = T.session.sessionId;
+  // 직접 마감(만료 전 마감 포함)은 새로고침 때 '방금 만료된 세션' 재연결 대상이 아니다(리뷰 #6)
+  if (reason !== '만료 후 마감') { try { localStorage.setItem('cosmos_closed_' + sid, '1'); } catch (_) {} }
   try {
     await sb._retry(() => sb.sessions.end(sid));
     TLOG.log('session_end_ok', { sessionId: sid, reason });
@@ -8642,6 +8654,13 @@ const SIBLING_ROOMS = {
   '리케이온': '해오름',
 };
 function getSiblingRoom(room) { return SIBLING_ROOMS[room] || null; }
+// 기록의 세션이 실제로 받은 장소들 — 해오름↔리케이온 쌍은 2026-10-07부터라 그 전 세션은 단독이다(리뷰 #4)
+function sessionRooms(sess) {
+  if (sess && Array.isArray(sess._rooms) && sess._rooms.length) return sess._rooms;
+  const g = getRoomGroup(sess.장소);
+  return g.includes('아우름') ? g : [sess.장소];
+}
+
 // 쌍 표시 이름: 아우름 · 교과1실 / 해오름 · 리케이온 (화면 표기 순서 고정)
 function roomPairLabel(room) {
   const g = getRoomGroup(room);
@@ -8744,6 +8763,8 @@ function subscribeRoster() {
           TLOG.log('session_closed_elsewhere', { sessionId: T.session.sessionId });
           stopTeacherTimer();
           unsubscribeRoster();
+          closeQrZoom();
+          closeExtendModal();
           if (T.qrInstance) { document.getElementById('t-qr-box').innerHTML = ''; T.qrInstance = null; }
           T.session = null;
           document.getElementById('t-setup').style.display = 'block';
@@ -10036,7 +10057,12 @@ async function loadHistorySessions() {
 
     // 2-1. sessions 테이블 기반으로 먼저 채우기 (메타데이터 신뢰)
     sessTable.forEach(s => {
+      if (sessionMap[s.세션id]) {   // 같은 세션 id의 다른 장소 행(쌍 세션)
+        if (!sessionMap[s.세션id]._rooms.includes(s.장소)) sessionMap[s.세션id]._rooms.push(s.장소);
+        return;
+      }
       sessionMap[s.세션id] = {
+        _rooms: [s.장소],
         세션id: s.세션id,
         프로그램: s.프로그램,
         장소: s.장소,
@@ -10058,6 +10084,7 @@ async function loadHistorySessions() {
       if (!sessionMap[key]) {
         // v1 이관 데이터: attendance만 존재
         sessionMap[key] = {
+          _rooms: null,
           세션id: r.세션id,
           프로그램: r.프로그램,
           장소: r.장소,
@@ -10078,6 +10105,20 @@ async function loadHistorySessions() {
         if (!sess._firstTime || r.원래시각 < sess._firstTime) sess._firstTime = r.원래시각;
         if (!sess._lastTime || r.원래시각 > sess._lastTime) sess._lastTime = r.원래시각;
       }
+    });
+
+    // 2-2b. 10/7 이전 해오름·리케이온 단독 세션: 실제로는 리케이온 한 세션에 두 방 학생이 모였다.
+    //       같은 날·같은 프로그램에 짝 방 세션이 따로 있었던 경우만 단독으로 두고, 나머지는 쌍으로 본다(리뷰 #4).
+    const _all = Object.values(sessionMap);
+    const _orig = new Map(_all.map(o => [o, Array.isArray(o._rooms) ? o._rooms.slice() : null]));   // 판정은 원래 장소로(순서 영향 없게)
+    _all.forEach(sess => {
+      const mine = _orig.get(sess);
+      if (!mine || mine.length !== 1) return;
+      const sib = getSiblingRoom(mine[0]);
+      if (!sib || !getRoomGroup(sib).includes('리케이온')) return;
+      const twinExists = _all.some(o => o !== sess && o.날짜 === sess.날짜 && o.프로그램 === sess.프로그램
+        && (_orig.get(o) || []).includes(sib));
+      if (!twinExists) sess._rooms = [mine[0], sib];
     });
 
     // 2-3. 시작/종료 시각 보정 (sessions에 없으면 attendance로 추정)
@@ -10118,7 +10159,7 @@ function renderHistoryList() {
 
   let filtered = A.historySessions.filter(s => {
     if (filterProg && s.프로그램 !== filterProg) return false;
-    if (filterRoom && s.장소 !== filterRoom) return false;
+    if (filterRoom && !sessionRooms(s).includes(filterRoom)) return false;
     return true;
   });
 
@@ -10164,7 +10205,7 @@ function renderHistoryList() {
           <div class="session-info-block">
             <div class="session-info-line1">
               <span class="session-info-prog">${escapeHtml(s.프로그램 || '')}</span>
-              <span class="session-info-room">${(()=>{const sib=getSiblingRoom(s.장소);return sib?escapeHtml(s.장소+' + '+sib):escapeHtml(s.장소||'');})()}</span>
+              <span class="session-info-room">${escapeHtml(sessionRooms(s).length > 1 ? roomPairLabel(s.장소) : (s.장소 || ''))}</span>
             </div>
             <div class="session-info-line2">
               <span class="session-info-time">${startTime}</span>
@@ -10273,7 +10314,7 @@ function renderHistoryDetail() {
   const dayKr = DAY_KR_HD[sessDate.getDay()];
 
   // sibling 장소 지원: 아우름/교과1실 통합 분모
-  const targetRooms = getRoomGroup(s.장소);
+  const targetRooms = sessionRooms(s);
   const attNos = new Set(att.map(r => String(r.학번)));
   const histCtx = { dayChangeHist: A.dayChangeHist || {} };
   const targetStudents = (A.students || []).filter(st => {
@@ -10317,7 +10358,7 @@ function renderHistoryDetail() {
   );
 
   // sibling 세션이면 장소별로 그룹화
-  const _sibDetail = getSiblingRoom(s.장소);
+  const _sibDetail = targetRooms.length > 1;
   let allDisplayGrouped = null;
   if (_sibDetail) {
     // 분모 학생: 장소별 그룹
@@ -10895,8 +10936,9 @@ function renderAnalysis() {
   const filterGrade = document.getElementById('anal-filter-grade').value;
   const search = document.getElementById('anal-search').value.trim().toLowerCase();
 
-  // 분모 학생 필터링 (활성 학생만)
-  let students = (A.students || []).filter(s => s.활성);
+  // 분모 학생: 활성 학생 + 기간 중 출석 기록이 있는 비활성(전출 등) 학생 — 출석부 엑셀과 같은 규칙(리뷰 #9)
+  const _attKeys = new Set((A.analysisAttendance || []).map(a => a.학번 + '|' + a.프로그램));
+  let students = (A.students || []).filter(s => s.활성 || _attKeys.has(s.학번 + '|' + s.프로그램));
   if (filterProg) students = students.filter(s => s.프로그램 === filterProg);
   if (filterRoom) students = students.filter(s => s.장소 === filterRoom);
   if (filterGrade) students = students.filter(s => String(s.학번)[0] === filterGrade);
@@ -11008,7 +11050,7 @@ function renderAnalysis() {
         <div class="top-absent-item" onclick="filterByStudent('${escapeAttr(s.학번)}', '${safeName}')">
           <div class="top-absent-rank">${idx + 1}</div>
           <div style="flex:1;min-width:0">
-            <div class="top-absent-name">${escapeHtml(s.이름 || '')}</div>
+            <div class="top-absent-name">${escapeHtml(s.이름 || '')}${s.활성 ? '' : ' <small>(비활성)</small>'}</div>
             <div class="top-absent-no">${escapeHtml(s.학번)} · ${escapeHtml((s.프로그램 || '').replace(' 독서시간', ''))}</div>
           </div>
           <div class="top-absent-count">${s._absent}/${s._target}회</div>
@@ -11055,7 +11097,7 @@ function renderAnalysis() {
     displayStats.forEach(s => {
       html += `<tr>
         <td class="matrix-td-fixed matrix-td-no">${escapeHtml(s.학번)}</td>
-        <td class="matrix-td-fixed matrix-td-name">${escapeHtml(s.이름 || '')}</td>
+        <td class="matrix-td-fixed matrix-td-name">${escapeHtml(s.이름 || '')}${s.활성 ? '' : ' <small>(비활성)</small>'}</td>
       `;
 
       A.analysisDates.forEach(date => {
@@ -11316,6 +11358,7 @@ async function handleExcelUpload(event) {
       // 어떤 필터로도 안 보이고 출석 분모에서도 빠지던 문제(리뷰 A5)
       const progOk = UPLOAD_PROGRAMS.find(v => v.replace(/\s/g, '') === program.replace(/\s/g, ''));
       const roomOk = UPLOAD_ROOMS.find(v => v.replace(/\s/g, '') === room.replace(/\s/g, ''));
+      if (name.length > 20 || /[<>"`\\]/.test(name)) { errors.push(`행 ${i+1}: 이름이 20자를 넘거나 쓸 수 없는 기호(따옴표·꺾쇠 등)가 있어요 (${no})`); continue; }
       if (!progOk) { errors.push(`행 ${i+1}: 프로그램 이름을 알 수 없어요 (${program})`); continue; }
       if (!roomOk) { errors.push(`행 ${i+1}: 장소 이름을 알 수 없어요 (${room})`); continue; }
 
@@ -11737,7 +11780,7 @@ async function doStudentAttend() {
     errEl.textContent = '이 휴대폰으로는 이미 다른 학번이 출석했어요. 각자 본인 휴대폰으로 찍거나, 선생님께 수동 출석을 받아 주세요.';
     return;
   }
-  try { localStorage.setItem(_devKey, no); } catch (e) {}
+  const lockDevice = () => { try { localStorage.setItem(_devKey, no); } catch (e) {} };   // 저장 성공 뒤에만(오타 학번에 잠기지 않게, 리뷰 #8)
 
   // 출석 페이로드
   const timeStr = nowTimeStr();
@@ -11772,6 +11815,7 @@ async function doStudentAttend() {
       result = await tryOnce();
     }
     if (result.ok) {
+      lockDevice();
       unregisterAttendBeacon(); // 성공 확정 → 백업 해제
       // 이미 출석이었으면 성공 화면을 "이미 출석" 톤으로 업데이트
       if (result.alreadyAttended) {
@@ -11799,6 +11843,7 @@ async function doStudentAttend() {
           await new Promise(r => setTimeout(r, 3000));
           const r2 = await tryOnce();
           if (r2.ok) {
+            lockDevice();
             unregisterAttendBeacon();
             try { ATTEND_QUEUE.flush(); } catch (e) {}
             setStudentResultOk(r2.alreadyAttended);
@@ -12351,7 +12396,8 @@ function renderDayReqs(fs,sr){const c=document.getElementById('req-list-daychang
 // 지금 보고 있는 하위 탭의 대기 요청을 한 번에 승인(주간 정리에서 건마다 누르고 목록을 다시 읽던 부담, 리뷰 A7)
 async function bulkApproveRequests() {
   const isDay = RQ.currentSubTab === 'daychange';
-  const items = (isDay ? RQ.dayChanges : RQ.corrections).filter(r => r.처리상태 === '대기');
+  const items = (isDay ? RQ.dayChanges : RQ.corrections).filter(r => r.처리상태 === '대기')
+    .slice().sort((a, b) => String(a.요청일시 || '').localeCompare(String(b.요청일시 || '')));   // 오래된 것부터
   if (!items.length) return;
   if (!confirm(`${isDay ? '요일 변경' : '수정'} 요청 ${items.length}건을 모두 승인할까요?`)) return;
   const btn = document.getElementById('req-bulk-approve');
