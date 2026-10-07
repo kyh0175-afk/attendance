@@ -2,10 +2,10 @@
 
 유봉여자고등학교 자율학습 프로그램 "코스모스 독서시간"의 출석 관리 웹 시스템입니다.
 
-🔗 **배포**: **[cosmos.yubongsystem.com](https://cosmos.yubongsystem.com/)** (커스텀 도메인, 2026-07-22 연결)
-- 학생/교사(v3): `cosmos.yubongsystem.com/v3/` · `…/v3/teacher.html` · 관리자 `…/v3/admin.html`
-- v2(운영 중): `cosmos.yubongsystem.com/v2/`
-- 기존 `kyh0175-afk.github.io/attendance/*` 주소·QR은 새 도메인으로 자동 리다이렉트됨
+🔗 **배포**: **[cosmos.yubong.app](https://cosmos.yubong.app/)** (2026-09-23 이전, GitHub Pages 커스텀 도메인)
+- **v2(운영 중)**: `cosmos.yubong.app/v2/` — 2026년 말까지 운영 버전
+- v3(개발만, 미사용): `cosmos.yubong.app/v3/` · `…/v3/teacher.html` · `…/v3/admin.html`
+- 옛 주소 `cosmos.yubongsystem.com`·`kyh0175-afk.github.io/attendance/*` 는 새 주소로 자동 이동
 
 ---
 
@@ -64,6 +64,8 @@ attendance/
 │   ├── guide.html              ← 풀 사용 가이드
 │   ├── quick-reference.html    ← A4 앞뒷면 현장 참조 카드
 │   └── assets/                 ← 가이드 이미지
+│   └── docs/                   ← 서버 SQL 기록(backend_integrity, 2026-10-07 보안 보강 등)
+├── v3/                         ← 개발만 된 다음 버전(미사용)
 ├── index.html                  ← v2로 리다이렉트
 ├── check.html                  ← v2의 ?mode=check로 리다이렉트
 └── README.md
@@ -73,8 +75,8 @@ attendance/
 
 ## 가이드 문서
 
-- 📘 **풀 가이드**: [/v2/guide.html](https://kyh0175-afk.github.io/attendance/v2/guide.html) — 교사·학생·관리자 전 기능 설명
-- 📋 **현장 참조 카드**: [/v2/quick-reference.html](https://kyh0175-afk.github.io/attendance/v2/quick-reference.html) — A4 앞뒷면, 코팅 비치용
+- 📘 **풀 가이드**: [/v2/guide.html](https://cosmos.yubong.app/v2/guide.html) — 교사·학생·관리자 전 기능 설명
+- 📋 **현장 참조 카드**: [/v2/quick-reference.html](https://cosmos.yubong.app/v2/quick-reference.html) — A4 앞뒷면, 코팅 비치용
 
 ---
 
@@ -83,6 +85,8 @@ attendance/
 - **v1** (2025) — Google Apps Script + Google Sheets
 - **v2** (2026-04-10~) — Supabase 전환
 - **2026-04-17** — v1 완전 철수 (루트·check.html 리다이렉트)
+- **2026-09-23** — 주소 이전 `cosmos.yubong.app`
+- **2026-10-07** — v2 전체 리뷰 반영: 세션 마감·복원 정리, 한국어 우선 화면, QR 크게 보기·미리 연장, 관리자 업로드 미리보기·요청 일괄 승인·학기 시작일 설정, 서버 보안 보강(`v2/docs/2026-10-07_security_hardening.sql`)
 
 자세한 변경 이력은 `v2_CHANGELOG.md`, 기술 구조는 `v2_ARCHITECTURE.md` 참고.
 

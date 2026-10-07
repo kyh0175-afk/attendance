@@ -7,7 +7,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&family=DM+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&family=DM+Mono:wght@400&display=swap">
 
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -71,7 +71,7 @@
   .header {
     text-align: center;
     margin-bottom: 48px;
-    animation: fadeIn 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: fadeIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(12px); }
@@ -104,7 +104,7 @@
     font-family: 'Cormorant Garamond', serif;
     font-size: clamp(48px, 8vw, 72px);
     font-weight: 500;
-    font-style: italic;
+    font-style: normal;
     color: var(--cream);
     letter-spacing: -0.01em;
     line-height: 1;
@@ -144,11 +144,11 @@
     border: 1px solid var(--border);
     border-radius: 4px;
     cursor: pointer;
-    transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow:
       0 1px 0 rgba(255, 255, 255, 0.03) inset,
       0 30px 60px -20px rgba(0, 0, 0, 0.5);
-    animation: cardIn 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: cardIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
     text-align: left;
     display: block;
     width: 100%;
@@ -172,7 +172,7 @@
     height: 18px;
     border: 1px solid var(--amber);
     opacity: 0.4;
-    transition: all 0.45s;
+    transition: all 0.2s;
   }
   .card::before {
     top: 12px;
@@ -206,7 +206,7 @@
     font-family: 'Cormorant Garamond', serif;
     font-size: 56px;
     font-weight: 400;
-    font-style: italic;
+    font-style: normal;
     line-height: 1;
     margin-bottom: 20px;
     display: inline-block;
@@ -226,7 +226,7 @@
     font-family: 'Cormorant Garamond', serif;
     font-size: 34px;
     font-weight: 500;
-    font-style: italic;
+    font-style: normal;
     color: var(--cream);
     margin-bottom: 4px;
     line-height: 1;
@@ -258,12 +258,12 @@
     text-transform: uppercase;
     padding-top: 14px;
     border-top: 1px solid var(--border);
-    transition: all 0.4s;
+    transition: all 0.2s;
   }
   .card:hover .card-action { border-top-color: var(--border2); }
   .card-action .arrow {
     display: inline-block;
-    transition: transform 0.4s;
+    transition: transform 0.2s;
   }
   .card:hover .card-action .arrow { transform: translateX(6px); }
 
