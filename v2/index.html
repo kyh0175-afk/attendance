@@ -6990,6 +6990,7 @@ const sb = {
         장소: record.장소 || record.cls || record.room,
         교사: record.교사 || record.teacher || null,
         상태: '출석',
+        메모: record.메모 || record.memo || null,
       };
       const { data, error } = await sb.client()
         .from('attendance')
@@ -8869,6 +8870,7 @@ async function manualAttend(no, name) {
       program: T.session.program,
       room: T.session.room,
       teacher: T.session.teacher,
+      memo: '수동',
     });
 
     if (!result.ok) {
@@ -8925,8 +8927,9 @@ async function undoManualAttend(no) {
   renderRoster();
 
   try {
-    const { error: undoErr } = await sb.client().rpc('undo_recent_attendance', { p_id: attId });
+    const { data: undoOk, error: undoErr } = await sb.client().rpc('undo_recent_attendance', { p_id: attId });
     if (undoErr) throw undoErr;
+    if (undoOk === false) throw new Error('취소할 수 없는 출석이에요(15분이 지났거나 교사 수동 출석이 아님)');
     try { TLOG.log('audit_manual_undo', { no: no, sessionId: sid, id: attId }); } catch (_) {}
     // 삭제 확정 후에도 진행 중이던 폴링 SELECT가 잔존 행을 되살릴 수 있어 잠시 더 억제
     setTimeout(() => { if (T.undoneKeys) T.undoneKeys.delete(no); }, 6000);
@@ -11558,6 +11561,18 @@ async function doStudentAttend() {
     showRegisterForm(no);
     return;
   }
+
+  // 같은 기기에서 이미 다른 학번이 이 세션에 출석했으면 막는다(친구 폰을 빌린 경우는 교사 수동 출석으로)
+  const _devKey = 'cosmos_att_' + ST.session.sessionId;
+  let _devNo = null;
+  try { _devNo = localStorage.getItem(_devKey); } catch (e) {}
+  if (_devNo && _devNo !== no) {
+    hideAttendProgress();
+    ST.inFlight = false;
+    errEl.textContent = '이 휴대폰으로는 이미 다른 학번이 출석했어요. 각자 본인 휴대폰으로 찍거나, 선생님께 수동 출석을 받아 주세요.';
+    return;
+  }
+  try { localStorage.setItem(_devKey, no); } catch (e) {}
 
   // 출석 페이로드
   const timeStr = nowTimeStr();
