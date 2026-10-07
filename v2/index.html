@@ -494,6 +494,43 @@ input { font-family: inherit; }
   letter-spacing: -0.01em;
 }
 
+.rooms-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* 카드가 두 장으로 줄어 남는 칸을 쓴다: 예전 카드 두 장(약 235px×2 + 간격 22px) 높이.
+   두 방을 위아래로 나눠 각 방에 ROOM 번호를 단다 */
+.rooms-grid-2 .room-card {
+  min-height: 492px;
+  display: flex;
+  flex-direction: column;
+}
+.rooms-grid-2 .room-card::before { top: 44px; bottom: 36px; }
+.room-pair { display: flex; flex-direction: column; gap: 26px; }
+.room-pair-item .room-label { margin-bottom: 10px; }
+.rooms-grid-2 .room-name { font-size: 34px; line-height: 1.2; margin-bottom: 0; }
+.room-progs-block {
+  margin-top: 34px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.room-progs-title {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  color: var(--ink-faint);
+  margin-bottom: 6px;
+}
+.rooms-grid-2 .room-progs { margin: 0; font-size: 17px; color: var(--ink); }
+.rooms-grid-2 .room-action { margin-top: auto; font-size: 15px; }
+@media (max-width: 560px) {
+  .rooms-grid-2 { grid-template-columns: 1fr; }
+  .rooms-grid-2 .room-card { min-height: 0; }
+  .rooms-grid-2 .room-action { margin-top: 24px; }
+}
+.room-progs { margin: 0; font-size: 16px; }
+.rooms-grid-2 .room-action { margin-top: auto; }
+@media (max-width: 560px) {
+  .rooms-grid-2 { grid-template-columns: 1fr; }
+  .rooms-grid-2 .room-card { min-height: 0; }
+  .rooms-grid-2 .room-action { margin-top: 24px; }
+}
 .room-progs {
   font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 14px;
@@ -5077,41 +5114,43 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
     <div class="title-ko">담당하는 장소를 고르세요</div>
   </div>
 
-  <div class="rooms-grid">
+  <div class="rooms-grid rooms-grid-2">
     <button class="room-card" data-room="1" onclick="enterRoom('아우름')">
-      <div class="room-label">ROOM 01</div>
-      <div class="room-name">아우름</div>
-      <div class="room-progs">방과후 · 야간 — 교과1실과 함께 운영</div>
+      <div class="room-pair">
+        <div class="room-pair-item">
+          <div class="room-label">ROOM 01</div>
+          <div class="room-name">아우름</div>
+        </div>
+        <div class="room-pair-item">
+          <div class="room-label">ROOM 02</div>
+          <div class="room-name">교과1실</div>
+        </div>
+      </div>
+      <div class="room-progs-block">
+        <div class="room-progs-title">운영 프로그램</div>
+        <div class="room-progs">방과후 · 야간</div>
+      </div>
       <div class="room-action">
         <span>출석 체크 시작</span>
         <span class="arrow">→</span>
       </div>
     </button>
 
-    <button class="room-card" data-room="2" onclick="enterRoom('교과1실')">
-      <div class="room-label">ROOM 02</div>
-      <div class="room-name">교과1실</div>
-      <div class="room-progs">방과후 · 야간 — 아우름과 함께 운영</div>
-      <div class="room-action">
-        <span>출석 체크 시작</span>
-        <span class="arrow">→</span>
+    <button class="room-card" data-room="2" onclick="enterRoom('리케이온')">
+      <div class="room-pair">
+        <div class="room-pair-item">
+          <div class="room-label">ROOM 03</div>
+          <div class="room-name">해오름</div>
+        </div>
+        <div class="room-pair-item">
+          <div class="room-label">ROOM 04</div>
+          <div class="room-name">리케이온</div>
+        </div>
       </div>
-    </button>
-
-    <button class="room-card" data-room="3" onclick="enterRoom('해오름')">
-      <div class="room-label">ROOM 03</div>
-      <div class="room-name">해오름</div>
-      <div class="room-progs">방과후 · 야간</div>
-      <div class="room-action">
-        <span>출석 체크 시작</span>
-        <span class="arrow">→</span>
+      <div class="room-progs-block">
+        <div class="room-progs-title">운영 프로그램</div>
+        <div class="room-progs">방과후 · 야간 · 심야<br>토요일 · 일요일</div>
       </div>
-    </button>
-
-    <button class="room-card" data-room="4" onclick="enterRoom('리케이온')">
-      <div class="room-label">ROOM 04</div>
-      <div class="room-name">리케이온</div>
-      <div class="room-progs">심야 · 토요일 · 일요일 (방과후·야간도 가능)</div>
       <div class="room-action">
         <span>출석 체크 시작</span>
         <span class="arrow">→</span>
@@ -7772,17 +7811,11 @@ async function enterTeacherScreen(room) {
   } catch (e) { TLOG.log('sdk_fail', { err: String(e && e.message || e) }); }
 
   // 상단바 채우기
-  document.getElementById('t-room-name').textContent = room;
-  const roomLabels = {
-    '아우름': 'ROOM 01',
-    '교과1실': 'ROOM 02',
-    '해오름': 'ROOM 03',
-    '리케이온': 'ROOM 04',
-  };
-  document.getElementById('t-room-label').textContent = roomLabels[room] || 'ROOM';
+  document.getElementById('t-room-name').textContent = roomPairLabel(room);
+  document.getElementById('t-room-label').style.display = 'none';   // 쌍 이름이 곧 장소 표시
 
-  // 토/일 옵션은 리케이온만
-  const isRikei = room === '리케이온';
+  // 심야·토·일 옵션은 리케이온이 든 쌍(해오름·리케이온)에서만
+  const isRikei = getRoomGroup(room).includes('리케이온');
   const allItems = document.querySelectorAll('#t-program-dd .field-dropdown-item');
   allItems.forEach(item => {
     if (item.dataset.rikeiOnly === 'true') {
@@ -7839,7 +7872,7 @@ async function enterTeacherScreen(room) {
 
       document.getElementById('t-sess-program').textContent = T.session.program;
       const _sib2 = getSiblingRoom(T.session.room);
-      document.getElementById('t-sess-meta').textContent = _sib2 ? `${T.session.room} + ${_sib2} 통합` : `${T.session.room} · ${T.session.teacher} 선생님`;
+      document.getElementById('t-sess-meta').textContent = _sib2 ? `${roomPairLabel(T.session.room)} 통합` + (T.session.teacher ? ` · ${T.session.teacher} 선생님` : '') : `${T.session.room} · ${T.session.teacher} 선생님`;
 
       document.getElementById('t-session').style.display = 'grid';
       document.getElementById('t-wrap').classList.add('session-active');
@@ -7929,7 +7962,7 @@ function initProgramDropdown() {
 // 지금 시각·요일에 맞는 프로그램 (운영 시간표 기준, 교사가 바꿀 수 있음)
 function suggestProgram(room, at) {
   const d = at || new Date();
-  const isRikei = room === '리케이온';
+  const isRikei = getRoomGroup(room).includes('리케이온');
   const dow = d.getDay();
   if (isRikei && dow === 6) return '토요일 독서시간';
   if (isRikei && dow === 0) return '일요일 독서시간';
@@ -8084,7 +8117,7 @@ async function startTeacherSession() {
     // 세션 정보 표시
     document.getElementById('t-sess-program').textContent = program;
     const _sib = getSiblingRoom(T.room);
-    document.getElementById('t-sess-meta').textContent = _sib ? `${T.room} + ${_sib} 통합` : `${T.room} · ${teacher} 선생님`;
+    document.getElementById('t-sess-meta').textContent = _sib ? `${roomPairLabel(T.room)} 통합` + (teacher ? ` · ${teacher} 선생님` : '') : `${T.room} · ${teacher} 선생님`;
 
     // QR 생성
     buildTeacherQR();
@@ -8603,8 +8636,21 @@ const SEAT_LAYOUTS = {
 const SIBLING_ROOMS = {
   '아우름': '교과1실',
   '교과1실': '아우름',
+  // 2026-10-07: 해오름 등록 학생(방과후·야간 44명)이 리케이온 세션에서 출석하는데 짝이 아니어서
+  // 교사 명단·출석률·분석에서 '자율'로 빠지던 문제 → 한 쌍으로 묶는다
+  '해오름': '리케이온',
+  '리케이온': '해오름',
 };
 function getSiblingRoom(room) { return SIBLING_ROOMS[room] || null; }
+// 쌍 표시 이름: 아우름 · 교과1실 / 해오름 · 리케이온 (화면 표기 순서 고정)
+function roomPairLabel(room) {
+  const g = getRoomGroup(room);
+  if (g.includes('아우름')) return '아우름 · 교과1실';
+  if (g.includes('리케이온')) return '해오름 · 리케이온';
+  return room;
+}
+// 계산용 쌍 키(정렬 고정)
+function roomGroupKey(room) { return getRoomGroup(room).slice().sort().join('+'); }
 function getRoomGroup(room) {
   const sib = getSiblingRoom(room);
   return sib ? [room, sib] : [room];
@@ -10758,7 +10804,7 @@ function buildAnalysisContext(filteredAtt) {
   const sessionDatesByPS = {};
   filteredAtt.forEach(r => {
     attMap[`${r.학번}|${r.프로그램}|${r.날짜}`] = r;
-    const psKey = `${r.프로그램}|${r.장소}`;
+    const psKey = `${r.프로그램}|${roomGroupKey(r.장소)}`;
     if (!sessionDatesByPS[psKey]) sessionDatesByPS[psKey] = new Set();
     sessionDatesByPS[psKey].add(r.날짜);
   });
@@ -10813,7 +10859,7 @@ function analysisStartDate(s, ctx) {
 
 // 한 학생·한 날짜의 판정. state: 'none'|'notTarget'|'preStart'|'attended'|'absent'
 function analysisDayCell(s, date, ctx) {
-  const sessionDates = ctx.sessionDatesByPS[`${s.프로그램}|${s.장소}`];
+  const sessionDates = ctx.sessionDatesByPS[`${s.프로그램}|${roomGroupKey(s.장소)}`];
   if (!sessionDates || !sessionDates.has(date)) return { state: 'none' };
   const sDays = daysOnDate(s, date, ctx);
   const dayKr = DAY_KR_ANAL[new Date(date + 'T00:00:00').getDay()];
@@ -10867,7 +10913,7 @@ function renderAnalysis() {
   // 출석 데이터 필터링 (필터에 맞는 학생들의 것만)
   let filteredAtt = A.analysisAttendance;
   if (filterProg) filteredAtt = filteredAtt.filter(a => a.프로그램 === filterProg);
-  if (filterRoom) filteredAtt = filteredAtt.filter(a => a.장소 === filterRoom);
+  if (filterRoom) filteredAtt = filteredAtt.filter(a => getRoomGroup(filterRoom).includes(a.장소));
 
   // 집계 컨텍스트(출석맵·세션날짜·첫출석일) + 학생별 통계 — 매트릭스·엑셀과 동일한 공용 규칙 사용
   const ctx = buildAnalysisContext(filteredAtt);
@@ -11090,7 +11136,7 @@ function exportAnalysisXlsx() {
   // 출석 데이터 필터 → 공용 집계 컨텍스트(화면과 동일 규칙)
   let filteredAtt = A.analysisAttendance;
   if (filterProg) filteredAtt = filteredAtt.filter(a => a.프로그램 === filterProg);
-  if (filterRoom) filteredAtt = filteredAtt.filter(a => a.장소 === filterRoom);
+  if (filterRoom) filteredAtt = filteredAtt.filter(a => getRoomGroup(filterRoom).includes(a.장소));
   const ctx = buildAnalysisContext(filteredAtt);
 
   // 분모 학생 (필터 적용). 기간 중 출석 기록이 있는 비활성(전출 등) 학생도 출석부에 남긴다.
@@ -11527,7 +11573,7 @@ async function enterStudentScreen(sessionId, scanRoom) {
         .from('students')
         .select('학번,이름,프로그램,장소,활성')
         .eq('프로그램', session.프로그램)
-        .eq('장소', session.장소)
+        .in('장소', getRoomGroup(session.장소))
         .eq('활성', true);
       if (!error && data) {
         const map = {};
@@ -13456,9 +13502,11 @@ const DIAG_SCHEDULE = [
   { 프로그램: '방과후 독서시간', 장소: '아우름', 시작: '16:30', 종료: '18:20' },
   { 프로그램: '방과후 독서시간', 장소: '교과1실', 시작: '16:30', 종료: '18:20' },
   { 프로그램: '방과후 독서시간', 장소: '해오름', 시작: '16:30', 종료: '18:20' },
+  { 프로그램: '방과후 독서시간', 장소: '리케이온', 시작: '16:30', 종료: '18:20' },
   { 프로그램: '야간 독서시간', 장소: '아우름', 시작: '19:10', 종료: '21:30' },
   { 프로그램: '야간 독서시간', 장소: '교과1실', 시작: '19:10', 종료: '21:30' },
   { 프로그램: '야간 독서시간', 장소: '해오름', 시작: '19:10', 종료: '21:30' },
+  { 프로그램: '야간 독서시간', 장소: '리케이온', 시작: '19:10', 종료: '21:30' },
   { 프로그램: '심야 독서시간', 장소: '리케이온', 시작: '21:30', 종료: '23:00' },
   // 주말 (오전/오후 분리 — sessionSlot로 구분)
   { 프로그램: '토요일 독서시간', 장소: '리케이온', 시작: '08:30', 종료: '12:30', 요일: 6, 슬롯: '오전' },
@@ -13527,7 +13575,7 @@ const DIAG = {
         const key = s.프로그램 + ':' + [s.장소, sib].sort().join('+');
         if (seen.has(key)) return;
         seen.add(key);
-        cards.push({ ...s, 장소표시: s.장소 + ' + ' + sib, sibling: true });
+        cards.push({ ...s, 장소표시: roomPairLabel(s.장소), sibling: true });
       } else {
         cards.push({ ...s, 장소표시: s.장소, sibling: false });
       }
@@ -13643,7 +13691,7 @@ const DIAG = {
 };
 
 const LIVE = {
-  rooms: ['아우름', '교과1실', '해오름', '리케이온'],
+  rooms: ['아우름', '리케이온'],   // 쌍 대표(아우름·교과1실 / 해오름·리케이온)
   pollInterval: null,
   todayAttendance: [],  // 오늘 하루 전체 출석 기록 (학번 검색용)
 
@@ -13669,9 +13717,8 @@ const LIVE = {
       const byRoom = {};
       LIVE.rooms.forEach(r => byRoom[r] = null);
       (sessions || []).forEach(s => {
-        if (!byRoom[s.장소] && s.활성) {
-          byRoom[s.장소] = s;
-        }
+        const rep = LIVE.rooms.find(r => getRoomGroup(r).includes(s.장소));
+        if (rep && !byRoom[rep] && s.활성) byRoom[rep] = s;
       });
 
       // 각 활성 세션의 분모 계산을 위해 students 로드
@@ -13692,13 +13739,13 @@ const LIVE = {
     const cards = LIVE.rooms.map(room => {
       const s = byRoom[room];
       if (!s) {
-        return '<div class="live-card inactive"><div class="live-card-head"><div class="live-card-room">' + room + '</div><div class="live-pill-s off">대기</div></div><div class="live-empty">진행 중인 세션이 없어요</div></div>';
+        return '<div class="live-card inactive"><div class="live-card-head"><div class="live-card-room">' + roomPairLabel(room) + '</div><div class="live-pill-s off">대기</div></div><div class="live-empty">진행 중인 세션이 없어요</div></div>';
       }
       // 분모 계산
       const target = allStudents.filter(st => {
         if (!st.활성) return false;
         if (st.프로그램 !== s.프로그램) return false;
-        if (st.장소 !== s.장소) return false;
+        if (!getRoomGroup(s.장소).includes(st.장소)) return false;
         const days = Array.isArray(st.출석요일) ? st.출석요일 : [];
         return days.length === 0 || days.includes(dayKr);
       });
@@ -13843,7 +13890,7 @@ function ckPickReason(b,r){document.querySelectorAll('.ck-reason-btn').forEach(x
 async function ckSubmitReq(){if(!_ckReqCtx||!_ckReason)return;const b=document.getElementById('ck-submit');b.disabled=true;b.textContent='전송 중...';try{await sb.requests.createCorrection({no:CK.no,name:CK.name,date:_ckReqCtx.date,program:_ckReqCtx.prog,room:_ckReqCtx.loc,reason:_ckReason,detail:document.getElementById('ck-detail').value.trim()});ckCloseReq();b.textContent='요청 보내기';const{data:cr}=await sb.client().from('correction_requests').select('*').eq('학번',CK.no).order('요청일시',{ascending:false});CK.requests=cr||[];ckRenderView();alert('요청이 전송됐어요! 교사 확인 후 반영됩니다.');}catch(e){document.getElementById('ck-merr').textContent='실패: '+(e.message||'오류');b.disabled=false;b.textContent='요청 보내기';}}
 document.addEventListener('click',e=>{if(e.target.id==='ck-modal-bg')ckCloseReq();});
 // 세션이 실제로 열린 날만 결석(X) 후보 — 방학·시험·휴일에 X가 찍혀 수정 요청이 몰리던 문제
-// 아우름↔교과1실은 한 방으로 본다(짝 방 QR로 찍어도 출석으로 인정)
+// 아우름↔교과1실, 해오름↔리케이온은 한 방으로 본다(짝 방 QR로 찍어도 출석으로 인정)
 function ckRoomKey(loc){return getRoomGroup(loc).slice().sort().join('+');}
 function ckSameRoom(a,b){return a===b||ckRoomKey(a)===ckRoomKey(b);}
 async function ckLoadSessionKeys(programs){const set=new Set();try{const progs=[...new Set(programs.map(p=>p.program))];const rows=await fetchAllRows(()=>sb.client().from('sessions').select('id, 날짜, 프로그램, 장소').in('프로그램',progs).order('id',{ascending:true}));rows.forEach(r=>set.add(r.날짜+'|'+r.프로그램+'|'+ckRoomKey(r.장소)));}catch(e){console.warn('세션 날짜 조회 실패 — 요일 기준으로 표시:',e);return null;}return set;}
