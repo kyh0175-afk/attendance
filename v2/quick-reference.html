@@ -6,7 +6,7 @@
 <title>코스모스 출석 — 현장 참조 카드</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap">
 <style>
 body { word-break: keep-all; overflow-wrap: break-word; /* 한국어 어절 단위 줄바꿈 (디자인게이트 KO) */ }
 :root {
@@ -88,10 +88,11 @@ html, body {
   margin-left: 8px;
 }
 .card-meta {
-  font-family: 'DM Mono', monospace;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 9pt;
   color: var(--ink-faint);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ─── 섹션 블록 ─── */
@@ -114,10 +115,11 @@ html, body {
 }
 /* 디자인게이트 C4 유지: 현장 카드에서 번호로 다른 항목을 가리킨다(예: 08 수동 출석) */
 .block-title .num {
-  font-family: 'DM Mono', monospace;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 9pt;
   color: var(--amber);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ─── 단계 리스트 ─── */
@@ -136,9 +138,10 @@ ol.steps li::before {
   content: counter(step) ".";
   position: absolute;
   left: 2px;
-  font-family: 'DM Mono', monospace;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-weight: 500;
   color: var(--amber);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ─── 불릿 리스트 ─── */
@@ -186,9 +189,10 @@ ul.dot li::before {
   white-space: nowrap;
 }
 .schedule td:nth-child(2) {
-  font-family: 'DM Mono', monospace;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 9.5pt;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ─── 강조 박스 ─── */
@@ -229,12 +233,13 @@ em {
   font-weight: 500;
 }
 code {
-  font-family: 'DM Mono', monospace;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 9.5pt;
   background: var(--paper3);
   color: var(--amber-d);
   padding: 1px 5px;
   border-radius: 2px;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ─── 접속 주소 박스 ─── */
@@ -243,12 +248,13 @@ code {
   border: 1pt solid var(--border2);
   padding: 8px 12px;
   text-align: center;
-  font-family: 'DM Mono', monospace;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 11pt;
   color: var(--amber-d);
   font-weight: 500;
   margin: 5px 0 8px;
   border-radius: 3px;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ─── 이미지 ─── */
@@ -282,13 +288,14 @@ code {
   bottom: 6mm;
   left: 12mm;
   right: 12mm;
-  font-family: 'DM Mono', monospace;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 8pt;
   color: var(--ink-faint);
   text-align: center;
   padding-top: 4px;
   border-top: 0.5pt solid var(--border);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ─── 인쇄 설정 ─── */
