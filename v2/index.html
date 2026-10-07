@@ -5168,7 +5168,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
       <div class="field-group">
         <label class="field-label">담당 교사</label>
         <input type="text" class="field-input" id="t-teacher" placeholder="이름 입력" autocomplete="off">
-        <div class="field-hint" id="t-teacher-hint">오늘의 심야 감독으로 자동 입력됨 — 다르면 직접 수정하세요</div>
+        <div class="field-hint" id="t-teacher-hint">감독표에서 오늘 감독으로 자동 입력됨 — 다르면 직접 수정하세요</div>
       </div>
 
       <button class="start-btn" id="t-start-btn" onclick="startTeacherSession()">QR 띄우고 출석 시작</button>
@@ -7295,6 +7295,26 @@ const sb = {
   //  심야 감독표 (supervisors)
   // ════════════════════════════════════════
   supervisors: {
+    // 감독표(엑셀 → supervisor_slots, GitHub Actions 동기화)에서 오늘 이 프로그램·장소·시간대의 감독
+    async forSlot(program, room, at) {
+      const d = at || new Date();
+      const weekend = program === '토요일 독서시간' || program === '일요일 독서시간';
+      const group = (program === '심야 독서시간' || weekend) ? '리케이온'
+        : (room === '아우름' || room === '교과1실') ? '아우름+교과1실' : '해오름+리케이온';
+      const slot = weekend ? (d.getHours() < 13 ? '오전' : '오후') : '';
+      const { data, error } = await sb.client()
+        .from('supervisor_slots')
+        .select('교사명')
+        .eq('날짜', todayKST())
+        .eq('프로그램', program)
+        .eq('장소그룹', group)
+        .eq('시간대', slot)
+        .limit(1);
+      if (error) throw error;
+      if (data && data.length) return data[0].교사명;
+      return program === '심야 독서시간' ? await sb.supervisors.today() : null;   // 예전 표 폴백
+    },
+
     async today() {
       const today = todayKST();
       const { data, error } = await sb.client()
@@ -7859,12 +7879,21 @@ async function enterTeacherScreen(room) {
   if (_teacherField && !_teacherField.value) {
     let last = '';
     try { last = localStorage.getItem('cosmos_last_teacher_' + room) || ''; } catch (e) {}
-    if (last) _teacherField.value = last;
+    if (last) { _teacherField.value = last; _teacherField.dataset.prefilled = 'true'; }
   }
 
   // 첫 진입 시 자동 채움 (심야면 감독 자동 입력)
   await handleProgramChange();
 }
+
+// 교사가 이름을 직접 고치면 자동 입력 표시를 지운다(이후 프로그램을 바꿔도 덮어쓰지 않음)
+document.getElementById('t-teacher').addEventListener('input', (e) => {
+  e.target.dataset.wasAutoFilled = 'false';
+  e.target.dataset.prefilled = 'false';
+  e.target.classList.remove('auto-filled');
+  const h = document.getElementById('t-teacher-hint');
+  if (h) h.classList.remove('on');
+});
 
 // 커스텀 드롭다운 초기화 (이벤트 한 번만 바인딩)
 let _dropdownInitialized = false;
@@ -7948,25 +7977,29 @@ async function handleProgramChange() {
   const hint = document.getElementById('t-teacher-hint');
   TLOG.log('program_change', { to: program });
 
-  if (program === '심야 독서시간') {
+  // 감독표에서 오늘 감독을 찾아 채운다(모든 프로그램). 교사가 직접 입력한 이름은 덮어쓰지 않는다.
+  const canOverwrite = !teacherInput.value.trim() || teacherInput.dataset.wasAutoFilled === 'true' || teacherInput.dataset.prefilled === 'true';
+  if (canOverwrite) {
     try {
-      const supervisor = await sb.supervisors.today();
+      const supervisor = await sb.supervisors.forSlot(program, T.room);
       if (supervisor) {
         teacherInput.value = supervisor;
         teacherInput.classList.add('auto-filled');
         teacherInput.dataset.wasAutoFilled = 'true';
+        teacherInput.dataset.prefilled = 'false';
         hint.classList.add('on');
-        TLOG.log('supervisor_fetch_ok', { name: supervisor });
+        TLOG.log('supervisor_fetch_ok', { program, found: true });
         return;
-      } else {
-        TLOG.log('supervisor_fetch_ok', { name: null });
       }
+      TLOG.log('supervisor_fetch_ok', { program, found: false });
     } catch (e) {
       console.warn('감독 조회 실패:', e);
       TLOG.log('supervisor_fetch_fail', { err: String(e && e.message || e) });
     }
+  } else {
+    return;   // 직접 입력한 이름 유지
   }
-  // 심야가 아니거나 감독 없으면 기본 상태로
+  // 감독표에 없으면 기본 상태로
   teacherInput.classList.remove('auto-filled');
   hint.classList.remove('on');
   // 자동 채워졌던 값이 있으면 비움

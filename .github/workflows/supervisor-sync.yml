@@ -1,0 +1,36 @@
+# ─────────────────────────────────────────────────────────────
+#  감독표 동기화 — OneDrive 공유 엑셀(감독표) → Supabase supervisor_slots
+#  교사 화면이 오늘 프로그램·장소·시간대의 감독 교사 이름을 자동으로 채우는 데 쓴다.
+#  하루 두 번(KST 06:00·15:30) + 수동 실행.
+#  ⚠ 공개 레포: 공유 링크·토큰은 Secrets에만 두고, 로그에는 교사 이름을 남기지 않는다(스크립트가 건수만 출력).
+#  실패 시 GitHub이 메일을 보낸다 → 공유 링크 만료·권한 변경·감독표 열 배치 변경을 의심.
+# ─────────────────────────────────────────────────────────────
+name: 감독표 동기화
+
+on:
+  schedule:
+    - cron: '0 21 * * *'    # KST 06:00
+    - cron: '30 6 * * *'    # KST 15:30 (방과후 전)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 의존성
+        run: pip install --quiet openpyxl requests
+      - name: 감독표 받아서 반영
+        env:
+          SUPERVISOR_XLSX_URL: ${{ secrets.SUPERVISOR_XLSX_URL }}
+          SUPERVISOR_SYNC_TOKEN: ${{ secrets.SUPERVISOR_SYNC_TOKEN }}
+          SUPABASE_URL: https://rxsmmwqekrtbstcjbagj.supabase.co
+          SUPABASE_KEY: sb_publishable_h7o2vnvgu7Akrg87cAYSkg__DA-KRpn
+        run: python .github/scripts/sync_supervisors.py
