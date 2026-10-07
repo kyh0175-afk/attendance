@@ -6,7 +6,7 @@
 <title>코스모스 독서시간 출석 시스템 — 이용 가이드</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap">
 <style>
 :root {
   --muted-note: #6b5d4a;   /* 진단 색 설명의 '예정(회색)' 견본 */
@@ -68,10 +68,11 @@ body { word-break: keep-all; overflow-wrap: break-word; /* 한국어 어절 단�
   margin-bottom: 16px;
 }
 .doc-meta {
-  font-family: 'DM Mono', monospace;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 12px;
   color: var(--ink-faint);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ─── 목차 ─── */
@@ -100,10 +101,11 @@ body { word-break: keep-all; overflow-wrap: break-word; /* 한국어 어절 단�
 }
 .toc li::before {
   content: counter(toc, decimal-leading-zero) ".";
-  font-family: 'DM Mono', monospace;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   color: var(--amber);
   margin-right: 12px;
   font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 .toc a {
   color: var(--cream);
@@ -132,11 +134,12 @@ body { word-break: keep-all; overflow-wrap: break-word; /* 한국어 어절 단�
 section { margin-bottom: 80px; scroll-margin-top: 40px; }
 .section-num {
   display: inline-block;
-  font-family: 'DM Mono', monospace;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 12px;
   color: var(--amber);
-  letter-spacing: 0.15em;
+  letter-spacing: 0.02em;
   margin-bottom: 8px;
+  font-variant-numeric: tabular-nums;
 }
 h1 {
   font-family: 'IBM Plex Sans KR', sans-serif;
@@ -185,12 +188,13 @@ p + p { margin-top: -2px; }
   color: var(--ink-dim);
 }
 .img-placeholder-label {
-  font-family: 'DM Mono', monospace;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 11px;
   color: var(--amber);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   margin-bottom: 8px;
+  font-variant-numeric: tabular-nums;
 }
 .img-placeholder-desc {
   font-size: 13px;
@@ -244,12 +248,13 @@ p + p { margin-top: -2px; }
   border-radius: 50%;
   background: var(--amber);
   color: var(--paper);
-  font-family: 'DM Mono', monospace;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-weight: 600;
   font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-variant-numeric: tabular-nums;
 }
 .step-body { flex: 1; padding-top: 2px; }
 .step-body strong { color: var(--cream); }
@@ -329,22 +334,24 @@ section ol li::before {
   position: absolute;
   left: 2px;
   color: var(--amber);
-  font-family: 'DM Mono', monospace;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 13px;
   font-weight: 500;
   line-height: 1.6;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ─── 강조 ─── */
 strong { color: var(--cream); font-weight: 600; }
 em { color: var(--amber); font-style: normal; font-family: 'Cormorant Garamond', serif; font-size: 1.08em; }
 code {
-  font-family: 'DM Mono', monospace;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 0.9em;
   background: var(--paper3);
   padding: 2px 8px;
   border-radius: 3px;
   color: var(--amber);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ─── 푸터 ─── */
@@ -976,7 +983,7 @@ code {
 <!-- ═══════════════════ 푸터 ═══════════════════ -->
 <footer class="doc-foot">
   Cosmos — 독서의 시간이 기록되는 곳<br>
-  <span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;">유봉여자고등학교 · 2026</span>
+  <span style="font-family:'IBM Plex Sans KR',sans-serif;font-variant-numeric:tabular-nums;font-size:11px;letter-spacing:0.1em;">유봉여자고등학교 · 2026</span>
 </footer>
 
 </div>

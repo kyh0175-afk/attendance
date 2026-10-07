@@ -7,7 +7,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&family=DM+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap">
 
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -119,12 +119,13 @@
     margin-bottom: 12px;
   }
   .title-sub {
-    font-family: 'DM Mono', monospace;
+    font-family: 'IBM Plex Sans KR', sans-serif;
     font-size: 11px;
     color: var(--ink-dim);
-    letter-spacing: 0.2em;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
-  }
+  font-variant-numeric: tabular-nums;
+}
 
   .cards {
     display: flex;
@@ -215,13 +216,14 @@
   .card-seat .card-symbol  { color: var(--copper); }
 
   .card-label {
-    font-family: 'DM Mono', monospace;
+    font-family: 'IBM Plex Sans KR', sans-serif;
     font-size: 10px;
-    letter-spacing: 0.25em;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
     color: var(--ink-faint);
     margin-bottom: 10px;
-  }
+  font-variant-numeric: tabular-nums;
+}
   .card-title {
     font-family: 'Cormorant Garamond', serif;
     font-size: 34px;
@@ -251,15 +253,16 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    font-family: 'DM Mono', monospace;
+    font-family: 'IBM Plex Sans KR', sans-serif;
     font-size: 11px;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.02em;
     color: var(--amber);
     text-transform: uppercase;
     padding-top: 14px;
     border-top: 1px solid var(--border);
     transition: all 0.2s;
-  }
+  font-variant-numeric: tabular-nums;
+}
   .card:hover .card-action { border-top-color: var(--border2); }
   .card-action .arrow {
     display: inline-block;
@@ -269,13 +272,14 @@
 
   .footer {
     margin-top: 48px;
-    font-family: 'DM Mono', monospace;
+    font-family: 'IBM Plex Sans KR', sans-serif;
     font-size: 10px;
     color: var(--ink-faint);
-    letter-spacing: 0.15em;
+    letter-spacing: 0.02em;
     opacity: 0.5;
     text-align: center;
-  }
+  font-variant-numeric: tabular-nums;
+}
 
   @media (max-width: 560px) {
     .wrap { padding: 40px 16px; }
