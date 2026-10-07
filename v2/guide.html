@@ -77,7 +77,6 @@ body { word-break: keep-all; overflow-wrap: break-word; /* 한국어 어절 단�
 .toc {
   background: var(--paper2);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--amber);
   border-radius: 4px;
   padding: 28px 32px;
   margin-bottom: 60px;
@@ -269,6 +268,7 @@ p + p { margin-top: -2px; }
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
+/* 디자인게이트 C5 유지: 안내 상자 등급(정보·주의·위험·권장)을 색 테두리로 구분하는 정보 구조 */
 .note-info {
   background: rgba(94, 184, 255, 0.06);
   border-left: 3px solid var(--info);
@@ -521,7 +521,6 @@ code {
 
 <!-- ═══════════════════ 1. 시작하기 전에 ═══════════════════ -->
 <section id="intro">
-  <div class="section-num">SECTION 01</div>
   <h1>시작하기 전에</h1>
 
   <p>이 시스템은 유봉여자고등학교의 <em>코스모스 독서시간</em> 출석을 QR 코드로 관리하는 웹 애플리케이션입니다. 교사가 QR 코드를 생성해 학생에게 보여주면, 학생이 본인 휴대폰으로 스캔해 학번을 입력하는 방식으로 출석이 처리됩니다.</p>
@@ -561,7 +560,6 @@ code {
 
 <!-- ═══════════════════ 2. 교사·관리자용 ═══════════════════ -->
 <section id="teacher">
-  <div class="section-num">SECTION 02</div>
   <h1>교사·관리자용 — 출석 진행 및 확인</h1>
 
   <p>교사 화면에서는 QR 코드를 생성해 학생 출석을 받고, 실시간으로 출석 현황을 확인하며, 필요 시 직접 학번을 입력해 출석을 추가할 수 있습니다.</p>
@@ -725,7 +723,6 @@ code {
 
 <!-- ═══════════════════ 3. 학생용 ═══════════════════ -->
 <section id="student">
-  <div class="section-num">SECTION 03</div>
   <h1>학생용 — 출석하기</h1>
 
   <h2 id="stu-qr">QR 코드로 출석하기</h2>
@@ -762,7 +759,6 @@ code {
 
 <!-- ═══════════════════ 4. 관리자 페이지 ═══════════════════ -->
 <section id="admin">
-  <div class="section-num">SECTION 04</div>
   <h1>관리자 페이지</h1>
 
   <p>관리자 페이지는 명단·기록·분석·요청 등 전반적인 운영을 처리하는 곳입니다. 메인 화면 우측 상단의 <strong>관리자 페이지</strong> 버튼으로 이동할 수 있습니다. 왼쪽 사이드바에서 탭을 전환하며 사용합니다.</p>
@@ -862,7 +858,6 @@ code {
 
 <!-- ═══════════════════ 5. 체크리스트 ═══════════════════ -->
 <section id="routine">
-  <div class="section-num">SECTION 05</div>
   <h1>일상 운영 체크리스트</h1>
 
   <p>매일 반복되는 기본 루틴입니다. 특히 <strong>관리자는 각 프로그램 시작 5~10분 후 진단 탭을 한 번씩 열어보는 습관</strong>을 들이면 대부분의 문제를 조기에 발견할 수 있습니다.</p>
@@ -893,7 +888,6 @@ code {
 
 <!-- ═══════════════════ 6. 트러블슈팅 ═══════════════════ -->
 <section id="trouble">
-  <div class="section-num">SECTION 06</div>
   <h1>자주 있는 문제</h1>
 
   <h2>학생이 "출석이 안 돼요"라고 할 때</h2>
