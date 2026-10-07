@@ -46,3 +46,26 @@ revoke truncate on all tables in schema public from anon, authenticated;
 --   alter table … drop constraint <이름>;  (위 9개)
 --   undo_recent_attendance 에서 "and 메모 = '수동'" 줄 제거
 --   grant delete on public.correction_requests, public.day_change_requests to anon;
+
+-- ═══════════════════════════════════════════════════════════════
+--  추가(같은 날, migration v2_admin_set_setting_20261007): 관리자 화면에서 학기 시작일 저장
+-- ═══════════════════════════════════════════════════════════════
+create or replace function public.admin_set_setting(p_token uuid, p_key text, p_value text)
+ returns void
+ language plpgsql
+ security definer
+ set search_path to 'public', 'pg_temp'
+as $function$
+begin
+  perform assert_admin(p_token);
+  if p_key not in ('semester_start') then
+    raise exception '바꿀 수 없는 설정입니다: %', p_key using errcode = 'check_violation';
+  end if;
+  if p_key = 'semester_start' and p_value !~ '^\d{4}-\d{2}-\d{2}$' then
+    raise exception '날짜 형식(YYYY-MM-DD)이 아닙니다' using errcode = 'check_violation';
+  end if;
+  insert into system_settings(key, value, 수정일시) values (p_key, p_value, now())
+  on conflict (key) do update set value = excluded.value, 수정일시 = now();
+end$function$;
+revoke all on function public.admin_set_setting(uuid, text, text) from public;
+grant execute on function public.admin_set_setting(uuid, text, text) to anon, authenticated;

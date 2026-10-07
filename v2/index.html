@@ -29,7 +29,7 @@
   var p=new URLSearchParams(location.search);
   var mode=p.get('mode')||'';
   var isLight=(mode==='student'||mode==='check');
-  var url='https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700';
+  var url='https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700';
   if(!isLight)url+='&family=DM+Mono:wght@400;500';
   url+='&display=swap';
   var l=document.createElement('link');l.rel='stylesheet';l.href=url;document.head.appendChild(l);
@@ -47,6 +47,13 @@
 /*  디자인 토큰 — 코지 도서관 (방향 D)             */
 /* ══════════════════════════════════════════ */
 :root {
+  --on-accent: #fff;          /* 진한 버튼·좌석 표식 위 글자 */
+  --copper-hover: #d68b6a;
+  --matrix-sticky: #1e1810;   /* 분석 매트릭스 고정 열(반투명이면 스크롤 내용이 비친다) */
+  --matrix-sticky-alt: #251e16;
+  --matrix-sticky-hover: #2a221a;
+  --qr-dark: #1a130c;         /* QR 대비는 순수 흰 바탕 필요 */
+  --qr-light: #ffffff;
   --bg:        #1a130c;
   --bg2:       #221810;
   --paper:     #2a1f15;
@@ -203,7 +210,7 @@ input { font-family: inherit; }
   font-family: 'Cormorant Garamond', serif;
   font-size: clamp(48px, 8vw, 84px);
   font-weight: 500;
-  font-style: italic;
+  font-style: normal;
   color: var(--cream);
   letter-spacing: -0.01em;
   line-height: 1;
@@ -267,7 +274,7 @@ input { font-family: inherit; }
   border: 1px solid var(--border);
   border-radius: var(--r);
   cursor: pointer;
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.03) inset,
     0 30px 60px -20px rgba(0, 0, 0, 0.5),
@@ -295,7 +302,7 @@ input { font-family: inherit; }
   height: 18px;
   border: 1px solid var(--amber);
   opacity: 0.4;
-  transition: all 0.5s;
+  transition: all 0.2s;
 }
 .card::before {
   top: 12px;
@@ -330,7 +337,7 @@ input { font-family: inherit; }
   font-family: 'Cormorant Garamond', serif;
   font-size: 64px;
   font-weight: 400;
-  font-style: italic;
+  font-style: normal;
   line-height: 1;
   margin-bottom: 24px;
   display: inline-block;
@@ -359,7 +366,7 @@ input { font-family: inherit; }
   font-family: 'Cormorant Garamond', serif;
   font-size: 22px;
   font-weight: 500;
-  font-style: italic;
+  font-style: normal;
   color: var(--amber);
   margin-bottom: 20px;
   line-height: 1.1;
@@ -382,12 +389,12 @@ input { font-family: inherit; }
   color: var(--amber);
   padding-top: 16px;
   border-top: 1px solid var(--border);
-  transition: all 0.4s;
+  transition: all 0.2s;
 }
 .card:hover .card-action { border-top-color: var(--border2); }
 .card-action .arrow {
   display: inline-block;
-  transition: transform 0.4s;
+  transition: transform 0.2s;
 }
 .card:hover .card-action .arrow { transform: translateX(6px); }
 
@@ -411,7 +418,7 @@ input { font-family: inherit; }
   border: 1px solid var(--border);
   border-radius: var(--r);
   cursor: pointer;
-  transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.03) inset,
     0 20px 40px -16px rgba(0, 0, 0, 0.45);
@@ -440,7 +447,7 @@ input { font-family: inherit; }
   width: 3px;
   background: var(--acc);
   opacity: 0.7;
-  transition: all 0.45s;
+  transition: all 0.2s;
   border-radius: 0 2px 2px 0;
 }
 
@@ -537,7 +544,7 @@ input { font-family: inherit; }
   color: var(--ink-dim);
   padding-top: 18px;
   border-top: 1px solid var(--border);
-  transition: all 0.4s;
+  transition: all 0.2s;
 }
 .room-card:hover .room-action {
   border-top-color: var(--border2);
@@ -547,7 +554,7 @@ input { font-family: inherit; }
   font-family: 'DM Mono', monospace;
   color: var(--acc);
   font-size: 14px;
-  transition: transform 0.4s;
+  transition: transform 0.2s;
 }
 .room-card:hover .room-action .arrow {
   transform: translateX(6px);
@@ -571,7 +578,7 @@ input { font-family: inherit; }
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.3s;
+  transition: all 0.2s;
 }
 .back-btn:hover {
   background: var(--paper2);
@@ -584,9 +591,7 @@ input { font-family: inherit; }
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(10, 8, 5, 0.78);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(10, 8, 5, 0.86);
   display: none;
   align-items: center;
   justify-content: center;
@@ -643,17 +648,17 @@ input { font-family: inherit; }
   text-align: center;
   font-family: 'Cormorant Garamond', serif;
   font-size: 56px;
-  font-style: italic;
+  font-style: normal;
   color: var(--amber);
   line-height: 1;
   margin-bottom: 16px;
 }
 
 .modal-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 28px;
-  font-style: italic;
-  font-weight: 500;
+  font-style: normal;
+  font-weight: 600;
   color: var(--cream);
   text-align: center;
   margin-bottom: 4px;
@@ -681,7 +686,7 @@ input { font-family: inherit; }
   text-align: center;
   outline: none;
   letter-spacing: 0.15em;
-  transition: all 0.3s;
+  transition: all 0.2s;
 }
 .modal-input::placeholder {
   color: var(--ink-faint);
@@ -723,7 +728,7 @@ input { font-family: inherit; }
   letter-spacing: 0.15em;
   text-transform: uppercase;
   font-weight: 500;
-  transition: all 0.3s;
+  transition: all 0.2s;
   border: 1px solid transparent;
 }
 
@@ -745,7 +750,7 @@ input { font-family: inherit; }
 .btn-primary:hover {
   background: var(--cream);
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px -6px rgba(214, 178, 124, 0.4);
+  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.5);
 }
 
 @keyframes shake {
@@ -755,7 +760,7 @@ input { font-family: inherit; }
   60% { transform: translateX(-6px); }
   80% { transform: translateX(6px); }
 }
-.shake { animation: shake 0.5s ease-in-out; }
+.shake { animation: shake 0.24s ease-in-out; }
 
 /* ══ 공사중 안내 ══ */
 .construction {
@@ -793,7 +798,7 @@ input { font-family: inherit; }
 .construction-icon {
   font-family: 'Cormorant Garamond', serif;
   font-size: 80px;
-  font-style: italic;
+  font-style: normal;
   color: var(--amber);
   line-height: 1;
   margin-bottom: 24px;
@@ -801,7 +806,7 @@ input { font-family: inherit; }
 .construction-title {
   font-family: 'Cormorant Garamond', serif;
   font-size: 38px;
-  font-style: italic;
+  font-style: normal;
   font-weight: 500;
   color: var(--cream);
   margin-bottom: 6px;
@@ -954,10 +959,10 @@ input { font-family: inherit; }
 }
 
 .setup-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 32px;
-  font-style: italic;
-  font-weight: 500;
+  font-style: normal;
+  font-weight: 600;
   color: var(--cream);
   text-align: center;
   margin-bottom: 4px;
@@ -1003,7 +1008,7 @@ input { font-family: inherit; }
   cursor: pointer;
   text-align: left;
   position: relative;
-  transition: all 0.3s;
+  transition: all 0.2s;
 }
 .field-dropdown-trigger::after {
   content: '';
@@ -1083,7 +1088,7 @@ input { font-family: inherit; }
   font-size: 15px;
   color: var(--cream);
   outline: none;
-  transition: all 0.3s;
+  transition: all 0.2s;
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
@@ -1109,7 +1114,7 @@ input { font-family: inherit; }
   font-size: 15px;
   color: var(--cream);
   outline: none;
-  transition: all 0.3s;
+  transition: all 0.2s;
 }
 .field-input:focus {
   border-color: var(--amber);
@@ -1175,12 +1180,12 @@ input { font-family: inherit; }
   font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 17px;
   font-weight: 600;
-  transition: all 0.3s;
+  transition: all 0.2s;
 }
 .start-btn:hover:not(:disabled) {
   background: var(--cream);
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px -8px rgba(214, 178, 124, 0.4);
+  box-shadow: 0 12px 28px -10px rgba(0, 0, 0, 0.55);
 }
 .start-btn:disabled {
   opacity: 0.5;
@@ -1259,11 +1264,6 @@ input { font-family: inherit; }
   height: 7px;
   border-radius: 50%;
   background: var(--ok);
-  animation: pulse 1.5s ease-in-out infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.85); }
 }
 
 .session-info {
@@ -1273,7 +1273,7 @@ input { font-family: inherit; }
 .session-program {
   font-family: 'Cormorant Garamond', serif;
   font-size: 24px;
-  font-style: italic;
+  font-style: normal;
   font-weight: 500;
   color: var(--cream);
   line-height: 1;
@@ -1296,9 +1296,8 @@ input { font-family: inherit; }
   justify-content: center;
   margin: 0 auto 20px;
   width: fit-content;
-  box-shadow:
-    0 0 0 1px rgba(214, 178, 124, 0.3),
-    0 20px 50px -10px rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--border3);   /* 색 링 그림자 대신 테두리(디자인게이트 A3) */
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.6);
 }
 .qr-box canvas,
 .qr-box img {
@@ -1321,11 +1320,7 @@ input { font-family: inherit; }
   font-variant-numeric: tabular-nums;
 }
 .timer-num.warn { color: var(--warn); }
-.timer-num.danger { color: var(--terra); animation: pulseFast 1s ease-in-out infinite; }
-@keyframes pulseFast {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
+.timer-num.danger { color: var(--terra); }
 .timer-label {
   font-family: 'DM Mono', monospace;
   font-size: 13px;
@@ -1353,7 +1348,7 @@ input { font-family: inherit; }
   font-size: 13px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  transition: all 0.3s;
+  transition: all 0.2s;
 }
 .session-actions .btn-refresh:hover {
   border-color: var(--border2);
@@ -1372,7 +1367,7 @@ input { font-family: inherit; }
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-weight: 500;
-  transition: all 0.3s;
+  transition: all 0.2s;
 }
 .session-actions .btn-end:hover {
   background: rgba(184, 84, 63, 0.2);
@@ -1554,7 +1549,6 @@ input { font-family: inherit; }
   width: 100%;
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.08) inset,
-    0 0 0 1px rgba(214, 178, 124, 0.15),
     0 60px 120px -30px rgba(0, 0, 0, 0.95),
     0 30px 60px -20px rgba(0, 0, 0, 0.7);
   animation: numpadModalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1612,10 +1606,10 @@ input { font-family: inherit; }
   margin-bottom: 18px;
 }
 .numpad-modal-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 22px;
-  font-style: italic;
-  font-weight: 500;
+  font-style: normal;
+  font-weight: 600;
   color: var(--cream);
 }
 .numpad-modal-title-ko {
@@ -1675,7 +1669,7 @@ input { font-family: inherit; }
   border-radius: var(--r);
   padding: 20px 16px 18px;
   text-align: center;
-  transition: all 0.3s;
+  transition: all 0.2s;
 }
 
 .stat-card.attended {
@@ -1696,7 +1690,7 @@ input { font-family: inherit; }
   font-family: 'Cormorant Garamond', serif;
   font-size: 42px;
   font-weight: 500;
-  font-style: italic;
+  font-style: normal;
   line-height: 1;
   margin-bottom: 6px;
   color: var(--cream);
@@ -1807,7 +1801,7 @@ input { font-family: inherit; }
   display: block;
   font-family: 'Cormorant Garamond', serif;
   font-size: 32px;
-  font-style: italic;
+  font-style: normal;
   color: var(--amber);
   opacity: 0.4;
   margin-bottom: 8px;
@@ -1820,7 +1814,7 @@ input { font-family: inherit; }
   gap: 16px;
   padding: 16px 20px;
   border-bottom: 1px solid rgba(214, 178, 124, 0.06);
-  transition: background 0.3s;
+  transition: background 0.2s;
 }
 .student-row:last-child { border-bottom: none; }
 .student-row.absent { opacity: 0.55; }
@@ -1835,7 +1829,7 @@ input { font-family: inherit; }
   justify-content: center;
   font-family: 'Cormorant Garamond', serif;
   font-size: 17px;
-  font-style: italic;
+  font-style: normal;
   flex-shrink: 0;
 }
 .student-row.attended .row-status {
@@ -1930,7 +1924,7 @@ input { font-family: inherit; }
   cursor: zoom-out;
 }
 .qr-zoom.on { display: flex; }
-.qr-zoom-box { background: #fff; padding: 16px; border-radius: 8px; line-height: 0; }
+.qr-zoom-box { background: var(--qr-light); padding: 16px; border-radius: 8px; line-height: 0; }
 .qr-zoom-close {
   font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 16px;
@@ -1972,6 +1966,7 @@ input { font-family: inherit; }
 
 /* 새로 들어온 학생 강조 */
 .student-row.fresh {
+  /* 디자인게이트 F5 유지: 새로 출석한 학생 행 강조 — 칠판 거리에서 알아볼 시간이 필요(등장 모션 아님) */
   animation: freshHighlight 2.5s ease-out;
 }
 @keyframes freshHighlight {
@@ -1995,7 +1990,7 @@ input { font-family: inherit; }
 .attendance-placeholder .icon {
   font-family: 'Cormorant Garamond', serif;
   font-size: 32px;
-  font-style: italic;
+  font-style: normal;
   color: var(--amber);
   opacity: 0.5;
   margin-bottom: 8px;
@@ -2031,7 +2026,7 @@ input { font-family: inherit; }
 .student-sess-program {
   font-family: 'Cormorant Garamond', serif;
   font-size: 22px;
-  font-style: italic;
+  font-style: normal;
   font-weight: 500;
   color: var(--cream);
   line-height: 1;
@@ -2195,8 +2190,7 @@ input { font-family: inherit; }
 .attend-progress {
   position: fixed;
   inset: 0;
-  background: rgba(10, 8, 5, 0.92);
-  backdrop-filter: blur(10px);
+  background: rgba(10, 8, 5, 0.94);
   z-index: 200;
   display: none;
   align-items: center;
@@ -2220,7 +2214,7 @@ input { font-family: inherit; }
 .progress-text {
   font-family: 'Cormorant Garamond', serif;
   font-size: 22px;
-  font-style: italic;
+  font-style: normal;
   color: var(--cream);
   margin-bottom: 6px;
 }
@@ -2304,10 +2298,10 @@ input { font-family: inherit; }
 }
 
 .success-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 32px;
-  font-style: italic;
-  font-weight: 500;
+  font-style: normal;
+  font-weight: 600;
   color: var(--cream);
   margin-bottom: 4px;
   line-height: 1;
@@ -2381,16 +2375,16 @@ input { font-family: inherit; }
 .error-icon {
   font-family: 'Cormorant Garamond', serif;
   font-size: 64px;
-  font-style: italic;
+  font-style: normal;
   color: var(--terra);
   margin-bottom: 16px;
   line-height: 1;
 }
 .error-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'IBM Plex Sans KR', sans-serif;
   font-size: 28px;
-  font-style: italic;
-  font-weight: 500;
+  font-style: normal;
+  font-weight: 600;
   color: var(--cream);
   margin-bottom: 6px;
 }
@@ -2441,7 +2435,7 @@ input { font-family: inherit; }
   text-align: center;
   font-family: 'Cormorant Garamond', serif;
   font-size: 48px;
-  font-style: italic;
+  font-style: normal;
   color: var(--amber);
   line-height: 1;
   margin-bottom: 12px;
@@ -2449,7 +2443,7 @@ input { font-family: inherit; }
 .reg-title {
   font-family: 'Cormorant Garamond', serif;
   font-size: 26px;
-  font-style: italic;
+  font-style: normal;
   font-weight: 500;
   color: var(--cream);
   text-align: center;
@@ -2500,7 +2494,7 @@ input { font-family: inherit; }
   color: var(--cream);
   text-align: center;
   outline: none;
-  transition: all 0.3s;
+  transition: all 0.2s;
 }
 .reg-input:focus {
   border-color: var(--amber);
@@ -2602,7 +2596,7 @@ input { font-family: inherit; }
 .admin-brand-title {
   font-family: 'Cormorant Garamond', serif;
   font-size: 30px;
-  font-style: italic;
+  font-style: normal;
   font-weight: 500;
   color: var(--cream);
   line-height: 1;
@@ -2653,7 +2647,7 @@ input { font-family: inherit; }
 .admin-nav-icon {
   font-family: 'Cormorant Garamond', serif;
   font-size: 22px;
-  font-style: italic;
+  font-style: normal;
   width: 22px;
   text-align: center;
   flex-shrink: 0;
@@ -2892,7 +2886,7 @@ input { font-family: inherit; }
 }
 .st-cell-days.empty {
   color: var(--ink-faint);
-  font-style: italic;
+  font-style: normal;
 }
 
 /* 인라인 요일 토글 (테이블 셀 안) */
@@ -3251,7 +3245,7 @@ input { font-family: inherit; }
   justify-content: center;
   font-family: 'Cormorant Garamond', serif;
   font-size: 18px;
-  font-style: italic;
+  font-style: normal;
   font-weight: 500;
   flex-shrink: 0;
 }
@@ -3337,7 +3331,7 @@ input { font-family: inherit; }
 .detail-empty .icon {
   font-family: 'Cormorant Garamond', serif;
   font-size: 36px;
-  font-style: italic;
+  font-style: normal;
   color: var(--amber);
   opacity: 0.4;
   display: block;
@@ -3430,7 +3424,7 @@ input { font-family: inherit; }
   justify-content: center;
   font-family: 'Cormorant Garamond', serif;
   font-size: 14px;
-  font-style: italic;
+  font-style: normal;
   flex-shrink: 0;
 }
 .detail-row.attended .detail-row-status {
@@ -3580,7 +3574,7 @@ input { font-family: inherit; }
 
 .summary-num {
   font-family: 'Cormorant Garamond', serif;
-  font-style: italic;
+  font-style: normal;
   font-size: 38px;
   font-weight: 500;
   line-height: 1;
@@ -3666,7 +3660,7 @@ input { font-family: inherit; }
 }
 .top-absent-rank {
   font-family: 'Cormorant Garamond', serif;
-  font-style: italic;
+  font-style: normal;
   font-size: 22px;
   font-weight: 500;
   color: var(--copper);
@@ -3775,7 +3769,7 @@ input { font-family: inherit; }
 .matrix-th-no, .matrix-th-name, .matrix-th-rate {
   position: sticky;
   z-index: 11;
-  background: #1e1810 !important;
+  background: var(--matrix-sticky) !important;
 }
 .matrix-th-no { left: 0; min-width: 60px; padding: 0 12px; }
 .matrix-th-name { left: 60px; min-width: 80px; padding: 0 12px; text-align: left; }
@@ -3807,12 +3801,12 @@ input { font-family: inherit; }
   font-size: 13px;
 }
 .matrix-table tbody tr:hover td { background: rgba(214, 178, 124, 0.04); }
-.matrix-table tbody tr:hover .matrix-td-fixed { background: #2a221a !important; }
+.matrix-table tbody tr:hover .matrix-td-fixed { background: var(--matrix-sticky-hover) !important; }
 
 .matrix-td-fixed {
   position: sticky;
   /* 진한 불투명 배경 + 옆 그림자로 매트릭스 셀과 분리 */
-  background: #251e16 !important;
+  background: var(--matrix-sticky-alt) !important;
   z-index: 5;
 }
 .matrix-td-no, .matrix-th-no {
@@ -3854,7 +3848,7 @@ input { font-family: inherit; }
 }
 .matrix-td-rate.high { color: var(--sage); }
 .matrix-td-rate.low { color: var(--copper); }
-.matrix-td-rate.na { color: var(--ink-faint); font-weight: 400; font-style: italic; }
+.matrix-td-rate.na { color: var(--ink-faint); font-weight: 400; font-style: normal; }
 
 /* 셀 (출석 표시) */
 .matrix-cell {
@@ -3866,7 +3860,7 @@ input { font-family: inherit; }
   border-radius: 50%;
   font-family: 'Cormorant Garamond', serif;
   font-size: 14px;
-  font-style: italic;
+  font-style: normal;
   cursor: default;
 }
 .matrix-cell.attended {
@@ -3914,9 +3908,9 @@ input { font-family: inherit; }
   padding: 24px;
   margin-bottom: 16px;
 }
-.diag-card h3 {
+.diag-card h2 {
   font-family: 'Cormorant Garamond', serif;
-  font-style: italic;
+  font-style: normal;
   font-size: 22px;
   color: var(--cream);
   margin-bottom: 14px;
@@ -3978,7 +3972,7 @@ input { font-family: inherit; }
 .req-status-badge.approved{background:rgba(123,160,135,.12);border:1px solid rgba(123,160,135,.3);color:var(--sage)}
 .req-status-badge.rejected{background:rgba(184,84,63,.1);border:1px solid rgba(184,84,63,.3);color:var(--terra)}
 .req-status-badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
-.req-status-badge.pending .dot{animation:pulse 1.5s ease-in-out infinite}
+
 .req-student-info{flex:1;min-width:0}
 .req-student-name{font-family:'IBM Plex Sans KR',sans-serif;font-size:16px;font-weight:600;color:var(--cream);margin-bottom:2px}
 .req-student-no{font-family:'DM Mono',monospace;font-size:13px;color:var(--ink-dim);letter-spacing:.05em}
@@ -3996,7 +3990,7 @@ input { font-family: inherit; }
 .req-day-badge.on{background:rgba(214,178,124,.18);border:1px solid rgba(214,178,124,.4);color:var(--amber)}
 .req-day-badge.on.weekend{background:rgba(184,84,63,.15);border:1px solid rgba(184,84,63,.35);color:var(--copper)}
 .req-day-badge.off{background:rgba(0,0,0,.2);border:1px solid var(--border);color:var(--ink-faint)}
-.req-reason{font-style:italic;color:var(--ink-dim);line-height:1.6}
+.req-reason{font-style: normal;color:var(--ink-dim);line-height:1.6}
 .req-teacher-note{margin-top:10px;padding:10px 14px;background:rgba(123,160,135,.06);border:1px solid rgba(123,160,135,.2);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink-dim)}
 .req-card.rejected .req-teacher-note{background:rgba(184,84,63,.06);border-color:rgba(184,84,63,.2)}
 .req-teacher-note .note-label{font-weight:600;color:var(--ink);margin-right:6px}
@@ -4004,7 +3998,7 @@ input { font-family: inherit; }
 .req-card.approved,.req-card.rejected{opacity:.75}
 .req-card.approved:hover,.req-card.rejected:hover{opacity:1}
 .req-empty{text-align:center;padding:60px 24px;color:var(--ink-faint);font-family:'IBM Plex Sans KR',sans-serif;font-size:14px}
-.req-empty .icon{font-family:'Cormorant Garamond',serif;font-size:36px;font-style:italic;color:var(--amber);opacity:.4;display:block;margin-bottom:12px}
+.req-empty .icon{font-family:'Cormorant Garamond',serif;font-size:36px;font-style: normal;color:var(--amber);opacity:.4;display:block;margin-bottom:12px}
 .reject-modal{max-width:420px;padding:36px 32px}
 .reject-modal .modal-title{font-family:'IBM Plex Sans KR',sans-serif;font-style:normal;font-size:20px;font-weight:600;margin-bottom:6px}
 .reject-modal-info{font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;color:var(--ink-dim);text-align:center;margin-bottom:20px}
@@ -4063,8 +4057,7 @@ input { font-family: inherit; }
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(10,8,5,.7);
-  backdrop-filter: blur(4px);
+  background: rgba(10,8,5,.8);
   z-index: 105;
 }
 .sidebar-backdrop.on { display: block; }
@@ -4084,7 +4077,7 @@ input { font-family: inherit; }
     border-right: 1px solid var(--border2) !important;
     border-bottom: none !important;
     transform: translateX(-100%);
-    transition: transform .3s cubic-bezier(.16,1,.3,1);
+    transition: transform 0.2s cubic-bezier(.16,1,.3,1);
     z-index: 108;
     box-shadow: 20px 0 50px -10px rgba(0,0,0,.6);
     padding: 28px 0 !important;
@@ -4229,7 +4222,7 @@ input { font-family: inherit; }
   .mobile-matrix-notice .icon {
     font-family: 'Cormorant Garamond', serif;
     font-size: 36px;
-    font-style: italic;
+    font-style: normal;
     color: var(--amber);
     opacity: .5;
     display: block;
@@ -4270,8 +4263,8 @@ input { font-family: inherit; }
 .check-login::before,.check-login::after{content:'';position:absolute;width:18px;height:18px;border:1px solid var(--amber);opacity:.4}
 .check-login::before{top:12px;left:12px;border-right:none;border-bottom:none}
 .check-login::after{bottom:12px;right:12px;border-left:none;border-top:none}
-.check-login-icon{font-family:'Cormorant Garamond',serif;font-size:56px;font-style:italic;color:var(--amber);line-height:1;margin-bottom:14px}
-.check-login-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-style:italic;color:var(--cream);margin-bottom:4px;line-height:1}
+.check-login-icon{font-family:'Cormorant Garamond',serif;font-size:56px;font-style: normal;color:var(--amber);line-height:1;margin-bottom:14px}
+.check-login-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-style: normal;color:var(--cream);margin-bottom:4px;line-height:1}
 .check-login-sub{font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;color:var(--ink-dim);margin-bottom:24px;line-height:1.7}
 .check-login-input{width:100%;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;font-family:'DM Mono',monospace;font-size:18px;color:var(--cream);text-align:center;outline:none;letter-spacing:.15em;margin-bottom:10px}
 .check-login-input:focus{border-color:var(--amber);background:rgba(214,178,124,.05)}
@@ -4290,7 +4283,7 @@ input { font-family: inherit; }
 .dash-logout:hover{border-color:var(--border2);color:var(--amber)}
 .dash-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
 .dash-stat{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:18px 14px;text-align:center}
-.dash-stat-num{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:32px;font-weight:500;line-height:1;margin-bottom:4px}
+.dash-stat-num{font-family:'Cormorant Garamond',serif;font-style: normal;font-size:32px;font-weight:500;line-height:1;margin-bottom:4px}
 .dash-stat.rate .dash-stat-num{color:var(--amber)}
 .dash-stat.att .dash-stat-num{color:var(--sage)}
 .dash-stat.abs .dash-stat-num{color:var(--terra)}
@@ -4301,7 +4294,7 @@ input { font-family: inherit; }
 .dash-tab.on{background:rgba(214,178,124,.15);color:var(--amber);font-weight:600}
 .dash-legend{display:flex;flex-wrap:wrap;gap:14px 18px;padding:12px 16px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink-dim)}
 .dash-legend .li{display:flex;align-items:center;gap:5px}
-.dash-legend .dt{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-style:italic;font-family:'Cormorant Garamond',serif}
+.dash-legend .dt{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-style: normal;font-family:'Cormorant Garamond',serif}
 .dt.O{background:rgba(123,160,135,.15);color:var(--sage);border:1px solid rgba(123,160,135,.4)}
 .dt.X{background:rgba(184,84,63,.15);color:var(--terra);border:1px solid rgba(184,84,63,.4);font-family:'IBM Plex Sans KR';font-style:normal}
 .dt.J{background:rgba(214,178,124,.12);color:var(--amber);border:1px solid rgba(214,178,124,.4)}
@@ -4331,7 +4324,7 @@ input { font-family: inherit; }
 .day-col.x:hover{background:rgba(184,84,63,.08)}
 .day-name{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink-faint);margin-bottom:2px}
 .day-num{font-family:'DM Mono',monospace;font-size:13px;color:var(--ink-dim);margin-bottom:6px}
-.day-badge{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;font-style:italic}
+.day-badge{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;font-style: normal}
 .day-badge.O{background:rgba(123,160,135,.15);color:var(--sage);border:1px solid rgba(123,160,135,.4)}
 .day-badge.X{background:rgba(184,84,63,.15);color:var(--terra);border:1px solid rgba(184,84,63,.5);font-family:'IBM Plex Sans KR';font-style:normal;font-weight:700}
 .day-badge.J{background:rgba(214,178,124,.12);color:var(--amber);border:1px solid rgba(214,178,124,.4)}
@@ -4352,7 +4345,7 @@ input { font-family: inherit; }
 .month-cell.x{cursor:pointer}
 .month-cell.x:hover{background:rgba(184,84,63,.08)}
 .month-cell .mn{font-family:'DM Mono',monospace;font-size:13px;line-height:1.1;color:var(--ink-faint);margin-bottom:2px}
-.month-cell .mb{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;font-weight:600}
+.month-cell .mb{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:13px;font-style: normal;font-weight:600}
 .mb.O{background:rgba(123,160,135,.15);color:var(--sage);border:1px solid rgba(123,160,135,.4)}
 .mb.X{background:rgba(184,84,63,.15);color:var(--terra);border:1px solid rgba(184,84,63,.5);font-family:'IBM Plex Sans KR';font-style:normal;font-weight:700}
 .mb.J{background:rgba(214,178,124,.12);color:var(--amber);border:1px solid rgba(214,178,124,.4)}
@@ -4373,10 +4366,10 @@ input { font-family: inherit; }
 .req-li-st.ok{background:rgba(123,160,135,.12);color:var(--sage);border:1px solid rgba(123,160,135,.3)}
 .req-li-st.no{background:rgba(184,84,63,.1);color:var(--terra);border:1px solid rgba(184,84,63,.3)}
 .req-li-meta{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink-dim)}
-.req-li-reason{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink);margin-top:6px;font-style:italic}
+.req-li-reason{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink);margin-top:6px;font-style: normal}
 .req-li-note{margin-top:8px;padding:8px 12px;background:rgba(0,0,0,.2);border-radius:3px;font-size:13px;color:var(--ink-dim)}
 /* 수정요청 모달 */
-.ck-modal-bg{position:fixed;inset:0;z-index:150;background:rgba(10,8,5,.78);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px}
+.ck-modal-bg{position:fixed;inset:0;z-index:150;background:rgba(10,8,5,.86);display:none;align-items:center;justify-content:center;padding:20px}
 .ck-modal-bg.on{display:flex}
 .ck-modal{background:var(--paper);border:1px solid var(--border2);border-radius:var(--r);padding:32px 28px;max-width:420px;width:100%;position:relative;animation:modalIn 0.24s cubic-bezier(.16,1,.3,1)}
 .ck-modal::before,.ck-modal::after{content:'';position:absolute;width:16px;height:16px;border:1px solid var(--amber);opacity:.5}
@@ -4402,7 +4395,7 @@ input { font-family: inherit; }
 
 /* check 헤더 */
 .ck-header{background:var(--paper);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-.ck-header-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--cream);line-height:1}
+.ck-header-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-style: normal;color:var(--cream);line-height:1}
 .ck-header-sub{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--amber);margin-top:2px}
 .ck-header-date{font-family:'DM Mono',monospace;font-size:13px;color:var(--ink-dim)}
 /* 요일 변경 버튼 (출석 요일 탭) */
@@ -4490,7 +4483,7 @@ input { font-family: inherit; }
 .diag-sched-status.warn { color: var(--amber); }
 .diag-sched-status.miss { color: var(--terra); font-weight: 500; }
 .diag-sched-status.future { color: var(--ink-faint); }
-.diag-empty { text-align: center; padding: 40px; color: var(--ink-faint); font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14px; }
+.diag-empty { text-align: center; padding: 40px; color: var(--ink-faint); font-family: 'Cormorant Garamond', serif; font-style: normal; font-size: 14px; }
 
 .diag-filter-row { display: flex; gap: 10px; margin-bottom: 14px; }
 .diag-filter-row select { background: var(--paper2); border: 1px solid var(--border); border-radius: 3px; color: var(--cream); font-family: 'IBM Plex Sans KR', sans-serif; font-size: 13px; padding: 6px 12px; cursor: pointer; }
@@ -4530,7 +4523,7 @@ input { font-family: inherit; }
 .live-pill-s{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:100px;font-family:'DM Mono',monospace;font-size:13px;letter-spacing:.1em;text-transform:uppercase}
 .live-pill-s.on{background:rgba(0,200,150,.12);border:1px solid rgba(0,200,150,.35);color:var(--ok)}
 .live-pill-s.off{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--ink-faint)}
-.live-pill-s.on .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);animation:pulse 1.5s infinite}
+.live-pill-s.on .dot{width:6px;height:6px;border-radius:50%;background:var(--ok)}
 .live-prog{font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;font-weight:500;color:var(--amber);margin-bottom:4px}
 .live-teacher{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink-dim);margin-bottom:12px}
 .live-stat-row{display:flex;gap:16px;padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:12px}
@@ -4557,7 +4550,7 @@ input { font-family: inherit; }
 
 /* ─── Seats 카드 (For All, 좌석 배치도) ─── */
 .card-seats .card-symbol {
-  color: var(--terra, #c87f5e);
+  color: var(--terra);
 }
 .card-seats:hover {
   border-color: rgba(200, 127, 94, 0.4);
@@ -4570,12 +4563,20 @@ input { font-family: inherit; }
   padding: 1px 7px;
   border-radius: 11px;
   background: var(--terra);
-  color: #fff;
+  color:var(--on-accent);
   font: 600 12px/18px 'IBM Plex Sans KR', sans-serif;
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
 body.admin-readonly .admin-logout-btn { display: none; }
+.anal-sem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 14px;
+  color: var(--ink-dim);
+}
 .anal-rule {
   margin: -6px 0 22px;
   font-family: 'IBM Plex Sans KR', sans-serif;
@@ -4612,8 +4613,8 @@ body.admin-readonly .admin-page-title::after {
   border-radius: 12px;
   font-size: 13px;
   color: var(--info);
-  font-family: 'DM Mono', monospace;
-  letter-spacing: 0.08em;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  letter-spacing: 0;
   vertical-align: middle;
   font-weight: 500;
 }
@@ -4634,15 +4635,15 @@ body.admin-readonly #admin-tab-diag {
 .seat-login::before,.seat-login::after{content:'';position:absolute;width:18px;height:18px;border:1px solid var(--copper);opacity:.45}
 .seat-login::before{top:12px;left:12px;border-right:none;border-bottom:none}
 .seat-login::after{bottom:12px;right:12px;border-left:none;border-top:none}
-.seat-login-icon{font-family:'Cormorant Garamond',serif;font-size:56px;font-style:italic;color:var(--copper);line-height:1;margin-bottom:14px}
-.seat-login-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-style:italic;color:var(--cream);margin-bottom:4px;line-height:1}
+.seat-login-icon{font-family:'Cormorant Garamond',serif;font-size:56px;font-style: normal;color:var(--copper);line-height:1;margin-bottom:14px}
+.seat-login-title{font-family: 'IBM Plex Sans KR', sans-serif;font-size:32px;font-style: normal;font-weight:600;color:var(--cream);margin-bottom:4px;line-height:1}
 .seat-login-sub{font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;color:var(--ink-dim);margin-bottom:24px;line-height:1.7}
 .seat-login-input{width:100%;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;font-family:'IBM Plex Sans KR',sans-serif;font-size:16px;color:var(--cream);text-align:center;outline:none}
 .seat-login-input:focus{border-color:var(--copper);background:rgba(200,127,94,.05)}
 .seat-login-input::placeholder{color:var(--ink-faint)}
 .seat-login-err{color:var(--terra);font-size:13px;min-height:18px;margin:10px 0}
-.seat-login-btn{width:100%;padding:14px;background:var(--copper);color:#fff;border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;font-weight:600}
-.seat-login-btn:hover:not(:disabled){background:#d68b6a}
+.seat-login-btn{width:100%;padding:14px;background:var(--copper);color:var(--on-accent);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;font-weight:600}
+.seat-login-btn:hover:not(:disabled){background:var(--copper-hover)}
 .seat-login-btn:disabled{opacity:.4;cursor:not-allowed}
 
 .seat-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);margin-bottom:20px;flex-wrap:wrap;gap:10px}
@@ -4672,18 +4673,18 @@ body.admin-readonly #admin-tab-diag {
 .seat-board-img{display:block;width:100%;height:auto;user-select:none;pointer-events:none}
 .seat-board-overlay{position:absolute;inset:0}
 .seat-marker{position:absolute;transform:translate(-50%,-50%);border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-weight:700;border:2px solid transparent;transition:all .15s;box-sizing:border-box;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;backface-visibility:hidden}
-.seat-marker.empty{background:rgba(212,175,103,1);color:#1a130c;border-color:rgba(80,55,15,.8);border-width:1px;font-weight:800;font-family:'Pretendard Variable',Pretendard,'IBM Plex Sans KR',sans-serif;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
+.seat-marker.empty{background:rgba(212,175,103,1);color:var(--bg);border-color:rgba(80,55,15,.8);border-width:1px;font-weight:800;font-family:'Pretendard Variable',Pretendard,'IBM Plex Sans KR',sans-serif;-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
 .seat-marker.disabled{background:rgba(60,55,50,.85);color:rgba(255,255,255,.4);border-color:rgba(80,75,70,.6);border-width:1px;font-weight:600;cursor:not-allowed;text-decoration:line-through}
-.seat-marker.cross-taken{background:rgba(94,184,255,.6);color:#1a130c;border-color:rgba(94,184,255,.8);border-width:1px;font-weight:700;cursor:not-allowed}
+.seat-marker.cross-taken{background:rgba(94,184,255,.6);color:var(--bg);border-color:rgba(94,184,255,.8);border-width:1px;font-weight:700;cursor:not-allowed}
 .sp-grade-chip{display:flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;color:var(--cream);cursor:pointer;transition:all .15s}
 .sp-grade-chip:has(input:checked){background:rgba(214,178,124,.12);border-color:var(--amber);color:var(--amber)}
 .sp-grade-chip input{width:16px;height:16px;cursor:pointer;accent-color:var(--amber)}
 .sr-grade-label{display:inline-block;margin-left:8px;padding:2px 8px;background:rgba(214,178,124,.12);border:1px solid rgba(214,178,124,.3);border-radius:10px;font-size:13px;line-height:var(--lh-tight);color:var(--amber);font-weight:600;vertical-align:middle}
-.seat-marker.empty:hover{background:rgba(123,160,135,1);transform:translate(-50%,-50%) scale(1.2);border-color:var(--sage);border-width:2px;color:#fff;z-index:5}
-.seat-marker.taken{background:rgba(200,127,94,.65);color:#fff;border-color:rgba(200,127,94,.85);cursor:pointer}
+.seat-marker.empty:hover{background:rgba(123,160,135,1);transform:translate(-50%,-50%) scale(1.2);border-color:var(--sage);border-width:2px;color:var(--on-accent);z-index:5}
+.seat-marker.taken{background:rgba(200,127,94,.65);color:var(--on-accent);border-color:rgba(200,127,94,.85);cursor:pointer}
 .seat-marker.taken:hover{transform:translate(-50%,-50%) scale(1.1);z-index:5}
-.seat-marker.mine{background:var(--copper);color:#fff;border-color:var(--cream);box-shadow:0 0 0 3px rgba(200,127,94,.4);z-index:4}
-.seat-marker.assigned{background:rgba(94,184,255,.92);color:#fff;border-color:rgba(50,140,210,1);cursor:default;flex-direction:column;line-height:1.05;text-align:center;padding:1px 2px;font-family:'Pretendard Variable',Pretendard,'IBM Plex Sans KR',sans-serif;font-weight:700;text-shadow:0 1px 1px rgba(0,0,0,.3);overflow:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:geometricPrecision}
+.seat-marker.mine{background:var(--copper);color:var(--on-accent);border-color:var(--cream);box-shadow:0 0 0 3px rgba(200,127,94,.4);z-index:4}
+.seat-marker.assigned{background:rgba(94,184,255,.92);color:var(--on-accent);border-color:rgba(50,140,210,1);cursor:default;flex-direction:column;line-height:1.05;text-align:center;padding:1px 2px;font-family:'Pretendard Variable',Pretendard,'IBM Plex Sans KR',sans-serif;font-weight:700;text-shadow:0 1px 1px rgba(0,0,0,.3);overflow:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:geometricPrecision}
 .seat-marker.assigned .sm-no{font-family:'DM Mono',monospace;font-size:.72em;font-weight:600;opacity:.85;line-height:1;margin-bottom:2px}
 .seat-marker.assigned .sm-name{font-size:.95em;font-weight:800;line-height:1.05;letter-spacing:-.02em;display:block;overflow:hidden;text-overflow:ellipsis}
 
@@ -4699,8 +4700,8 @@ body.admin-readonly #admin-tab-diag {
 .seat-submit-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r);flex-wrap:wrap}
 .seat-submit-info{font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;color:var(--ink-dim)}
 .seat-submit-info.has-pick{color:var(--copper);font-weight:500}
-.seat-submit-btn{padding:12px 28px;background:var(--copper);color:#fff;border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
-.seat-submit-btn:hover:not(:disabled){background:#d68b6a}
+.seat-submit-btn{padding:12px 28px;background:var(--copper);color:var(--on-accent);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;font-weight:600;cursor:pointer}
+.seat-submit-btn:hover:not(:disabled){background:var(--copper-hover)}
 .seat-submit-btn:disabled{opacity:.4;cursor:not-allowed}
 
 .seat-done{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:48px 32px;text-align:center;max-width:480px;margin:0 auto;position:relative;box-shadow:0 30px 60px -20px rgba(0,0,0,.5)}
@@ -4787,12 +4788,12 @@ body.admin-readonly #admin-tab-diag {
   /* 좌석 마커 인쇄 시 강조 */
   .seat-marker.empty {
     background: rgba(212,175,103,1) !important;
-    color: #1a130c !important;
+    color: var(--bg) !important;
     font-weight: 800 !important;
   }
   .seat-marker.assigned {
     background: rgba(94,184,255,1) !important;
-    color: #fff !important;
+    color:var(--on-accent) !important;
     border-color: rgba(40,120,200,1) !important;
     font-weight: 800 !important;
     text-shadow: 0 1px 2px rgba(0,0,0,.5) !important;
@@ -4823,8 +4824,8 @@ body.admin-readonly #admin-tab-diag {
 .cosmos-matrix input[type="number"]{width:60px;text-align:center;font-family:'DM Mono',monospace}
 .cosmos-day-cell{width:34px;cursor:pointer;user-select:none}
 .cosmos-day-toggle{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:rgba(0,0,0,.25);border:1px solid var(--border);font-size:13px;font-weight:600;color:var(--ink-dim);transition:all .15s}
-.cosmos-day-toggle.on{background:rgba(123,160,135,.7);border-color:var(--sage);color:#fff}
-.cosmos-day-toggle.conflict{background:rgba(184,84,63,.7);border-color:var(--terra);color:#fff}
+.cosmos-day-toggle.on{background:rgba(123,160,135,.7);border-color:var(--sage);color:var(--on-accent)}
+.cosmos-day-toggle.conflict{background:rgba(184,84,63,.7);border-color:var(--terra);color:var(--on-accent)}
 .cosmos-day-cell:hover .cosmos-day-toggle:not(.on){background:rgba(214,178,124,.15);border-color:var(--amber)}
 .cosmos-matrix .actions{white-space:nowrap}
 .cosmos-empty{padding:60px 20px;text-align:center;color:var(--ink-faint);font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;background:var(--paper);border:1px solid var(--border);border-radius:var(--r)}
@@ -4899,6 +4900,17 @@ body.admin-readonly #admin-tab-diag {
 a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
   outline: 2px solid var(--amber);
   outline-offset: 2px;
+}
+
+/* 한글이 들어가는 라벨은 고정폭 영문 서체 대신 한국어 서체로 — 한글이 시스템 대체 글꼴·넓은 자간으로 띄엄띄엄 보이던 문제(리뷰 N9).
+   숫자가 섞인 곳은 tabular-nums로 자리 폭 유지. 코드성 텍스트(.diag-log-data)는 고정폭 그대로. */
+.back-btn, .timer-label, .btn-end, .manual-btn, .admin-back-btn, .session-count, .session-att-frac,
+.top-absent-no, .top-absent-count, .day-kr, .live-pill-s, .seat-admin-period-meta,
+.diag-sched-room, .diag-hint, .diag-log-room {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
 }
 
 /* 모션 최소화 선호 존중(접근성, 순수 추가) */
@@ -5012,7 +5024,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 <!-- ══════════════════════════════════════════ -->
 <div class="screen" id="screen-rooms" style="display:none">
   <button class="back-btn" onclick="goHome()">
-    <span>←</span><span>BACK</span>
+    <span>←</span><span>뒤로</span>
   </button>
 
   <div class="header compact">
@@ -5073,7 +5085,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 <!-- ══════════════════════════════════════════ -->
 <div class="screen" id="screen-teacher" style="display:none">
   <button class="back-btn" onclick="teacherBack()">
-    <span>←</span><span>BACK</span>
+    <span>←</span><span>뒤로</span>
   </button>
 
   <div class="teacher-wrap" id="t-wrap">
@@ -5116,7 +5128,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
       <div class="field-group">
         <label class="field-label">담당 교사</label>
         <input type="text" class="field-input" id="t-teacher" placeholder="이름 입력" autocomplete="off">
-        <div class="field-hint" id="t-teacher-hint">⚠️ 오늘의 심야 감독으로 자동 입력됨 — 다르면 직접 수정하세요</div>
+        <div class="field-hint" id="t-teacher-hint">오늘의 심야 감독으로 자동 입력됨 — 다르면 직접 수정하세요</div>
       </div>
 
       <button class="start-btn" id="t-start-btn" onclick="startTeacherSession()">QR 띄우고 출석 시작</button>
@@ -5256,8 +5268,8 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 <!-- 세션 종료 모달 -->
 <div class="modal-bg" id="modal-end">
   <div class="modal">
-    <div class="modal-icon">✕</div>
-    <div class="modal-title">End Session</div>
+    <div class="modal-icon">×</div>
+    <div class="modal-title">출석 마감</div>
     <div class="modal-title-ko">출석을 마감할까요?</div>
 
     <div style="font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;font-weight:300;color:var(--ink-dim);text-align:center;line-height:1.7;margin-bottom:24px">
@@ -5407,7 +5419,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 
 
 <div class="screen" id="screen-check" style="display:none">
-  <button class="back-btn" onclick="goHome()"><span>←</span><span>BACK</span></button>
+  <button class="back-btn" onclick="goHome()"><span>←</span><span>뒤로</span></button>
   <div class="check-wrap">
     <div id="ck-login" class="check-login">
       <div class="check-login-icon">C</div>
@@ -5496,7 +5508,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 <!--  좌석 신청 화면 (학생용)                       -->
 <!-- ══════════════════════════════════════════ -->
 <div class="screen" id="screen-seat-request" style="display:none">
-  <button class="back-btn" onclick="goHome()"><span>←</span><span>BACK</span></button>
+  <button class="back-btn" onclick="goHome()"><span>←</span><span>뒤로</span></button>
   <div class="seat-wrap">
 
     <!-- (1) 학번/이름 입력 -->
@@ -5615,14 +5627,14 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 <!--  좌석 배치도 조회 화면 (학생·교사 공통)        -->
 <!-- ══════════════════════════════════════════ -->
 <div class="screen" id="screen-seat-board" style="display:none">
-  <button class="back-btn" onclick="goHome()"><span>←</span><span>BACK</span></button>
+  <button class="back-btn" onclick="goHome()"><span>←</span><span>뒤로</span></button>
   <div class="seat-wrap">
     <div class="seat-header">
       <div>
         <div class="seat-board-period-title">좌석 배치도</div>
         <div class="seat-board-period-meta" id="sb-meta">확정된 배치를 확인합니다</div>
       </div>
-      <button class="admin-btn sb-print-btn" onclick="sbPrint()">🖨 출력</button>
+      <button class="admin-btn sb-print-btn" onclick="sbPrint()">출력</button>
     </div>
 
     <div class="seat-tab-bar" id="sb-tabs">
@@ -5640,11 +5652,11 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 <!-- ══════════════════════════════════════════ -->
 <div class="screen" id="screen-construction" style="display:none">
   <button class="back-btn" onclick="goHome()">
-    <span>←</span><span>BACK</span>
+    <span>←</span><span>뒤로</span>
   </button>
 
   <div class="construction">
-    <div class="construction-icon">⏳</div>
+    <div class="construction-icon">✦</div>
     <div class="construction-title">Coming Soon</div>
     <div class="construction-title-ko" id="construction-ko">공사중입니다</div>
     <div class="construction-desc" id="construction-desc">
@@ -5722,10 +5734,10 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
           <div class="admin-page-title">명단 관리</div>
           <div class="admin-page-actions">
             <label class="admin-btn" style="cursor:pointer">
-              📂 엑셀 업로드
+              엑셀 업로드
               <input type="file" id="excel-upload-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleExcelUpload(event)">
             </label>
-            <button class="admin-btn" onclick="downloadStudentTemplate()">📥 양식 다운로드</button>
+            <button class="admin-btn" onclick="downloadStudentTemplate()">양식 다운로드</button>
             <button class="admin-btn primary" onclick="openStudentModal()">+ 학생 추가</button>
           </div>
         </div>
@@ -5803,7 +5815,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
         <div class="admin-page-header">
           <div class="admin-page-title">출석 기록</div>
           <div class="admin-page-actions">
-            <button class="admin-btn" onclick="loadHistorySessions()">🔄 새로고침</button>
+            <button class="admin-btn" onclick="loadHistorySessions()">새로고침</button>
           </div>
         </div>
 
@@ -5854,8 +5866,8 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
         <div class="admin-page-header">
           <div class="admin-page-title">분석</div>
           <div class="admin-page-actions">
-            <button class="admin-btn" onclick="loadAnalysis()">🔄 새로고침</button>
-            <button class="admin-btn primary" onclick="exportAnalysisXlsx()">📥 출석부 다운로드</button>
+            <button class="admin-btn" onclick="loadAnalysis()">새로고침</button>
+            <button class="admin-btn primary" onclick="exportAnalysisXlsx()">출석부 다운로드</button>
           </div>
         </div>
 
@@ -5868,6 +5880,11 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
             <option value="semester">이번 학기</option>
             <option value="0">전체</option>
           </select>
+          <span class="anal-sem" id="anal-sem-box" style="display:none">
+            학기 시작일
+            <input type="date" id="anal-sem-date" class="admin-filter-select">
+            <button class="admin-btn admin-btn-sm" onclick="saveSemesterStart()">저장</button>
+          </span>
           <select class="admin-filter-select" id="anal-filter-prog" onchange="renderAnalysis()">
             <option value="">전체 프로그램</option>
             <option>심야 독서시간</option>
@@ -5908,7 +5925,8 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
         <div class="admin-page-header">
           <div class="admin-page-title">요청 관리</div>
           <div class="admin-page-actions">
-            <button class="admin-btn" onclick="loadRequests()">🔄 새로고침</button>
+            <button class="admin-btn primary" id="req-bulk-approve" onclick="bulkApproveRequests()" style="display:none">대기 요청 모두 승인</button>
+            <button class="admin-btn" onclick="loadRequests()">새로고침</button>
           </div>
         </div>
         <div class="req-sub-tabs">
@@ -5922,8 +5940,8 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
           <input type="text" class="admin-search" id="req-search" placeholder="학번 또는 이름으로 검색..." oninput="renderRequests()">
           <span class="admin-result-count" id="req-count">—</span>
         </div>
-        <div id="req-pane-correction"><div class="req-list" id="req-list-correction"><div class="req-empty"><span class="icon">⏳</span>불러오는 중...</div></div></div>
-        <div id="req-pane-daychange" style="display:none"><div class="req-list" id="req-list-daychange"><div class="req-empty"><span class="icon">⏳</span>불러오는 중...</div></div></div>
+        <div id="req-pane-correction"><div class="req-list" id="req-list-correction"><div class="req-empty"><span class="icon">✦</span>불러오는 중...</div></div></div>
+        <div id="req-pane-daychange" style="display:none"><div class="req-list" id="req-list-daychange"><div class="req-empty"><span class="icon">✦</span>불러오는 중...</div></div></div>
       </div>
 
       <!-- 탭 5: 실시간 모니터 -->
@@ -5931,11 +5949,11 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
         <div class="admin-page-header">
           <div class="admin-page-title">실시간</div>
           <div class="admin-page-actions">
-            <button class="admin-btn" onclick="LIVE.manualRefresh()">🔄 새로고침</button>
+            <button class="admin-btn" onclick="LIVE.manualRefresh()">새로고침</button>
           </div>
         </div>
         <div class="live-search">
-          <div class="live-search-title">🔍 학번으로 출석 여부 확인</div>
+          <div class="live-search-title">학번으로 출석 여부 확인</div>
           <div class="live-search-row">
             <input type="text" id="live-search-input" placeholder="학번 5자리" maxlength="5" inputmode="numeric" oninput="LIVE.onSearch()">
           </div>
@@ -5949,7 +5967,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
         <div class="admin-page-header">
           <div class="admin-page-title">좌석 관리</div>
           <div class="admin-page-actions">
-            <button class="admin-btn" onclick="SEAT_ADMIN.refresh()">🔄 새로고침</button>
+            <button class="admin-btn" onclick="SEAT_ADMIN.refresh()">새로고침</button>
             <button class="admin-btn primary" onclick="SEAT_ADMIN.openNewPeriodModal()">+ 새 신청 기간</button>
           </div>
         </div>
@@ -5971,7 +5989,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
         <div class="admin-page-header">
           <div class="admin-page-title">코스모스 명단</div>
           <div class="admin-page-actions">
-            <button class="admin-btn" onclick="COSMOS.refresh()">🔄 새로고침</button>
+            <button class="admin-btn" onclick="COSMOS.refresh()">새로고침</button>
           </div>
         </div>
 
@@ -5986,10 +6004,10 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
             <button class="admin-btn admin-btn-sm" onclick="COSMOS.newMonth()">+ 새 월</button>
           </div>
           <div class="cosmos-actions">
-            <button class="admin-btn" onclick="COSMOS.openImportModal()">📥 좌석 배치 가져오기</button>
+            <button class="admin-btn" onclick="COSMOS.openImportModal()">좌석 배치 가져오기</button>
             <button class="admin-btn" onclick="COSMOS.openAddStudentModal()">+ 학생 직접 추가</button>
-            <button class="admin-btn" onclick="COSMOS.openUploadModal()">📤 명단 관리</button>
-            <button class="admin-btn" onclick="COSMOS.downloadAttendanceXlsx()">📥 출석부 다운로드</button>
+            <button class="admin-btn" onclick="COSMOS.openUploadModal()">명단 관리</button>
+            <button class="admin-btn" onclick="COSMOS.downloadAttendanceXlsx()">출석부 다운로드</button>
           </div>
         </div>
 
@@ -6037,7 +6055,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
         <div class="admin-page-header">
           <div class="admin-page-title">진단</div>
           <div class="admin-page-actions">
-            <button class="admin-btn" onclick="DIAG.refresh()">🔄 새로고침</button>
+            <button class="admin-btn" onclick="DIAG.refresh()">새로고침</button>
           </div>
         </div>
 
@@ -6199,7 +6217,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 </div>
 
 <div class="modal-bg" id="modal-reject"><div class="modal reject-modal">
-<div class="modal-icon" style="color:var(--terra)">✕</div><div class="modal-title">요청 거절</div>
+<div class="modal-icon" style="color:var(--terra)">×</div><div class="modal-title">요청 거절</div>
 <div class="reject-modal-info" id="reject-modal-info">—</div>
 <div class="reject-reasons" id="reject-reasons">
 <button class="reject-reason-btn" data-reason="확인 결과 출석이 맞지 않음" onclick="selectRejectReason(this)">확인 결과 출석이 맞지 않음</button>
@@ -6304,9 +6322,9 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
     </div>
 
     <div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="admin-btn admin-btn-sm" onclick="COSMOS.downloadTemplate()">📥 빈 양식 다운로드</button>
+      <button class="admin-btn admin-btn-sm" onclick="COSMOS.downloadTemplate()">빈 양식 다운로드</button>
       <label class="admin-btn admin-btn-sm primary" style="cursor:pointer;margin:0">
-        📤 파일 선택
+        파일 선택
         <input type="file" id="cu-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="COSMOS.onFilePick(event)">
       </label>
       <span id="cu-filename" style="font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink-dim);align-self:center"></span>
@@ -6442,7 +6460,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 <!-- ══════════════════════════════════════════ -->
 <div class="screen" id="screen-diag" style="display:none">
   <button class="back-btn" onclick="goHome()">
-    <span>←</span><span>BACK</span>
+    <span>←</span><span>뒤로</span>
   </button>
 
   <div class="header compact">
@@ -6457,14 +6475,14 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 
   <div class="diag-wrap">
     <div class="diag-card">
-      <h3>Supabase Connection</h3>
+      <h2>Supabase Connection</h2>
       <div class="diag-row"><span class="diag-label">Project URL</span><span class="diag-value" id="diag-url">—</span></div>
       <div class="diag-row"><span class="diag-label">SDK Load</span><span class="diag-value" id="diag-sdk">—</span></div>
       <div class="diag-row"><span class="diag-label">Client Created</span><span class="diag-value" id="diag-client">—</span></div>
     </div>
 
     <div class="diag-card">
-      <h3>Data Tables</h3>
+      <h2>Data Tables</h2>
       <div class="diag-row"><span class="diag-label">students</span><span class="diag-value" id="diag-students">—</span></div>
       <div class="diag-row"><span class="diag-label">attendance</span><span class="diag-value" id="diag-attendance">—</span></div>
       <div class="diag-row"><span class="diag-label">seats</span><span class="diag-value" id="diag-seats">—</span></div>
@@ -6473,7 +6491,7 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
     </div>
 
     <div class="diag-card">
-      <h3>sb Helpers</h3>
+      <h2>sb Helpers</h2>
       <div class="diag-row"><span class="diag-label">sb.settings.adminPassword()</span><span class="diag-value" id="diag-h-pw">—</span></div>
       <div class="diag-row"><span class="diag-label">sb.settings.semesterStart()</span><span class="diag-value" id="diag-h-sem">—</span></div>
       <div class="diag-row"><span class="diag-label">sb.students.list()</span><span class="diag-value" id="diag-h-students">—</span></div>
@@ -6486,12 +6504,12 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
     </div>
 
     <div class="diag-card">
-      <h3>Realtime</h3>
+      <h2>Realtime</h2>
       <div class="diag-row"><span class="diag-label">Channel</span><span class="diag-value" id="diag-realtime">—</span></div>
     </div>
 
     <div class="diag-card">
-      <h3>Log</h3>
+      <h2>Log</h2>
       <div class="diag-log" id="diag-log"></div>
     </div>
   </div>
@@ -6561,7 +6579,7 @@ if (!String.prototype.padEnd) {
 // ══════════════════════════════════════════════════════════════
 const SUPABASE_URL = 'https://rxsmmwqekrtbstcjbagj.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_h7o2vnvgu7Akrg87cAYSkg__DA-KRpn';
-//  ⚠️ 본인 publishable key로 교체
+//  본인 publishable key로 교체
 
 // ══════════════════════════════════════════════════════════════
 //  Supabase 클라이언트
@@ -8039,11 +8057,13 @@ function buildTeacherQR() {
     text: url,
     width: 280,
     height: 280,
-    colorDark: '#1a130c',
-    colorLight: '#ffffff',
+    colorDark: qrColor('--qr-dark'),
+    colorLight: qrColor('--qr-light'),
     correctLevel: QRCode.CorrectLevel.M,
   });
 }
+
+function qrColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 
 // QR 크게 보기: 화면 높이에 맞춘 큰 QR을 따로 그린다
 function openQrZoom() {
@@ -8052,7 +8072,7 @@ function openQrZoom() {
   box.innerHTML = '';
   const size = Math.floor(Math.min(window.innerHeight * 0.78, window.innerWidth * 0.86));
   const url = `${location.origin}${location.pathname}?mode=student&s=${T.session.sessionId}&r=${encodeURIComponent(T.session.room)}`;
-  new QRCode(box, { text: url, width: size, height: size, colorDark: '#1a130c', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+  new QRCode(box, { text: url, width: size, height: size, colorDark: qrColor('--qr-dark'), colorLight: qrColor('--qr-light'), correctLevel: QRCode.CorrectLevel.M });
   document.getElementById('qr-zoom').classList.add('on');
   TLOG.log('qr_zoom_open', { size });
 }
@@ -9736,7 +9756,7 @@ function confirmDeleteStudent(no, program) {
   );
   if (!student) return;
   openConfirmModal(
-    '⚠️ 학생 완전 삭제',
+    '학생 완전 삭제',
     `${student.이름} (${no}) — ${program}\n\nDB에서 영구 삭제됩니다.\n관련 출석 기록도 함께 삭제될 수 있어요.\n이 작업은 되돌릴 수 없습니다.`,
     'delete',
     { no, program }
@@ -10058,11 +10078,12 @@ async function selectHistorySession(sessionId) {
 
   // 우측 로딩
   const detail = document.getElementById('history-detail');
-  detail.innerHTML = '<div class="detail-empty"><span class="icon">⏳</span>출석 명단을 불러오는 중...</div>';
+  detail.innerHTML = '<div class="detail-empty"><span class="icon">✦</span>출석 명단을 불러오는 중...</div>';
 
   try {
     // 출석 기록 조회
     A.selectedAttendance = await sb.attendance.bySession(sessionId);
+    await ensureDayChangeHist();
     renderHistoryDetail();
   } catch (e) {
     console.error('출석 조회 실패:', e);
@@ -10134,11 +10155,16 @@ function renderHistoryDetail() {
 
   // sibling 장소 지원: 아우름/교과1실 통합 분모
   const targetRooms = getRoomGroup(s.장소);
+  const attNos = new Set(att.map(r => String(r.학번)));
+  const histCtx = { dayChangeHist: A.dayChangeHist || {} };
   const targetStudents = (A.students || []).filter(st => {
-    if (!st.활성) return false;
+    const came = attNos.has(String(st.학번));
+    if (!st.활성 && !came) return false;               // 비활성이라도 이 세션에 출석했으면 분모에 남긴다(전엔 '자율'로 보였다)
     if (st.프로그램 !== s.프로그램) return false;
     if (!targetRooms.includes(st.장소)) return false;
-    const days = Array.isArray(st.출석요일) ? st.출석요일 : [];
+    const reg = st.생성일시 ? localDateStr(st.생성일시) : null;
+    if (!came && reg && s.날짜 < reg) return false;     // 명단 등록 전 세션은 분모 제외(분석과 같은 규칙)
+    const days = daysOnDate(st, s.날짜, histCtx);        // 그날 적용되던 출석요일
     return days.length === 0 || days.includes(dayKr);
   });
 
@@ -10236,7 +10262,7 @@ function renderHistoryDetail() {
         ${escapeHtml(s.장소 || '')}
         <span class="sep">·</span>
         <span id="detail-teacher-name">${escapeHtml(s.교사 || '(미입력)')}</span> 선생님
-        ${A.readOnly ? '' : `<button class="teacher-edit-btn" onclick="openEditTeacherModal()" title="교사 이름 수정">✏️</button>`}
+        ${A.readOnly ? '' : `<button class="teacher-edit-btn" onclick="openEditTeacherModal()" title="교사 이름 수정">수정</button>`}
         <br>
         <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--ink-faint)">${startTime} ~ ${endTime}</span>
       </div>
@@ -10262,7 +10288,7 @@ function renderHistoryDetail() {
     <div class="detail-actions">
       <button class="admin-btn primary" onclick="openLateAttendModal()">+ 사후 출석 추가</button>
       <button class="admin-btn" onclick="copyAbsentList()" ${absentCount ? '' : 'disabled'}>미출석 명단 복사</button>
-      ${A.readOnly ? '' : `<button class="admin-btn danger" onclick="confirmDeleteSession()" style="margin-left:auto">🗑 세션 삭제</button>`}
+      ${A.readOnly ? '' : `<button class="admin-btn danger" onclick="confirmDeleteSession()" style="margin-left:auto">세션 삭제</button>`}
     </div>
 
     <div class="detail-list">
@@ -10476,7 +10502,7 @@ function confirmDeleteSession() {
   if (!A.selectedSession) return;
   const s = A.selectedSession;
   openConfirmModal(
-    '⚠️ 세션 삭제',
+    '세션 삭제',
     `${s.프로그램}\n${s.장소} · ${s.교사} 선생님\n${s.날짜}\n\n이 세션과 관련된 모든 출석 기록이 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.`,
     'deleteSession',
     { sessionId: s.세션id }
@@ -10510,11 +10536,13 @@ async function loadAnalysis() {
   const isSemester = rangeVal === 'semester';
   const days = isSemester ? 0 : parseInt(rangeVal);
   let semSinceStr = null;
+  document.getElementById('anal-sem-box').style.display = isSemester ? '' : 'none';
   if (isSemester) {
     try {
       const semStart = await sb.settings.semesterStart();
       if (semStart) {
         semSinceStr = String(semStart).slice(0, 10);   // YYYY-MM-DD
+        document.getElementById('anal-sem-date').value = semSinceStr;
       } else {
         showAdminToast('학기 시작일(semester_start)이 설정되지 않았어요 — 전체 기간으로 표시해요.', 'warn');
       }
@@ -10574,7 +10602,7 @@ async function loadAnalysis() {
 
     // 학생별 첫 출석 날짜 맵 (전체 기간 기준) — 한 번만 로드해서 캐시
     // 신규 등록/비활성 재활성 학생의 "등록 이전 기간 결석" 왜곡 방지용
-    // ⚠️ 전량 조회라 1000행 캡을 반드시 넘는다 → fetchAllRows로 페이지네이션(캡 유실 시 중도등록 학생이 통째로 사라짐).
+    // 전량 조회라 1000행 캡을 반드시 넘는다 → fetchAllRows로 페이지네이션(캡 유실 시 중도등록 학생이 통째로 사라짐).
     if (!A.firstAttDateMap) {
       try {
         const allFirst = await fetchAllRows(() => sb.client()
@@ -10594,27 +10622,7 @@ async function loadAnalysis() {
       }
     }
 
-    // 승인된 요일 변경 이력 — 과거 날짜는 그 당시 요일로 판정(요일 변경 승인 시 과거가 소급해 바뀌지 않게)
-    if (!A.dayChangeHist) {
-      try {
-        const { data, error } = await sb.client()
-          .from('day_change_requests')
-          .select('학번, 프로그램, 현재요일, 처리일시')
-          .eq('처리상태', '승인')
-          .order('처리일시', { ascending: true });
-        if (error) throw error;
-        const h = {};
-        (data || []).forEach(r => {
-          if (!r.처리일시 || !Array.isArray(r.현재요일)) return;
-          const k = `${r.학번}|${r.프로그램}`;
-          (h[k] = h[k] || []).push({ at: localDateStr(r.처리일시), prevDays: r.현재요일 });
-        });
-        A.dayChangeHist = h;
-      } catch (e) {
-        console.warn('요일 변경 이력 로드 실패 (현재 요일로 판정):', e);
-        A.dayChangeHist = {};
-      }
-    }
+    await ensureDayChangeHist();
 
     A.analysisLoaded = true;
     renderAnalysis();
@@ -10622,6 +10630,44 @@ async function loadAnalysis() {
   } catch (e) {
     console.error('분석 데이터 로딩 실패:', e);
     container.innerHTML = `<div class="student-table-empty">불러오기 실패: ${e.message || '오류'}</div>`;
+  }
+}
+
+// 학기 시작일 저장(이전엔 Supabase 대시보드에서만 바꿀 수 있었다, 리뷰 A11)
+async function saveSemesterStart() {
+  const v = document.getElementById('anal-sem-date').value;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) { showAdminToast('날짜를 고르세요', 'err'); return; }
+  try {
+    await sb.settings.adminRpc('admin_set_setting', { p_key: 'semester_start', p_value: v });
+    sb._cache.settings = null;
+    showAdminToast('학기 시작일을 ' + v + '로 저장했어요', 'ok');
+    loadAnalysis();
+  } catch (e) {
+    if (!e.authExpired) showAdminToast('저장 실패: ' + (e.message || '오류'), 'err');
+  }
+}
+
+// 승인된 요일 변경 이력 — 과거 날짜는 그 당시 요일로 판정(요일 변경 승인 시 과거가 소급해 바뀌지 않게)
+async function ensureDayChangeHist() {
+  if (!A.dayChangeHist) {
+    try {
+      const { data, error } = await sb.client()
+        .from('day_change_requests')
+        .select('학번, 프로그램, 현재요일, 처리일시')
+        .eq('처리상태', '승인')
+        .order('처리일시', { ascending: true });
+      if (error) throw error;
+      const h = {};
+      (data || []).forEach(r => {
+        if (!r.처리일시 || !Array.isArray(r.현재요일)) return;
+        const k = `${r.학번}|${r.프로그램}`;
+        (h[k] = h[k] || []).push({ at: localDateStr(r.처리일시), prevDays: r.현재요일 });
+      });
+      A.dayChangeHist = h;
+    } catch (e) {
+      console.warn('요일 변경 이력 로드 실패 (현재 요일로 판정):', e);
+      A.dayChangeHist = {};
+    }
   }
 }
 
@@ -11327,7 +11373,7 @@ const ATTEND_QUEUE = {
           // throw(네트워크 등) → 보존
         }
       }
-      // ⚠️ await 사이 다른 전송이 enqueue했을 수 있으므로, 스냅샷을 덮어쓰지 않고
+      // await 사이 다른 전송이 enqueue했을 수 있으므로, 스냅샷을 덮어쓰지 않고
       //    지금 큐를 다시 읽어 '확정 제거분'만 걸러 저장(동시 적재분 보존).
       this.save(this.load().filter(it => !resolved.has(this._key(it.payload))));
     } finally {
@@ -11871,7 +11917,7 @@ function fireAttendBeacon() {
     if (navigator.sendBeacon) {
       // sendBeacon은 헤더를 직접 못 설정하므로 Blob의 type으로 처리
       const blob = new Blob([body], { type: 'application/json' });
-      // ⚠️ sendBeacon은 Authorization 헤더를 지원 안 해서 RLS가 anon으로 동작
+      // sendBeacon은 Authorization 헤더를 지원 안 해서 RLS가 anon으로 동작
       //    publishable key를 URL 쿼리로 전달
       const beaconUrl = url + '?apikey=' + encodeURIComponent(SUPABASE_KEY);
       navigator.sendBeacon(beaconUrl, blob);
@@ -12007,7 +12053,7 @@ async function runDiagnostics() {
   diagSet('diag-url', SUPABASE_URL, 'ok');
 
   if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
-    diagSet('diag-sdk', '❌ 로드 실패', 'err');
+    diagSet('diag-sdk', '로드 실패', 'err');
     diagLog('SDK 로드 실패', 'err');
     return;
   }
@@ -12019,7 +12065,7 @@ async function runDiagnostics() {
     diagSet('diag-client', '✓ 정상', 'ok');
     diagLog('클라이언트 생성 OK', 'ok');
   } catch (e) {
-    diagSet('diag-client', '❌ ' + e.message, 'err');
+    diagSet('diag-client', '실패: ' + e.message, 'err');
     diagLog('클라이언트 생성 실패: ' + e.message, 'err');
     return;
   }
@@ -12042,9 +12088,9 @@ async function runDiagnostics() {
       if (error) throw error;
       const ok = count === t.expected;
       diagSet(t.labelId, `${count}행${ok ? ' ✓' : ` (예상: ${t.expected})`}`, ok ? 'ok' : 'err');
-      diagLog(`${t.name}: ${count}행 ${ok ? 'OK' : '⚠'}`, ok ? 'ok' : 'err');
+      diagLog(`${t.name}: ${count}행 ${ok ? 'OK' : '확인 필요'}`, ok ? 'ok' : 'err');
     } catch (e) {
-      diagSet(t.labelId, '❌ ' + (e.message || '오류'), 'err');
+      diagSet(t.labelId, '실패: ' + (e.message || '오류'), 'err');
       diagLog(`${t.name} 실패: ${e.message}`, 'err');
     }
   }
@@ -12059,7 +12105,7 @@ async function runDiagnostics() {
     diagSet('diag-h-pw', ok === false ? '✓ RPC 정상' : '✓ RPC 응답', 'ok');
     diagLog('verify_admin_password RPC OK', 'ok');
   } catch (e) {
-    diagSet('diag-h-pw', '❌ ' + e.message, 'err');
+    diagSet('diag-h-pw', '실패: ' + e.message, 'err');
     diagLog('verify_admin_password 실패: ' + e.message, 'err');
   }
 
@@ -12070,7 +12116,7 @@ async function runDiagnostics() {
     diagSet('diag-h-sem', `✓ ${sem}`, 'ok');
     diagLog(`semesterStart(): ${sem}`, 'ok');
   } catch (e) {
-    diagSet('diag-h-sem', '❌ ' + e.message, 'err');
+    diagSet('diag-h-sem', '실패: ' + e.message, 'err');
   }
 
   // students.list
@@ -12080,7 +12126,7 @@ async function runDiagnostics() {
     diagSet('diag-h-students', `✓ ${list.length}명`, 'ok');
     diagLog(`students.list(): ${list.length}명`, 'ok');
   } catch (e) {
-    diagSet('diag-h-students', '❌ ' + e.message, 'err');
+    diagSet('diag-h-students', '실패: ' + e.message, 'err');
   }
 
   // students.byNo
@@ -12094,7 +12140,7 @@ async function runDiagnostics() {
       diagSet('diag-h-byno', '0건 (10101 없음)', 'err');
     }
   } catch (e) {
-    diagSet('diag-h-byno', '❌ ' + e.message, 'err');
+    diagSet('diag-h-byno', '실패: ' + e.message, 'err');
   }
 
   // students.byRoom
@@ -12104,7 +12150,7 @@ async function runDiagnostics() {
     diagSet('diag-h-byroom', `✓ ${room.length}명`, 'ok');
     diagLog(`byRoom(심야, 리케이온): ${room.length}명`, 'ok');
   } catch (e) {
-    diagSet('diag-h-byroom', '❌ ' + e.message, 'err');
+    diagSet('diag-h-byroom', '실패: ' + e.message, 'err');
   }
 
   // attendance.history
@@ -12114,7 +12160,7 @@ async function runDiagnostics() {
     diagSet('diag-h-hist', `✓ ${hist.length}건 (최근 7일)`, 'ok');
     diagLog(`history(7): ${hist.length}건`, 'ok');
   } catch (e) {
-    diagSet('diag-h-hist', '❌ ' + e.message, 'err');
+    diagSet('diag-h-hist', '실패: ' + e.message, 'err');
   }
 
   // attendance.byStudent
@@ -12124,7 +12170,7 @@ async function runDiagnostics() {
     diagSet('diag-h-bystu', `✓ ${studentHist.length}건`, 'ok');
     diagLog(`byStudent('10101'): ${studentHist.length}건`, 'ok');
   } catch (e) {
-    diagSet('diag-h-bystu', '❌ ' + e.message, 'err');
+    diagSet('diag-h-bystu', '실패: ' + e.message, 'err');
   }
 
   // supervisors.today
@@ -12134,7 +12180,7 @@ async function runDiagnostics() {
     diagSet('diag-h-sup', sup ? `✓ ${sup}` : '오늘 감독 없음', sup ? 'ok' : 'pending');
     diagLog(`supervisors.today(): ${sup || '없음'}`, 'ok');
   } catch (e) {
-    diagSet('diag-h-sup', '❌ ' + e.message, 'err');
+    diagSet('diag-h-sup', '실패: ' + e.message, 'err');
   }
 
   // requests.list
@@ -12145,7 +12191,7 @@ async function runDiagnostics() {
     diagSet('diag-h-req', `✓ ${total}건 (수정 ${reqs.corrections.length}, 요일 ${reqs.dayChanges.length})`, 'ok');
     diagLog(`requests.list(): 수정 ${reqs.corrections.length}, 요일변경 ${reqs.dayChanges.length}`, 'ok');
   } catch (e) {
-    diagSet('diag-h-req', '❌ ' + e.message, 'err');
+    diagSet('diag-h-req', '실패: ' + e.message, 'err');
   }
 
   // ── 4. Realtime ──
@@ -12159,11 +12205,11 @@ async function runDiagnostics() {
           diagSet('diag-realtime', '✓ 구독 성공', 'ok');
           diagLog('Realtime OK', 'ok');
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          diagSet('diag-realtime', '❌ ' + status, 'err');
+          diagSet('diag-realtime', '실패: ' + status, 'err');
         }
       });
   } catch (e) {
-    diagSet('diag-realtime', '❌ ' + e.message, 'err');
+    diagSet('diag-realtime', '실패: ' + e.message, 'err');
   }
 
   diagLog('진단 완료', 'info');
@@ -12172,8 +12218,8 @@ async function runDiagnostics() {
 
 const RQ={loaded:false,corrections:[],dayChanges:[],currentSubTab:'correction',rejectTarget:null,rejectReason:''};
 async function loadRequests(){try{const r=await sb.requests.list();RQ.corrections=r.corrections||[];RQ.dayChanges=r.dayChanges||[];RQ.loaded=true;updateReqBadges();renderRequests();}catch(e){console.error(e);showAdminToast('요청 로딩 실패: '+(e.message||'오류'),'err');}}
-function updateReqBadges(){const pC=RQ.corrections.filter(r=>r.처리상태==='대기').length;const pD=RQ.dayChanges.filter(r=>r.처리상태==='대기').length;const bC=document.getElementById('req-badge-correction');const bD=document.getElementById('req-badge-daychange');if(bC){bC.textContent=pC;bC.className='badge'+(pC>0?' pending':' zero');}if(bD){bD.textContent=pD;bD.className='badge'+(pD>0?' pending':' zero');}const nb=document.getElementById('nav-req-badge');if(nb){const t=pC+pD;nb.textContent=t;nb.style.display=t>0?'':'none';nb.title='대기 중인 요청 '+t+'건';}}
-function switchReqSubTab(t){RQ.currentSubTab=t;document.querySelectorAll('.req-sub-tab').forEach(b=>b.classList.toggle('on',b.dataset.reqtab===t));document.getElementById('req-pane-correction').style.display=t==='correction'?'block':'none';document.getElementById('req-pane-daychange').style.display=t==='daychange'?'block':'none';renderRequests();}
+function updateReqBadges(){const pC=RQ.corrections.filter(r=>r.처리상태==='대기').length;const pD=RQ.dayChanges.filter(r=>r.처리상태==='대기').length;const bC=document.getElementById('req-badge-correction');const bD=document.getElementById('req-badge-daychange');if(bC){bC.textContent=pC;bC.className='badge'+(pC>0?' pending':' zero');}if(bD){bD.textContent=pD;bD.className='badge'+(pD>0?' pending':' zero');}const bb=document.getElementById('req-bulk-approve');if(bb){const cur=RQ.currentSubTab==='daychange'?pD:pC;bb.style.display=cur>0?'':'none';bb.textContent=(RQ.currentSubTab==='daychange'?'요일 변경':'수정')+' 요청 '+cur+'건 모두 승인';}const nb=document.getElementById('nav-req-badge');if(nb){const t=pC+pD;nb.textContent=t;nb.style.display=t>0?'':'none';nb.title='대기 중인 요청 '+t+'건';}}
+function switchReqSubTab(t){RQ.currentSubTab=t;document.querySelectorAll('.req-sub-tab').forEach(b=>b.classList.toggle('on',b.dataset.reqtab===t));document.getElementById('req-pane-correction').style.display=t==='correction'?'block':'none';document.getElementById('req-pane-daychange').style.display=t==='daychange'?'block':'none';updateReqBadges();renderRequests();}
 function renderRequests(){const fs=document.getElementById('req-filter-status').value;const sr=document.getElementById('req-search').value.trim().toLowerCase();if(RQ.currentSubTab==='correction')renderCorrReqs(fs,sr);else renderDayReqs(fs,sr);}
 function _filt(items,fs,sr){let r=items;if(fs)r=r.filter(x=>x.처리상태===fs);if(sr)r=r.filter(x=>String(x.학번||'').includes(sr)||(x.이름||'').toLowerCase().includes(sr));r.sort((a,b)=>{const ap=a.처리상태==='대기'?0:1;const bp=b.처리상태==='대기'?0:1;if(ap!==bp)return ap-bp;return(b.요청일시||'').localeCompare(a.요청일시||'');});return r;}
 function _fmtRD(s){if(!s)return'—';try{const d=new Date(s);return(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}catch(e){return'—';}}
@@ -12183,6 +12229,33 @@ function _hdr(r){const sc=_statCls(r.처리상태);return '<div class="req-card-
 function _note(r){if(r.처리상태==='대기'||!r.교사메모)return'';return '<div class="req-teacher-note"><span class="note-label">'+(r.처리상태==='승인'?'승인':'거절')+' 사유:</span>'+escapeHtml(r.교사메모)+'</div>';}
 function renderCorrReqs(fs,sr){const c=document.getElementById('req-list-correction');if(!c)return;const items=_filt(RQ.corrections,fs,sr);document.getElementById('req-count').textContent=items.length+'건';if(!items.length){c.innerHTML='<div class="req-empty"><span class="icon">✦</span>'+(fs==='대기'?'대기 중인 수정 요청이 없어요':'조건에 맞는 요청이 없어요')+'</div>';return;}c.innerHTML=items.map(r=>{const sc=_statCls(r.처리상태);let act='';if(r.처리상태==='대기')act='<div class="req-card-actions"><button class="admin-btn success" onclick="approveCorrection('+r.id+')">승인</button><button class="admin-btn danger" onclick="openRejectModal(&#39;correction&#39;,'+r.id+',&#39;'+escapeAttr(r.이름||'')+'&#39;,&#39;'+escapeAttr(r.학번)+'&#39;)">거절</button></div>';return '<div class="req-card '+sc+'">'+_hdr(r)+'<div class="req-card-body"><div class="req-detail-row"><span class="req-detail-label">대상 날짜</span><span class="req-detail-value highlight">'+(r.대상날짜||'—')+'</span></div><div class="req-detail-row"><span class="req-detail-label">변경 요청</span><span class="req-detail-value from-to"><span>'+escapeHtml(r.현재상태||'결석')+'</span><span class="arrow-icon">→</span><span style="color:var(--sage);font-weight:500">'+escapeHtml(r.요청상태||'출석')+'</span></span></div><div class="req-detail-row"><span class="req-detail-label">사유</span><span class="req-detail-value req-reason">'+escapeHtml(r.사유||'—')+'</span></div>'+(r.상세?'<div class="req-detail-row"><span class="req-detail-label">상세</span><span class="req-detail-value">'+escapeHtml(r.상세)+'</span></div>':'')+'</div>'+_note(r)+act+'</div>';}).join('');}
 function renderDayReqs(fs,sr){const c=document.getElementById('req-list-daychange');if(!c)return;const items=_filt(RQ.dayChanges,fs,sr);document.getElementById('req-count').textContent=items.length+'건';if(!items.length){c.innerHTML='<div class="req-empty"><span class="icon">✦</span>'+(fs==='대기'?'대기 중인 요일 변경 요청이 없어요':'조건에 맞는 요청이 없어요')+'</div>';return;}const ad=['월','화','수','목','금','토','일'];const mb=(ds)=>ad.map(d=>{const o=ds.includes(d);const w=d==='토'||d==='일';return '<span class="req-day-badge '+(o?'on':'off')+(w&&o?' weekend':'')+'">'+d+'</span>';}).join('');c.innerHTML=items.map(r=>{const sc=_statCls(r.처리상태);const cd=Array.isArray(r.현재요일)?r.현재요일:[];const rd=Array.isArray(r.요청요일)?r.요청요일:[];let act='';if(r.처리상태==='대기')act='<div class="req-card-actions"><button class="admin-btn success" onclick="approveDayChange('+r.id+')">승인</button><button class="admin-btn danger" onclick="openRejectModal(&#39;daychange&#39;,'+r.id+',&#39;'+escapeAttr(r.이름||'')+'&#39;,&#39;'+escapeAttr(r.학번)+'&#39;)">거절</button></div>';return '<div class="req-card '+sc+'">'+_hdr(r)+'<div class="req-card-body"><div class="req-detail-row"><span class="req-detail-label">현재 요일</span><span class="req-detail-value"><div class="req-day-badges">'+mb(cd)+'</div></span></div><div class="req-detail-row"><span class="req-detail-label">요청 요일</span><span class="req-detail-value"><div class="req-day-badges">'+mb(rd)+'</div></span></div><div class="req-detail-row"><span class="req-detail-label">사유</span><span class="req-detail-value req-reason">'+escapeHtml(r.사유||'—')+'</span></div></div>'+_note(r)+act+'</div>';}).join('');}
+// 지금 보고 있는 하위 탭의 대기 요청을 한 번에 승인(주간 정리에서 건마다 누르고 목록을 다시 읽던 부담, 리뷰 A7)
+async function bulkApproveRequests() {
+  const isDay = RQ.currentSubTab === 'daychange';
+  const items = (isDay ? RQ.dayChanges : RQ.corrections).filter(r => r.처리상태 === '대기');
+  if (!items.length) return;
+  if (!confirm(`${isDay ? '요일 변경' : '수정'} 요청 ${items.length}건을 모두 승인할까요?`)) return;
+  const btn = document.getElementById('req-bulk-approve');
+  btn.disabled = true;
+  let done = 0, fail = 0;
+  for (const r of items) {
+    try {
+      if (isDay) await sb.requests.approveDayChange(r.id, '');
+      else await sb.requests.approveCorrection(r.id, '');
+      done++;
+    } catch (e) {
+      fail++;
+      if (e && e.authExpired) break;
+    }
+  }
+  btn.disabled = false;
+  try { TLOG.log('audit_bulk_approve', { kind: RQ.currentSubTab, done, fail }); } catch (_) {}
+  invalidateAttendanceViews();
+  if (isDay) { sb.invalidateCache('students'); await loadAllStudents(); }
+  await loadRequests();
+  showAdminToast(`${done}건 승인${fail ? `, ${fail}건 실패` : ''}`, fail ? 'warn' : 'ok');
+}
+
 // 승인으로 출석·요일이 바뀌면 기록·분석 캐시를 버려 다음에 탭을 열 때 새로 읽게 한다
 function invalidateAttendanceViews(){A.historyLoaded=false;A.analysisLoaded=false;A.firstAttDateMap=null;A.dayChangeHist=null;}
 async function approveCorrection(id){try{await sb.requests.approveCorrection(id,'');showAdminToast('수정 요청이 승인됐어요','ok');invalidateAttendanceViews();await loadRequests();}catch(e){showAdminToast('승인 실패: '+(e.message||'오류'),'err');}}
@@ -12523,7 +12596,7 @@ const COSMOS = {
       el.style.display = 'none';
       return;
     }
-    let html = '<div class="cosmos-conflicts-title">⚠ 좌석 점유 충돌 ' + this.conflicts.length + '건</div>';
+    let html = '<div class="cosmos-conflicts-title">좌석 점유 충돌 ' + this.conflicts.length + '건</div>';
     this.conflicts.forEach(c => {
       const names = (c.이름들 || []).join(', ');
       html += '<div class="cosmos-conflict-item">· ' + c.프로그램 + ' / ' + c.장소 + ' ' + c.좌석번호 + '번 / ' + c.요일 + '요일 → ' + names + '</div>';
@@ -12948,7 +13021,7 @@ const COSMOS = {
       const msg =
         '✓ 학생 ' + (data.members_added || 0) + '명 추가, ' + (data.members_updated || 0) + '명 갱신\n' +
         '✓ 스케줄 ' + (data.rows_added || 0) + '개 추가, ' + (data.rows_updated || 0) + '개 갱신' +
-        (data.error_count > 0 ? '\n⚠ 오류 ' + data.error_count + '건 — 콘솔 확인' : '');
+        (data.error_count > 0 ? '\n오류 ' + data.error_count + '건 — 콘솔 확인' : '');
       if (data.error_count > 0) {
         console.warn('bulk_upsert_cosmos 오류:', data.errors);
       }
@@ -13429,7 +13502,7 @@ const DIAG = {
           }
         } else {
           cls = 'miss';
-          statusText = nowMin < startMin ? '시작 예정이지만 세션 없음' : '⚠️ 세션 미생성 — 교사 확인 필요';
+          statusText = nowMin < startMin ? '시작 예정이지만 세션 없음' : '세션 미생성 — 교사 확인 필요';
         }
       } else {
         if (matched) {
@@ -13600,7 +13673,7 @@ const LIVE = {
     const found = (LIVE.todayAttendance || []).filter(a => a.학번 === val);
     if (found.length === 0) {
       box.className = 'live-search-result on no';
-      box.innerHTML = '<div class="name">❌ ' + val + '</div>오늘 어떤 세션에도 출석 기록이 없어요';
+      box.innerHTML = '<div class="name">' + escapeHtml(val) + '</div>오늘 어떤 세션에도 출석 기록이 없어요';
     } else {
       box.className = 'live-search-result on ok';
       const html = found.map(a => {
@@ -14525,9 +14598,9 @@ const SEAT_ADMIN = {
       actionsHtml += '<button class="admin-btn primary" ' + (conflicts.length > 0 ? 'disabled' : '') +
         ' onclick="SEAT_ADMIN.confirmAssignments()">' + confirmLabel + conflictNote + '</button>';
     }
-    actionsHtml += '<button class="admin-btn" onclick="SEAT_ADMIN.downloadXlsx()">📥 xlsx 다운로드</button>';
+    actionsHtml += '<button class="admin-btn" onclick="SEAT_ADMIN.downloadXlsx()">xlsx 다운로드</button>';
     if (period.좌석배치월) {
-      actionsHtml += '<button class="admin-btn" onclick="SEAT_ADMIN.downloadXlsxMonth()">📥 ' + period.좌석배치월 + ' 통합 xlsx</button>';
+      actionsHtml += '<button class="admin-btn" onclick="SEAT_ADMIN.downloadXlsxMonth()">' + period.좌석배치월 + ' 통합 xlsx</button>';
     }
     actionsHtml += '<button class="admin-btn" onclick="SEAT_ADMIN.openManualModal()">+ 학생 수동 추가</button>';
     actionsHtml += '<button class="admin-btn danger" onclick="SEAT_ADMIN.deletePeriod()">기간 삭제</button>';
@@ -14538,7 +14611,7 @@ const SEAT_ADMIN = {
         const [r, n] = k.split(':');
         return r + ' ' + n + '번';
       });
-      conflictHtml = '<div class="seat-admin-conflict">⚠️ ' + labels.join(', ') + ' 좌석이 중복 배치되어 있어요. 수정 후 확정해주세요.</div>';
+      conflictHtml = '<div class="seat-admin-conflict">' + labels.join(', ') + ' 좌석이 중복 배치되어 있어요. 수정 후 확정해주세요.</div>';
     }
 
     // 장소별 카운트
@@ -14617,7 +14690,7 @@ const SEAT_ADMIN = {
 
         const reqLabel = (a.학생신청장소 || '?') + ' ' + (a.학생신청좌석 || '—') + '번';
         const reasonText = a.변경사유 || (isChanged ? '(사유 필요)' : '');
-        const reasonStyle = isChanged && !a.변경사유 ? 'color:var(--terra);font-style:italic' : 'color:var(--ink-dim)';
+        const reasonStyle = isChanged && !a.변경사유 ? 'color:var(--terra);font-style: normal' : 'color:var(--ink-dim)';
 
         html += '<tr class="' + (isChanged ? 'has-change' : '') + '">' +
           '<td class="seat-admin-req-no">' + escapeHtml(a.학번) + '</td>' +
