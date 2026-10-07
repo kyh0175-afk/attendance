@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap">
 <style>
+body { word-break: keep-all; overflow-wrap: break-word; /* 한국어 어절 단위 줄바꿈 (디자인게이트 KO) */ }
 :root {
   --paper:     #ffffff;
   --paper2:    #faf6ec;
@@ -318,7 +319,7 @@ code {
   <!-- ─── 접속 주소 ─── -->
   <div class="block">
     <div class="block-title"><span class="num">01</span>접속 주소</div>
-    <div class="url-box">kyh0175-afk.github.io/attendance/v2/</div>
+    <div class="url-box">cosmos.yubong.app</div>
   </div>
 
   <!-- ─── 출석 시작 절차 ─── -->
@@ -438,7 +439,7 @@ code {
     <div class="block-title"><span class="num">10</span>학생이 "출석 안 됐어요"라고 할 때</div>
     <ol class="steps">
       <li>먼저 <strong>교사 화면 출석 명단</strong>에서 해당 학생 학번·이름 확인 (이미 출석 처리됐을 수 있음)</li>
-      <li>명단에 없으면 → 위 <strong>08 수동 출석</strong>으로 직접 추가</li>
+      <li>명단에 없으면 → 수동 출석이 안 돼요. 학생이 QR로 직접 등록하거나 관리자가 명단에 추가</li>
       <li>해당 출석 시간이 이미 마감됐으면 → <strong>09 사후 출석(View)</strong>으로 추가</li>
       <li>본인 기록은 모두 정상인데 학생이 못 봤다면 → <strong>관리자에게 연락</strong> (관리자가 실시간 탭에서 해당 학번 조회 가능)</li>
     </ol>

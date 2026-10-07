@@ -28,7 +28,7 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-body {
+body { word-break: keep-all; overflow-wrap: break-word; /* 한국어 어절 단위 줄바꿈 (디자인게이트 KO) */
   background: var(--paper);
   color: var(--cream);
   font-family: 'IBM Plex Sans KR', sans-serif;
@@ -528,7 +528,7 @@ code {
 
   <h2>접속 주소</h2>
   <p>모든 사용자는 아래 주소로 접속합니다. 별도의 앱 설치나 로그인은 필요하지 않습니다.</p>
-  <p><code>https://kyh0175-afk.github.io/attendance/v2/</code></p>
+  <p><code>https://cosmos.yubong.app</code></p>
 
   <img class="guide-img" src="assets/guide-01a-main.png" alt="메인 화면 — Attend / View / Manage 선택">
   <div class="guide-img-caption">[이미지 01-a] 접속 직후 뜨는 메인 화면. 교사용 <strong>Attend(출석 체크)</strong>와 <strong>View(출석 기록 조회)</strong>, 관리자용 <strong>Manage(관리자)</strong> 세 카드가 보입니다.</div>
@@ -654,7 +654,7 @@ code {
   </div>
   <div class="step">
     <div class="step-num">3</div>
-    <div class="step-body">더 받을 학생이 없으면 "<strong>세션 마감</strong>" 버튼을 누릅니다. 출석 시간이 완전히 종료되고 메인 화면으로 돌아갑니다.</div>
+    <div class="step-body">더 받을 학생이 없으면 "<strong>세션 마감</strong>" 버튼을 누릅니다. 출석이 마감되고 같은 장소의 시작 화면으로 돌아갑니다. 늦게 온 학생은 화면 위쪽 「오늘 마감된 세션」 카드에서 사후 출석으로 넣을 수 있습니다.</div>
   </div>
 
   <div class="note note-warn">
@@ -681,7 +681,7 @@ code {
   </div>
   <div class="step">
     <div class="step-num">3</div>
-    <div class="step-body">출석 현황 요약이 간단히 표시된 후 메인 화면으로 돌아갑니다.</div>
+    <div class="step-body">화면 아래에 출석 인원이 잠깐 표시되고, 같은 장소의 시작 화면으로 돌아갑니다. 인터넷 문제로 마감이 저장되지 않으면 안내가 뜨고 출석 화면에 그대로 남으니 「출석 마감」을 다시 누르면 됩니다.</div>
   </div>
 
   <img class="guide-img" src="assets/guide-08-end-confirm.png" alt="출석 마감 확인 창">
