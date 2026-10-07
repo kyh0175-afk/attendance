@@ -69,3 +69,11 @@ begin
 end$function$;
 revoke all on function public.admin_set_setting(uuid, text, text) from public;
 grant execute on function public.admin_set_setting(uuid, text, text) to anon, authenticated;
+
+-- ═══════════════════════════════════════════════════════════════
+--  추가(같은 날, migration v2_supervisor_slots_20261007): 감독표 자동 동기화
+--  supervisor_slots(날짜·프로그램·장소그룹·시간대 → 교사명, anon 읽기만) + sync_tokens(해시, 정책 없음)
+--  + sync_supervisor_slots(p_token, p_rows) — 토큰 해시가 맞을 때만 쓰기, 심야는 supervisors에도 기록(메모 '감독표 자동')
+--  실행: .github/workflows/supervisor-sync.yml → .github/scripts/sync_supervisors.py
+--  Secrets: SUPERVISOR_XLSX_URL(공유 링크), SUPERVISOR_SYNC_TOKEN(원문 — DB엔 sha256만)
+-- ═══════════════════════════════════════════════════════════════
