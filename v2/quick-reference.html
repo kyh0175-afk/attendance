@@ -390,7 +390,7 @@ code {
     <ul class="dot">
       <li>수업 끝나거나 모든 학생 출석 완료 시 <strong>출석 마감</strong> 버튼 클릭 → 확인 창에서 <strong>마감</strong> 선택</li>
       <li>마감 후에는 학생이 더 이상 QR을 스캔할 수 없음</li>
-      <li>굳이 20분을 다 기다릴 필요 없음</li>
+      <li>굳이 30분을 다 기다릴 필요 없음</li>
     </ul>
   </div>
 
@@ -409,16 +409,13 @@ code {
     <div class="card-meta">TROUBLESHOOTING</div>
   </header>
 
-  <!-- ─── 연장 안내 창 ─── -->
+  <!-- ─── 자동 마감 ─── -->
   <div class="block">
-    <div class="block-title"><span class="num">07</span>QR 시간이 끝났을 때 — 연장 안내 창</div>
-    <p>QR 코드 유효 시간 <strong>20분</strong>이 지나면 자동으로 <em>연장 안내 창</em>이 뜹니다. <strong>5분 카운트다운</strong> 안에 선택해야 합니다.</p>
+    <div class="block-title"><span class="num">07</span>QR 시간이 끝났을 때 — 자동 마감</div>
+    <p>QR 코드는 <strong>30분</strong> 동안 열려 있고, 시간이 다 되면 <strong>자동으로 마감</strong>됩니다. 연장은 없습니다.</p>
     <ul class="dot">
-      <li><strong>+ 10분 연장</strong> — 아직 올 학생이 있으면. QR이 다시 활성화됨. <strong>연장은 1회만</strong> 가능</li>
-      <li><strong>세션 마감</strong> — 더 받을 학생 없으면. 출석 시간 종료</li>
-      <li><strong>미리 연장</strong> — 만료 2분 전부터 QR 아래 「+10분 연장」 버튼(1회)</li>
+      <li><strong>늦게 온 학생</strong> — 「오늘 마감된 세션」 카드에서 사후 출석</li>
       <li><strong>QR 크게</strong> — QR을 누르면 화면 가득, 다시 누르면 원래대로</li>
-      <li><strong>5분 안에 아무것도 안 누르면</strong> → 자동으로 마감 처리 (안전함)</li>
     </ul>
   </div>
 
@@ -464,7 +461,7 @@ code {
   <div class="block">
     <div class="block-title"><span class="num">11</span>QR 코드를 스캔해도 연결 안 될 때</div>
     <ul class="dot">
-      <li><strong>QR 만료</strong> — 20분 지났으면 교사가 연장하거나 새 QR 생성 필요</li>
+      <li><strong>QR 만료</strong> — 30분 지났으면 자동 마감 — 교사가 사후 출석</li>
       <li><strong>학생 휴대폰 인터넷</strong> — 와이파이 불안정하면 LTE 데이터로 전환 권유</li>
       <li><strong>교사 화면 새로고침</strong> — 드물게 교사 화면이 멈춰 있을 수 있음</li>
       <li>위 방법 다 해도 안 되면 → <strong>수동 출석</strong>으로 대체</li>

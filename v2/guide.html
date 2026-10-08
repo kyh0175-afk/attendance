@@ -534,7 +534,7 @@ code {
         <li><a href="#tch-supervisor">감독 교사 자동 채움</a></li>
         <li><a href="#tch-monitor">학생 출석 현황 보기</a></li>
         <li><a href="#tch-manual">학번으로 수동 출석 추가</a></li>
-        <li><a href="#tch-extend">QR 시간이 끝났을 때 (연장 안내 창)</a></li>
+        <li><a href="#tch-extend">QR 시간이 끝났을 때 (자동 마감)</a></li>
         <li><a href="#tch-end">출석 시간 마감하기</a></li>
         <li><a href="#tch-late">출석 기록 조회 · 사후 출석 (출석 기록 조회)</a></li>
       </ul>
@@ -565,7 +565,7 @@ code {
   <div class="note note-info">
     <div class="note-title">2026-10-07 화면 변경</div>
     아래 스크린샷은 이전 화면입니다. 지금은 첫 화면 카드 제목이 한국어(「출석 체크」·「출석 기록 조회」·「좌석 배치도」·「관리자」)로 바뀌었고,
-    출석 화면에서 <strong>QR을 누르면 크게</strong> 보이며, QR 만료 <strong>2분 전부터 「+10분 연장」</strong> 버튼이 나타납니다(연장은 여전히 1회).
+    출석 화면에서 <strong>QR을 누르면 크게</strong> 보입니다. QR은 <strong>30분</strong> 동안 열려 있고 연장은 없습니다.
     시간표와 다른 프로그램으로 시작하면 한 번 확인 창이 뜹니다.
   </div>
 
@@ -681,39 +681,18 @@ code {
   <img class="guide-img" src="assets/guide-06-manual-keypad.png" alt="수동 출석 키패드">
   <div class="guide-img-caption">[이미지 06] <strong>수동 출석</strong> 버튼을 누르면 뜨는 학번 입력 키패드. 5자리 학번 입력란과 숫자 버튼, 삭제 버튼, 출석 확정 버튼이 있습니다.</div>
 
-  <h2 id="tch-extend">QR 시간이 끝났을 때 — 연장 안내 창</h2>
+  <h2 id="tch-extend">QR 시간이 끝났을 때 — 자동 마감</h2>
 
-  <p>QR 코드 유효 시간 20분이 지나면 자동으로 <strong>연장 안내 창</strong>이 뜹니다. 이 창이 뜨는 동안 학생은 임시로 출석을 할 수 없으며, 교사의 선택을 기다립니다.</p>
-
-  <img class="guide-img" src="assets/guide-07-extend-modal.png" alt="연장 안내 창">
-  <div class="guide-img-caption">[이미지 07] QR 유효 시간 20분이 지나면 뜨는 연장 안내 창. <strong>QR 시간이 만료됐어요</strong> 제목과 5분 카운트다운, 그 아래에 <em>세션 마감</em> / <em>+ 10분 연장</em> 두 버튼이 있습니다. 창이 뜨는 동안 뒤쪽 QR 코드는 흐려진 상태로 임시 비활성화됩니다.</div>
-
-  <div class="step">
-    <div class="step-num">1</div>
-    <div class="step-body">창 중앙에 <strong>5분 카운트다운</strong>이 시작됩니다. 이 시간 안에 선택해야 합니다.</div>
-  </div>
-  <div class="step">
-    <div class="step-num">2</div>
-    <div class="step-body">아직 올 학생이 더 있으면 "<strong>+ 10분 연장</strong>" 버튼을 누릅니다. QR이 다시 활성화되고 학생이 계속 출석할 수 있습니다. <strong>연장은 1회만 가능</strong>합니다.</div>
-  </div>
-  <div class="step">
-    <div class="step-num">3</div>
-    <div class="step-body">더 받을 학생이 없으면 "<strong>세션 마감</strong>" 버튼을 누릅니다. 출석이 마감되고 같은 장소의 시작 화면으로 돌아갑니다. 늦게 온 학생은 화면 위쪽 「오늘 마감된 세션」 카드에서 사후 출석으로 넣을 수 있습니다.</div>
-  </div>
-
-  <div class="note note-warn">
-    <div class="note-title">⏰ 5분 안에 선택하지 않으면</div>
-    5분 카운트다운이 끝날 때까지 아무 버튼도 누르지 않으면 <strong>자동으로 세션이 마감</strong>되고 같은 장소의 시작 화면으로 돌아갑니다. 자리를 비웠거나 창을 닫아도 안전하게 정리됩니다.
-  </div>
+  <p>QR 코드는 <strong>30분</strong> 동안 열려 있고, 시간이 다 되면 <strong>자동으로 마감</strong>되어 같은 장소의 시작 화면으로 돌아갑니다. 연장은 없습니다(2026-10-08 변경 — 전에는 20분 + 10분 연장 1회). 자리를 비웠거나 창을 닫아도 다음에 화면을 열 때 정리됩니다.</p>
 
   <div class="note note-info">
-    <div class="note-title">💡 연장 후 두 번째 만료</div>
-    이미 한 번 연장한 뒤 또 20분이 지나면 연장 안내 창이 다시 뜨지만, 이번에는 "+ 10분 연장" 버튼이 <strong>회색으로 비활성화</strong>됩니다. 이제는 "세션 마감"만 누를 수 있고, 5분 뒤 자동 마감됩니다.
+    <div class="note-title">💡 늦게 온 학생</div>
+    마감 뒤에 온 학생은 화면 위쪽 「오늘 마감된 세션」 카드에서 사후 출석으로 넣습니다.
   </div>
 
   <h2 id="tch-end">출석 시간 마감하기</h2>
 
-  <p>수업이 끝났거나 모든 학생이 출석을 마쳤으면 직접 출석 시간을 마감할 수 있습니다. 굳이 20분을 다 기다릴 필요는 없습니다.</p>
+  <p>수업이 끝났거나 모든 학생이 출석을 마쳤으면 직접 출석 시간을 마감할 수 있습니다. 굳이 30분을 다 기다릴 필요는 없습니다.</p>
 
   <div class="step">
     <div class="step-num">1</div>
@@ -798,7 +777,7 @@ code {
 
   <div class="note note-warn">
     <div class="note-title">⚠ QR 코드 유효 시간</div>
-    QR 코드는 생성 후 <strong>20분 동안만</strong> 사용할 수 있습니다. 20분이 지나면 교사가 새 QR 코드를 만들거나 연장해야 합니다. 출석 화면에서 "이 시간은 이미 마감됐어요" 같은 메시지가 나오면 교사에게 알려 새 QR 코드를 받으세요.
+    QR 코드는 생성 후 <strong>30분 동안만</strong> 사용할 수 있습니다. 30분이 지나면 출석이 자동으로 마감되고, 늦게 온 학생은 교사가 사후 출석으로 넣습니다. 출석 화면에서 "이 시간은 이미 마감됐어요" 같은 메시지가 나오면 교사에게 알려 새 QR 코드를 받으세요.
   </div>
 
 </section>
@@ -927,7 +906,7 @@ code {
   </div>
   <div class="step">
     <div class="step-num">4</div>
-    <div class="step-body">20분 후 연장 안내 창이 뜨면 연장 / 마감 선택</div>
+    <div class="step-body">30분이 지나면 자동 마감 — 늦게 온 학생은 사후 출석</div>
   </div>
   <div class="step">
     <div class="step-num">5</div>
@@ -949,7 +928,7 @@ code {
 
   <h2>QR 코드를 스캔해도 연결이 안 될 때</h2>
   <ul class="plain">
-    <li><strong>QR 시간 만료 가능성</strong> — 20분이 지났으면 교사가 새 QR을 만들거나 연장해야 함</li>
+    <li><strong>QR 시간 만료 가능성</strong> — 30분이 지났으면 자동 마감 — 교사에게 사후 출석 요청</li>
     <li><strong>학생 휴대폰 인터넷 확인</strong> — 학교 와이파이가 불안정하면 데이터로 전환</li>
     <li><strong>교사 화면 새로고침</strong> — 드문 경우 화면이 멈춰 있을 수 있음</li>
   </ul>
