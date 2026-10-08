@@ -8890,7 +8890,7 @@ function renderRoster() {
 
     const _roomLabel = getSiblingRoom(T.session.room) && s.장소 ? `<span class="row-room-tag">${escapeHtml(s.장소)}</span>` : '';
     return `
-      <div class="${cls.trim()}">
+      <div class="${cls.trim()}" data-no="${escapeHtml(s.학번)}">
         <div class="row-status">${statusIcon}</div>
         <div class="row-no">${escapeHtml(s.학번)}</div>
         <div class="row-name">${escapeHtml(s.이름)}${_roomLabel}</div>
@@ -14214,6 +14214,7 @@ const CARD_STATION = {
   QKEY: 'cosmos_card_queue',
   _recent: {}, _flushing: false, _timer: null, _hideTimer: null, _audio: null,
   onResult: null,   // (결과, 보관분이었나) — 화면별 후처리
+  onShow: null,     // (안내, 결과) — 있으면 전체 화면 대신 이걸로 보여 준다(칠판 교사 화면: QR을 가리지 않게)
   onQueue: null,    // (보관 건수)
 
   queue() { try { return JSON.parse(localStorage.getItem(this.QKEY) || '[]'); } catch (_) { return []; } },
@@ -14252,21 +14253,21 @@ const CARD_STATION = {
     this._recent[uid] = now;
     try {
       const r = await this.call(uid, 0);
-      this.show(this.describe(r));
+      this.present(this.describe(r), r);
       if (this.onResult) this.onResult(r, false);
     } catch (e) {
       if (e && e.noDevice) {
-        this.show({ kind: 'err', title: '카드 단말 설정이 필요해요', sub: '관리자 화면 「카드」 탭에서 이 기기를 단말로 설정하세요.' });
+        this.present({ kind: 'err', title: '카드 단말 설정이 필요해요', sub: '관리자 화면 「카드」 탭에서 이 기기를 단말로 설정하세요.' });
       } else if (this._isNetwork(e)) {
         const q = this.queue();
         q.push({ uid, at: now });
         this.saveQueue(q);
-        this.show({ kind: 'warn', title: '저장해 두었어요', sub: '인터넷이 끊겨 있어요. 연결되면 자동으로 출석 처리돼요.' });
+        this.present({ kind: 'warn', title: '저장해 두었어요', sub: '인터넷이 끊겨 있어요. 연결되면 자동으로 출석 처리돼요.' });
         if (this.onQueue) this.onQueue(q.length);
       } else if (/등록되지 않은 단말/.test(String(e && e.message))) {
-        this.show({ kind: 'err', title: '단말 등록이 해제됐어요', sub: '관리자에게 알려 주세요. (이 기기의 단말 키가 폐기됨)' });
+        this.present({ kind: 'err', title: '단말 등록이 해제됐어요', sub: '관리자에게 알려 주세요. (이 기기의 단말 키가 폐기됨)' });
       } else {
-        this.show({ kind: 'err', title: '처리하지 못했어요', sub: '선생님께 말해 주세요. (' + String((e && e.message) || e).slice(0, 60) + ')' });
+        this.present({ kind: 'err', title: '처리하지 못했어요', sub: '선생님께 말해 주세요. (' + String((e && e.message) || e).slice(0, 60) + ')' });
       }
     }
   },
@@ -14318,6 +14319,10 @@ const CARD_STATION = {
     }
   },
 
+  present(m, r) {
+    if (this.onShow) { this.beep(m.kind); this.onShow(m, r || null); }
+    else this.show(m);
+  },
   show(m) {
     const ov = document.getElementById('card-ov');
     if (!ov) return;
@@ -14361,11 +14366,28 @@ function teacherCardAttach(room) {
   if (!dev || dev.장소쌍 !== pair) return;
   CARD_READER.attach(uid => CARD_STATION.submit(uid));
   CARD_STATION.onResult = null;
+  CARD_STATION.onShow = teacherCardShow;
   CARD_STATION.onQueue = (n) => {
     if (label) label.textContent = n ? `카드 리더 · 보관 ${n}건` : '카드 리더 사용 중';
   };
   CARD_STATION.start();
   if (label) { label.textContent = '카드 리더 사용 중'; label.style.display = ''; }
+}
+
+// 칠판 교사 화면의 카드 결과(사용자 결정 10/8: 화면을 덮지 않고 명단 줄 강조 + 소리 — QR로 찍는 학생을 가리지 않게)
+function teacherCardShow(m, r) {
+  if (r && (r.결과 === '출석' || r.결과 === '이미출석') && r.학번 && T.session) {
+    const no = String(r.학번);
+    const inRoster = T.rosterStudents.some(s => String(s.학번) === no);
+    if (!T.attendedMap[no]) T.attendedMap[no] = { name: r.이름, time: String(r.시각 || '').slice(0, 5), isSelf: !inRoster, fresh: true };
+    else T.attendedMap[no].fresh = true;
+    renderRoster();
+    const row = document.querySelector('#t-roster-body [data-no="' + no + '"]');
+    if (row) { try { row.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (_) {} }
+    setTimeout(() => { if (T.attendedMap[no] && T.attendedMap[no].fresh) { T.attendedMap[no].fresh = false; renderRoster(); } }, 2500);
+    return;
+  }
+  showTeacherToast(m.title + (m.sub ? ' · ' + m.sub : ''), m.kind === 'err' ? 'err' : 'ok');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -14382,6 +14404,7 @@ const KIOSK = {
     document.getElementById('kc-wrap').style.display = '';
     document.getElementById('kc-device').textContent = dev.이름 + ' · ' + (dev.장소쌍 === '리케이온' ? '해오름·리케이온' : '아우름·교과1실');
     CARD_READER.attach(uid => CARD_STATION.submit(uid));
+    CARD_STATION.onShow = null;   // 키오스크는 전체 화면으로 크게
     CARD_STATION.onResult = () => this.loadStatus();
     CARD_STATION.onQueue = (n) => {
       const el = document.getElementById('kc-count');
