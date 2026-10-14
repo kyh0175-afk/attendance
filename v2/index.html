@@ -14565,7 +14565,9 @@ selectHistorySession=async function(sid){
 
 const CK={no:'',name:'',programs:[],records:[],requests:[],dayRequests:[],weekOffset:0,view:'weekly'};
 const CK_DAY=['일','월','화','수','목','금','토'];
-async function enterCheckScreen(){showScreen('screen-check');document.getElementById('ck-login').style.display='block';document.getElementById('ck-dash').style.display='none';document.getElementById('ck-no').value='';document.getElementById('ck-err').textContent='';const sav=sessionStorage.getItem('ck_no');if(sav){document.getElementById('ck-no').value=sav;ckOnInput();ckLogin();}else setTimeout(()=>document.getElementById('ck-no').focus(),200);}
+// 조회(?mode=check) 사용 중지(10/14 결정). 다시 열 때: CHECK_OPEN=true + docs/2026-10-14_check_closed.sql 의 되돌리기
+const CHECK_OPEN=false;
+async function enterCheckScreen(){showScreen('screen-check');if(!CHECK_OPEN){document.getElementById('ck-dash').style.display='none';const l=document.getElementById('ck-login');l.style.display='block';l.innerHTML='<div class="check-login-icon">C</div><div class="check-login-title">Check</div><div class="check-login-sub">출석 확인 사용 중지<br>출석 문의는 감독 선생님께</div>';return;}document.getElementById('ck-login').style.display='block';document.getElementById('ck-dash').style.display='none';document.getElementById('ck-no').value='';document.getElementById('ck-err').textContent='';const sav=sessionStorage.getItem('ck_no');if(sav){document.getElementById('ck-no').value=sav;ckOnInput();ckLogin();}else setTimeout(()=>document.getElementById('ck-no').focus(),200);}
 function ckOnInput(){const v=document.getElementById('ck-no').value.trim();document.getElementById('ck-btn').disabled=!/^\d{5}$/.test(v);document.getElementById('ck-err').textContent='';}
 // 요청 목록 다시 읽기(본인 학번 것만, RPC)
 async function ckReloadRequests(){try{const{data:lk}=await sb.client().rpc('student_lookup',{p_hakbun:CK.no});if(lk&&lk.found){CK.requests=lk.requests||[];CK.dayRequests=lk.dayRequests||[];}}catch(e){}}
