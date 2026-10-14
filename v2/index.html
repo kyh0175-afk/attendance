@@ -1250,7 +1250,17 @@ input { font-family: inherit; }
 .past-sess-stats .abs{color:var(--copper);margin-left:8px}
 .past-sess-btn{flex-shrink:0;padding:11px 18px;background:rgba(123,160,135,.12);border:1px solid rgba(123,160,135,.4);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;font-weight:500;color:var(--sage);cursor:pointer;transition:all .25s}
 .past-sess-btn:hover{background:rgba(123,160,135,.22);border-color:var(--sage);transform:translateY(-1px)}
-@media (max-width:640px){.past-sess-card{flex-direction:column;align-items:stretch;gap:12px}.past-sess-btn{width:100%}}
+.past-sess-btn.ghost{background:transparent;border-color:rgba(214,178,124,.35);color:var(--ink-dim)}
+.past-sess-btn.ghost:hover{background:rgba(214,178,124,.08);border-color:var(--amber)}
+.past-sess-roster{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:-4px 0 10px;padding:16px 22px;background:var(--paper);border:1px solid rgba(214,178,124,.2);border-radius:var(--r)}
+.past-sess-roster[hidden]{display:none}
+.past-sess-col-h{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;font-weight:600;color:var(--sage);margin-bottom:8px;font-variant-numeric:tabular-nums}
+.past-sess-col.abs .past-sess-col-h{color:var(--copper)}
+.past-sess-col ul{list-style:none;margin:0;padding:0;columns:2;column-gap:16px}
+.past-sess-col li{font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;line-height:1.7;color:var(--cream);font-variant-numeric:tabular-nums;break-inside:avoid}
+.past-sess-col li.none{color:var(--ink-faint)}
+.past-sess-col li .late{margin-left:6px;font-size:12px;color:var(--amber)}
+@media (max-width:640px){.past-sess-card{flex-direction:column;align-items:stretch;gap:12px}.past-sess-btn{width:100%}.past-sess-roster{grid-template-columns:1fr}}
 
 /* ══ 세션 진행 화면 (QR 표시) ══ */
 .session-card {
@@ -7825,18 +7835,32 @@ async function loadPastSessions() {
           return days.length === 0 || days.includes(dayKr);
         });
         const attSet = new Set((att || []).map(r => r.학번));
+        const noRoster = all.length === 0;   // 이 기기가 그 방 명단을 못 읽음(QR 안 연 기기)
         const targetAtt = target.filter(st => attSet.has(st.학번)).length;
         const absCount = target.length - targetAtt;
 
         const endTime = s.종료시각 ? new Date(s.종료시각).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false}) : '—';
+        // 종이 출석부 옮겨 적기용 명단(학번 순): 출석(사후 표시)·미출석
+        const byNo = (a, b) => String(a.학번).localeCompare(String(b.학번), undefined, { numeric: true });
+        const attRows = (att || []).slice().sort(byNo).map(r =>
+          `<li>${escapeHtml(r.학번)} ${escapeHtml(r.이름 || '')}${r.사후여부 ? '<span class="late">사후</span>' : ''}</li>`).join('');
+        const absRows = target.filter(st => !attSet.has(st.학번)).sort(byNo).map(st =>
+          `<li>${escapeHtml(st.학번)} ${escapeHtml(st.이름 || '')}</li>`).join('');
+        const roster = `<div class="past-sess-roster" id="psr-${escapeAttr(s.세션id)}" hidden>
+            <div class="past-sess-col"><div class="past-sess-col-h">출석 ${attCount}명</div><ul>${attRows || '<li class="none">없음</li>'}</ul></div>
+            ${noRoster
+              ? '<div class="past-sess-col abs"><div class="past-sess-col-h">미출석</div><ul><li class="none">이 기기에서는 명단을 못 읽음 — QR 연 칠판에서 확인</li></ul></div>'
+              : `<div class="past-sess-col abs"><div class="past-sess-col-h">미출석 ${absCount}명</div><ul>${absRows || '<li class="none">없음</li>'}</ul></div>`}
+          </div>`;
         return `<div class="past-sess-card" data-sid="${escapeHtml(s.세션id)}">
           <div class="past-sess-info">
             <div class="past-sess-prog">${escapeHtml(s.프로그램||'')}</div>
             <div class="past-sess-meta">${endTime} 마감 · ${escapeHtml(s.교사||'')} 선생님</div>
-            <div class="past-sess-stats">출석 ${targetAtt}명<span class="abs">미출석 ${absCount}명</span></div>
+            <div class="past-sess-stats">${noRoster ? `출석 ${attCount}명` : `출석 ${targetAtt}명<span class="abs">미출석 ${absCount}명</span>`}</div>
           </div>
+          <button class="past-sess-btn ghost" onclick="togglePastRoster('${escapeAttr(s.세션id)}', this)">명단 보기</button>
           <button class="past-sess-btn" onclick="openPastAttend('${escapeAttr(s.세션id)}')">+ 사후 출석 추가</button>
-        </div>`;
+        </div>${roster}`;
       } catch (e) { console.warn('past session card 실패:', e); return ''; }
     }));
 
@@ -7846,6 +7870,13 @@ async function loadPastSessions() {
     console.warn('오늘 마감 세션 로딩 실패:', e);
     container.style.display = 'none';
   }
+}
+
+function togglePastRoster(sid, btn) {
+  const el = document.getElementById('psr-' + sid);
+  if (!el) return;
+  el.hidden = !el.hidden;
+  if (btn) btn.textContent = el.hidden ? '명단 보기' : '명단 닫기';
 }
 
 // 사후 출석 모달 컨텍스트 (어느 세션에 추가할지)
@@ -9246,18 +9277,8 @@ async function enterAdminScreen(opts) {
     return;
   }
 
-  // View 는 오늘 QR을 연 기기(세션 키) 또는 관리자만 — 서버도 같은 조건으로 오늘 기록만 준다(2026-10-14)
-  if (A.readOnly && !sb.settings.adminToken()) {
-    let hasKey = false;
-    try { hasKey = SKEYS.todayKeys().length > 0; } catch (_) {}
-    if (!hasKey) {
-      history.replaceState({}, '', location.pathname);
-      showScreen('screen-main');
-      openPwModal();
-      document.getElementById('pw-err').textContent = '오늘 QR을 연 칠판 기기이거나 관리자만 볼 수 있어요';
-      return;
-    }
-  }
+  // View 는 어느 기기에서나 오늘 출석 기록을 본다(2026-10-14 사용자 결정, 비밀번호 없음 — 서버 정책도 오늘 기록 공개).
+  // 학생 명단(미출석 계산)은 오늘 QR을 연 칠판 기기 또는 관리자만 — 명단 없으면 출석자만 보여 준다.
 
   // View 모드면 기본 탭을 history로, 관리자 전용 탭 접근을 차단
   if (A.readOnly) {
@@ -10307,7 +10328,9 @@ function renderHistoryDetail() {
   const targetRooms = sessionRooms(s);
   const attNos = new Set(att.map(r => String(r.학번)));
   const histCtx = { dayChangeHist: A.dayChangeHist || {} };
-  const targetStudents = (A.students || []).filter(st => {
+  // 이 기기가 그 방 명단을 못 읽으면(관리자 아님·그 방 QR 안 연 기기) 미출석·출석률을 낼 수 없다 → 출석자만
+  const noRoster = !(A.students || []).some(st => targetRooms.includes(st.장소));
+  const targetStudents = noRoster ? [] : (A.students || []).filter(st => {
     const came = attNos.has(String(st.학번));
     if (!st.활성 && !came) return false;               // 비활성이라도 이 세션에 출석했으면 분모에 남긴다(전엔 '자율'로 보였다)
     if (st.프로그램 !== s.프로그램) return false;
@@ -10335,20 +10358,25 @@ function renderHistoryDetail() {
 
   // 자율 출석 학생 (분모 밖)
   const targetNoSet = new Set(targetStudents.map(st => st.학번));
-  const selfStudents = att
+  const selfStudents = noRoster ? [] : att
     .filter(r => !targetNoSet.has(r.학번))
     .map(r => ({ 학번: r.학번, 이름: r.이름, _isSelf: true, _att: r }));
+  // 명단 없는 기기: 출석 기록을 그대로 출석자로(장소 = 출석 기록의 장소)
+  const rosterless = noRoster
+    ? att.map(r => ({ 학번: r.학번, 이름: r.이름, 장소: r.장소, _isSelf: false, _att: r }))
+    : [];
 
   // 통합 명단 (학번 순)
   const allDisplay = [
     ...targetStudents.map(st => ({ ...st, _isSelf: false, _att: attMap[st.학번] })),
     ...selfStudents,
+    ...rosterless,
   ].sort((a, b) =>
     String(a.학번).localeCompare(String(b.학번), undefined, { numeric: true })
   );
 
   // sibling 세션이면 장소별로 그룹화
-  const _sibDetail = targetRooms.length > 1;
+  const _sibDetail = targetRooms.length > 1 && !noRoster;   // 명단 없으면 방을 못 가르므로 한 목록
   let allDisplayGrouped = null;
   if (_sibDetail) {
     // 분모 학생: 장소별 그룹
@@ -10418,6 +10446,14 @@ function renderHistoryDetail() {
       </div>
     </div>
 
+    ${noRoster ? `
+    <div class="detail-stats">
+      <div class="detail-stat attended">
+        <span class="detail-stat-num">${att.length}</span><span class="detail-stat-label">출석</span>
+      </div>
+      <div class="detail-stat" style="align-self:center;font-size:13px;color:var(--ink-faint)">미출석은 이 방 칠판(QR 연 기기)에서 확인</div>
+    </div>
+    ` : `
     <div class="detail-stats">
       <div class="detail-stat attended">
         <span class="detail-stat-num">${attendedInTarget}</span><span class="detail-stat-label">출석</span>
@@ -10434,10 +10470,11 @@ function renderHistoryDetail() {
         </div>
       ` : ''}
     </div>
+    `}
 
     <div class="detail-actions">
       ${cosmosCanLate(A.selectedSession) ? '<button class="admin-btn primary" onclick="openLateAttendModal()">+ 사후 출석 추가</button>' : ''}
-      <button class="admin-btn" onclick="copyAbsentList()" ${absentCount ? '' : 'disabled'}>미출석 명단 복사</button>
+      ${noRoster ? '' : `<button class="admin-btn" onclick="copyAbsentList()" ${absentCount ? '' : 'disabled'}>미출석 명단 복사</button>`}
       ${A.readOnly ? '' : `<button class="admin-btn danger" onclick="confirmDeleteSession()" style="margin-left:auto">세션 삭제</button>`}
     </div>
 
