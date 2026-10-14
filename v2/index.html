@@ -8655,6 +8655,12 @@ async function loadRosterAndSubscribe() {
   try {
     // 1. 분모 학생 조회 (오늘 요일 대상자만)
     const allStudents = await sb._retry(() => sb.students.byRoom(program, room));   // 학교망 블립 자동 재시도
+    // 2026-10-14: 명단은 이 기기가 연 세션 키가 있어야 보인다(다른 기기에서 연 출석을 이어받은 경우)
+    let _hasKey = false;
+    try { _hasKey = !!SKEYS._load()[sessionId]; } catch (_) {}
+    if (!_hasKey && allStudents.length === 0) {
+      const ke = new Error('no-key'); ke.noKey = true; throw ke;
+    }
     const todayKr = DAY_KR[new Date().getDay()];
     T.rosterStudents = allStudents.filter(s => {
       // 출석요일이 NULL이면 매번 대상 (v1 동작 보존)
@@ -8692,7 +8698,7 @@ async function loadRosterAndSubscribe() {
       body.innerHTML = `
         <div class="list-empty">
           <span class="icon">✦</span>
-          명단을 불러오지 못했어요. 학생 출석은 계속 받고 있어요.
+          ${e && e.noKey ? '다른 기기에서 연 출석이라 이 화면에서는 명단을 볼 수 없어요. 학생 QR 출석은 계속 받고 있어요. 명단이 필요하면 이 출석을 마감하고 이 기기에서 새로 시작해 주세요.' : '명단을 불러오지 못했어요. 학생 출석은 계속 받고 있어요.'}
           <div><button type="button" class="roster-retry" onclick="loadRosterAndSubscribe()">명단 다시 불러오기</button></div>
         </div>
       `;
