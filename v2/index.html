@@ -6966,6 +6966,62 @@ const TLOG = {
 // 페이지 로드 직후 초기화
 try { TLOG.init(); } catch (e) {}
 
+// ══════════════════════════════════════════════════════════════
+//  세션 비밀키 (2026-10-14 보안) — QR을 연 교사 기기만 안다.
+//  수동 출석·사후 출석·수동 취소·명단 조회에 쓴다. localStorage 에 오늘 것만 보관.
+// ══════════════════════════════════════════════════════════════
+const SKEYS = {
+  KEY: 'cosmos_session_keys',
+  _load() {
+    try { return JSON.parse(localStorage.getItem(this.KEY) || '{}') || {}; } catch (e) { return {}; }
+  },
+  _save(m) {
+    try {
+      const today = todayKST();
+      const keep = {};
+      Object.keys(m).forEach(k => { if (m[k] && m[k].d === today) keep[k] = m[k]; });
+      localStorage.setItem(this.KEY, JSON.stringify(keep));
+    } catch (e) {}
+  },
+  set(sid, key, date, room) {
+    if (!sid || !key) return;
+    const m = this._load();
+    m[sid] = { k: key, d: date || todayKST(), r: room || '' };
+    this._save(m);
+  },
+  // 이 세션 키 → 없으면 같은 날·같은 장소 쌍 키 → 없으면 같은 날 아무 키(서버가 판정)
+  pick(sid, date, room) {
+    const m = this._load();
+    if (sid && m[sid]) return m[sid].k;
+    const d = date || todayKST();
+    const grp = room ? getRoomGroup(room) : [];
+    const vals = Object.values(m).filter(v => v && v.d === d);
+    const same = vals.find(v => grp.includes(v.r));
+    if (same) return same.k;
+    return vals.length ? vals[vals.length - 1].k : null;
+  },
+  todayKeys() {
+    const d = todayKST();
+    return [...new Set(Object.values(this._load()).filter(v => v && v.d === d).map(v => v.k))];
+  },
+};
+function newSessionKey() {
+  try { if (crypto && crypto.randomUUID) return crypto.randomUUID(); } catch (e) {}
+  const b = new Uint8Array(16);
+  crypto.getRandomValues(b);
+  b[6] = (b[6] & 0x0f) | 0x40; b[8] = (b[8] & 0x3f) | 0x80;
+  const h = [...b].map(x => x.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`;
+}
+// sessions 공개 열(session_key 제외)
+const SESS_COLS = 'id,세션id,프로그램,장소,교사,날짜,시작시각,만료시각,종료시각,활성,연장됨';
+// 출석 RPC 결과 → 기존 호출부가 쓰던 모양
+function cosmosCheckinResult(d) {
+  d = d || {};
+  return { ok: !!d.ok, alreadyAttended: !!d.already, data: d.id ? { id: d.id } : null,
+           name: d.name || null, code: d.code || null, msg: d.msg || null };
+}
+
 const sb = {
   // ─── 캐시 ───
   _cache: {
@@ -7213,72 +7269,37 @@ const sb = {
   // ════════════════════════════════════════
   attendance: {
     async add(record) {
-      // 정상 출석 (학생이 QR 스캔)
+      // 정상 출석 (학생이 QR 스캔) — 서버 RPC가 세션 활성·만료·명단·이름을 판정한다(2026-10-14)
       const sessionId = record.세션id || record.sessionId;
-      // ⭐ 세션 활성 검증 — 만료/비활성 세션엔 출석 차단 (좀비 QR 방지)
-      // sibling 세션은 같은 세션id로 여러 행 존재 가능 → limit(1)로 첫 행만
-      try {
-        const { data: sessArr, error: sessErr } = await sb.client()
-          .from('sessions').select('활성').eq('세션id', sessionId).limit(1);
-        if (sessErr) throw sessErr;
-        if (!sessArr || sessArr.length === 0) return { ok: false, msg: '세션을 찾을 수 없어요. 새 QR을 받아주세요.' };
-        if (!sessArr[0].활성) return { ok: false, msg: '이 세션은 이미 마감됐어요. 선생님께 새 QR을 요청해주세요.' };
-      } catch (e) { console.warn('[attendance.add] 세션 검증 실패 (계속 진행):', e); }
+      const { data, error } = await sb.client().rpc('student_check_in', {
+        p_session_id: sessionId,
+        p_hakbun: String(record.학번 || record.no),
+        p_room: record.장소 || record.cls || record.room || null,
+        p_time: record.원래시각 || record.time || null,
+      });
+      if (error) throw error;
+      return cosmosCheckinResult(data);
+    },
 
-      const row = {
-        세션id: sessionId,
-        학번: String(record.학번 || record.no),
-        이름: record.이름 || record.name,
-        날짜: record.날짜 || todayKST(),
-        원래시각: record.원래시각 || record.time || nowTimeStr(),
-        처리시각: null,
-        사후여부: false,
-        프로그램: record.프로그램 || record.program,
-        장소: record.장소 || record.cls || record.room,
-        교사: record.교사 || record.teacher || null,
-        상태: '출석',
-        메모: record.메모 || record.memo || null,
-      };
-      const { data, error } = await sb.client()
-        .from('attendance')
-        .insert(row)
-        .select();
-
-      if (error) {
-        // unique 제약 위반 = 이미 출석 = 정상으로 간주
-        if (error.code === '23505') {
-          return { ok: true, alreadyAttended: true };
-        }
-        throw error;
-      }
-      return { ok: true, data: data[0] };
+    // 교사 수동 출석(late=false) / 사후 출석(late=true) — 이 기기의 세션 키 또는 관리자 토큰 필요
+    async manual(record, late) {
+      const sid = record.세션id || record.sessionId;
+      const room = record.장소 || record.cls || record.room || null;
+      const { data, error } = await sb.client().rpc('teacher_check_in', {
+        p_session_id: sid,
+        p_hakbun: String(record.학번 || record.no),
+        p_key: SKEYS.pick(sid, record.날짜 || record.date, room),
+        p_token: sb.settings.adminToken(),
+        p_late: !!late,
+        p_room: room,
+      });
+      if (error) throw error;
+      return cosmosCheckinResult(data);
     },
 
     async lateAdd(record) {
       // 사후 출석 (교사가 수동 추가)
-      const now = new Date();
-      const row = {
-        세션id: record.세션id || record.sessionId,
-        학번: String(record.학번 || record.no),
-        이름: record.이름 || record.name,
-        날짜: record.날짜 || record.date,
-        원래시각: record.원래시각 || null,    // 모르면 NULL
-        처리시각: now.toISOString(),
-        사후여부: true,
-        프로그램: record.프로그램 || record.program,
-        장소: record.장소 || record.cls || record.room,
-        교사: record.교사 || record.teacher || null,
-        상태: '출석',
-      };
-      const { data, error } = await sb.client()
-        .from('attendance')
-        .insert(row)
-        .select();
-      if (error) {
-        if (error.code === '23505') return { ok: true, alreadyAttended: true };
-        throw error;
-      }
-      return { ok: true, data: data[0] };
+      return this.manual(record, true);
     },
 
     async history(days = 7) {
@@ -7360,13 +7381,15 @@ const sb = {
         만료시각: session.만료시각 || session.expireAt,
         활성: true,
       };
-      // sibling 있으면 여러 행, 없으면 1행
-      const rows = rooms.map(r => ({ ...common, 장소: r }));
+      // sibling 있으면 여러 행, 없으면 1행 — 세션 비밀키는 이 기기에서 만들어 보관(서버는 공개 조회에 안 내보냄)
+      const skey = newSessionKey();
+      const rows = rooms.map(r => ({ ...common, 장소: r, session_key: skey }));
       const { data, error } = await sb.client()
         .from('sessions')
         .insert(rows)
-        .select();
+        .select(SESS_COLS);
       if (error) throw error;
+      rooms.forEach(r => SKEYS.set(sessionId, skey, common.날짜, r));
       // 호출자 장소 행 우선 반환
       return data.find(r => r.장소 === room) || data[0];
     },
@@ -7384,7 +7407,7 @@ const sb = {
       // sibling 세션은 세션id가 같은 행이 여러 개 있을 수 있어 limit(1)로 안전하게
       const { data, error } = await sb.client()
         .from('sessions')
-        .select('*')
+        .select(SESS_COLS)
         .eq('세션id', sessionId)
         .limit(1);
       if (error) throw error;
@@ -7396,7 +7419,7 @@ const sb = {
       // 단, 너무 오래된 좀비 방지를 위해 오늘 날짜로 제한
       const { data, error } = await sb.client()
         .from('sessions')
-        .select('*')
+        .select(SESS_COLS)
         .eq('장소', room)
         .eq('활성', true)
         .eq('날짜', todayKST())
@@ -7767,7 +7790,7 @@ async function loadPastSessions() {
     // 오늘 이 장소에서 생성된 모든 세션 (활성 세션은 제외)
     const { data: sessions, error } = await sb.client()
       .from('sessions')
-      .select('*')
+      .select(SESS_COLS)
       .eq('장소', T.room)
       .eq('날짜', today)
       .eq('활성', false)
@@ -8953,17 +8976,12 @@ async function manualAttend(no, name) {
 
   // DB에 저장
   try {
-    const result = await sb.attendance.add({
+    const result = await sb.attendance.manual({
       sessionId: T.session.sessionId,
       no: no,
-      name: name,
       date: todayKST(),
-      time: timeStr,
-      program: T.session.program,
       room: T.session.room,
-      teacher: T.session.teacher,
-      memo: '수동',
-    });
+    }, false);
 
     if (!result.ok) {
       throw new Error(result.msg || '저장 실패');
@@ -9019,7 +9037,8 @@ async function undoManualAttend(no) {
   renderRoster();
 
   try {
-    const { data: undoOk, error: undoErr } = await sb.client().rpc('undo_recent_attendance', { p_id: attId });
+    const { data: undoOk, error: undoErr } = await sb.client().rpc('undo_recent_attendance', {
+      p_id: attId, p_key: SKEYS.pick(sid, todayKST(), T.session.room), p_token: sb.settings.adminToken() });
     if (undoErr) throw undoErr;
     if (undoOk === false) throw new Error('취소할 수 없는 출석이에요(15분이 지났거나 교사 수동 출석이 아님)');
     try { TLOG.log('audit_manual_undo', { no: no, sessionId: sid, id: attId }); } catch (_) {}
@@ -9977,7 +9996,7 @@ async function loadHistorySessions() {
     let sessTable = [];
     try {
       sessTable = await fetchAllRows(() => {
-        let q = sb.client().from('sessions').select('*')
+        let q = sb.client().from('sessions').select(SESS_COLS)
           .order('날짜', { ascending: false })
           .order('세션id', { ascending: true });   // 페이지 경계 안정용 타이브레이커
         if (days > 0) q = q.gte('날짜', daysAgoKST(days));
@@ -11461,7 +11480,7 @@ const ATTEND_QUEUE = {
           const r = await sb.attendance.add(it.payload);
           if (r && r.ok) { resolved.add(k); continue; }            // 성공/이미출석 → 제거
           const msg = (r && r.msg) || '';
-          if (/마감|만료|찾을 수 없/.test(msg)) { resolved.add(k); continue; } // 종결 오류 → 폐기
+          if (/마감|만료|찾을 수 없/.test(msg) || /^(closed|no_session|not_registered|bad_input)$/.test((r && r.code) || '')) { resolved.add(k); continue; } // 종결 오류 → 폐기
           // 그 외(일시 오류) → 보존(resolved에 넣지 않음)
         } catch (e) {
           // throw(네트워크 등) → 보존
@@ -11540,23 +11559,8 @@ async function enterStudentScreen(sessionId, scanRoom) {
   document.getElementById('st-program').textContent = session.프로그램;
   document.getElementById('st-meta').textContent = `${session.장소} · ${session.교사} 선생님`;
 
-  // 학생 명단 사전 캐싱 (해당 프로그램+장소 전원)
+  // 학생 명단은 미리 받지 않는다(2026-10-14) — 이름은 출석 RPC가 돌려준다
   ST.studentsCache = null;
-  (async () => {
-    try {
-      const { data, error } = await sb.client()
-        .from('students')
-        .select('학번,이름,프로그램,장소,활성')
-        .eq('프로그램', session.프로그램)
-        .in('장소', getRoomGroup(session.장소))
-        .eq('활성', true);
-      if (!error && data) {
-        const map = {};
-        data.forEach(s => { map[String(s.학번)] = s; });
-        ST.studentsCache = map;
-      }
-    } catch (e) { console.warn('학생 사전 캐싱 실패 (출석 가능):', e); }
-  })();
 
   document.getElementById('st-loading').style.display = 'none';
   document.getElementById('st-input').style.display = 'block';
@@ -11667,59 +11671,24 @@ async function doStudentAttend() {
     }
   }
 
-  ST.inFlight = true;
-  showAttendProgress(no);
-
-  // 학생 정보 조회 — 1) 사전 캐시 히트 → 0 왕복 2) 미스 시 네트워크 폴백
-  let studentInfo = null;
-  let lookupFailed = false;
-  if (ST.studentsCache && ST.studentsCache[no]) {
-    studentInfo = ST.studentsCache[no];
-  } else {
-    try {
-      const matches = await sb.students.byNo(no);
-      if (matches && matches.length > 0) {
-        studentInfo = matches.find(s => s.프로그램 === ST.session.program && s.장소 === ST.session.room)
-                    || matches.find(s => s.장소 === ST.session.room)
-                    || matches[0];
-      }
-    } catch (e) { console.warn('학생 조회 실패:', e); lookupFailed = true; }
-  }
-
-  // 조회 자체가 실패한 경우는 '명단에 없음'과 구분 — 등록 화면으로 보내지 않고 다시 누르게 한다
-  if (!studentInfo && lookupFailed) {
-    hideAttendProgress();
-    ST.inFlight = false;
-    errEl.textContent = '인터넷이 불안정해 학생 정보를 확인하지 못했어요. 잠시 뒤 「출석」을 다시 눌러 주세요.';
-    return;
-  }
-
-  // 명단에 없으면 → 즉석 등록 폼 표시 (Phase 2F)
-  if (!studentInfo) {
-    hideAttendProgress();
-    ST.inFlight = false;
-    showRegisterForm(no);
-    return;
-  }
-
   // 같은 기기에서 이미 다른 학번이 이 세션에 출석했으면 막는다(친구 폰을 빌린 경우는 교사 수동 출석으로)
   const _devKey = 'cosmos_att_' + ST.session.sessionId;
   let _devNo = null;
   try { _devNo = localStorage.getItem(_devKey); } catch (e) {}
   if (_devNo && _devNo !== no) {
-    hideAttendProgress();
-    ST.inFlight = false;
     errEl.textContent = '이 휴대폰으로는 이미 다른 학번이 출석했어요. 각자 본인 휴대폰으로 찍거나, 선생님께 수동 출석을 받아 주세요.';
     return;
   }
   const lockDevice = () => { try { localStorage.setItem(_devKey, no); } catch (e) {} };   // 저장 성공 뒤에만(오타 학번에 잠기지 않게, 리뷰 #8)
 
-  // 출석 페이로드
+  ST.inFlight = true;
+  showAttendProgress(no);
+
+  // 출석 페이로드 — 이름·프로그램·교사는 서버가 정한다
   const timeStr = nowTimeStr();
   const payload = {
     sessionId: ST.session.sessionId,
     no: no,
-    name: studentInfo.이름,
     date: todayKST(),
     time: timeStr,
     program: ST.session.program,
@@ -11730,66 +11699,76 @@ async function doStudentAttend() {
   // sendBeacon 백업 등록 (페이지가 갑자기 닫히거나 전송 실패해도 unload 시 자동 발사)
   registerAttendBeacon(payload);
 
-  // ⭐ 낙관적 UI: 즉시 성공 화면 표시 → 백그라운드로 전송
+  // 전송 1회(8초 제한). 네트워크 문제는 network:true 로 구분
+  const tryOnce = async () => {
+    try {
+      return await Promise.race([
+        sb.attendance.add(payload),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('시간 초과')), 8000)),
+      ]);
+    } catch (e) { return { ok: false, network: true, msg: e.message || '네트워크 오류' }; }
+  };
+  const isTerminal = (r) => /^(closed|no_session)$/.test(r.code || '') || /마감|찾을 수 없|만료/.test(r.msg || '');
+  const CLOSED_MSG = '출석이 마감됐거나 QR 시간이 지났어요. 선생님께 학번과 이름을 말하고 수동 출석을 받아 주세요.';
+
+  let result = await tryOnce();
+  if (!result.ok && result.network) {
+    await new Promise(r => setTimeout(r, 500));
+    result = await tryOnce();
+  }
   hideAttendProgress();
   ST.inFlight = false;
-  showStudentSuccess(studentInfo.이름, timeStr, false);
 
-  // 백그라운드 전송 + 1회 자동 재시도
+  if (result.ok) {
+    lockDevice();
+    unregisterAttendBeacon();
+    showStudentSuccess(result.name || no, timeStr, result.alreadyAttended);
+    try { ATTEND_QUEUE.flush(); } catch (e) {}
+    return;
+  }
+  if (result.code === 'not_registered') {
+    // 명단에 없으면 → 즉석 등록 폼 표시 (Phase 2F)
+    unregisterAttendBeacon();
+    showRegisterForm(no);
+    return;
+  }
+  if (result.code === 'bad_input') {
+    unregisterAttendBeacon();
+    errEl.textContent = result.msg || '학번을 다시 확인해 주세요.';
+    return;
+  }
+  if (!result.network || isTerminal(result)) {
+    unregisterAttendBeacon();
+    errEl.textContent = isTerminal(result) ? CLOSED_MSG : ('출석 처리 실패: ' + (result.msg || '오류'));
+    return;
+  }
+
+  // 일반 네트워크 오류: 내구성 큐 + sendBeacon 백업은 유지하고, 화면이 열린 동안 직접 재시도.
+  ATTEND_QUEUE.enqueue(payload);
+  console.warn('출석 전송 2회 실패 → 화면에서 재시도 + 큐·sendBeacon 백업:', result.msg);
+  showStudentSuccess(no, timeStr, false);
+  setStudentResultPending('전송이 늦어지고 있어요. 이 화면을 닫지 말고 잠시만 기다려 주세요.');
   (async () => {
-    const tryOnce = async () => {
-      try { return await sb.attendance.add(payload); }
-      catch (e) { return { ok: false, msg: e.message || '네트워크 오류' }; }
-    };
-    let result = await tryOnce();
-    if (!result.ok) {
-      await new Promise(r => setTimeout(r, 500));
-      result = await tryOnce();
-    }
-    if (result.ok) {
-      lockDevice();
-      unregisterAttendBeacon(); // 성공 확정 → 백업 해제
-      // 이미 출석이었으면 성공 화면을 "이미 출석" 톤으로 업데이트
-      if (result.alreadyAttended) {
-        const successEl = document.getElementById('st-success');
-        const titleEl = successEl && successEl.querySelector('.success-title');
-        if (titleEl) { titleEl.textContent = '이미 출석했어요'; successEl.classList.add('already'); }
+    const deadline = Date.now() + 60 * 1000;
+    while (Date.now() < deadline) {
+      await new Promise(r => setTimeout(r, 3000));
+      const r2 = await tryOnce();
+      if (r2.ok) {
+        lockDevice();
+        unregisterAttendBeacon();
+        try { ATTEND_QUEUE.flush(); } catch (e) {}
+        try { document.getElementById('st-success-name').textContent = (r2.name || no) + ' 학생'; } catch (e) {}
+        setStudentResultOk(r2.alreadyAttended);
+        return;
       }
-      // 신호가 살아있는 지금, 이전에 밀렸던 출석 큐도 함께 비운다
-      try { ATTEND_QUEUE.flush(); } catch (e) {}
-    } else {
-      // ⭐ 세션 만료/마감 거부 → 즉시 학생에게 알림 (낙관적 UI 되돌리기)
-      const msg = result.msg || '';
-      if (/마감|찾을 수 없|만료/.test(msg)) {
-        unregisterAttendBeacon(); // 더 이상 재시도 안 함
-        setStudentResultFailed('출석이 마감됐거나 QR 시간이 지났어요. 선생님께 학번과 이름을 말하고 수동 출석을 받아 주세요.');
-        console.warn('[출석 거부]', msg);
-      } else {
-        // 일반 네트워크 오류: 내구성 큐 + sendBeacon 백업은 유지하되, 성공처럼 보이게 두지 않는다.
-        // 큐는 다음 진입 때나 비워지는데 그땐 세션이 마감돼 버려질 수 있다 → 화면이 열린 동안 직접 재시도.
-        ATTEND_QUEUE.enqueue(payload);
-        console.warn('출석 전송 2회 실패 → 화면에서 재시도 + 큐·sendBeacon 백업:', msg);
-        setStudentResultPending('전송이 늦어지고 있어요. 이 화면을 닫지 말고 잠시만 기다려 주세요.');
-        const deadline = Date.now() + 60 * 1000;
-        while (Date.now() < deadline) {
-          await new Promise(r => setTimeout(r, 3000));
-          const r2 = await tryOnce();
-          if (r2.ok) {
-            lockDevice();
-            unregisterAttendBeacon();
-            try { ATTEND_QUEUE.flush(); } catch (e) {}
-            setStudentResultOk(r2.alreadyAttended);
-            return;
-          }
-          if (/마감|찾을 수 없|만료/.test(r2.msg || '')) {
-            unregisterAttendBeacon();
-            setStudentResultFailed('출석이 마감됐거나 QR 시간이 지났어요. 선생님께 학번과 이름을 말하고 수동 출석을 받아 주세요.');
-            return;
-          }
-        }
-        setStudentResultFailed('인터넷이 불안정해 출석이 아직 전송되지 않았어요. 선생님께 이름을 말해 확인받아 주세요.');
+      if (!r2.network) {
+        unregisterAttendBeacon();
+        setStudentResultFailed(isTerminal(r2) ? CLOSED_MSG
+          : (r2.code === 'not_registered' ? '명단에 없는 학번이에요. 선생님께 말해 주세요.' : ('출석 처리 실패: ' + (r2.msg || '오류'))));
+        return;
       }
     }
+    setStudentResultFailed('인터넷이 불안정해 출석이 아직 전송되지 않았어요. 선생님께 이름을 말해 확인받아 주세요.');
   })();
   return;
 }
@@ -11937,7 +11916,6 @@ async function doRegisterAndAttend() {
     const result = await sb.attendance.add({
       sessionId: ST.session.sessionId,
       no: no,
-      name: name,
       date: todayKST(),
       time: timeStr,
       program: ST.session.program,
@@ -11995,19 +11973,13 @@ function fireAttendBeacon() {
 
   try {
     // Supabase REST API 직접 호출 (sendBeacon은 fetch처럼 SDK 못 씀)
-    const url = `${SUPABASE_URL}/rest/v1/attendance`;
+    // 2026-10-14: 테이블 직접 INSERT 대신 출석 RPC (apikey 는 쿼리로 — sendBeacon 은 헤더를 못 단다)
+    const url = `${SUPABASE_URL}/rest/v1/rpc/student_check_in`;
     const body = JSON.stringify({
-      세션id: payload.sessionId,
-      학번: payload.no,
-      이름: payload.name,
-      날짜: payload.date,
-      원래시각: payload.time,
-      처리시각: null,
-      사후여부: false,
-      프로그램: payload.program,
-      장소: payload.room,
-      교사: payload.teacher,
-      상태: '출석',
+      p_session_id: payload.sessionId,
+      p_hakbun: payload.no,
+      p_room: payload.room || null,
+      p_time: payload.time || null,
     });
 
     if (navigator.sendBeacon) {
@@ -13503,7 +13475,7 @@ const DIAG = {
       const today = todayKST();
       const { data, error } = await sb.client()
         .from('sessions')
-        .select('*')
+        .select(SESS_COLS)
         .eq('날짜', today)
         .order('시작시각', { ascending: true });
       if (error) throw error;
@@ -13673,7 +13645,7 @@ const LIVE = {
       const today = todayKST();
       // 1. 오늘 모든 세션
       const { data: sessions } = await sb.client()
-        .from('sessions').select('*').eq('날짜', today).order('시작시각', { ascending: false });
+        .from('sessions').select(SESS_COLS).eq('날짜', today).order('시작시각', { ascending: false });
       // 2. 오늘 전체 출석
       const { data: atts } = await sb.client()
         .from('attendance').select('*').eq('날짜', today).order('원래시각', { ascending: false });
