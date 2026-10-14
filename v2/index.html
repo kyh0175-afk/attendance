@@ -9240,6 +9240,19 @@ async function enterAdminScreen(opts) {
     return;
   }
 
+  // View 는 오늘 QR을 연 기기(세션 키) 또는 관리자만 — 서버도 같은 조건으로 오늘 기록만 준다(2026-10-14)
+  if (A.readOnly && !sb.settings.adminToken()) {
+    let hasKey = false;
+    try { hasKey = SKEYS.todayKeys().length > 0; } catch (_) {}
+    if (!hasKey) {
+      history.replaceState({}, '', location.pathname);
+      showScreen('screen-main');
+      openPwModal();
+      document.getElementById('pw-err').textContent = '오늘 QR을 연 칠판 기기이거나 관리자만 볼 수 있어요';
+      return;
+    }
+  }
+
   // View 모드면 기본 탭을 history로, 관리자 전용 탭 접근을 차단
   if (A.readOnly) {
     if (A.currentTab !== 'history' && A.currentTab !== 'live') {
