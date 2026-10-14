@@ -34,10 +34,12 @@ jobs:
             url: https://rxsmmwqekrtbstcjbagj.supabase.co
             key: sb_publishable_h7o2vnvgu7Akrg87cAYSkg__DA-KRpn
             table: sessions
+            cols: id          # 2026-10-14 sessions 는 열 단위 권한(session_key 비공개) — * 는 401
           - name: 급식 (YB-meal)
             url: https://mvuxbngxpmdmxdkxohoc.supabase.co
             key: sb_publishable_h6vVNV3t-b2JSZAH2wuZ3g_bBq3_GwI
             table: meal_sessions
+            cols: "*"
     steps:
       - name: REST 요청으로 프로젝트 깨우기
         run: |
@@ -45,7 +47,7 @@ jobs:
           code=000
           for i in 1 2 3; do
             code=$(curl -sS -o /tmp/body.txt -w '%{http_code}' --max-time 30 \
-              "${{ matrix.url }}/rest/v1/${{ matrix.table }}?select=*&limit=1" \
+              "${{ matrix.url }}/rest/v1/${{ matrix.table }}?select=${{ matrix.cols }}&limit=1" \
               -H "apikey: ${{ matrix.key }}" \
               -H "Authorization: Bearer ${{ matrix.key }}") || code=000
             echo "[$i회차] ${{ matrix.name }} → HTTP $code"
