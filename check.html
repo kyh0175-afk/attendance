@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>코스모스 독서시간 — 학생용</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="./v2/icon.svg">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,6 +13,7 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+  /* 디자인게이트 A2 유지: 코스모스 v2 전체가 쓰는 팔레트(v2/index.html :root와 같은 값) — 학생 진입 페이지만 바꾸면 화면이 갈린다 */
   :root {
     --bg:        #1a130c;
     --paper:     #2a1f15;
@@ -32,7 +34,7 @@
     color: var(--ink);
     font-family: 'IBM Plex Sans KR', sans-serif;
     font-weight: 300;
-    min-height: 100vh;
+    min-height: 100dvh; /* 구 100vh → 100dvh: 모바일 주소창 U25 */
     -webkit-font-smoothing: antialiased;
   }
   body { overflow-x: hidden; word-break: keep-all; overflow-wrap: break-word; /* 한국어 어절 단위 줄바꿈 (디자인게이트 KO) */ }
@@ -60,7 +62,7 @@
   .wrap {
     position: relative;
     z-index: 1;
-    min-height: 100vh;
+    min-height: 100dvh; /* 구 100vh → 100dvh: U25 */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -145,7 +147,8 @@
     border: 1px solid var(--border);
     border-radius: 4px;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    /* 구 transition: all → 바뀌는 속성만(U08) */
+    transition: background-color 0.2s, border-color 0.2s, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
     box-shadow:
       0 1px 0 rgba(255, 255, 255, 0.03) inset,
       0 30px 60px -20px rgba(0, 0, 0, 0.5);
@@ -173,7 +176,7 @@
     height: 18px;
     border: 1px solid var(--amber);
     opacity: 0.4;
-    transition: all 0.2s;
+    transition: opacity 0.2s, width 0.2s, height 0.2s; /* 구 all(U08) */
   }
   .card::before {
     top: 12px;
@@ -213,6 +216,7 @@
     display: inline-block;
   }
   .card-check .card-symbol { color: var(--info); }
+  .card-survey .card-symbol { color: var(--amber); }
   .card-seat .card-symbol  { color: var(--copper); }
 
   .card-label {
@@ -260,7 +264,7 @@
     text-transform: uppercase;
     padding-top: 14px;
     border-top: 1px solid var(--border);
-    transition: all 0.2s;
+    transition: border-color 0.2s; /* 구 all(U08) */
   font-variant-numeric: tabular-nums;
 }
   .card:hover .card-action { border-top-color: var(--border2); }
@@ -284,10 +288,15 @@
   @media (max-width: 560px) {
     .wrap { padding: 40px 16px; }
     .header { margin-bottom: 32px; }
+    .cards { flex-direction: column; gap: 14px; } /* 카드 2장(요일 조사·좌석) — 폰 폭에서 나란히 두면 제목이 끊김 */
     .card { padding: 32px 24px; min-width: 0; }
     .card-symbol { font-size: 44px; margin-bottom: 14px; }
     .card-title { font-size: 28px; }
     .card-desc { font-size: 12px; }
+  }
+  /* F6: 움직임 줄이기 설정이면 등장·호버 모션 끔 */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
   }
 </style>
 </head>
@@ -325,6 +334,21 @@
       </div>
     </a>
     -->
+
+    <a class="card card-survey" href="./v2/?mode=survey">
+      <div class="card-symbol">D</div>
+      <div class="card-label">FOR STUDENTS</div>
+      <div class="card-title">Days</div>
+      <div class="card-title-ko">자습 참여 요일 조사</div>
+      <div class="card-desc">
+        방과후·야간·심야·토요일·일요일<br>
+        참여 여부와 요일 제출 · 조사 기간에만
+      </div>
+      <div class="card-action">
+        <span>조사 참여</span>
+        <span class="arrow">→</span>
+      </div>
+    </a>
 
     <a class="card card-seat" href="./v2/?mode=seat-request">
       <div class="card-symbol">S</div>

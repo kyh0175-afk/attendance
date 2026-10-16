@@ -4099,6 +4099,35 @@ input { font-family: inherit; }
 .req-card.pending::before{background:var(--warn)}
 .req-card.approved::before{background:var(--sage);opacity:.6}
 .req-card.rejected::before{background:var(--terra);opacity:.5}
+.req-card.replaced::before{background:var(--ink-faint);opacity:.4}
+.req-status-badge.replaced{background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--ink-faint)}
+/* 요청 관리 › 요일 조사 (2026-10-16) */
+.svr-period{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:12px}
+.svr-period-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-family:'IBM Plex Sans KR',sans-serif}
+.svr-period-title{font-size:15px;font-weight:600;color:var(--cream)}
+.svr-state{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--border2);color:var(--ink-dim)}
+.svr-state.on{border-color:var(--sage);color:var(--sage)}
+.svr-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px;align-items:end}
+.svr-f{display:flex;flex-direction:column;gap:4px;font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink-faint);border:0;padding:0;margin:0;min-width:0}
+.svr-f.wide{grid-column:span 2}
+.svr-f legend{padding:0;margin-bottom:6px}
+fieldset.svr-f{display:block}   /* 체크박스는 한 줄로 */
+.svr-f input[type=text],.svr-f input[type=datetime-local],.svr-f select{background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;font-family:inherit;font-size:14px;color:var(--cream);font-variant-numeric:tabular-nums}
+.svr-chk{display:inline-flex;align-items:center;gap:5px;margin-right:12px;color:var(--ink);font-size:14px}
+.svr-f-actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.svr-stats{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;margin-bottom:14px;font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;color:var(--ink-dim);font-variant-numeric:tabular-nums}
+.svr-stats strong{color:var(--cream);font-weight:600}
+.svr-row .req-detail-value{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.svr-from{color:var(--ink-dim)}
+.svr-to{color:var(--cream);font-weight:500}
+.svr-kind{font-size:12px;padding:1px 7px;border-radius:999px;border:1px solid var(--border2);color:var(--amber)}
+.svr-row.k-그만둠 .svr-kind{color:var(--terra);border-color:rgba(184,84,63,.5)}
+.svr-row.k-추가 .svr-kind,.svr-row.k-재참여 .svr-kind{color:var(--sage);border-color:rgba(123,160,135,.5)}
+.svr-same{color:var(--ink-faint)}
+.svr-room{font-size:13px;color:var(--ink-dim)}
+.svr-room-sel{background:rgba(0,0,0,.25);border:1px solid var(--warn);border-radius:var(--r);padding:4px 8px;font-size:13px;color:var(--cream)}
+.st-src{margin-left:6px;font-size:11px;padding:1px 6px;border-radius:999px;border:1px solid var(--border2);color:var(--amber)}
+@media (max-width: 920px){.svr-form{grid-template-columns:minmax(0,1fr)}.svr-f.wide{grid-column:auto}}
 .req-card-top{display:flex;align-items:center;gap:14px;margin-bottom:14px}
 .req-status-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;font-weight:600;flex-shrink:0}
 .req-status-badge.pending{background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.4);color:var(--warn)}
@@ -4845,6 +4874,43 @@ body.admin-readonly #admin-tab-diag {
 .seat-done .success-name{color:var(--copper)}
 .seat-done-actions{display:flex;gap:10px;margin-top:24px}
 .seat-done-actions .btn{flex:1}
+
+/* ── 자습 참여 요일 조사 (?mode=survey, 2026-10-16) — 좌석 신청 부품(seat-login·seat-done·form-group)을 그대로 쓰고 카드만 새로 ── */
+.sv-wrap{width:100%;max-width:560px;margin:0 auto;padding:56px 0 24px}
+.sv-title{font-family:'IBM Plex Sans KR',sans-serif;font-size:26px;font-weight:600;color:var(--cream);line-height:1.3;margin:0 0 6px}
+.sv-period{font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;color:var(--ink-dim);margin-bottom:22px;font-variant-numeric:tabular-nums}
+.sv-id-grid{text-align:left}
+.sv-id-grid input{font-size:16px}
+.sv-err{font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;color:var(--terra);min-height:20px;margin:4px 0 12px;line-height:1.5}
+.sv-head{margin-bottom:16px}
+.sv-head-meta{font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;color:var(--ink-dim);font-variant-numeric:tabular-nums}
+.sv-banner{background:rgba(94,184,255,.08);border:1px solid rgba(94,184,255,.3);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;line-height:1.6;color:var(--ink)}
+.sv-banner.warn{background:rgba(184,84,63,.1);border-color:rgba(184,84,63,.4)}
+.sv-card{background:var(--paper);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;transition:border-color .2s}
+.sv-card.need{border-color:var(--terra)}
+.sv-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}
+.sv-card .prog-name{font-size:16px}
+.sv-now{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink-dim);white-space:nowrap}
+.sv-now .chg{color:var(--copper);font-weight:600;margin-left:6px}
+.sv-seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sv-seg button,.sv-days button{min-height:44px;border:1px solid var(--border2);border-radius:var(--r);background:rgba(0,0,0,.2);font-family:'IBM Plex Sans KR',sans-serif;font-size:15px;color:var(--ink-dim);transition:background-color .15s,border-color .15s,color .15s}
+.sv-seg button[aria-pressed="true"]{background:var(--amber);border-color:var(--amber);color:var(--bg);font-weight:600}
+.sv-seg button.off[aria-pressed="true"]{background:var(--paper3);border-color:var(--border3);color:var(--cream)}
+.sv-days{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}
+.sv-days button[aria-pressed="true"]{background:rgba(214,178,124,.18);border-color:var(--amber);color:var(--cream);font-weight:600}
+.sv-fixed{margin-top:10px;font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;color:var(--ink-dim)}
+.sv-need{margin-top:8px;font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--terra)}
+.sv-foot{position:sticky;bottom:0;background:linear-gradient(to top,var(--bg) 70%,transparent);padding:16px 0 calc(12px + env(safe-area-inset-bottom));margin-top:6px}
+.sv-foot-info{font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;color:var(--ink-dim);text-align:center;margin-bottom:8px;min-height:18px}
+.sv-confirm{text-align:left}
+.sv-confirm .sv-title{text-align:center;margin-bottom:18px}
+.sv-sum{margin:0 0 16px;text-align:left}
+.sv-sum-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-family:'IBM Plex Sans KR',sans-serif;font-size:15px;color:var(--ink)}
+.sv-sum-row .v{color:var(--cream);font-weight:500;text-align:right}
+.sv-sum-row .v.off{color:var(--ink-faint);font-weight:400}
+.sv-sum-row .chg{color:var(--copper);font-size:13px;margin-left:6px}
+.sv-sum-all-off{padding:12px;border:1px solid rgba(184,84,63,.4);border-radius:var(--r);color:var(--cream);font-family:'IBM Plex Sans KR',sans-serif;font-size:15px;text-align:center;margin-bottom:12px}
+@media (prefers-reduced-motion: reduce){#screen-survey,#screen-survey *{animation:none!important;transition:none!important}}
 
 .seat-tab-bar{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
 .seat-tab{padding:10px 20px;background:transparent;border:1px solid var(--border);border-radius:var(--r);font-family:'IBM Plex Sans KR',sans-serif;font-size:14px;font-weight:500;color:var(--ink-dim);cursor:pointer;transition:all .25s}
@@ -5735,6 +5801,74 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
 </div>
 
 <!-- ══════════════════════════════════════════ -->
+<!--  자습 참여 요일 조사 (학생, ?mode=survey)     -->
+<!-- ══════════════════════════════════════════ -->
+<div class="screen" id="screen-survey" style="display:none">
+  <a class="back-btn" href="../check.html"><span>←</span><span>뒤로</span></a>
+  <div class="sv-wrap">
+
+    <!-- 본인 확인 -->
+    <div id="sv-identify" class="seat-login" style="display:none">
+      <h1 class="sv-title">자습 참여 요일 조사</h1>
+      <div class="sv-period" id="sv-period-line"></div>
+      <div class="form-grid sv-id-grid">
+        <div class="form-group">
+          <label for="sv-no">학번</label>
+          <input type="tel" id="sv-no" placeholder="10101" maxlength="5" inputmode="numeric" autocomplete="off" oninput="svIdOnInput()" onkeydown="if(event.key==='Enter')svIdSubmit()">
+        </div>
+        <div class="form-group">
+          <label for="sv-name">이름</label>
+          <input type="text" id="sv-name" placeholder="홍길동" autocomplete="off" oninput="svIdOnInput()" onkeydown="if(event.key==='Enter')svIdSubmit()">
+        </div>
+      </div>
+      <div class="sv-err" id="sv-id-err" role="alert"></div>
+      <button class="seat-login-btn" id="sv-id-btn" onclick="svIdSubmit()" disabled>다음</button>
+    </div>
+
+    <!-- 입력 -->
+    <div id="sv-form" style="display:none">
+      <div class="sv-head">
+        <h1 class="sv-title">자습 참여 요일 조사</h1>
+        <div class="sv-head-meta"><span id="sv-form-no"></span> · <span id="sv-form-period"></span></div>
+      </div>
+      <div class="sv-banner" id="sv-banner" style="display:none"></div>
+      <div id="sv-cards"></div>
+      <div class="sv-foot">
+        <div class="sv-foot-info" id="sv-foot-info"></div>
+        <button class="seat-login-btn" id="sv-next-btn" onclick="svToConfirm()" disabled>확인</button>
+      </div>
+    </div>
+
+    <!-- 제출 전 확인 -->
+    <div id="sv-confirm" class="seat-login sv-confirm" style="display:none">
+      <h1 class="sv-title">제출 내용 확인</h1>
+      <div class="sv-sum" id="sv-sum"></div>
+      <div class="sv-err" id="sv-sub-err" role="alert"></div>
+      <div class="seat-done-actions">
+        <button class="btn btn-ghost" onclick="svBackToForm()">고치기</button>
+        <button class="btn btn-primary" id="sv-sub-btn" onclick="svSubmit()">제출</button>
+      </div>
+    </div>
+
+    <!-- 완료 -->
+    <div id="sv-done" class="seat-done" style="display:none">
+      <div class="success-check">✓</div>
+      <div class="success-title">제출 완료</div>
+      <div class="success-name" id="sv-done-no"></div>
+      <div class="sv-sum" id="sv-done-sum"></div>
+      <div class="success-meta">관리자 확인 뒤 명단 반영<br>바꿀 때 다시 제출 · <span id="sv-done-end"></span>까지</div>
+    </div>
+
+    <!-- 기간 아님·오류 -->
+    <div id="sv-closed" class="seat-login" style="display:none">
+      <h1 class="sv-title">자습 참여 요일 조사</h1>
+      <div class="seat-login-sub" id="sv-closed-msg">조사 기간 아님</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
 <!--  좌석 배치도 조회 화면 (학생·교사 공통)        -->
 <!-- ══════════════════════════════════════════ -->
 <div class="screen" id="screen-seat-board" style="display:none">
@@ -6048,16 +6182,23 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
         <div class="req-sub-tabs">
           <button class="req-sub-tab on" data-reqtab="correction" onclick="switchReqSubTab('correction')">수정 요청<span class="badge" id="req-badge-correction">0</span></button>
           <button class="req-sub-tab" data-reqtab="daychange" onclick="switchReqSubTab('daychange')">요일 변경 요청<span class="badge" id="req-badge-daychange">0</span></button>
+          <button class="req-sub-tab" data-reqtab="survey" onclick="switchReqSubTab('survey')">요일 조사<span class="badge" id="req-badge-survey">0</span></button>
         </div>
         <div class="admin-filters">
           <select class="admin-filter-select" id="req-filter-status" onchange="renderRequests()">
-            <option value="">전체 상태</option><option value="대기" selected>대기중</option><option value="승인">승인됨</option><option value="거절">거절됨</option>
+            <option value="">전체 상태</option><option value="대기" selected>대기중</option><option value="승인">승인됨</option><option value="거절">거절됨</option><option value="대체">대체됨(요일 조사)</option>
           </select>
           <input type="text" class="admin-search" id="req-search" placeholder="학번 또는 이름으로 검색..." oninput="renderRequests()">
           <span class="admin-result-count" id="req-count">—</span>
         </div>
         <div id="req-pane-correction"><div class="req-list" id="req-list-correction"><div class="req-empty"><span class="icon">✦</span>불러오는 중...</div></div></div>
         <div id="req-pane-daychange" style="display:none"><div class="req-list" id="req-list-daychange"><div class="req-empty"><span class="icon">✦</span>불러오는 중...</div></div></div>
+        <!-- 자습 참여 요일 조사(2026-10-16): 기간 설정 · 제출 현황 · 학생별 지금→제출 차이 승인 -->
+        <div id="req-pane-survey" style="display:none">
+          <div class="svr-period" id="svr-period"></div>
+          <div class="svr-stats" id="svr-stats"></div>
+          <div class="req-list" id="req-list-survey"><div class="req-empty"><span class="icon">✦</span>불러오는 중...</div></div>
+        </div>
       </div>
 
       <!-- 탭 5: 실시간 모니터 -->
@@ -7721,6 +7862,7 @@ function route() {
     enterSeatRequestScreen();
     return;
   }
+  if (params.get('mode') === 'survey') { enterSurveyScreen(); return; }   // 자습 참여 요일 조사(학생)
   if (params.get('mode') === 'seat-board') {
     enterSeatBoardScreen();
     return;
@@ -9654,7 +9796,7 @@ function renderStudentsTable() {
         <td class="st-cell-program">${escapeHtml(s.프로그램 || '')}</td>
         <td class="st-cell-room">${escapeHtml(s.장소 || '')}</td>
         <td><div class="row-days">${dayBtnsHtml}</div></td>
-        <td class="st-cell-status ${inactive ? 'inactive' : 'active'}">${inactive ? '비활성' : '활성'}</td>
+        <td class="st-cell-status ${inactive ? 'inactive' : 'active'}">${inactive ? '비활성' : '활성'}${s.메모 === '요일 조사' ? '<span class="st-src" title="요일 조사 승인으로 추가된 행">조사</span>' : ''}</td>
         <td class="st-cell-actions">
           <button class="admin-btn admin-btn-sm" onclick="editStudent('${escapeAttr(s.학번)}', '${escapeAttr(s.프로그램)}')">수정</button>
           ${inactive
@@ -10332,7 +10474,8 @@ function renderHistoryDetail() {
   const noRoster = !(A.students || []).some(st => targetRooms.includes(st.장소));
   const targetStudents = noRoster ? [] : (A.students || []).filter(st => {
     const came = attNos.has(String(st.학번));
-    if (!st.활성 && !came) return false;               // 비활성이라도 이 세션에 출석했으면 분모에 남긴다(전엔 '자율'로 보였다)
+    // 비활성이라도 이 세션에 출석했거나, 그만두기 전 세션이면 분모에 남긴다(그만둔 날 = inactiveFromDate)
+    if (!st.활성 && !came) { const quit = inactiveFromDate(st); if (!quit || s.날짜 >= quit) return false; }
     if (st.프로그램 !== s.프로그램) return false;
     if (!targetRooms.includes(st.장소)) return false;
     const reg = st.생성일시 ? localDateStr(st.생성일시) : null;
@@ -10917,6 +11060,21 @@ function daysOnDate(s, date, ctx) {
   return Array.isArray(s.출석요일) ? s.출석요일 : [];
 }
 
+// 비활성 행의 그만둔 날 = 비활성일시(활성 true→false 순간만 트리거가 기록, docs/2026-10-16_survey.sql).
+// 이 날부터 분모에서 뺀다(10/16 사용자 결정 D10). 열이 없던 옛 행은 수정일시로 대신한다.
+// 활성 행이면 null. 비활성인데 두 값 다 없으면 '' → 모든 날이 그 뒤 = 전부 대상 아님(예전 동작과 같음)
+function inactiveFromDate(s) {
+  if (s.활성) return null;
+  const ts = s.비활성일시 || s.수정일시;
+  return ts ? localDateStr(ts) : '';
+}
+// 기간(시작일 이후)에 한 번이라도 활성이었는가 — 분석·출석부 분모에 남길지 판단
+function activeDuring(s, periodStart) {
+  if (s.활성) return true;
+  const end = inactiveFromDate(s);
+  return !!end && !!periodStart && end > periodStart;
+}
+
 // 분모 시작일: 첫 출석일과 명단 등록일 중 이른 날. 한 번도 안 온 학생도 등록일부터 결석으로 센다.
 function analysisStartDate(s, ctx) {
   const first = ctx.firstAttByStudent[`${s.학번}|${s.프로그램}`] || null;
@@ -10936,6 +11094,8 @@ function analysisDayCell(s, date, ctx) {
   if (!startDate || date < startDate) return { state: 'preStart' };
   const rec = ctx.attMap[`${s.학번}|${s.프로그램}|${date}`];
   if (rec) return { state: 'attended', late: !!rec.사후여부, rec: rec };
+  const quit = inactiveFromDate(s);
+  if (quit !== null && date >= quit) return { state: 'notTarget' };   // 그만둔 날부터는 결석으로 세지 않음
   return { state: 'absent' };
 }
 
@@ -10965,7 +11125,9 @@ function renderAnalysis() {
 
   // 분모 학생: 활성 학생 + 기간 중 출석 기록이 있는 비활성(전출 등) 학생 — 출석부 엑셀과 같은 규칙(리뷰 #9)
   const _attKeys = new Set((A.analysisAttendance || []).map(a => a.학번 + '|' + a.프로그램));
-  let students = (A.students || []).filter(s => s.활성 || _attKeys.has(s.학번 + '|' + s.프로그램));
+  // + 기간 안에 그만둔 학생은 그만둔 날 전까지 분모에 남긴다(inactiveFromDate)
+  const _pStart = (A.analysisDates || [])[0];
+  let students = (A.students || []).filter(s => activeDuring(s, _pStart) || _attKeys.has(s.학번 + '|' + s.프로그램));
   if (filterProg) students = students.filter(s => s.프로그램 === filterProg);
   if (filterRoom) students = students.filter(s => s.장소 === filterRoom);
   if (filterGrade) students = students.filter(s => String(s.학번)[0] === filterGrade);
@@ -11054,7 +11216,7 @@ function renderAnalysis() {
       </div>
     </div>
     <div class="anal-rule">
-      출석률 = 출석 ÷ 대상일. 대상일은 그 프로그램·장소에 세션이 열린 날 중 학생의 출석 요일이고, 명단 등록일(또는 첫 출석일) 이전은 뺍니다.
+      출석률 = 출석 ÷ 대상일. 대상일은 그 프로그램·장소에 세션이 열린 날 중 학생의 출석 요일이고, 명단 등록일(또는 첫 출석일) 이전과 그만둔 날(비활성 처리일)부터는 뺍니다.
       표기: O 출석 · ◎ 사후 출석 · X 결석 · - 대상 아님 · 빈칸 세션 없음
     </div>
   `;
@@ -11210,7 +11372,8 @@ function exportAnalysisXlsx() {
 
   // 분모 학생 (필터 적용). 기간 중 출석 기록이 있는 비활성(전출 등) 학생도 출석부에 남긴다.
   const attendedKeys = new Set(filteredAtt.map(a => a.학번 + '|' + a.프로그램));
-  let students = (A.students || []).filter(s => s.활성 || attendedKeys.has(s.학번 + '|' + s.프로그램));
+  const _pStart = (A.analysisDates || [])[0];   // 기간 안에 그만둔 학생도 그만둔 날 전까지 남김(분석과 같은 규칙)
+  let students = (A.students || []).filter(s => activeDuring(s, _pStart) || attendedKeys.has(s.학번 + '|' + s.프로그램));
   if (filterProg) students = students.filter(s => s.프로그램 === filterProg);
   if (filterRoom) students = students.filter(s => s.장소 === filterRoom);
   if (filterGrade) students = students.filter(s => String(s.학번)[0] === filterGrade);
@@ -12355,21 +12518,23 @@ async function runDiagnostics() {
 }
 
 
-const RQ={loaded:false,corrections:[],dayChanges:[],currentSubTab:'correction',rejectTarget:null,rejectReason:''};
-async function loadRequests(){try{const r=await sb.requests.list();RQ.corrections=r.corrections||[];RQ.dayChanges=r.dayChanges||[];RQ.loaded=true;updateReqBadges();renderRequests();}catch(e){console.error(e);showAdminToast('요청 로딩 실패: '+(e.message||'오류'),'err');}}
-function updateReqBadges(){const pC=RQ.corrections.filter(r=>r.처리상태==='대기').length;const pD=RQ.dayChanges.filter(r=>r.처리상태==='대기').length;const bC=document.getElementById('req-badge-correction');const bD=document.getElementById('req-badge-daychange');if(bC){bC.textContent=pC;bC.className='badge'+(pC>0?' pending':' zero');}if(bD){bD.textContent=pD;bD.className='badge'+(pD>0?' pending':' zero');}const bb=document.getElementById('req-bulk-approve');if(bb){const cur=RQ.currentSubTab==='daychange'?pD:pC;bb.style.display=cur>0?'':'none';bb.textContent=(RQ.currentSubTab==='daychange'?'요일 변경':'수정')+' 요청 '+cur+'건 모두 승인';}const nb=document.getElementById('nav-req-badge');if(nb){const t=pC+pD;nb.textContent=t;nb.style.display=t>0?'':'none';nb.title='대기 중인 요청 '+t+'건';}}
-function switchReqSubTab(t){RQ.currentSubTab=t;document.querySelectorAll('.req-sub-tab').forEach(b=>b.classList.toggle('on',b.dataset.reqtab===t));document.getElementById('req-pane-correction').style.display=t==='correction'?'block':'none';document.getElementById('req-pane-daychange').style.display=t==='daychange'?'block':'none';updateReqBadges();renderRequests();}
-function renderRequests(){const fs=document.getElementById('req-filter-status').value;const sr=document.getElementById('req-search').value.trim().toLowerCase();if(RQ.currentSubTab==='correction')renderCorrReqs(fs,sr);else renderDayReqs(fs,sr);}
+const RQ={loaded:false,corrections:[],dayChanges:[],surveys:[],surveyPeriods:[],currentSubTab:'correction',rejectTarget:null,rejectReason:''};
+// 요일 변경 요청 목록에서는 요일 조사 승인 때 자동으로 남긴 이력 행(사유 '요일 조사')을 뺀다 — 분석 이력(ensureDayChangeHist)은 그대로 읽는다
+async function loadRequests(){try{const r=await sb.requests.list();RQ.corrections=r.corrections||[];RQ.dayChanges=(r.dayChanges||[]).filter(x=>!(x.사유==='요일 조사'&&x.처리상태==='승인'&&/^요일 조사 #\d+$/.test(x.교사메모||'')));await svrLoad();RQ.loaded=true;updateReqBadges();renderRequests();}catch(e){console.error(e);showAdminToast('요청 로딩 실패: '+(e.message||'오류'),'err');}}
+function updateReqBadges(){const pC=RQ.corrections.filter(r=>r.처리상태==='대기').length;const pD=RQ.dayChanges.filter(r=>r.처리상태==='대기').length;const pS=RQ.surveys.filter(r=>r.처리상태==='대기').length;const bC=document.getElementById('req-badge-correction');const bD=document.getElementById('req-badge-daychange');const bS=document.getElementById('req-badge-survey');if(bC){bC.textContent=pC;bC.className='badge'+(pC>0?' pending':' zero');}if(bD){bD.textContent=pD;bD.className='badge'+(pD>0?' pending':' zero');}if(bS){bS.textContent=pS;bS.className='badge'+(pS>0?' pending':' zero');}const bb=document.getElementById('req-bulk-approve');if(bb){if(RQ.currentSubTab==='survey'){const n=svrBulkTargets().length;bb.style.display=n>0?'':'none';bb.textContent='요일 조사 '+n+'건 모두 승인';}else{const cur=RQ.currentSubTab==='daychange'?pD:pC;bb.style.display=cur>0?'':'none';bb.textContent=(RQ.currentSubTab==='daychange'?'요일 변경':'수정')+' 요청 '+cur+'건 모두 승인';}}const nb=document.getElementById('nav-req-badge');if(nb){const t=pC+pD+pS;nb.textContent=t;nb.style.display=t>0?'':'none';nb.title='대기 중인 요청 '+t+'건';}}
+function switchReqSubTab(t){RQ.currentSubTab=t;document.querySelectorAll('.req-sub-tab').forEach(b=>b.classList.toggle('on',b.dataset.reqtab===t));['correction','daychange','survey'].forEach(k=>{const p=document.getElementById('req-pane-'+k);if(p)p.style.display=t===k?'block':'none';});updateReqBadges();renderRequests();}
+function renderRequests(){const fs=document.getElementById('req-filter-status').value;const sr=document.getElementById('req-search').value.trim().toLowerCase();if(RQ.currentSubTab==='correction')renderCorrReqs(fs,sr);else if(RQ.currentSubTab==='survey')renderSurveyReqs(fs,sr);else renderDayReqs(fs,sr);}
 function _filt(items,fs,sr){let r=items;if(fs)r=r.filter(x=>x.처리상태===fs);if(sr)r=r.filter(x=>String(x.학번||'').includes(sr)||(x.이름||'').toLowerCase().includes(sr));r.sort((a,b)=>{const ap=a.처리상태==='대기'?0:1;const bp=b.처리상태==='대기'?0:1;if(ap!==bp)return ap-bp;return(b.요청일시||'').localeCompare(a.요청일시||'');});return r;}
 function _fmtRD(s){if(!s)return'—';try{const d=new Date(s);return(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}catch(e){return'—';}}
-function _statCls(s){return s==='대기'?'pending':s==='승인'?'approved':'rejected';}
-function _statTxt(s){return s==='대기'?'대기중':s==='승인'?'승인됨':'거절됨';}
+function _statCls(s){return s==='대기'?'pending':s==='승인'?'approved':s==='대체'?'replaced':'rejected';}
+function _statTxt(s){return s==='대기'?'대기중':s==='승인'?'승인됨':s==='대체'?'대체됨':'거절됨';}
 function _hdr(r){const sc=_statCls(r.처리상태);return '<div class="req-card-top"><div class="req-status-badge '+sc+'"><span class="dot"></span>'+_statTxt(r.처리상태)+'</div><div class="req-student-info"><div class="req-student-name">'+escapeHtml(r.이름||'')+'</div><div class="req-student-no">'+escapeHtml(r.학번)+' · '+escapeHtml(r.프로그램||'')+' · '+escapeHtml(r.장소||'')+'</div></div><div class="req-time">'+_fmtRD(r.요청일시)+'</div></div>';}
 function _note(r){if(r.처리상태==='대기'||!r.교사메모)return'';return '<div class="req-teacher-note"><span class="note-label">'+(r.처리상태==='승인'?'승인':'거절')+' 사유:</span>'+escapeHtml(r.교사메모)+'</div>';}
 function renderCorrReqs(fs,sr){const c=document.getElementById('req-list-correction');if(!c)return;const items=_filt(RQ.corrections,fs,sr);document.getElementById('req-count').textContent=items.length+'건';if(!items.length){c.innerHTML='<div class="req-empty"><span class="icon">✦</span>'+(fs==='대기'?'대기 중인 수정 요청이 없어요':'조건에 맞는 요청이 없어요')+'</div>';return;}c.innerHTML=items.map(r=>{const sc=_statCls(r.처리상태);let act='';if(r.처리상태==='대기')act='<div class="req-card-actions"><button class="admin-btn success" onclick="approveCorrection('+r.id+')">승인</button><button class="admin-btn danger" onclick="openRejectModal(&#39;correction&#39;,'+r.id+',&#39;'+escapeAttr(r.이름||'')+'&#39;,&#39;'+escapeAttr(r.학번)+'&#39;)">거절</button></div>';return '<div class="req-card '+sc+'">'+_hdr(r)+'<div class="req-card-body"><div class="req-detail-row"><span class="req-detail-label">대상 날짜</span><span class="req-detail-value highlight">'+(r.대상날짜||'—')+'</span></div><div class="req-detail-row"><span class="req-detail-label">변경 요청</span><span class="req-detail-value from-to"><span>'+escapeHtml(r.현재상태||'결석')+'</span><span class="arrow-icon">→</span><span style="color:var(--sage);font-weight:500">'+escapeHtml(r.요청상태||'출석')+'</span></span></div><div class="req-detail-row"><span class="req-detail-label">사유</span><span class="req-detail-value req-reason">'+escapeHtml(r.사유||'—')+'</span></div>'+(r.상세?'<div class="req-detail-row"><span class="req-detail-label">상세</span><span class="req-detail-value">'+escapeHtml(r.상세)+'</span></div>':'')+'</div>'+_note(r)+act+'</div>';}).join('');}
 function renderDayReqs(fs,sr){const c=document.getElementById('req-list-daychange');if(!c)return;const items=_filt(RQ.dayChanges,fs,sr);document.getElementById('req-count').textContent=items.length+'건';if(!items.length){c.innerHTML='<div class="req-empty"><span class="icon">✦</span>'+(fs==='대기'?'대기 중인 요일 변경 요청이 없어요':'조건에 맞는 요청이 없어요')+'</div>';return;}const ad=['월','화','수','목','금','토','일'];const mb=(ds)=>ad.map(d=>{const o=ds.includes(d);const w=d==='토'||d==='일';return '<span class="req-day-badge '+(o?'on':'off')+(w&&o?' weekend':'')+'">'+d+'</span>';}).join('');c.innerHTML=items.map(r=>{const sc=_statCls(r.처리상태);const cd=Array.isArray(r.현재요일)?r.현재요일:[];const rd=Array.isArray(r.요청요일)?r.요청요일:[];let act='';if(r.처리상태==='대기')act='<div class="req-card-actions"><button class="admin-btn success" onclick="approveDayChange('+r.id+')">승인</button><button class="admin-btn danger" onclick="openRejectModal(&#39;daychange&#39;,'+r.id+',&#39;'+escapeAttr(r.이름||'')+'&#39;,&#39;'+escapeAttr(r.학번)+'&#39;)">거절</button></div>';return '<div class="req-card '+sc+'">'+_hdr(r)+'<div class="req-card-body"><div class="req-detail-row"><span class="req-detail-label">현재 요일</span><span class="req-detail-value"><div class="req-day-badges">'+mb(cd)+'</div></span></div><div class="req-detail-row"><span class="req-detail-label">요청 요일</span><span class="req-detail-value"><div class="req-day-badges">'+mb(rd)+'</div></span></div><div class="req-detail-row"><span class="req-detail-label">사유</span><span class="req-detail-value req-reason">'+escapeHtml(r.사유||'—')+'</span></div></div>'+_note(r)+act+'</div>';}).join('');}
 // 지금 보고 있는 하위 탭의 대기 요청을 한 번에 승인(주간 정리에서 건마다 누르고 목록을 다시 읽던 부담, 리뷰 A7)
 async function bulkApproveRequests() {
+  if (RQ.currentSubTab === 'survey') return svrBulkApprove();
   const isDay = RQ.currentSubTab === 'daychange';
   const items = (isDay ? RQ.dayChanges : RQ.corrections).filter(r => r.처리상태 === '대기')
     .slice().sort((a, b) => String(a.요청일시 || '').localeCompare(String(b.요청일시 || '')));   // 오래된 것부터
@@ -12403,8 +12568,228 @@ async function approveDayChange(id){try{await sb.requests.approveDayChange(id,''
 function openRejectModal(t,id,n,no){RQ.rejectTarget={type:t,id:id};RQ.rejectReason='';document.getElementById('reject-modal-info').textContent=n+' ('+no+')';document.getElementById('reject-err').textContent='';document.getElementById('reject-custom-input').value='';document.getElementById('reject-custom-wrap').classList.remove('on');document.querySelectorAll('#reject-reasons .reject-reason-btn').forEach(b=>b.classList.remove('on'));document.getElementById('modal-reject').classList.add('on');}
 function closeRejectModal(){document.getElementById('modal-reject').classList.remove('on');RQ.rejectTarget=null;}
 function selectRejectReason(b){document.querySelectorAll('#reject-reasons .reject-reason-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');const r=b.dataset.reason;if(r==='custom'){RQ.rejectReason='';document.getElementById('reject-custom-wrap').classList.add('on');setTimeout(()=>document.getElementById('reject-custom-input').focus(),100);}else{RQ.rejectReason=r;document.getElementById('reject-custom-wrap').classList.remove('on');}}
-async function confirmReject(){if(!RQ.rejectTarget)return;const cw=document.getElementById('reject-custom-wrap');if(cw.classList.contains('on'))RQ.rejectReason=document.getElementById('reject-custom-input').value.trim();if(!RQ.rejectReason){document.getElementById('reject-err').textContent='거절 사유를 선택해주세요';return;}const b=document.getElementById('reject-confirm-btn');b.disabled=true;b.textContent='처리 중...';try{await sb.requests.reject(RQ.rejectTarget.type,RQ.rejectTarget.id,RQ.rejectReason);closeRejectModal();showAdminToast('요청이 거절됐어요','ok');await loadRequests();}catch(e){document.getElementById('reject-err').textContent='실패: '+(e.message||'오류');}finally{b.disabled=false;b.textContent='거절';}}
+async function confirmReject(){if(!RQ.rejectTarget)return;const cw=document.getElementById('reject-custom-wrap');if(cw.classList.contains('on'))RQ.rejectReason=document.getElementById('reject-custom-input').value.trim();if(!RQ.rejectReason){document.getElementById('reject-err').textContent='거절 사유를 선택해주세요';return;}const b=document.getElementById('reject-confirm-btn');b.disabled=true;b.textContent='처리 중...';try{if(RQ.rejectTarget.type==='survey')await svrReject(RQ.rejectTarget.id,RQ.rejectReason);else await sb.requests.reject(RQ.rejectTarget.type,RQ.rejectTarget.id,RQ.rejectReason);closeRejectModal();showAdminToast('요청이 거절됐어요','ok');await loadRequests();}catch(e){document.getElementById('reject-err').textContent='실패: '+(e.message||'오류');}finally{b.disabled=false;b.textContent='거절';}}
 document.getElementById('modal-reject').addEventListener('click',(e)=>{if(e.target.id==='modal-reject')closeRejectModal();});
+
+// ══════════════════════════════════════════════════════════════
+//  요청 관리 › 요일 조사 (2026-10-16)
+//  학생 제출(survey_responses) ↔ 지금 명단(A.students) 차이를 보여 주고 admin_survey_approve 로 반영.
+//  승인 뒤 무효화 순서는 approveDayChange 와 같다(기록·분석 캐시 → 명단 캐시 → 명단 다시 읽기 → 요청 다시 읽기).
+// ══════════════════════════════════════════════════════════════
+const SVR_PROGS = ['방과후 독서시간', '야간 독서시간', '심야 독서시간', '토요일 독서시간', '일요일 독서시간'];
+const SVR_ROOMS = ['아우름', '교과1실', '해오름', '리케이온'];
+
+async function svrLoad() {
+  try {
+    const [p, rows] = await Promise.all([
+      sb.client().from('survey_periods').select('*').order('id', { ascending: false }),
+      fetchAllRows(() => sb.client().from('survey_responses').select('*').order('id', { ascending: true })),
+    ]);
+    if (p.error) throw p.error;
+    RQ.surveyPeriods = p.data || []; RQ.periodStale = true;   // 서버 값이 바뀐 때만 기간 칸을 다시 그린다
+    // 공통 목록 함수(_filt·_hdr)가 쓰는 요청일시 이름으로 맞춘다
+    RQ.surveys = (rows || []).map(r => ({ ...r, 요청일시: r.제출일시 }));
+  } catch (e) {
+    // migration 전이거나 권한 문제여도 기존 요청 탭은 살린다
+    console.warn('[survey] 불러오기 실패', e);
+    RQ.surveyPeriods = []; RQ.surveys = []; RQ.periodStale = true;
+  }
+}
+
+function svrSet(a, b) { const x = a || [], y = b || []; return x.length === y.length && x.every(d => y.includes(d)); }
+function svrCur(no, prog) { return (A.students || []).find(s => String(s.학번) === String(no) && s.프로그램 === prog) || null; }
+// 새 참여 행의 기본 장소 — SQL survey_default_room 과 같은 규칙(계획서 §4-1)
+function svrDefaultRoom(no, prog) {
+  const own = svrCur(no, prog); if (own) return own.장소;
+  if (prog === '방과후 독서시간') { const y = svrCur(no, '야간 독서시간'); return y ? y.장소 : null; }
+  if (prog === '야간 독서시간') { const b = svrCur(no, '방과후 독서시간'); return b ? b.장소 : null; }
+  return '리케이온';   // 심야·토요일·일요일
+}
+// 한 제출의 프로그램별 차이: kind = 추가|재참여|요일|그만둠|같음|안 함
+function svrDiff(r) {
+  return Object.keys(r.응답 || {}).sort((a, b) => SVR_PROGS.indexOf(a) - SVR_PROGS.indexOf(b)).map(prog => {
+    const ans = r.응답[prog];
+    const cur = svrCur(r.학번, prog);
+    const curOn = !!(cur && cur.활성);
+    const curDays = cur && Array.isArray(cur.출석요일) ? cur.출석요일 : [];
+    let kind;
+    if (ans === null) kind = curOn ? '그만둠' : '안 함';
+    else if (!cur) kind = '추가';
+    else if (!cur.활성) kind = '재참여';
+    else kind = (svrSet(curDays, ans) || prog === '토요일 독서시간' || prog === '일요일 독서시간') ? '같음' : '요일';   // 토·일은 요일 고정(SQL 과 같음)
+    const room = kind === '추가' ? svrDefaultRoom(r.학번, prog) : (cur ? cur.장소 : null);
+    return { prog, ans, cur, curOn, curDays, kind, room };
+  });
+}
+function svrNeedsRoom(r) { return svrDiff(r).some(d => d.kind === '추가' && !d.room); }
+function svrBulkTargets() { return RQ.surveys.filter(r => r.처리상태 === '대기' && !svrNeedsRoom(r)); }
+function svrDaysTxt(d) { return d && d.length ? d.join('·') : '매일'; }
+
+function svrOpenPeriod() { return RQ.surveyPeriods.find(p => p.상태 === 'open') || null; }
+
+function renderSurveyPeriod() {
+  const el = document.getElementById('svr-period'); if (!el) return;
+  const p = svrOpenPeriod() || RQ.surveyPeriods[0] || null;
+  const toLocal = ts => { if (!ts) return ''; const d = new Date(ts); const z = n => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + 'T' + z(d.getHours()) + ':' + z(d.getMinutes()); };
+  const grades = p ? p.대상학년 : [1, 2];
+  const progs = p ? p.대상프로그램 : SVR_PROGS;
+  const state = p ? p.상태 : 'open';
+  el.innerHTML =
+    '<div class="svr-period-head"><span class="svr-period-title">조사 기간</span>' +
+    '<span class="svr-state ' + (p && p.상태 === 'open' && new Date(p.마감) > new Date() ? 'on' : 'off') + '">' +
+    (p ? (p.상태 === 'open' ? (new Date(p.마감) > new Date() ? '받는 중' : '마감 지남') : '닫힘') : '기간 없음') + '</span></div>' +
+    '<div class="svr-form">' +
+    '<label class="svr-f wide">제목<input type="text" id="svr-p-title" aria-label="조사 제목" maxlength="60" value="' + escapeHtml(p ? p.제목 : '자습 참여 요일 조사') + '"></label>' +
+    '<label class="svr-f">마감<input type="datetime-local" id="svr-p-end" aria-label="조사 마감" value="' + (p ? toLocal(p.마감) : '') + '"></label>' +
+    '<label class="svr-f">상태<select id="svr-p-state"><option value="open"' + (state === 'open' ? ' selected' : '') + '>받음</option><option value="closed"' + (state === 'closed' ? ' selected' : '') + '>닫음</option></select></label>' +
+    '<fieldset class="svr-f"><legend>학년</legend>' + [1, 2, 3].map(g => '<label class="svr-chk"><input type="checkbox" class="svr-p-grade" aria-label="' + g + '학년" value="' + g + '"' + (grades.includes(g) ? ' checked' : '') + '>' + g + '</label>').join('') + '</fieldset>' +
+    '<fieldset class="svr-f wide"><legend>프로그램</legend>' + SVR_PROGS.map(pg => '<label class="svr-chk"><input type="checkbox" class="svr-p-prog" aria-label="' + escapeHtml(pg) + '" value="' + escapeHtml(pg) + '"' + (progs.includes(pg) ? ' checked' : '') + '>' + escapeHtml(pg.replace(' 독서시간', '')) + '</label>').join('') + '</fieldset>' +
+    '<div class="svr-f-actions"><button class="admin-btn primary" onclick="svrSavePeriod(' + (p ? p.id : 'null') + ')">저장</button>' +
+    (p ? '<button class="admin-btn" onclick="svrSavePeriod(null)">새 기간으로 저장</button>' : '') +
+    '<a class="admin-btn" href="./?mode=survey" target="_blank" rel="noopener">학생 화면</a></div>' +
+    '</div>';
+}
+
+function renderSurveyStats() {
+  const el = document.getElementById('svr-stats'); if (!el) return;
+  const p = svrOpenPeriod() || RQ.surveyPeriods[0] || null;
+  if (!p) { el.innerHTML = ''; return; }
+  // 대상 = 명단에 학번 줄이 있는(비활성 포함, survey_verify 와 같음) 대상 학년 학생
+  const target = new Set((A.students || []).filter(s => p.대상학년.includes(parseInt(String(s.학번)[0], 10))).map(s => String(s.학번)));
+  const mine = RQ.surveys.filter(r => r.period_id === p.id && r.처리상태 !== '대체');
+  const submitted = new Set(mine.map(r => String(r.학번)));
+  const missing = [...target].filter(no => !submitted.has(no)).sort();
+  const cnt = st => mine.filter(r => r.처리상태 === st).length;
+  RQ.surveyMissing = missing;
+  el.innerHTML =
+    '<span>대상 <strong>' + target.size + '</strong></span><span>제출 <strong>' + submitted.size + '</strong></span>' +
+    '<span>미제출 <strong>' + missing.length + '</strong></span><span>대기 <strong>' + cnt('대기') + '</strong></span>' +
+    '<span>승인 <strong>' + cnt('승인') + '</strong></span><span>거절 <strong>' + cnt('거절') + '</strong></span>' +
+    (missing.length ? '<button class="admin-btn admin-btn-sm" onclick="svrCopyMissing()">미제출 학번 복사</button>' : '');
+}
+
+async function svrCopyMissing() {
+  const list = (RQ.surveyMissing || []).join('\n');
+  try { await navigator.clipboard.writeText(list); showAdminToast('미제출 ' + RQ.surveyMissing.length + '명 학번 복사', 'ok'); }
+  catch (e) { showAdminToast('복사 실패', 'err'); }
+}
+
+function renderSurveyReqs(fs, sr) {
+  // 검색·필터 입력마다 기간 칸을 다시 그리면 저장 전 입력이 지워진다 → 서버에서 새로 읽었을 때만
+  if (RQ.periodStale !== false) { renderSurveyPeriod(); RQ.periodStale = false; }
+  const c = document.getElementById('req-list-survey'); if (!c) return;
+  if (!A.studentsLoaded) {
+    document.getElementById('svr-stats').innerHTML = '';
+    c.innerHTML = '<div class="req-empty"><span class="icon">✦</span>명단 불러오는 중</div>';
+    loadAllStudents().then(() => { if (A.studentsLoaded && RQ.currentSubTab === 'survey') renderRequests(); });
+    return;
+  }
+  renderSurveyStats();
+  const keep = {};   // 다시 그려도 고른 새 참여 장소는 유지
+  c.querySelectorAll('.svr-room-sel').forEach(s => { keep[s.id] = s.value; });
+  // 전체 상태에서도 '대체'(같은 학생이 다시 낸 앞 제출)는 숨긴다 — 상태 「대체됨」을 고르면 보인다
+  const items = _filt(RQ.surveys, fs, sr).filter(r => fs === '대체' || r.처리상태 !== '대체');
+  document.getElementById('req-count').textContent = items.length + '건';
+  if (!items.length) { c.innerHTML = '<div class="req-empty"><span class="icon">✦</span>' + (fs === '대기' ? '대기 중인 제출 없음' : '조건에 맞는 제출 없음') + '</div>'; return; }
+  c.innerHTML = items.map(r => {
+    const sc = _statCls(r.처리상태);
+    let body;
+    if (r.처리상태 === '대기') {
+      body = svrDiff(r).map((d, i) => {
+        const now = d.cur ? (d.curOn ? svrDaysTxt(d.curDays) : '그만둠') : '없음';
+        const next = d.ans === null ? '안 함' : svrDaysTxt(d.ans);
+        let roomHtml = d.room ? '<span class="svr-room">' + escapeHtml(d.room) + '</span>' : '';
+        if (d.kind === '추가') {
+          roomHtml = '<select class="svr-room-sel" id="svr-room-' + r.id + '-' + i + '" data-prog="' + escapeHtml(d.prog) + '" aria-label="새 참여 장소 ' + escapeHtml(d.prog) + '">' +
+            '<option value="">장소 선택</option>' + SVR_ROOMS.map(rm => '<option' + (rm === d.room ? ' selected' : '') + '>' + rm + '</option>').join('') + '</select>';
+        }
+        return '<div class="req-detail-row svr-row k-' + d.kind.replace(' ', '') + '"><span class="req-detail-label">' + escapeHtml(d.prog.replace(' 독서시간', '')) + '</span>' +
+          '<span class="req-detail-value">' + (d.kind === '같음' || d.kind === '안 함' ? '<span class="svr-same">' + escapeHtml(next) + ' · 변경 없음</span>'
+            : '<span class="svr-from">' + escapeHtml(now) + '</span><span class="arrow-icon">→</span><span class="svr-to">' + escapeHtml(next) + '</span><span class="svr-kind">' + d.kind + '</span>') +
+          roomHtml + '</span></div>';
+      }).join('');
+    } else {
+      // 처리된 건: 서버가 실제로 바꾼 기록(처리내용)
+      const done = Array.isArray(r.처리내용) ? r.처리내용 : [];
+      body = done.length ? done.map(d => '<div class="req-detail-row"><span class="req-detail-label">' + escapeHtml(String(d.프로그램 || '').replace(' 독서시간', '')) + '</span><span class="req-detail-value">' +
+        escapeHtml(d.처리 || '') + (d.요일 ? ' · ' + escapeHtml(svrDaysTxt(d.요일)) : '') + (d.장소 ? ' · ' + escapeHtml(d.장소) : '') + '</span></div>').join('')
+        : '<div class="req-detail-row"><span class="req-detail-value svr-same">' + (r.처리상태 === '승인' ? '바뀐 것 없음' : '반영 안 함') + '</span></div>';
+    }
+    const act = r.처리상태 === '대기' ? '<div class="req-card-actions"><button class="admin-btn success" onclick="svrApprove(' + r.id + ')">승인</button>' +
+      '<button class="admin-btn danger" onclick="openRejectModal(&#39;survey&#39;,' + r.id + ',&#39;' + escapeAttr(r.이름 || '') + '&#39;,&#39;' + escapeAttr(r.학번) + '&#39;)">거절</button></div>' : '';
+    return '<div class="req-card ' + sc + '" id="svr-card-' + r.id + '">' +
+      '<div class="req-card-top"><div class="req-status-badge ' + sc + '"><span class="dot"></span>' + _statTxt(r.처리상태) + '</div>' +
+      '<div class="req-student-info"><div class="req-student-name">' + escapeHtml(r.이름 || '') + '</div><div class="req-student-no">' + escapeHtml(r.학번) + ' · 요일 조사</div></div>' +
+      '<div class="req-time">' + _fmtRD(r.제출일시) + '</div></div>' +
+      '<div class="req-card-body">' + body + '</div>' + _note(r) + act + '</div>';
+  }).join('');
+  Object.keys(keep).forEach(id => { const s = document.getElementById(id); if (s && keep[id]) s.value = keep[id]; });
+}
+
+async function svrSavePeriod(id) {
+  const title = document.getElementById('svr-p-title').value.trim();
+  const end = document.getElementById('svr-p-end').value;
+  const state = document.getElementById('svr-p-state').value;
+  const grades = [...document.querySelectorAll('.svr-p-grade:checked')].map(x => parseInt(x.value, 10));
+  const progs = [...document.querySelectorAll('.svr-p-prog:checked')].map(x => x.value);
+  if (!title || !end || !grades.length || !progs.length) { showAdminToast('제목·마감·학년·프로그램 입력', 'err'); return; }
+  try {
+    const data = await sb.settings.adminRpc('admin_survey_period_save', {
+      p_id: id, p_title: title, p_end: new Date(end).toISOString(), p_grades: grades, p_programs: progs, p_state: state });
+    if (data && data.ok === false) throw new Error(data.msg || '저장 실패');
+    showAdminToast('조사 기간 저장', 'ok');
+    await loadRequests();
+  } catch (e) { showAdminToast('저장 실패: ' + (e.message || '오류'), 'err'); }
+}
+
+// 승인 1건. rooms = 새 참여 프로그램의 장소(카드의 선택 상자)
+async function svrApproveOne(id, rooms) {
+  const data = await sb.settings.adminRpc('admin_survey_approve', { p_id: id, p_rooms: rooms || {}, p_note: '' });
+  if (data && data.ok === false) throw new Error(data.msg || '승인 실패');
+  return data;
+}
+async function svrAfterApprove() {
+  invalidateAttendanceViews();
+  sb.invalidateCache('students');
+  await loadAllStudents();
+  await loadRequests();
+}
+async function svrApprove(id) {
+  const card = document.getElementById('svr-card-' + id);
+  const rooms = {};
+  let missing = false;
+  (card ? card.querySelectorAll('.svr-room-sel') : []).forEach(sel => { if (!sel.value) missing = true; else rooms[sel.dataset.prog] = sel.value; });
+  if (missing) { showAdminToast('새 참여 장소 선택', 'err'); return; }
+  try {
+    await svrApproveOne(id, rooms);
+    try { TLOG.log('audit_survey_approve', { id }); } catch (_) {}
+    showAdminToast('요일 조사 승인 · 명단 반영', 'ok');
+    await svrAfterApprove();
+  } catch (e) { showAdminToast('승인 실패: ' + (e.message || '오류'), 'err'); }
+}
+// 일괄 승인: 장소를 고를 필요가 없는 대기 건만, 오래된 것부터
+async function svrBulkApprove() {
+  const items = svrBulkTargets().slice().sort((a, b) => String(a.제출일시 || '').localeCompare(String(b.제출일시 || '')));
+  if (!items.length) return;
+  const skipped = RQ.surveys.filter(r => r.처리상태 === '대기').length - items.length;
+  if (!confirm('요일 조사 ' + items.length + '건 모두 승인' + (skipped ? '\n(장소 선택이 필요한 ' + skipped + '건은 제외)' : '') + '\n명단에 바로 반영됩니다.')) return;
+  const btn = document.getElementById('req-bulk-approve');
+  btn.disabled = true;
+  let done = 0, fail = 0;
+  for (const r of items) {
+    try { await svrApproveOne(r.id, {}); done++; }
+    catch (e) { fail++; if (e && e.authExpired) break; }
+  }
+  btn.disabled = false;
+  try { TLOG.log('audit_bulk_approve', { kind: 'survey', done, fail }); } catch (_) {}
+  await svrAfterApprove();
+  showAdminToast(done + '건 승인' + (fail ? ', ' + fail + '건 실패' : ''), fail ? 'warn' : 'ok');
+}
+async function svrReject(id, note) {
+  const data = await sb.settings.adminRpc('admin_survey_reject', { p_id: id, p_note: note || '' });
+  if (data && data.ok === false) throw new Error(data.msg || '거절 실패');
+}
 
 
 
@@ -15070,6 +15455,215 @@ function srUpdateSubmitState() {
   info.innerHTML = '선택: <strong>' + SR.pickedRoom + ' ' + SR.pickedSeat + '번</strong> · 현재 신청 ' +
     '<strong style="color:' + (count > 0 ? 'var(--copper)' : 'var(--sage)') + '">' + count + '명</strong>';
   info.classList.add('has-pick');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  자습 참여 요일 조사 (학생, ?mode=survey, 2026-10-16)
+//  기간 확인(survey_open) → 학번·이름(survey_me) → 프로그램별 참여·요일 → 확인 → survey_submit
+//  서버가 기간·학년·요일 규칙을 다시 검사한다. 반영은 관리자 승인 뒤.
+// ══════════════════════════════════════════════════════════════
+const SV_WEEKDAYS = ['월', '화', '수', '목', '금'];
+const SV_FIXED = { '토요일 독서시간': '토', '일요일 독서시간': '일' };
+const SV = { period: null, no: '', name: '', roster: {}, pending: null, ans: {} };
+
+function svShow(id) {
+  ['sv-identify', 'sv-form', 'sv-confirm', 'sv-done', 'sv-closed'].forEach(k => {
+    document.getElementById(k).style.display = k === id ? 'block' : 'none';
+  });
+  window.scrollTo(0, 0);
+}
+function svClosed(msg) { document.getElementById('sv-closed-msg').textContent = msg; svShow('sv-closed'); }
+function svFmtEnd(ts) {
+  const d = new Date(ts);
+  return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+// 명단의 빈 요일 = 매일 대상(교사 명단 규칙). 조사에서는 요일을 다시 고르게 한다(D3)
+function svDaysText(days) { return days && days.length ? days.join('·') : '요일 미지정(매일)'; }
+// 지금 명단 → 같은 모양의 답(null = 안 함). 비활성·행 없음 = 안 함
+function svNowAnswer(prog) {
+  const r = SV.roster[prog];
+  if (!r || !r.활성) return null;
+  return SV_FIXED[prog] ? [SV_FIXED[prog]] : (Array.isArray(r.요일) ? r.요일.slice() : []);
+}
+function svSame(a, b) {
+  if (a === null || b === null) return a === b;
+  return a.length === b.length && a.every(d => b.includes(d));
+}
+function svCardOk(prog) {
+  const v = SV.ans[prog];
+  return v === null || (Array.isArray(v) && v.length > 0);
+}
+
+async function enterSurveyScreen() {
+  showScreen('screen-survey');
+  svClosed('불러오는 중');
+  try {
+    const { data, error } = await sb.client().rpc('survey_open');
+    if (error) throw error;
+    if (!data || !data.ok) { svClosed('조사 기간 아님'); return; }
+    SV.period = data;
+    document.getElementById('sv-period-line').textContent =
+      data.대상학년.join('·') + '학년 · ' + svFmtEnd(data.마감) + '까지';
+    document.getElementById('sv-no').value = '';
+    document.getElementById('sv-name').value = '';
+    document.getElementById('sv-id-err').textContent = '';
+    svIdOnInput();
+    svShow('sv-identify');
+    setTimeout(() => document.getElementById('sv-no').focus(), 150);
+  } catch (e) {
+    console.error('[survey] open', e);
+    svClosed('불러오기 실패 · 새로고침');
+  }
+}
+
+function svIdOnInput() {
+  const no = document.getElementById('sv-no').value.trim();
+  const name = document.getElementById('sv-name').value.trim();
+  document.getElementById('sv-id-btn').disabled = !(/^\d{5}$/.test(no) && name.length >= 2);
+  document.getElementById('sv-id-err').textContent = '';
+}
+
+async function svIdSubmit() {
+  const no = document.getElementById('sv-no').value.trim();
+  const name = document.getElementById('sv-name').value.trim();
+  const btn = document.getElementById('sv-id-btn');
+  const err = document.getElementById('sv-id-err');
+  if (btn.disabled || !/^\d{5}$/.test(no) || name.length < 2) return;   // Enter 연타 중복 호출 막기
+  btn.disabled = true; btn.textContent = '확인 중';
+  try {
+    const { data, error } = await sb.client().rpc('survey_me', { p_hakbun: no, p_name: name });
+    if (error) throw error;
+    if (!data || !data.ok) {
+      const code = data && data.code;
+      if (code === 'closed') { svClosed('조사 기간 아님'); return; }
+      err.textContent = code === 'grade'
+        ? SV.period.대상학년.join('·') + '학년 대상 조사'
+        : '학번·이름 불일치 · 명단에 없으면 감독 교사 문의';
+      return;
+    }
+    SV.no = no; SV.name = name;
+    SV.period = data.period;
+    SV.roster = data.명단 || {};
+    SV.pending = data.대기 || null;
+    SV.ans = {};
+    SV.period.대상프로그램.forEach(p => {
+      const src = SV.pending && SV.pending.응답 && (p in SV.pending.응답) ? SV.pending.응답[p] : svNowAnswer(p);
+      SV.ans[p] = src === null ? null : src.slice();
+    });
+    const banner = document.getElementById('sv-banner');
+    if (SV.pending) {
+      banner.className = 'sv-banner';
+      banner.textContent = '제출함 · 확인 대기 (' + svFmtEnd(SV.pending.제출일시) + ') · 다시 내면 이전 제출 대신';
+      banner.style.display = 'block';
+    } else if (data.최근처리 && data.최근처리.처리상태 === '거절') {
+      banner.className = 'sv-banner warn';
+      banner.textContent = '지난 제출 반려 · 다시 제출 또는 감독 교사 문의';
+      banner.style.display = 'block';
+    } else {
+      banner.style.display = 'none';
+    }
+    document.getElementById('sv-form-no').textContent = no;
+    document.getElementById('sv-form-period').textContent = svFmtEnd(SV.period.마감) + '까지';
+    svRenderCards();
+    svShow('sv-form');
+  } catch (e) {
+    console.error('[survey] me', e);
+    err.textContent = '확인 실패 · 다시 시도';
+  } finally {
+    btn.textContent = '다음';
+    btn.disabled = false;   // svIdOnInput()은 오류 문구까지 지우므로 여기서 부르지 않는다
+  }
+}
+
+function svRenderCards() {
+  const html = SV.period.대상프로그램.map((p, i) => {
+    const v = SV.ans[p];
+    const on = Array.isArray(v);
+    const now = svNowAnswer(p);
+    const nowText = now === null ? '안 함' : (SV_FIXED[p] ? '참여' : svDaysText(now));
+    const changed = !svSame(v, now);
+    let body = '';
+    if (on && SV_FIXED[p]) {
+      body = '<div class="sv-fixed">매주 ' + SV_FIXED[p] + '</div>';
+    } else if (on) {
+      body = '<div class="sv-days" role="group" aria-label="' + escapeHtml(p) + ' 요일">' +
+        SV_WEEKDAYS.map(d => '<button type="button" aria-pressed="' + v.includes(d) + '" onclick="svToggleDay(' + i + ',\'' + d + '\')">' + d + '</button>').join('') +
+        '</div>' + (v.length ? '' : '<div class="sv-need">요일 선택</div>');
+    }
+    return '<div class="sv-card' + (svCardOk(p) ? '' : ' need') + '">' +
+      '<div class="sv-card-head"><div class="prog-name' + ckProgCls(p) + '">' + escapeHtml(p) + '</div>' +
+      '<div class="sv-now">지금 ' + escapeHtml(nowText) + (changed ? '<span class="chg">바뀜</span>' : '') + '</div></div>' +
+      '<div class="sv-seg" role="group" aria-label="' + escapeHtml(p) + ' 참여">' +
+      '<button type="button" aria-pressed="' + on + '" onclick="svSetJoin(' + i + ',true)">참여</button>' +
+      '<button type="button" class="off" aria-pressed="' + !on + '" onclick="svSetJoin(' + i + ',false)">안 함</button>' +
+      '</div>' + body + '</div>';
+  }).join('');
+  document.getElementById('sv-cards').innerHTML = html;
+  const missing = SV.period.대상프로그램.filter(p => !svCardOk(p)).length;
+  document.getElementById('sv-next-btn').disabled = missing > 0;
+  document.getElementById('sv-foot-info').textContent = missing ? '요일 선택 안 한 프로그램 ' + missing + '개' : '';
+}
+
+function svSetJoin(i, on) {
+  const p = SV.period.대상프로그램[i];
+  if (!on) SV.ans[p] = null;
+  else if (!Array.isArray(SV.ans[p])) {
+    const now = svNowAnswer(p);
+    SV.ans[p] = SV_FIXED[p] ? [SV_FIXED[p]] : (now && now.length ? now : []);
+  }
+  svRenderCards();
+}
+
+function svToggleDay(i, d) {
+  const p = SV.period.대상프로그램[i];
+  const v = SV.ans[p];
+  if (!Array.isArray(v)) return;
+  SV.ans[p] = v.includes(d) ? v.filter(x => x !== d) : SV_WEEKDAYS.filter(x => x === d || v.includes(x));
+  svRenderCards();
+}
+
+function svSummaryHtml() {
+  const progs = SV.period.대상프로그램;
+  const allOff = progs.every(p => SV.ans[p] === null);
+  const rows = progs.map(p => {
+    const v = SV.ans[p];
+    const val = v === null ? '안 함' : (SV_FIXED[p] ? '참여' : svDaysText(v));
+    const chg = !svSame(v, svNowAnswer(p));
+    return '<div class="sv-sum-row"><span>' + escapeHtml(p) + (chg ? '<span class="chg">바뀜</span>' : '') + '</span>' +
+      '<span class="v' + (v === null ? ' off' : '') + '">' + escapeHtml(val) + '</span></div>';
+  }).join('');
+  return (allOff ? '<div class="sv-sum-all-off">모든 자습 그만둠</div>' : '') + rows;
+}
+
+function svToConfirm() {
+  if (SV.period.대상프로그램.some(p => !svCardOk(p))) return;
+  document.getElementById('sv-sum').innerHTML = svSummaryHtml();
+  document.getElementById('sv-sub-err').textContent = '';
+  svShow('sv-confirm');
+}
+function svBackToForm() { svShow('sv-form'); }
+
+async function svSubmit() {
+  const btn = document.getElementById('sv-sub-btn');
+  const err = document.getElementById('sv-sub-err');
+  btn.disabled = true; btn.textContent = '제출 중';
+  try {
+    const answer = {};
+    SV.period.대상프로그램.forEach(p => { answer[p] = SV.ans[p]; });
+    const { data, error } = await sb.client().rpc('survey_submit', { p_hakbun: SV.no, p_name: SV.name, p_answer: answer });
+    if (error) throw error;
+    if (!data || !data.ok) { err.textContent = (data && data.msg) || '제출 실패'; return; }
+    document.getElementById('sv-done-no').textContent = SV.no;
+    document.getElementById('sv-done-sum').innerHTML = svSummaryHtml();
+    document.getElementById('sv-done-end').textContent = svFmtEnd(SV.period.마감);
+    SV.pending = { 응답: data.응답, 제출일시: new Date().toISOString() };
+    svShow('sv-done');
+  } catch (e) {
+    console.error('[survey] submit', e);
+    err.textContent = '제출 실패 · 다시 시도';
+  } finally {
+    btn.disabled = false; btn.textContent = '제출';
+  }
 }
 
 // ── 신청 확인 모달 (학번+이름 입력) ──
